@@ -1,0 +1,3 @@
+[account]
+    type = "BCOS_ACCOUNT"
+    accountFile = '0xde4247b42754e220256dbf51009c79d6736da6be.pem'
