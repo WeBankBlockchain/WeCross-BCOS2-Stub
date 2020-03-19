@@ -1,6 +1,7 @@
 package com.webank.wecross.stub.bcos;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Request;
@@ -14,7 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BlockNumber;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.slf4j.Logger;
@@ -61,8 +61,20 @@ public class BCOSConnection implements Connection {
 
             resourceInfo.setName(resource.getName());
             resourceInfo.setStubType(resource.getType());
-            resourceInfo.getProperties().put(resource.getName(), resource.getValue());
             resourceInfo.setChecksum(sha3Digest.hash(resource.getValue()));
+
+            resourceInfo.getProperties().put(resource.getName(), resource.getValue());
+            resourceInfo
+                    .getProperties()
+                    .put(
+                            BCOSConstant.BCOS_RESOURCEINFO_GROUP_ID,
+                            resourceList.get(i).getChain().getGroupID());
+            resourceInfo
+                    .getProperties()
+                    .put(
+                            BCOSConstant.BCOS_RESOURCEINFO_CHAIN_ID,
+                            resourceList.get(i).getChain().getChainID());
+
             resourceInfoList.add(resourceInfo);
         }
 
@@ -99,12 +111,12 @@ public class BCOSConnection implements Connection {
 
             logger.debug(" contractAddress: {}, ABI: {}", split[0], split[1]);
 
-            Call call = web3jWrapper.call(split[0], split[1]);
+            Call.CallOutput callOutput = web3jWrapper.call(split[0], split[1]);
 
             response.setErrorCode(0);
             response.setErrorMessage("success");
-            response.setData(objectMapper.writeValueAsBytes(call.getResult()));
-            logger.debug(" call {}", call.getResult());
+            response.setData(objectMapper.writeValueAsBytes(callOutput));
+            logger.debug(" call {}", callOutput);
 
         } catch (Exception e) {
             logger.warn(" Exception, e: {}", e);
@@ -125,6 +137,7 @@ public class BCOSConnection implements Connection {
 
             response.setErrorCode(0);
             response.setErrorMessage("success");
+            objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
             response.setData(objectMapper.writeValueAsBytes(receipt));
             logger.debug(" sendTransaction, result: {}", receipt);
 
@@ -139,14 +152,12 @@ public class BCOSConnection implements Connection {
     public Response handleGetBlockNumberRequest(Request request) {
         Response response = new Response();
         try {
-            BlockNumber blockNumber = web3jWrapper.getBlockNumber();
-
-            BigInteger blk = blockNumber.getBlockNumber();
+            BigInteger blockNumber = web3jWrapper.getBlockNumber();
 
             response.setErrorCode(0);
             response.setErrorMessage("success");
-            response.setData(blk.toByteArray());
-            logger.debug(" blockNumber: {}", blk);
+            response.setData(blockNumber.toByteArray());
+            logger.debug(" blockNumber: {}", blockNumber);
 
         } catch (Exception e) {
             logger.warn(" Exception, e: {}", e);
@@ -177,13 +188,12 @@ public class BCOSConnection implements Connection {
         Response response = new Response();
         try {
             BigInteger blockNumber = new BigInteger(request.getData());
-            BcosBlock bcosBlock = web3jWrapper.getBlockByNumber(blockNumber.longValue());
+            BcosBlock.Block bcosBlock = web3jWrapper.getBlockByNumber(blockNumber.longValue());
 
             response.setErrorCode(0);
             response.setErrorMessage("success");
-            response.setData(objectMapper.writeValueAsBytes(toBlockHeader(bcosBlock.getResult())));
-            logger.debug(
-                    " getBlockByNumber, blk: {}, block: {}", blockNumber, bcosBlock.getResult());
+            response.setData(objectMapper.writeValueAsBytes(toBlockHeader(bcosBlock)));
+            logger.debug(" getBlockByNumber, blk: {}, block: {}", blockNumber, bcosBlock);
         } catch (Exception e) {
             logger.warn(" Exception, e: {}", e);
             response.setErrorCode(-1);

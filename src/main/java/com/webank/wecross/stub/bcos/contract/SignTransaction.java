@@ -14,25 +14,18 @@ public class SignTransaction extends ExtendedRawTransactionManager {
     public static final BigInteger gasPrice = new BigInteger("300000000000");
     public static final BigInteger gasLimit = new BigInteger("300000000000");
 
-    private BigInteger blockNumber;
     private BigInteger groupId;
     private BigInteger chainId;
 
-    public SignTransaction(
-            Credentials credentials,
-            BigInteger blockNumber,
-            BigInteger groupId,
-            BigInteger chainId) {
+    public SignTransaction(Credentials credentials, BigInteger groupId, BigInteger chainId) {
         super(null, credentials, groupId, chainId);
-        this.blockNumber = blockNumber;
         this.groupId = groupId;
         this.chainId = chainId;
     }
 
-    public SignTransaction(Credentials credentials, BigInteger blockNumber) {
+    public SignTransaction(Credentials credentials) {
         this(
                 credentials,
-                blockNumber,
                 BigInteger.valueOf(BCOSConstant.BCOS_DEFAULT_GROUP_ID),
                 BigInteger.valueOf(BCOSConstant.BCOS_DEFAULT_CHAIN_ID));
     }
@@ -44,17 +37,18 @@ public class SignTransaction extends ExtendedRawTransactionManager {
      * @param abiData
      * @return
      */
-    public String sign(String contractAddress, String abiData) {
+    public String sign(String contractAddress, String abiData, BigInteger blockNumber) {
 
         Random r = ThreadLocalRandom.current();
         BigInteger randomid = new BigInteger(250, r);
+        BigInteger blockLimit = blockNumber.add(BigInteger.valueOf(BlockLimit.blockLimit));
 
         ExtendedRawTransaction rawTransaction =
                 ExtendedRawTransaction.createTransaction(
                         randomid,
                         SignTransaction.gasPrice,
                         SignTransaction.gasLimit,
-                        getBlockLimit(),
+                        blockLimit,
                         contractAddress,
                         BigInteger.ZERO,
                         abiData,
@@ -63,14 +57,6 @@ public class SignTransaction extends ExtendedRawTransactionManager {
                         "");
 
         return sign(rawTransaction);
-    }
-
-    public BigInteger getBlockLimit() {
-        return getBlockNumber().add(BigInteger.valueOf(BlockLimit.blockLimit));
-    }
-
-    public BigInteger getBlockNumber() {
-        return blockNumber;
     }
 
     public BigInteger getGroupId() {

@@ -3,10 +3,27 @@ import static junit.framework.TestCase.assertEquals;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.webank.wecross.stub.BlockHeader;
+import com.webank.wecross.stub.Request;
+import com.webank.wecross.stub.ResourceInfo;
+import com.webank.wecross.stub.Response;
 import com.webank.wecross.stub.bcos.BCOSConnection;
+import com.webank.wecross.stub.bcos.BCOSDriver;
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
+import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
+import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
+import com.webank.wecross.stub.bcos.contract.StubFunction;
+import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.List;
+import org.fisco.bcos.web3j.abi.FunctionEncoder;
+import org.fisco.bcos.web3j.abi.FunctionReturnDecoder;
+import org.fisco.bcos.web3j.abi.datatypes.Function;
+import org.fisco.bcos.web3j.abi.datatypes.Type;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
+import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.junit.Test;
 
 public class BCOSConnectionTest {
@@ -27,5 +44,107 @@ public class BCOSConnectionTest {
         assertEquals(blockHeader.getStateRoot(), block.getStateRoot());
         assertEquals(blockHeader.getNumber(), block.getNumber().intValue());
         assertEquals(blockHeader.getTransactionRoot(), block.getTransactionsRoot());
+    }
+
+    @Test
+    public void resourceInfoListTest() throws IOException {
+        BCOSStubConfigParser bcosStubConfigParser =
+                new BCOSStubConfigParser("ut/stub-sample-ut.toml");
+        BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
+        Web3jWrapper web3jWrapper = new Web3jWrapperMock();
+        BCOSConnection connection = new BCOSConnection(web3jWrapper);
+        List<ResourceInfo> resourceInfoList =
+                connection.getResourceInfoList(bcosStubConfig.getResources());
+
+        assertEquals(resourceInfoList.size(), bcosStubConfig.getResources().size());
+        for (int i = 0; i < resourceInfoList.size(); i++) {
+            ResourceInfo resourceInfo = resourceInfoList.get(i);
+            assertEquals(resourceInfo.getStubType(), "BCOS_CONTRACT");
+            assertEquals(
+                    resourceInfo.getProperties().get(BCOSConstant.BCOS_RESOURCEINFO_CHAIN_ID), 123);
+            assertEquals(
+                    resourceInfo.getProperties().get(BCOSConstant.BCOS_RESOURCEINFO_GROUP_ID), 111);
+        }
+    }
+
+    @Test
+    public void handleGetBlockNumberTest() throws IOException {
+        Web3jWrapper web3jWrapper = new Web3jWrapperMock();
+        BCOSConnection connection = new BCOSConnection(web3jWrapper);
+        Request request = new Request();
+        request.setType(BCOSConstant.BCOS_GET_BLOCK_NUMBER);
+        Response response = connection.send(request);
+        BigInteger blockNumber = new BigInteger(response.getData());
+        assertEquals(response.getErrorCode(), 0);
+        assertEquals(blockNumber, BigInteger.valueOf(11111));
+    }
+
+    @Test
+    public void handleGetBlockTest() throws IOException {
+        BCOSDriver driver = new BCOSDriver();
+
+        Web3jWrapper web3jWrapper = new Web3jWrapperMock();
+        BCOSConnection connection = new BCOSConnection(web3jWrapper);
+        Request request = new Request();
+        request.setType(BCOSConstant.BCOS_GET_BLOCK_HEADER);
+
+        request.setData(BigInteger.valueOf(11111).toByteArray());
+        Response response = connection.send(request);
+        assertEquals(response.getErrorCode(), 0);
+
+        BlockHeader blockHeader = driver.decodeBlockHeader(response.getData());
+        assertEquals(
+                blockHeader.getHash(),
+                "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0");
+        assertEquals(
+                blockHeader.getPrevHash(),
+                "0xed0ef6826277efbc9601dedc1b6ea20067eed219e415e1038f111155b8fc1e24");
+        assertEquals(
+                blockHeader.getReceiptRoot(),
+                "0x2a4433b7611c4b1fae16b873ced1dec9a65b82416e448f58fded002c05a10082");
+        assertEquals(
+                blockHeader.getStateRoot(),
+                "0xce8a92c9311e9e0b77842c86adf8fcf91cbab8fb5daefc85b21f501ca8b1f682");
+        assertEquals(blockHeader.getNumber(), 331);
+        assertEquals(
+                blockHeader.getTransactionRoot(),
+                "0x07009a9d655cee91e95dcd1c53d5917a58f80e6e6ac689bae24bd911d75c471c");
+    }
+
+    @Test
+    public void handleCallTest() throws IOException {
+        BCOSDriver driver = new BCOSDriver();
+
+        Web3jWrapper web3jWrapper = new Web3jWrapperMock();
+        BCOSConnection connection = new BCOSConnection(web3jWrapper);
+        Request request = new Request();
+        request.setType(BCOSConstant.BCOS_CALL);
+
+        String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
+        String funName = "funcName";
+        List<String> params = Arrays.asList("abc", "def", "hig");
+        Function function = StubFunction.newFunction(funName, params);
+
+        String abi = FunctionEncoder.encode(function);
+        request.setData((address + "," + abi).getBytes());
+
+        Response response = connection.send(request);
+
+        assertEquals(response.getErrorCode(), 0);
+
+        Call.CallOutput callOutput =
+                ObjectMapperFactory.getObjectMapper()
+                        .readValue(response.getData(), Call.CallOutput.class);
+        assertEquals(callOutput.getStatus(), "0x0");
+
+        String data = callOutput.getOutput();
+        List<Type> typeList = FunctionReturnDecoder.decode(data, function.getOutputParameters());
+
+        List<String> stringList = StubFunction.convertToStringList(typeList);
+        assertEquals(stringList.size(), params.size());
+
+        for (int i = 0; i < params.size(); i++) {
+            assertEquals(stringList.get(i), params.get(i));
+        }
     }
 }

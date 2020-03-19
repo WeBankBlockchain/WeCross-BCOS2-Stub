@@ -7,20 +7,22 @@ import org.junit.Test;
 
 public class BCOSStubConfigParserTest {
     @Test
-    public void transactionSignTest() throws IOException {
-        BCOSStubConfigParser bcosStubConfigParser = new BCOSStubConfigParser("stub-sample.toml");
+    public void stubConfigParserTest() throws IOException {
+        BCOSStubConfigParser bcosStubConfigParser =
+                new BCOSStubConfigParser("ut/stub-sample-ut.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
-        assertEquals(bcosStubConfig.getStub(), "bcos");
-        assertEquals(bcosStubConfig.getType(), "BCOS");
+        assertEquals(bcosStubConfig.getStub(), "bcos-ut");
+        assertEquals(bcosStubConfig.getType(), "BCOS-UT");
         BCOSStubConfig.ChannelService channelService = bcosStubConfig.getChannelService();
-        assertEquals(channelService.getChainID(), 1);
-        assertEquals(channelService.getGroupID(), 1);
-        assertEquals(channelService.getTimeout(), 300000);
+        assertEquals(channelService.getChain().getChainID(), 123);
+        assertEquals(channelService.getChain().getGroupID(), 111);
+        assertEquals(channelService.getChain().isEnableGM(), true);
+        assertEquals(channelService.getTimeout(), 111100);
         assertEquals(channelService.getCaCert(), "classpath:/stubs/bcos/ca.crt");
         assertEquals(channelService.getSslCert(), "classpath:/stubs/bcos/sdk.crt");
         assertEquals(channelService.getSslKey(), "classpath:/stubs/bcos/sdk.key");
 
-        assertEquals(channelService.getConnectionsStr().size(), 3);
+        assertEquals(channelService.getConnectionsStr().size(), 4);
 
         assertEquals(bcosStubConfig.getResources().size(), 2);
         assertEquals(bcosStubConfig.getResources().get(0).getName(), "HelloWeCross");

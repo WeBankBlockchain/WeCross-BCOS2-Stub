@@ -26,19 +26,19 @@ public class Web3jWrapperImpl implements Web3jWrapper {
     }
 
     @Override
-    public BcosBlock getBlockByNumber(long blockNumber) throws IOException {
+    public BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException {
         BcosBlock bcosBlock =
                 web3j.getBlockByNumber(
                                 DefaultBlockParameter.valueOf(BigInteger.valueOf(blockNumber)),
                                 false)
                         .send();
-        return bcosBlock;
+        return bcosBlock.getResult();
     }
 
     @Override
-    public BlockNumber getBlockNumber() throws IOException {
+    public BigInteger getBlockNumber() throws IOException {
         BlockNumber blockNumber = web3j.getBlockNumber().send();
-        return blockNumber;
+        return blockNumber.getBlockNumber();
     }
 
     @Override
@@ -47,12 +47,12 @@ public class Web3jWrapperImpl implements Web3jWrapper {
     }
 
     @Override
-    public Call call(String contractAddress, String data) throws IOException {
+    public Call.CallOutput call(String contractAddress, String data) throws IOException {
         Call ethCall =
                 web3j.call(
                                 Transaction.createEthCallTransaction("0x0", contractAddress, data),
                                 DefaultBlockParameterName.LATEST)
                         .send();
-        return ethCall;
+        return ethCall.getResult();
     }
 }

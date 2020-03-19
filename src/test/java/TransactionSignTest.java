@@ -15,32 +15,19 @@ import org.fisco.bcos.web3j.crypto.Credentials;
 import org.fisco.bcos.web3j.crypto.ExtendedRawTransaction;
 import org.fisco.bcos.web3j.crypto.ExtendedTransactionDecoder;
 import org.fisco.bcos.web3j.crypto.gm.GenCredential;
-import org.fisco.bcos.web3j.utils.BlockLimit;
 import org.junit.Test;
 
 public class TransactionSignTest {
-
-    @Test
-    public void blockLimitTest() throws IOException {
-        Credentials credentials = GenCredential.create();
-        BigInteger blockNumber = BigInteger.valueOf(10000);
-        BigInteger blockNumberBak = BigInteger.valueOf(10000);
-        SignTransaction signTransaction = new SignTransaction(credentials, blockNumber);
-        BigInteger blockLimit = signTransaction.getBlockLimit();
-
-        assertEquals(blockLimit, blockNumberBak.add(BigInteger.valueOf(BlockLimit.blockLimit)));
-    }
 
     @Test
     public void transactionSignTest() throws IOException {
         Credentials credentials = GenCredential.create();
         BigInteger blockNumber = BigInteger.valueOf(1111111);
 
-        SignTransaction signTransaction = new SignTransaction(credentials, blockNumber);
+        SignTransaction signTransaction = new SignTransaction(credentials);
 
         Random r = ThreadLocalRandom.current();
         BigInteger randomid = new BigInteger(250, r);
-        BigInteger blockLimit = signTransaction.getBlockLimit();
 
         String funcName = "testFuncName";
         List<String> params = Arrays.asList("aaa", "bbbb", "ccc");
@@ -50,24 +37,10 @@ public class TransactionSignTest {
         String to = "0xb3c223fc0bf6646959f254ac4e4a7e355b50a344";
         String extraData = "extraData";
 
-        ExtendedRawTransaction rawTransaction =
-                ExtendedRawTransaction.createTransaction(
-                        randomid,
-                        SignTransaction.gasPrice,
-                        SignTransaction.gasLimit,
-                        blockLimit,
-                        to,
-                        BigInteger.ZERO,
-                        abiData,
-                        BigInteger.valueOf(BCOSConstant.BCOS_DEFAULT_GROUP_ID),
-                        BigInteger.valueOf(BCOSConstant.BCOS_DEFAULT_CHAIN_ID),
-                        extraData);
-
-        String sign = signTransaction.sign(rawTransaction);
+        String sign = signTransaction.sign(to, abiData, blockNumber);
         ExtendedRawTransaction decodeExtendedRawTransaction =
                 ExtendedTransactionDecoder.decode(sign);
 
-        assertEquals(randomid, decodeExtendedRawTransaction.getRandomid());
         assertEquals(SignTransaction.gasPrice, decodeExtendedRawTransaction.getGasPrice());
         assertEquals(SignTransaction.gasLimit, decodeExtendedRawTransaction.getGasLimit());
         assertEquals(to, decodeExtendedRawTransaction.getTo());
