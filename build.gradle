@@ -1,0 +1,132 @@
+plugins {
+    id 'java'
+    id 'idea'
+    id 'eclipse'
+    id 'maven'
+    id 'jacoco'
+    id 'maven-publish'
+    id 'org.ajoberstar.grgit' version '4.0.1'
+    id 'com.github.sherter.google-java-format' version '0.8'
+}
+
+group 'com.webank.wecross'
+version '1.0.0-rc2'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+// In this section you declare where to find the dependencies of your project
+repositories {
+    // Use jcenter for resolving your dependencies.
+    // You can declare any Maven/Ivy/file repository here.
+    jcenter()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+}
+
+googleJavaFormat {
+    options style: 'AOSP'
+    source = sourceSets*.allJava
+    include '**/*.java'
+    exclude '**/temp/*.java'
+}
+
+verifyGoogleJavaFormat {
+    source = sourceSets*.allJava
+    include '**/*.java'
+    exclude '**/temp/*.java'
+}
+
+configurations {
+    all*.exclude group: 'org.java-websocket', module: 'Java-WebSocket'
+    all*.exclude group: 'org.antlr', module: '*'
+    all*.exclude group: 'de.vandermeer', module: '*'
+    all*.exclude group: 'net.bytebuddy', module: 'byte-buddy'
+    all*.exclude group: 'com.alibaba', module: 'druid'
+    all*.exclude group: 'com.google.guava', module: 'guava'
+    all*.exclude group: 'org.apache.httpcomponents', module: 'httpclient'
+    all*.exclude group: 'org.mockito', module: 'mockito-core'
+    all*.exclude group: 'io.reactivex', module: 'rxjava'
+    all*.exclude group: 'org.ethereum', module: 'solcJ-all'
+}
+
+dependencies {
+
+    compile 'org.slf4j:slf4j-log4j12:1.7.25'
+    compile 'com.moandjiezana.toml:toml4j:0.7.2'
+    compile 'commons-codec:commons-codec:1.14'
+    compile 'org.fisco-bcos:web3sdk:2.2.2'
+
+    // Use JUnit test framework
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.1.4.RELEASE'
+}
+
+sourceSets {
+    main {
+        resources {
+            exclude '/*'
+        }
+    }
+}
+
+jar {
+    destinationDir file('dist/apps')
+    archiveName project.name + '.jar'
+
+    manifest {
+
+        def repo = null;
+        try {
+            repo = grgit.open()
+
+            def user = System.getProperty("user.name")
+            def date = new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+            def branch = repo.branch.getCurrent().getName()
+            def commit = repo.head().getAbbreviatedId(40)
+
+            attributes(["Built-By"                : user,
+                        "Implementation-Timestamp": date,
+                        "Git-Branch"              : branch,
+                        "Git-Commit"              : commit
+            ])
+
+            logger.info("  Commit : ")
+            logger.info("  => user: {}", user)
+            logger.info("  => date: {}", date)
+            logger.info("  => branch: {}", branch)
+            logger.info("  => commit: {}", commit)
+        } catch (Exception e) {
+            logger.warn(' .git not exist, cannot found commit id')
+        }
+    }
+
+    doLast {
+        copy {
+            from file('src/main/resources/')
+            into 'dist/conf'
+        }
+        copy {
+            from configurations.runtime
+            into 'dist/lib'
+        }
+        copy {
+            from file('.').listFiles().findAll { File f -> (f.name.endsWith('.sh') || f.name.endsWith('.env')) }
+            into 'dist'
+        }
+        copy {
+            from file('scripts/')
+            into 'dist'
+        }
+    }
+}
+
+test {
+    testLogging.showStandardStreams = true
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled false
+    }
+}
