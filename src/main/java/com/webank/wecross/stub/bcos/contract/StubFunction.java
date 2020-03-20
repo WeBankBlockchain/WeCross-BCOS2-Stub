@@ -11,8 +11,9 @@ import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
 
 /**
  * Function object used across blockchain chain. Wecross requires that a cross-chain contract
- * interface must conform to the following format: function funcName(string[] params) public
- * returns(string[])
+ * interface must conform to the following format:
+ *
+ * <p>function funcName(string[] params) public returns(string[])
  */
 public class StubFunction {
 

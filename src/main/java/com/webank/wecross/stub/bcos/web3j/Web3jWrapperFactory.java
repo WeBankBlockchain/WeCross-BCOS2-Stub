@@ -23,7 +23,7 @@ public class Web3jWrapperFactory {
 
         EncryptType encryptType =
                 new EncryptType(
-                        channelServiceConfig.isEnableGM()
+                        channelServiceConfig.getChain().isEnableGM()
                                 ? EncryptType.SM2_TYPE
                                 : EncryptType.ECDSA_TYPE);
 
@@ -31,11 +31,11 @@ public class Web3jWrapperFactory {
 
         Service service = new Service();
         service.setConnectSeconds(BCOSConstant.WE3J_START_TIMEOUT_DEFAULT);
-        service.setGroupId(channelServiceConfig.getGroupID());
+        service.setGroupId(channelServiceConfig.getChain().getGroupID());
 
         List<ChannelConnections> allChannelConnections = new ArrayList<>();
         ChannelConnections channelConnections = new ChannelConnections();
-        channelConnections.setGroupId(channelServiceConfig.getGroupID());
+        channelConnections.setGroupId(channelServiceConfig.getChain().getGroupID());
         channelConnections.setConnectionsStr(channelServiceConfig.getConnectionsStr());
         allChannelConnections.add(channelConnections);
 

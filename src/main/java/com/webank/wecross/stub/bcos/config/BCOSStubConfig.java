@@ -12,21 +12,50 @@ public class BCOSStubConfig {
     private String stub;
     /** stub type, BCOS */
     private String type;
-
+    /** */
+    private Chain chain;
     /** ChannelServiceConfig, used for JavaSDK initialize */
     private ChannelService channelService;
     /** BCOS resource list */
     private List<Resource> resources;
+
+    public static class Chain {
+        private int groupID;
+        private int chainID;
+        private boolean enableGM;
+
+        public int getGroupID() {
+            return groupID;
+        }
+
+        public void setGroupID(int groupID) {
+            this.groupID = groupID;
+        }
+
+        public int getChainID() {
+            return chainID;
+        }
+
+        public void setChainID(int chainID) {
+            this.chainID = chainID;
+        }
+
+        public boolean isEnableGM() {
+            return enableGM;
+        }
+
+        public void setEnableGM(boolean enableGM) {
+            this.enableGM = enableGM;
+        }
+    }
 
     public static class ChannelService {
         private int timeout;
         private String caCert;
         private String sslCert;
         private String sslKey;
-        private int groupID;
-        private boolean enableGM;
-        private int chainID;
         private List<String> connectionsStr;
+        private Chain chain;
 
         public int getTimeout() {
             return timeout;
@@ -60,14 +89,6 @@ public class BCOSStubConfig {
             this.sslKey = sslKey;
         }
 
-        public int getGroupID() {
-            return groupID;
-        }
-
-        public void setGroupID(int groupID) {
-            this.groupID = groupID;
-        }
-
         public List<String> getConnectionsStr() {
             return connectionsStr;
         }
@@ -76,20 +97,12 @@ public class BCOSStubConfig {
             this.connectionsStr = connectionsStr;
         }
 
-        public boolean isEnableGM() {
-            return enableGM;
+        public Chain getChain() {
+            return chain;
         }
 
-        public void setEnableGM(boolean enableGM) {
-            this.enableGM = enableGM;
-        }
-
-        public int getChainID() {
-            return chainID;
-        }
-
-        public void setChainID(int chainID) {
-            this.chainID = chainID;
+        public void setChain(Chain chain) {
+            this.chain = chain;
         }
 
         @Override
@@ -106,12 +119,6 @@ public class BCOSStubConfig {
                     + ", sslKey='"
                     + sslKey
                     + '\''
-                    + ", groupID="
-                    + groupID
-                    + ", enableGM="
-                    + enableGM
-                    + ", chainID="
-                    + chainID
                     + ", connectionsStr="
                     + connectionsStr
                     + '}';
@@ -122,6 +129,7 @@ public class BCOSStubConfig {
         private String name;
         private String type;
         private String value;
+        private Chain chain;
 
         public String getName() {
             return name;
@@ -145,6 +153,14 @@ public class BCOSStubConfig {
 
         public void setValue(String value) {
             this.value = value;
+        }
+
+        public Chain getChain() {
+            return chain;
+        }
+
+        public void setChain(Chain chain) {
+            this.chain = chain;
         }
 
         @Override
@@ -193,6 +209,14 @@ public class BCOSStubConfig {
 
     public void setResources(List<Resource> resources) {
         this.resources = resources;
+    }
+
+    public Chain getChain() {
+        return chain;
+    }
+
+    public void setChain(Chain chain) {
+        this.chain = chain;
     }
 
     @Override

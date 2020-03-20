@@ -1,6 +1,7 @@
 package com.webank.wecross.stub.bcos;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
@@ -57,11 +58,10 @@ public class BCOSDriver implements Driver {
             String data,
             Credentials credentials) {
 
-        SignTransaction signTransaction =
-                new SignTransaction(credentials, blockNumber, groupId, chainId);
+        SignTransaction signTransaction = new SignTransaction(credentials, groupId, chainId);
 
         // get signed transaction hex string
-        String signTx = signTransaction.sign(contractAddress, data);
+        String signTx = signTransaction.sign(contractAddress, data, blockNumber);
 
         logger.debug(
                 " contractAddress: {}, groupId: {}, chainId: {}, blockNumber: {}",
@@ -80,7 +80,8 @@ public class BCOSDriver implements Driver {
 
     @Override
     public boolean isTransaction(Request request) {
-        return request.getType() == BCOSConstant.BCOS_SEND_TRANSACTION;
+        return (request.getType() == BCOSConstant.BCOS_SEND_TRANSACTION)
+                || (request.getType() == BCOSConstant.BCOS_CALL);
     }
 
     @Override
@@ -127,6 +128,7 @@ public class BCOSDriver implements Driver {
                             Arrays.asList(request.getData().getArgs()));
             // ABI data
             String data = FunctionEncoder.encode(function);
+
             logger.debug(
                     " address: {}, method: {}, args: {}, ABI: {}",
                     contractAddress,
@@ -231,16 +233,22 @@ public class BCOSDriver implements Driver {
                 throw new RuntimeException(resp.getErrorMessage());
             }
 
+            objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
             TransactionReceipt receipt =
                     objectMapper.readValue(resp.getData(), TransactionReceipt.class);
             if (receipt.isStatusOK()) {
                 response.setHash(receipt.getTransactionHash());
-                // response.setExtraHashes();
+                List<Type> typeList =
+                        FunctionReturnDecoder.decode(
+                                receipt.getOutput(), function.getOutputParameters());
+                List<String> outputs = StubFunction.convertToStringList(typeList);
+                response.setResult(outputs.toArray(new String[0]));
+                response.setErrorCode(0);
             } else {
+                response.setHash(receipt.getTransactionHash());
                 response.setErrorCode(-1);
                 response.setErrorMessage(StatusCode.getStatusMessage(receipt.getStatus()));
             }
-
         } catch (Exception e) {
             logger.warn(" Exception: {}", e);
             response.setErrorCode(-1);
@@ -262,7 +270,7 @@ public class BCOSDriver implements Driver {
                     " errorCode: {},  errorMessage: {}",
                     response.getErrorCode(),
                     response.getErrorMessage());
-            return 0;
+            return -1;
         }
 
         BigInteger blockNumber = new BigInteger(response.getData());
