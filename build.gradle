@@ -55,6 +55,7 @@ dependencies {
     compile 'com.moandjiezana.toml:toml4j:0.7.2'
     compile 'commons-codec:commons-codec:1.14'
     compile 'org.fisco-bcos:web3sdk:2.2.2'
+	compile 'com.webank:wecross-java-stub:1.0.0-SNAPSHOT'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
