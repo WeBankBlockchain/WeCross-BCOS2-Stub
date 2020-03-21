@@ -1,6 +1,6 @@
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.webank.wecross.stub.bcos.contract.StubFunction;
+import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -11,7 +11,7 @@ import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 
-public class Web3jWrapperMock implements Web3jWrapper {
+public class Web3jWrapperImplMock implements Web3jWrapper {
 
     @Override
     public BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException {
@@ -41,7 +41,7 @@ public class Web3jWrapperMock implements Web3jWrapper {
     @Override
     public Call.CallOutput call(String contractAddress, String data) throws IOException {
         Function function =
-                StubFunction.newFunction("funcName", Arrays.asList("aa", "bb", "cc", "dd"));
+                FunctionUtility.newFunction("funcName", Arrays.asList("aa", "bb", "cc", "dd"));
         Call.CallOutput callOutput = new Call.CallOutput();
         callOutput.setCurrentBlockNumber("0x1111");
         callOutput.setStatus("0x0");

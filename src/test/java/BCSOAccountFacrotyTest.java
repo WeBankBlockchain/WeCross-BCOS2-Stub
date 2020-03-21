@@ -1,4 +1,5 @@
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
@@ -21,9 +22,9 @@ public class BCSOAccountFacrotyTest {
                     InvalidKeySpecException {
         Credentials credentials =
                 BCOSAccountFactory.loadPemAccount(
-                        "ut/accounts/bcos1/0xde4247b42754e220256dbf51009c79d6736da6be.pem");
+                        "accounts/bcos1/0xde4247b42754e220256dbf51009c79d6736da6be.pem");
         assertEquals(credentials.getAddress(), "0xde4247b42754e220256dbf51009c79d6736da6be");
-        assertTrue(!credentials.getEcKeyPair().getPrivateKey().toString().isEmpty());
+        assertFalse(credentials.getEcKeyPair().getPrivateKey().toString().isEmpty());
     }
 
     @Test
@@ -33,8 +34,7 @@ public class BCSOAccountFacrotyTest {
                     InvalidKeySpecException {
         Credentials credentials =
                 BCOSAccountFactory.loadP12Account(
-                        "ut/accounts/bcos/0x4c9e341a015ce8200060a028ce45dfea8bf33e15.p12",
-                        "123456");
+                        "accounts/bcos/0x4c9e341a015ce8200060a028ce45dfea8bf33e15.p12", "123456");
         assertEquals(credentials.getAddress(), "0x4c9e341a015ce8200060a028ce45dfea8bf33e15");
         assertTrue(!credentials.getEcKeyPair().getPrivateKey().toString().isEmpty());
     }
@@ -45,9 +45,8 @@ public class BCSOAccountFacrotyTest {
                     NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException,
                     InvalidKeySpecException {
 
-        BCOSAccount bcosAccount0 = BCOSAccountFactory.build("bcos", "classpath:/ut/accounts/bcos");
-        BCOSAccount bcosAccount1 =
-                BCOSAccountFactory.build("bcos1", "classpath:/ut/accounts/bcos1");
+        BCOSAccount bcosAccount0 = BCOSAccountFactory.build("bcos", "classpath:/accounts/bcos");
+        BCOSAccount bcosAccount1 = BCOSAccountFactory.build("bcos1", "classpath:/accounts/bcos1");
 
         assertEquals(
                 bcosAccount0.getCredentials().getAddress(),

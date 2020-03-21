@@ -1,0 +1,20 @@
+#!/bin/bash
+set -e
+
+# download build_chain.sh to build fisco-bcos block chain
+curl -LO https://github.com/FISCO-BCOS/FISCO-BCOS/releases/download/v2.2.0/build_chain.sh && chmod u+x build_chain.sh
+echo "127.0.0.1:4 agency1 1,2,3" > ipconf
+bash build_chain.sh -f ipconf
+bash nodes/127.0.0.1/start_all.sh
+./nodes/127.0.0.1/fisco-bcos -v
+
+# gradle build check
+bash gradlew build
+bash gradlew test
+# integration testing
+mkdir -p src/integTest/resources/stubs/bcos
+cp nodes/127.0.0.1/sdk/* src/integTest/resources/stubs/bcos
+cp src/test/resources/stub-sample.toml src/integTest/resources/
+cp -r src/test/resources/accounts src/integTest/resources/
+cp -r src/test/resources/contract src/integTest/resources/
+bash gradlew integTest

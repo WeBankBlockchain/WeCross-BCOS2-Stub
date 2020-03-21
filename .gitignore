@@ -5,6 +5,7 @@
 
 # Log file
 *.log
+/log/
 
 # BlueJ files
 *.ctxt
@@ -30,6 +31,8 @@ hs_err_pid*
 
 # Ignore Gradle GUI config
 gradle-app.setting
+gradle.properties
+gpg
 
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar
