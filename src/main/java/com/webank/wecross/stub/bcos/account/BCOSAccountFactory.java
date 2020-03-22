@@ -28,6 +28,7 @@ public class BCOSAccountFactory {
                     NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException,
                     InvalidKeySpecException {
         String accountConfigFile = accountPath + File.separator + "account.toml";
+        logger.debug("Loading account.toml: {}", accountConfigFile);
 
         BCOSAccountConfigParser parser = new BCOSAccountConfigParser(accountConfigFile);
         BCOSAccountConfig bcosAccountConfig = parser.loadConfig();
@@ -37,12 +38,11 @@ public class BCOSAccountFactory {
 
         Credentials credentials = null;
         if (accountFile.endsWith("p12")) {
+        	logger.debug("Loading account p12: {}", accountFile);
             credentials = loadP12Account(accountFile, passwd);
-        } else if (accountFile.endsWith("pem")) {
-            credentials = loadPemAccount(accountFile);
         } else {
-            throw new InvalidParameterException(
-                    " unrecognized account file type, file:" + accountFile);
+        	logger.debug("Loading account pem: {}", accountFile);
+            credentials = loadPemAccount(accountFile);
         }
 
         BCOSAccount bcosAccount = new BCOSAccount(name, bcosAccountConfig.getType(), credentials);

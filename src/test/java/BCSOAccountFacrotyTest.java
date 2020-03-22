@@ -58,7 +58,7 @@ public class BCSOAccountFacrotyTest {
         assertEquals(bcosAccount0.getName(), "bcos");
         assertEquals(bcosAccount1.getName(), "bcos1");
 
-        assertEquals(bcosAccount0.getType(), "BCOS_ACCOUNT");
-        assertEquals(bcosAccount1.getType(), "BCOS_ACCOUNT");
+        assertEquals(bcosAccount0.getType(), "BCOS2.0");
+        assertEquals(bcosAccount1.getType(), "BCOS2.0");
     }
 }

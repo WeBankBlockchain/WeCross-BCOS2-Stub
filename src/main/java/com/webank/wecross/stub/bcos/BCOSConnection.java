@@ -60,7 +60,8 @@ public class BCOSConnection implements Connection {
             BCOSStubConfig.Resource resource = resourceList.get(i);
 
             resourceInfo.setName(resource.getName());
-            resourceInfo.setStubType(resource.getType());
+            resourceInfo.setStubType("BCOS2.0");
+            // resourceInfo.setType(resource.getType());
             resourceInfo.setChecksum(sha3Digest.hash(resource.getValue()));
 
             resourceInfo.getProperties().put(resource.getName(), resource.getValue());

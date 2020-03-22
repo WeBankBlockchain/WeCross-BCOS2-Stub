@@ -5,9 +5,9 @@ public class BCOSConstant {
     /** BCOS contract resource */
     public static final String RESOURCE_TYPE_BCOS_CONTRACT = "BCOS_CONTRACT";
     /** */
-    public static final String BCOS_ACCOUNT = "BCOS_ACCOUNT";
+    public static final String BCOS_ACCOUNT = "BCOS2.0";
     /** */
-    public static final String BCOS_SM_ACCOUNT = "BCOS_SM_ACCOUNT";
+    public static final String BCOS_SM_ACCOUNT = "BCOS2.0_gm";
 
     public static final String BCOS_RESOURCEINFO_GROUP_ID = "BCOS_PROPERTY_GROUP_ID";
     public static final String BCOS_RESOURCEINFO_CHAIN_ID = "BCOS_PROPERTY_CHAIN_ID";

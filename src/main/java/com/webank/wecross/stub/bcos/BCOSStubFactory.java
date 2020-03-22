@@ -31,7 +31,7 @@ public class BCOSStubFactory implements StubFactory {
     @Override
     public Account newAccount(String name, String path) {
         try {
-            return BCOSAccountFactory.build(name, path);
+            return BCOSAccountFactory.build(name, "file:" + path);
         } catch (Exception e) {
             logger.error(" newAccount, e: ", e);
             return null;
