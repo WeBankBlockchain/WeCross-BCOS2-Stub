@@ -7,7 +7,10 @@ plugins {
     id 'maven-publish'
     id 'org.ajoberstar.grgit' version '4.0.1'
     id 'com.github.sherter.google-java-format' version '0.8'
+	id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
+
+apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'com.webank.wecross'
 version '1.0.0-rc2'
@@ -70,12 +73,15 @@ sourceSets {
     }
 }
 
-jar {
+jar.enabled = false
+project.tasks.assemble.dependsOn project.tasks.shadowJar
+
+shadowJar {
     destinationDir file('dist/apps')
     archiveName project.name + '.jar'
 
     manifest {
-
+/*
         def repo = null;
         try {
             repo = grgit.open()
@@ -99,16 +105,13 @@ jar {
         } catch (Exception e) {
             logger.warn(' .git not exist, cannot found commit id')
         }
+        */
     }
 
     doLast {
         copy {
             from file('src/main/resources/')
             into 'dist/conf'
-        }
-        copy {
-            from configurations.runtime
-            into 'dist/lib'
         }
         copy {
             from file('.').listFiles().findAll { File f -> (f.name.endsWith('.sh') || f.name.endsWith('.env')) }
