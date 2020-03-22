@@ -99,6 +99,10 @@ project.tasks.assemble.dependsOn project.tasks.shadowJar
 shadowJar {
     destinationDir file('dist/apps')
     archiveName project.name + '.jar'
+	exclude '**/*.xml'
+	exclude '**/*.toml'
+	exclude '**/*.properties'
+	exclude '**/*.yml'
 
     manifest {
 /*
