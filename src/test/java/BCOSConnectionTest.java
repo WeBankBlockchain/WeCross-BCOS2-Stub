@@ -11,7 +11,7 @@ import com.webank.wecross.stub.bcos.BCOSDriver;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
-import com.webank.wecross.stub.bcos.contract.StubFunction;
+import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -48,10 +48,9 @@ public class BCOSConnectionTest {
 
     @Test
     public void resourceInfoListTest() throws IOException {
-        BCOSStubConfigParser bcosStubConfigParser =
-                new BCOSStubConfigParser("ut/stub-sample-ut.toml");
+        BCOSStubConfigParser bcosStubConfigParser = new BCOSStubConfigParser("stub-sample-ut.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
-        Web3jWrapper web3jWrapper = new Web3jWrapperMock();
+        Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
         BCOSConnection connection = new BCOSConnection(web3jWrapper);
         List<ResourceInfo> resourceInfoList =
                 connection.getResourceInfoList(bcosStubConfig.getResources());
@@ -68,8 +67,8 @@ public class BCOSConnectionTest {
     }
 
     @Test
-    public void handleGetBlockNumberTest() throws IOException {
-        Web3jWrapper web3jWrapper = new Web3jWrapperMock();
+    public void handleGetBlockNumberTest() {
+        Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
         BCOSConnection connection = new BCOSConnection(web3jWrapper);
         Request request = new Request();
         request.setType(BCOSConstant.BCOS_GET_BLOCK_NUMBER);
@@ -83,7 +82,7 @@ public class BCOSConnectionTest {
     public void handleGetBlockTest() throws IOException {
         BCOSDriver driver = new BCOSDriver();
 
-        Web3jWrapper web3jWrapper = new Web3jWrapperMock();
+        Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
         BCOSConnection connection = new BCOSConnection(web3jWrapper);
         Request request = new Request();
         request.setType(BCOSConstant.BCOS_GET_BLOCK_HEADER);
@@ -115,7 +114,7 @@ public class BCOSConnectionTest {
     public void handleCallTest() throws IOException {
         BCOSDriver driver = new BCOSDriver();
 
-        Web3jWrapper web3jWrapper = new Web3jWrapperMock();
+        Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
         BCOSConnection connection = new BCOSConnection(web3jWrapper);
         Request request = new Request();
         request.setType(BCOSConstant.BCOS_CALL);
@@ -123,7 +122,7 @@ public class BCOSConnectionTest {
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
         List<String> params = Arrays.asList("abc", "def", "hig");
-        Function function = StubFunction.newFunction(funName, params);
+        Function function = FunctionUtility.newFunction(funName, params);
 
         String abi = FunctionEncoder.encode(function);
         request.setData((address + "," + abi).getBytes());
@@ -140,7 +139,7 @@ public class BCOSConnectionTest {
         String data = callOutput.getOutput();
         List<Type> typeList = FunctionReturnDecoder.decode(data, function.getOutputParameters());
 
-        List<String> stringList = StubFunction.convertToStringList(typeList);
+        List<String> stringList = FunctionUtility.convertToStringList(typeList);
         assertEquals(stringList.size(), params.size());
 
         for (int i = 0; i < params.size(); i++) {

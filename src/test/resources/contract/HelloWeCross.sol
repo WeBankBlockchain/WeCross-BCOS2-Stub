@@ -6,10 +6,10 @@ contract HelloWeCross {
 
     function set(string[] memory _ss) public returns (string[] memory) {
         ss = _ss;
-        return _ss;
+        return ss;
     }
 
-    function echo(string[] memory ss) public returns(string[] memory) {
+    function get(string[] memory ss) public constant returns(string[] memory) {
         return ss;
     }
 }

@@ -47,6 +47,18 @@ public class BCOSStubConfig {
         public void setEnableGM(boolean enableGM) {
             this.enableGM = enableGM;
         }
+
+        @Override
+        public String toString() {
+            return "Chain{"
+                    + "groupID="
+                    + groupID
+                    + ", chainID="
+                    + chainID
+                    + ", enableGM="
+                    + enableGM
+                    + '}';
+        }
     }
 
     public static class ChannelService {

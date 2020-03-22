@@ -23,8 +23,7 @@ public class Web3jWrapperFactoryTest {
     private static Logger logger = LoggerFactory.getLogger(Web3jWrapperFactory.class);
 
     public static void main0(String[] args) throws IOException {
-        BCOSStubConfigParser bcosStubConfigParser =
-                new BCOSStubConfigParser("ut/stub-sample-ut.toml");
+        BCOSStubConfigParser bcosStubConfigParser = new BCOSStubConfigParser("stub-sample-ut.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
         BCOSStubConfig.ChannelService channelService = bcosStubConfig.getChannelService();
 
@@ -36,10 +35,14 @@ public class Web3jWrapperFactoryTest {
             ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
             objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
 
-            SignTransaction signTransaction = new SignTransaction(GenCredential.create());
             String signTX =
-                    signTransaction.sign(
-                            "0x8827cca7f0f38b861b62dae6d711efe92a1e3602", "0x000", blockNumber);
+                    SignTransaction.sign(
+                            GenCredential.create(),
+                            "0x8827cca7f0f38b861b62dae6d711efe92a1e3602",
+                            BigInteger.valueOf(BCOSConstant.BCOS_DEFAULT_GROUP_ID),
+                            BigInteger.valueOf(BCOSConstant.BCOS_DEFAULT_CHAIN_ID),
+                            blockNumber,
+                            "0x");
             TransactionReceipt receipt = web3jWrapper.sendTransaction(signTX);
             System.out.println(receipt);
 
@@ -50,13 +53,12 @@ public class Web3jWrapperFactoryTest {
     }
 
     public static void main(String[] args) throws IOException {
-        BCOSStubConfigParser bcosStubConfigParser =
-                new BCOSStubConfigParser("ut/stub-sample-ut.toml");
+        BCOSStubConfigParser bcosStubConfigParser = new BCOSStubConfigParser("stub-sample-ut.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
         BCOSStubConfig.ChannelService channelService = bcosStubConfig.getChannelService();
 
         try {
-            Web3jWrapper web3jWrapper = new Web3jWrapperMock();
+            Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
             BCOSConnection bcosConnection = new BCOSConnection(web3jWrapper);
             Request request = new Request();
             request.setType(BCOSConstant.BCOS_GET_BLOCK_NUMBER);

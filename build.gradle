@@ -5,6 +5,7 @@ plugins {
     id 'maven'
     id 'jacoco'
     id 'maven-publish'
+
     id 'org.ajoberstar.grgit' version '4.0.1'
     id 'com.github.sherter.google-java-format' version '0.8'
 }
@@ -47,38 +48,66 @@ configurations {
     all*.exclude group: 'org.mockito', module: 'mockito-core'
     all*.exclude group: 'io.reactivex', module: 'rxjava'
     all*.exclude group: 'org.ethereum', module: 'solcJ-all'
+    all*.exclude group: 'ch.qos.logback', module: 'logback-classic'
+
+    integTestImplementation.extendsFrom implementation
+    integTestTestImplementation.extendsFrom testImplementation
 }
 
 dependencies {
 
-    compile 'org.slf4j:slf4j-log4j12:1.7.25'
-    compile 'com.moandjiezana.toml:toml4j:0.7.2'
-    compile 'commons-codec:commons-codec:1.14'
-    compile 'org.fisco-bcos:web3sdk:2.2.2'
-	compile 'com.webank:wecross-java-stub:1.0.0-SNAPSHOT'
+    implementation 'org.slf4j:slf4j-api:1.7.25'
+    implementation 'com.moandjiezana.toml:toml4j:0.7.2'
+    implementation 'commons-codec:commons-codec:1.14'
+    implementation 'org.fisco-bcos:web3sdk:2.2.2'
+    implementation 'com.webank:wecross-java-stub:1.0.0-SNAPSHOT'
 
     // Use JUnit test framework
+    testImplementation 'org.slf4j:slf4j-log4j12:1.7.25'
     testImplementation 'junit:junit:4.12'
+    testImplementation 'org.slf4j:slf4j-log4j12:1.7.25'
     testImplementation 'org.springframework.boot:spring-boot-starter-test:2.1.4.RELEASE'
 }
 
 sourceSets {
+
     main {
         resources {
             exclude '/*'
         }
     }
+
+    // Add the integration test directory
+    integTest {
+        java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+        }
+
+//        resources {
+//            srcDir file('src/integTest/resources')
+//        }
+    }
 }
+
+task integTest(type: Test) {
+    description = 'Runs integration tests.'
+
+    testClassesDirs = sourceSets.integTest.output.classesDirs
+    classpath = sourceSets.integTest.runtimeClasspath
+    mustRunAfter test
+}
+
+check.dependsOn integTest
+check.dependsOn.remove(integTest)
 
 jar {
     destinationDir file('dist/apps')
     archiveName project.name + '.jar'
 
     manifest {
-
-        def repo = null;
         try {
-            repo = grgit.open()
+            def repo = grgit.open()
 
             def user = System.getProperty("user.name")
             def date = new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
@@ -121,13 +150,26 @@ jar {
     }
 }
 
+// clean dist and log dir
+task cleanDistAndLogDir(type:Delete) {
+    delete 'dist'
+    delete 'log'
+}
+
+tasks.clean.dependsOn(tasks.cleanDistAndLogDir)
+
 test {
-    testLogging.showStandardStreams = true
+    testLogging {
+        showStandardStreams = false
+        events 'passed', 'skipped', 'failed'
+    }
+
 }
 
 jacocoTestReport {
     reports {
         xml.enabled true
-        html.enabled false
+        html.enabled true
+        //html.destination file("${buildDir}/jacocoHtml")
     }
 }
