@@ -13,8 +13,8 @@ import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
+import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
-import com.webank.wecross.stub.bcos.contract.StubFunction;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -39,40 +39,6 @@ public class BCOSDriver implements Driver {
 
     private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
 
-    /**
-     * create sign transactin hex string
-     *
-     * @param groupId
-     * @param chainId
-     * @param blockNumber
-     * @param contractAddress
-     * @param data
-     * @param credentials
-     * @return
-     */
-    public String createSignTx(
-            BigInteger groupId,
-            BigInteger chainId,
-            BigInteger blockNumber,
-            String contractAddress,
-            String data,
-            Credentials credentials) {
-
-        SignTransaction signTransaction = new SignTransaction(credentials, groupId, chainId);
-
-        // get signed transaction hex string
-        String signTx = signTransaction.sign(contractAddress, data, blockNumber);
-
-        logger.debug(
-                " contractAddress: {}, groupId: {}, chainId: {}, blockNumber: {}",
-                contractAddress,
-                groupId,
-                chainId,
-                blockNumber);
-
-        return signTx;
-    }
-
     @Override
     public TransactionContext<TransactionRequest> decodeTransactionRequest(byte[] data) {
         return null;
@@ -88,7 +54,6 @@ public class BCOSDriver implements Driver {
     public BlockHeader decodeBlockHeader(byte[] data) {
         try {
             BlockHeader blockHeader = objectMapper.readValue(data, BlockHeader.class);
-            logger.debug(" BlockHeader: {}", blockHeader);
             return blockHeader;
         } catch (IOException e) {
             logger.warn(" IOException: {}", e);
@@ -116,14 +81,13 @@ public class BCOSDriver implements Driver {
 
         try {
             String contractAddress = (String) properties.get(resourceInfo.getName());
-            if (Objects.isNull(contractAddress)) {
-                throw new RuntimeException(
-                        " Not found contract address, resource name: " + resourceInfo.getName());
-            }
+            Objects.requireNonNull(
+                    contractAddress,
+                    " Not found contract address, resource name: " + resourceInfo.getName());
 
             // Function object
             Function function =
-                    StubFunction.newFunction(
+                    FunctionUtility.newFunction(
                             request.getData().getMethod(),
                             Arrays.asList(request.getData().getArgs()));
             // ABI data
@@ -146,15 +110,15 @@ public class BCOSDriver implements Driver {
 
             Call.CallOutput callOutput =
                     objectMapper.readValue(resp.getData(), Call.CallOutput.class);
-            logger.trace(
+            logger.debug(
                     " CallOutput,  status: {}, current blk: {}",
                     callOutput.getStatus(),
                     callOutput.getCurrentBlockNumber());
-            if (StatusCode.Success.equals(callOutput.getOutput())) {
+            if (StatusCode.Success.equals(callOutput.getStatus())) {
                 List<Type> typeList =
                         FunctionReturnDecoder.decode(
                                 callOutput.getOutput(), function.getOutputParameters());
-                List<String> outputs = StubFunction.convertToStringList(typeList);
+                List<String> outputs = FunctionUtility.convertToStringList(typeList);
                 response.setErrorCode(0);
                 response.setErrorMessage("success");
                 response.setResult(outputs.toArray(new String[0]));
@@ -182,7 +146,6 @@ public class BCOSDriver implements Driver {
             TransactionContext<TransactionRequest> request, Connection connection) {
         // transaction request
         TransactionRequest transactionRequest = request.getData();
-
         // get contractAddress, groupId, chainId from resourceInfo
         ResourceInfo resourceInfo = request.getResourceInfo();
 
@@ -198,11 +161,19 @@ public class BCOSDriver implements Driver {
         try {
             // contractAddress
             String contractAddress = (String) properties.get(resourceInfo.getName());
-            BigInteger groupId =
-                    (BigInteger) properties.get(BCOSConstant.BCOS_RESOURCEINFO_GROUP_ID);
-            BigInteger chainId =
-                    (BigInteger) properties.get(BCOSConstant.BCOS_RESOURCEINFO_CHAIN_ID);
+            Objects.requireNonNull(
+                    contractAddress,
+                    " Not found contract address, resource name: " + resourceInfo.getName());
+
+            Integer groupId = (Integer) properties.get(BCOSConstant.BCOS_RESOURCEINFO_GROUP_ID);
+            Objects.requireNonNull(
+                    groupId, " Not found groupId, resource name: " + resourceInfo.getName());
+            Integer chainId = (Integer) properties.get(BCOSConstant.BCOS_RESOURCEINFO_CHAIN_ID);
+            Objects.requireNonNull(
+                    chainId, " Not found chainId, resource name: " + resourceInfo.getName());
+
             long blockNumber = request.getBlockHeaderManager().getBlockNumber();
+            logger.trace(" blockNumber: {}", blockNumber);
 
             // BCOSAccount to get credentials to sign the transaction
             BCOSAccount bcosAccount = (BCOSAccount) request.getAccount();
@@ -210,20 +181,21 @@ public class BCOSDriver implements Driver {
 
             // Function object
             Function function =
-                    StubFunction.newFunction(
+                    FunctionUtility.newFunction(
                             request.getData().getMethod(),
                             Arrays.asList(request.getData().getArgs()));
             // ABI data
             String data = FunctionEncoder.encode(function);
 
+            // get signed transaction hex string
             String signTx =
-                    createSignTx(
-                            groupId,
-                            chainId,
-                            BigInteger.valueOf(blockNumber),
+                    SignTransaction.sign(
+                            credentials,
                             contractAddress,
-                            data,
-                            credentials);
+                            BigInteger.valueOf(groupId),
+                            BigInteger.valueOf(chainId),
+                            BigInteger.valueOf(blockNumber),
+                            data);
 
             Request req = new Request();
             req.setType(BCOSConstant.BCOS_SEND_TRANSACTION);
@@ -236,12 +208,13 @@ public class BCOSDriver implements Driver {
             objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
             TransactionReceipt receipt =
                     objectMapper.readValue(resp.getData(), TransactionReceipt.class);
+
             if (receipt.isStatusOK()) {
                 response.setHash(receipt.getTransactionHash());
                 List<Type> typeList =
                         FunctionReturnDecoder.decode(
                                 receipt.getOutput(), function.getOutputParameters());
-                List<String> outputs = StubFunction.convertToStringList(typeList);
+                List<String> outputs = FunctionUtility.convertToStringList(typeList);
                 response.setResult(outputs.toArray(new String[0]));
                 response.setErrorCode(0);
             } else {
@@ -264,7 +237,7 @@ public class BCOSDriver implements Driver {
         request.setType(BCOSConstant.BCOS_GET_BLOCK_NUMBER);
         Response response = connection.send(request);
 
-        // error , return default value
+        // Returns an invalid value to indicate that the function performed incorrectly
         if (response.getErrorCode() != 0) {
             logger.warn(
                     " errorCode: {},  errorMessage: {}",

@@ -8,8 +8,7 @@ import org.junit.Test;
 public class BCOSStubConfigParserTest {
     @Test
     public void stubConfigParserTest() throws IOException {
-        BCOSStubConfigParser bcosStubConfigParser =
-                new BCOSStubConfigParser("ut/stub-sample-ut.toml");
+        BCOSStubConfigParser bcosStubConfigParser = new BCOSStubConfigParser("stub-sample-ut.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
         assertEquals(bcosStubConfig.getStub(), "bcos-ut");
         assertEquals(bcosStubConfig.getType(), "BCOS-UT");

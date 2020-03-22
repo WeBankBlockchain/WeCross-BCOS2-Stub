@@ -1,5 +1,5 @@
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
+import static junit.framework.TestCase.assertFalse;
 
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import java.io.IOException;
@@ -12,7 +12,7 @@ public class BCOSAccountTest {
     public void transactionSignTest() throws IOException {
         Credentials credentials = GenCredential.create();
         BCOSAccount account = new BCOSAccount("test", "type", credentials);
-        assertTrue(!account.getIdentity().isEmpty());
+        assertFalse(account.getIdentity().isEmpty());
         assertEquals(account.getName(), "test");
         assertEquals(account.getType(), "type");
     }
