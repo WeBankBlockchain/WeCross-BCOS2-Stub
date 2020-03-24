@@ -8,6 +8,9 @@ bash build_chain.sh -f ipconf
 bash nodes/127.0.0.1/start_all.sh
 ./nodes/127.0.0.1/fisco-bcos -v
 
+# Verify format
+bash gradlew verifyGoogleJavaFormat
+
 # gradle build check
 bash gradlew build
 bash gradlew test
