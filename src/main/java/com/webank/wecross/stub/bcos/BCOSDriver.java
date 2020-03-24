@@ -149,7 +149,6 @@ public class BCOSDriver implements Driver {
         TransactionResponse response = new TransactionResponse();
 
         try {
-
             // check
             checkRequest(request);
 
