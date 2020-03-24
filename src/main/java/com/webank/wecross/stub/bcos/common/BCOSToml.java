@@ -2,10 +2,6 @@ package com.webank.wecross.stub.bcos.common;
 
 import com.moandjiezana.toml.Toml;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 

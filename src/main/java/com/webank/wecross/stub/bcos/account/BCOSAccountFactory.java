@@ -4,7 +4,6 @@ import com.webank.wecross.stub.bcos.config.BCOSAccountConfig;
 import com.webank.wecross.stub.bcos.config.BCOSAccountConfigParser;
 import java.io.File;
 import java.io.IOException;
-import java.security.InvalidParameterException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -38,10 +37,10 @@ public class BCOSAccountFactory {
 
         Credentials credentials = null;
         if (accountFile.endsWith("p12")) {
-        	logger.debug("Loading account p12: {}", accountFile);
+            logger.debug("Loading account p12: {}", accountFile);
             credentials = loadP12Account(accountFile, passwd);
         } else {
-        	logger.debug("Loading account pem: {}", accountFile);
+            logger.debug("Loading account pem: {}", accountFile);
             credentials = loadPemAccount(accountFile);
         }
 
