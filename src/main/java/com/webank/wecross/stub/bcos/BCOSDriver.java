@@ -64,22 +64,23 @@ public class BCOSDriver implements Driver {
     @Override
     public TransactionResponse call(
             TransactionContext<TransactionRequest> request, Connection connection) {
-        // transaction request
-        TransactionRequest transactionRequest = request.getData();
-
-        // get contractAddress from resourceInfo
-        ResourceInfo resourceInfo = request.getResourceInfo();
-        Map<Object, Object> properties = resourceInfo.getProperties();
-
-        logger.trace(
-                " resource => name: {}, type: {}, properties: {}",
-                resourceInfo.getName(),
-                resourceInfo.getStubType(),
-                resourceInfo.getProperties());
 
         TransactionResponse response = new TransactionResponse();
 
         try {
+            // check
+            checkRequest(request);
+
+            // get contractAddress from resourceInfo
+            ResourceInfo resourceInfo = request.getResourceInfo();
+            Map<Object, Object> properties = resourceInfo.getProperties();
+
+            logger.trace(
+                    " resource => name: {}, type: {}, properties: {}",
+                    resourceInfo.getName(),
+                    resourceInfo.getStubType(),
+                    resourceInfo.getProperties());
+
             String contractAddress = (String) properties.get(resourceInfo.getName());
             Objects.requireNonNull(
                     contractAddress,
@@ -144,21 +145,25 @@ public class BCOSDriver implements Driver {
     @Override
     public TransactionResponse sendTransaction(
             TransactionContext<TransactionRequest> request, Connection connection) {
-        // transaction request
-        TransactionRequest transactionRequest = request.getData();
-        // get contractAddress, groupId, chainId from resourceInfo
-        ResourceInfo resourceInfo = request.getResourceInfo();
 
-        logger.trace(
-                " resource name: {}, type: {}, properties: {}",
-                resourceInfo.getName(),
-                resourceInfo.getStubType(),
-                resourceInfo.getProperties());
-
-        Map<Object, Object> properties = resourceInfo.getProperties();
         TransactionResponse response = new TransactionResponse();
 
         try {
+
+            // check
+            checkRequest(request);
+
+            // get contractAddress, groupId, chainId from resourceInfo
+            ResourceInfo resourceInfo = request.getResourceInfo();
+
+            logger.trace(
+                    " resource name: {}, type: {}, properties: {}",
+                    resourceInfo.getName(),
+                    resourceInfo.getStubType(),
+                    resourceInfo.getProperties());
+
+            Map<Object, Object> properties = resourceInfo.getProperties();
+
             // contractAddress
             String contractAddress = (String) properties.get(resourceInfo.getName());
             Objects.requireNonNull(
@@ -267,5 +272,23 @@ public class BCOSDriver implements Driver {
         }
 
         return response.getData();
+    }
+
+    private void checkRequest(TransactionContext<TransactionRequest> request) throws Exception {
+        if (request.getAccount() == null) {
+            throw new Exception("Unknown account");
+        }
+
+        if (request.getBlockHeaderManager() == null) {
+            throw new Exception("blockHeaderManager is null");
+        }
+
+        if (request.getResourceInfo() == null) {
+            throw new Exception("resourceInfo is null");
+        }
+
+        if (request.getData() == null) {
+            throw new Exception("TransactionRequest is null");
+        }
     }
 }
