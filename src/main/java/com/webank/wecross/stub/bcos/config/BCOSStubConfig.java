@@ -68,6 +68,7 @@ public class BCOSStubConfig {
         private String sslKey;
         private List<String> connectionsStr;
         private Chain chain;
+        private Boolean enableTest = false;
 
         public int getTimeout() {
             return timeout;
@@ -115,6 +116,14 @@ public class BCOSStubConfig {
 
         public void setChain(Chain chain) {
             this.chain = chain;
+        }
+
+        public Boolean getEnableTest() {
+            return enableTest;
+        }
+
+        public void setEnableTest(Boolean enableTest) {
+            this.enableTest = enableTest;
         }
 
         @Override
