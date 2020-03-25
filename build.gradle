@@ -163,6 +163,7 @@ check.dependsOn.remove(integTest)
 task cleanDistAndLogDir(type:Delete) {
     delete 'dist'
     delete 'log'
+    delete 'out'
 }
 
 tasks.clean.dependsOn(tasks.cleanDistAndLogDir)

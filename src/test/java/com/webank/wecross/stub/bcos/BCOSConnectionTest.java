@@ -1,3 +1,5 @@
+package com.webank.wecross.stub.bcos;
+
 import static junit.framework.TestCase.assertEquals;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -6,13 +8,12 @@ import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.Response;
-import com.webank.wecross.stub.bcos.BCOSConnection;
-import com.webank.wecross.stub.bcos.BCOSDriver;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
+import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImplMock;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -64,6 +65,16 @@ public class BCOSConnectionTest {
             assertEquals(
                     resourceInfo.getProperties().get(BCOSConstant.BCOS_RESOURCEINFO_GROUP_ID), 111);
         }
+    }
+
+    @Test
+    public void handleUnkownTypeTest() throws IOException {
+        Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
+        BCOSConnection connection = new BCOSConnection(web3jWrapper);
+        Request request = new Request();
+        request.setType(2000);
+        Response response = connection.send(request);
+        assertEquals(response.getErrorCode(), -1);
     }
 
     @Test

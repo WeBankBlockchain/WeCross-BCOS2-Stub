@@ -32,6 +32,8 @@ public class Web3jWrapperImpl implements Web3jWrapper {
     private Service service;
     private ExecuteTransaction executeTransaction;
 
+    public Web3jWrapperImpl() {}
+
     public Web3jWrapperImpl(BCOSStubConfig.ChannelService channelServiceConfig) throws Exception {
         this.initialize(channelServiceConfig);
     }

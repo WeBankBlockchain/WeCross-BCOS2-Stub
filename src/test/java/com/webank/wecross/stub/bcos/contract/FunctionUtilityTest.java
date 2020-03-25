@@ -1,8 +1,9 @@
+package com.webank.wecross.stub.bcos.contract;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
-import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;

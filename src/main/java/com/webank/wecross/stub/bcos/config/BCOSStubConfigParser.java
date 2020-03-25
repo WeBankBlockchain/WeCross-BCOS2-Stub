@@ -109,6 +109,9 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
                 (List<String>) channelServiceConfigValue.get("connectionsStr");
         requireFieldNotNull(connectionsStr, "channelService", "connectionsStr", configFile);
 
+        // sslKey field
+        Boolean enableTest = (Boolean) channelServiceConfigValue.get("enableTest");
+
         BCOSStubConfig.ChannelService channelServiceConfig = new BCOSStubConfig.ChannelService();
         channelServiceConfig.setTimeout(
                 Objects.isNull(timeout)
@@ -119,6 +122,7 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         channelServiceConfig.setSslCert(sslCert);
         channelServiceConfig.setSslKey(sslKey);
         channelServiceConfig.setConnectionsStr(connectionsStr);
+        channelServiceConfig.setEnableTest(Objects.isNull(enableTest) ? false : enableTest);
 
         logger.debug(" ChannelServiceConfig: {}", channelServiceConfig);
 
