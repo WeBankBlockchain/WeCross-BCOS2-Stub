@@ -24,7 +24,7 @@ public class BlockHeaderManagerImplMock implements BlockHeaderManager {
     }
 
     @Override
-    public byte[] getBlock(long l) {
+    public byte[] getBlockHeader(long l) {
         return new byte[0];
     }
 }

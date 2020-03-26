@@ -27,7 +27,7 @@ public class TransactionSignTest {
         Function function = FunctionUtility.newFunction(funcName, params);
         String abiData = FunctionEncoder.encode(function);
 
-        String to = "0xb3c223fc0bf6646959f254ac4e4a7e355b50a344";
+        String to = "0xb3c223fc0bf6646959f254ac4e4a7e355b50a355";
         String extraData = "extraData";
 
         String sign =

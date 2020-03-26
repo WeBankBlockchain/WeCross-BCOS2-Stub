@@ -7,6 +7,7 @@ import static junit.framework.TestCase.assertTrue;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
+import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImplMock;
 import java.io.IOException;
 import java.util.List;
 import org.junit.Test;
@@ -14,9 +15,9 @@ import org.junit.Test;
 public class BCOSConnectionFactoryTest {
     @Test
     public void buildTest() throws IOException {
-        BCOSStubFactory bcosStubFactory = new BCOSStubFactory();
         try {
-            Connection connection = BCOSConnectionFactory.build("stub-sample-ut.toml");
+            Connection connection =
+                    BCOSConnectionFactory.build("stub-sample-ut.toml", new Web3jWrapperImplMock());
             List<ResourceInfo> resources = connection.getResources();
             assertTrue(resources.size() == 2);
             ResourceInfo resourceInfo = resources.get(0);

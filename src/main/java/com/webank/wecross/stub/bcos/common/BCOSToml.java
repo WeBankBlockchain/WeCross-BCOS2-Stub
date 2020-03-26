@@ -8,7 +8,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 public class BCOSToml {
     private final String path;
 
-    public BCOSToml(String path) throws IOException {
+    public BCOSToml(String path) {
         this.path = path;
     }
 

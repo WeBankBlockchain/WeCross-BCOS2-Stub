@@ -21,6 +21,9 @@ public class FunctionUtilityTest {
         Function function = FunctionUtility.newFunction(funcName, params);
         String abi = FunctionEncoder.encode(function);
         assertFalse(abi.isEmpty());
+        assertTrue(funcName.equals(function.getName()));
+        assertTrue(function.getInputParameters().size() == 1);
+        assertTrue(function.getOutputParameters().size() == 1);
     }
 
     @Test
@@ -45,6 +48,7 @@ public class FunctionUtilityTest {
         List<String> params = Arrays.asList();
         Function function = FunctionUtility.newFunction(funcName, params);
         String abi = FunctionEncoder.encode(function);
+        assertTrue(funcName.equals(function.getName()));
 
         List<Type> typeList =
                 FunctionReturnDecoder.decode(abi.substring(10), function.getOutputParameters());
