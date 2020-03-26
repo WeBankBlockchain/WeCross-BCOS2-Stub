@@ -1,8 +1,8 @@
+package com.webank.wecross.stub.bcos.contract;
+
 import static junit.framework.TestCase.assertEquals;
 
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
-import com.webank.wecross.stub.bcos.contract.FunctionUtility;
-import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;

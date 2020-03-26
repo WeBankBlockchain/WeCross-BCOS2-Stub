@@ -1,7 +1,7 @@
+package com.webank.wecross.stub.bcos.config;
+
 import static junit.framework.TestCase.assertEquals;
 
-import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
-import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import java.io.IOException;
 import org.junit.Test;
 
@@ -15,7 +15,7 @@ public class BCOSStubConfigParserTest {
         BCOSStubConfig.ChannelService channelService = bcosStubConfig.getChannelService();
         assertEquals(channelService.getChain().getChainID(), 123);
         assertEquals(channelService.getChain().getGroupID(), 111);
-        assertEquals(channelService.getChain().isEnableGM(), true);
+        assertEquals(channelService.getChain().isEnableGM(), false);
         assertEquals(channelService.getTimeout(), 111100);
         assertEquals(channelService.getCaCert(), "classpath:/stubs/bcos/ca.crt");
         assertEquals(channelService.getSslCert(), "classpath:/stubs/bcos/sdk.crt");

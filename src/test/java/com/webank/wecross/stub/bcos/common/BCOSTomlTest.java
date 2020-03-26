@@ -1,6 +1,7 @@
+package com.webank.wecross.stub.bcos.common;
+
 import static junit.framework.TestCase.assertEquals;
 
-import com.webank.wecross.stub.bcos.common.BCOSToml;
 import java.io.IOException;
 import org.junit.Test;
 

@@ -1,3 +1,5 @@
+package com.webank.wecross.stub.bcos;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
@@ -14,7 +16,7 @@ import java.security.spec.InvalidKeySpecException;
 import org.fisco.bcos.web3j.crypto.Credentials;
 import org.junit.Test;
 
-public class BCSOAccountFacrotyTest {
+public class BCSOAccountFactoryTest {
     @Test
     public void loadPemTest()
             throws IOException, CertificateException, UnrecoverableKeyException,

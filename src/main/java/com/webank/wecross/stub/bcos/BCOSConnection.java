@@ -28,7 +28,7 @@ public class BCOSConnection implements Connection {
 
     private List<ResourceInfo> resourceInfoList;
 
-    private final Web3jWrapper web3jWrapper;
+    private Web3jWrapper web3jWrapper;
 
     public BCOSConnection(Web3jWrapper web3jWrapper) {
         this.web3jWrapper = web3jWrapper;
@@ -44,6 +44,10 @@ public class BCOSConnection implements Connection {
 
     public Web3jWrapper getWeb3jWrapper() {
         return web3jWrapper;
+    }
+
+    public void setWeb3jWrapper(Web3jWrapper web3jWrapper) {
+        this.web3jWrapper = web3jWrapper;
     }
 
     @Override

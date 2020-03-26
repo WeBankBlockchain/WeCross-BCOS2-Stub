@@ -17,6 +17,7 @@ import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.InvalidParameterException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -273,21 +274,21 @@ public class BCOSDriver implements Driver {
         return response.getData();
     }
 
-    private void checkRequest(TransactionContext<TransactionRequest> request) throws Exception {
+    private void checkRequest(TransactionContext<TransactionRequest> request) {
         if (request.getAccount() == null) {
-            throw new Exception("Unknown account");
+            throw new InvalidParameterException("Unknown account");
         }
 
         if (request.getBlockHeaderManager() == null) {
-            throw new Exception("blockHeaderManager is null");
+            throw new InvalidParameterException("blockHeaderManager is null");
         }
 
         if (request.getResourceInfo() == null) {
-            throw new Exception("resourceInfo is null");
+            throw new InvalidParameterException("resourceInfo is null");
         }
 
         if (request.getData() == null) {
-            throw new Exception("TransactionRequest is null");
+            throw new InvalidParameterException("TransactionRequest is null");
         }
     }
 }
