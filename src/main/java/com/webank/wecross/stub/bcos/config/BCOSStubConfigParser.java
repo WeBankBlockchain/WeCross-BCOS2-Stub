@@ -44,7 +44,7 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
 
         Map<String, Object> chainConfigValue = (Map<String, Object>) stubConfig.get("chain");
         requireItemNotNull(chainConfigValue, "chain", getConfigPath());
-        BCOSStubConfig.Chain chain = getChainConfig(getConfigPath(), chainConfigValue);
+        BCOSStubConfig.Chain chain = getChainConfig(chainConfigValue);
 
         Map<String, Object> channelServiceConfigValue =
                 (Map<String, Object>) stubConfig.get("channelService");
@@ -69,8 +69,7 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         return bcosStubConfig;
     }
 
-    public BCOSStubConfig.Chain getChainConfig(
-            String configFile, Map<String, Object> chainConfigValue) {
+    public BCOSStubConfig.Chain getChainConfig(Map<String, Object> chainConfigValue) {
         // groupId field
         Long groupId = (Long) chainConfigValue.get("groupId");
         // chain field
@@ -109,9 +108,6 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
                 (List<String>) channelServiceConfigValue.get("connectionsStr");
         requireFieldNotNull(connectionsStr, "channelService", "connectionsStr", configFile);
 
-        // sslKey field
-        Boolean enableTest = (Boolean) channelServiceConfigValue.get("enableTest");
-
         BCOSStubConfig.ChannelService channelServiceConfig = new BCOSStubConfig.ChannelService();
         channelServiceConfig.setTimeout(
                 Objects.isNull(timeout)
@@ -122,7 +118,6 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         channelServiceConfig.setSslCert(sslCert);
         channelServiceConfig.setSslKey(sslKey);
         channelServiceConfig.setConnectionsStr(connectionsStr);
-        channelServiceConfig.setEnableTest(Objects.isNull(enableTest) ? false : enableTest);
 
         logger.debug(" ChannelServiceConfig: {}", channelServiceConfig);
 

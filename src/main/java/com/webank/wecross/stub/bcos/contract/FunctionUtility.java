@@ -19,6 +19,11 @@ import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
 @SuppressWarnings("rawtypes")
 public class FunctionUtility {
 
+    private FunctionUtility() {}
+
+    public static final List<TypeReference<?>> outputParameters =
+            Collections.singletonList(new TypeReference<DynamicArray<Utf8String>>() {});
+
     public static Function newFunction(String funcName, List<String> params) {
         return new Function(
                 funcName,
@@ -28,7 +33,7 @@ public class FunctionUtility {
                                 : new DynamicArray<>(
                                         org.fisco.bcos.web3j.abi.Utils.typeMap(
                                                 params, Utf8String.class))),
-                Collections.singletonList(new TypeReference<DynamicArray<Utf8String>>() {}));
+                outputParameters);
     }
 
     public static List<String> convertToStringList(List<Type> typeList) {

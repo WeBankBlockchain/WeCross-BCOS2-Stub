@@ -1,3 +1,5 @@
+package com.webank.wecross.stub.bcos.integration;
+
 import com.webank.wecross.stub.BlockHeaderManager;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import java.io.IOException;
@@ -22,7 +24,7 @@ public class IntegTestBlockHeaderManagerImpl implements BlockHeaderManager {
     }
 
     @Override
-    public byte[] getBlock(long l) {
+    public byte[] getBlockHeader(long l) {
         return new byte[0];
     }
 }

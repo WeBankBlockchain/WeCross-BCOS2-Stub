@@ -1,13 +1,10 @@
 package com.webank.wecross.stub.bcos.config;
 
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Resolve the BCOS stub.toml to get BCOSConfig object */
 public class BCOSStubConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(BCOSStubConfig.class);
     /** stub name */
     private String stub;
     /** stub type, BCOS */
@@ -68,7 +65,6 @@ public class BCOSStubConfig {
         private String sslKey;
         private List<String> connectionsStr;
         private Chain chain;
-        private Boolean enableTest = false;
 
         public int getTimeout() {
             return timeout;
@@ -116,14 +112,6 @@ public class BCOSStubConfig {
 
         public void setChain(Chain chain) {
             this.chain = chain;
-        }
-
-        public Boolean getEnableTest() {
-            return enableTest;
-        }
-
-        public void setEnableTest(Boolean enableTest) {
-            this.enableTest = enableTest;
         }
 
         @Override

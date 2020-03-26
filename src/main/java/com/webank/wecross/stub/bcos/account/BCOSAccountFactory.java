@@ -20,6 +20,8 @@ import org.slf4j.LoggerFactory;
 
 public class BCOSAccountFactory {
 
+    private BCOSAccountFactory() {}
+
     private static final Logger logger = LoggerFactory.getLogger(BCOSAccountFactory.class);
 
     public static BCOSAccount build(String name, String accountPath)
@@ -44,8 +46,7 @@ public class BCOSAccountFactory {
             credentials = loadPemAccount(accountFile);
         }
 
-        BCOSAccount bcosAccount = new BCOSAccount(name, bcosAccountConfig.getType(), credentials);
-        return bcosAccount;
+        return new BCOSAccount(name, bcosAccountConfig.getType(), credentials);
     }
 
     // load pem account file

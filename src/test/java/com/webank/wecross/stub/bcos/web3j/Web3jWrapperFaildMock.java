@@ -24,6 +24,11 @@ public class Web3jWrapperFaildMock implements Web3jWrapper {
     }
 
     @Override
+    public TransactionReceipt getTransactionReceipt(String hash) throws IOException {
+        throw new IOException(" test IOException");
+    }
+
+    @Override
     public Call.CallOutput call(String contractAddress, String data) throws IOException {
         throw new IOException(" test IOException");
     }
