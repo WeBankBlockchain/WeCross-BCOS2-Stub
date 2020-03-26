@@ -14,13 +14,20 @@ public class BCOSConstantTest {
         assertEquals(BCOSConstant.RESOURCE_TYPE_BCOS_CONTRACT, "BCOS_CONTRACT");
         assertEquals(BCOSConstant.BCOS_ACCOUNT, "BCOS2.0");
         assertEquals(BCOSConstant.BCOS_SM_ACCOUNT, "BCOS2.0_gm");
-        assertEquals(BCOSConstant.BCOS_CALL, 1000);
-        assertEquals(BCOSConstant.BCOS_SEND_TRANSACTION, 1001);
-        assertEquals(BCOSConstant.BCOS_GET_BLOCK_NUMBER, 1002);
 
         assertEquals(BCOSConstant.BCOS_DEFAULT_GROUP_ID, 1);
         assertEquals(BCOSConstant.BCOS_DEFAULT_CHAIN_ID, 1);
         assertEquals(BCOSConstant.CHANNELSERVICE_TIMEOUT_DEFAULT, 60000);
         assertEquals(BCOSConstant.WE3J_START_TIMEOUT_DEFAULT, 60000);
+    }
+
+    @Test
+    public void bcosRequestTypeTest() throws IOException {
+
+        assertEquals(BCOSRequestType.CALL, 1000);
+        assertEquals(BCOSRequestType.SEND_TRANSACTION, 1001);
+        assertEquals(BCOSRequestType.GET_BLOCK_NUMBER, 1002);
+        assertEquals(BCOSRequestType.GET_BLOCK_HEADER, 1003);
+        assertEquals(BCOSRequestType.GET_TRANSACTION_RECEIPT, 1004);
     }
 }

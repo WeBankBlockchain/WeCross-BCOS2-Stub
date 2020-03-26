@@ -1,6 +1,8 @@
 codecov:
   branch: *
 coverage:
+  ignore:
+    - "src/integTest/**/*"
   status:
     project:
       default:

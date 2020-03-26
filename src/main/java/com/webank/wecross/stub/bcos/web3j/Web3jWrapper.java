@@ -14,5 +14,7 @@ public interface Web3jWrapper {
 
     TransactionReceipt sendTransaction(String signedTransactionData) throws IOException;
 
+    TransactionReceipt getTransactionReceipt(String hash) throws IOException;
+
     Call.CallOutput call(String contractAddress, String data) throws IOException;
 }

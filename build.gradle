@@ -52,6 +52,7 @@ configurations {
     all*.exclude group: 'io.reactivex', module: 'rxjava'
     all*.exclude group: 'org.ethereum', module: 'solcJ-all'
     all*.exclude group: 'ch.qos.logback', module: 'logback-classic'
+    all*.exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
 
     integTestImplementation.extendsFrom implementation
     integTestTestImplementation.extendsFrom testImplementation
@@ -59,11 +60,13 @@ configurations {
 
 dependencies {
 
+    // implementation 'com.webank:wecross-java-stub:1.0.0-rc2-0326-SNAPSHOT'
+    implementation 'com.webank:wecross-java-stub:1.0.0-rc2-03264-SNAPSHOT'
+
     implementation 'org.slf4j:slf4j-api:1.7.25'
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'
-    implementation 'org.fisco-bcos:web3sdk:2.2.2'
-    implementation 'com.webank:wecross-java-stub:1.0.0-SNAPSHOT'
+    implementation 'org.fisco-bcos:web3sdk:2.3.0'
 
     // Use JUnit test framework
     testImplementation 'org.slf4j:slf4j-log4j12:1.7.25'
@@ -170,7 +173,7 @@ tasks.clean.dependsOn(tasks.cleanDistAndLogDir)
 
 test {
     testLogging {
-        showStandardStreams = false
+        showStandardStreams = true
         events 'passed', 'skipped', 'failed'
     }
 

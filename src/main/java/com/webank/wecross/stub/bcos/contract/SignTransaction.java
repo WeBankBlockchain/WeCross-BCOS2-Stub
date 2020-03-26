@@ -11,8 +11,10 @@ import org.fisco.bcos.web3j.utils.Numeric;
 
 public class SignTransaction {
 
-    public static final BigInteger gasPrice = new BigInteger("300000000000");
-    public static final BigInteger gasLimit = new BigInteger("300000000000");
+    private SignTransaction() {}
+
+    public static final BigInteger gasPrice = BigInteger.valueOf(300000000000L);
+    public static final BigInteger gasLimit = BigInteger.valueOf(300000000000L);
 
     /**
      * create and sign the transaction
@@ -52,8 +54,6 @@ public class SignTransaction {
 
         byte[] signedMessage = ExtendedTransactionEncoder.signMessage(rawTransaction, credentials);
 
-        String signedData = Numeric.toHexString(signedMessage);
-
-        return signedData;
+        return Numeric.toHexString(signedMessage);
     }
 }
