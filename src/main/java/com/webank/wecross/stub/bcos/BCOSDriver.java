@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Objects;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.FunctionReturnDecoder;
+import org.fisco.bcos.web3j.abi.Utils;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
 import org.fisco.bcos.web3j.abi.datatypes.Type;
 import org.fisco.bcos.web3j.crypto.Credentials;
@@ -35,6 +36,7 @@ import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.channel.StatusCode;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.fisco.bcos.web3j.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -225,6 +227,7 @@ public class BCOSDriver implements Driver {
             if (Objects.nonNull(receipt.getTransactionHash())
                     && (!"".equals(receipt.getTransactionHash()))) {
                 response.setHash(receipt.getTransactionHash());
+                response.setBlockNumber(receipt.getBlockNumber().longValue());
             }
 
             if (receipt.isStatusOK()) {
@@ -285,13 +288,91 @@ public class BCOSDriver implements Driver {
         return response.getData();
     }
 
+    /**
+     * send getTransactionReceipt request
+     *
+     * @param transactionHash
+     * @param connection
+     * @return
+     * @throws IOException
+     */
+    public TransactionReceipt requestTransactionReceipt(
+            String transactionHash, Connection connection) throws IOException {
+        Request request = new Request();
+        request.setType(BCOSRequestType.GET_TRANSACTION_RECEIPT);
+        request.setData(transactionHash.getBytes(StandardCharsets.UTF_8));
+
+        Response resp = connection.send(request);
+        if (resp.getErrorCode() != 0) {
+            throw new RuntimeException(resp.getErrorMessage());
+        }
+
+        TransactionReceipt receipt =
+                objectMapper.readValue(resp.getData(), TransactionReceipt.class);
+
+        logger.debug(" hash: {}, receipt: {}", transactionHash, receipt);
+        return receipt;
+    }
+
     @Override
     public VerifiedTransaction getVerifiedTransaction(
             String transactionHash,
             long blockNumber,
             BlockHeaderManager blockHeaderManager,
             Connection connection) {
-        return null;
+        try {
+            // get transaction receipt first
+            TransactionReceipt receipt = requestTransactionReceipt(transactionHash, connection);
+
+            /** decode input args from input */
+            List<Type> inputTypes =
+                    FunctionReturnDecoder.decode(
+                            Numeric.cleanHexPrefix(receipt.getInput()).substring(8),
+                            Utils.convert(FunctionUtility.abiTypeReferenceOutputs));
+            List<String> inputArgs = FunctionUtility.convertToStringList(inputTypes);
+            String[] inputResult = inputArgs.toArray(new String[0]);
+            logger.trace(" input: {}", inputArgs);
+
+            /**
+             * set args for TransactionRequest, the method parameter cannot be recovered from the
+             * abi encoding
+             */
+            TransactionRequest transactionRequest = new TransactionRequest();
+            transactionRequest.setArgs(inputResult);
+
+            TransactionResponse transactionResponse = new TransactionResponse();
+            transactionResponse.setHash(transactionHash);
+            transactionResponse.setBlockNumber(blockNumber);
+
+            /** If the transaction executes normally, resolve the output parameters */
+            if (receipt.isStatusOK()) {
+                // transaction response
+                List<Type> outputTypes =
+                        FunctionReturnDecoder.decode(
+                                receipt.getOutput(),
+                                Utils.convert(FunctionUtility.abiTypeReferenceOutputs));
+                List<String> outputArgs = FunctionUtility.convertToStringList(outputTypes);
+                String[] outputResult = outputArgs.toArray(new String[0]);
+                logger.trace(" output: {}", outputArgs);
+                transactionResponse.setResult(outputResult);
+            }
+
+            /** set error code and error message info */
+            transactionResponse.setErrorMessage(StatusCode.getStatusMessage(receipt.getStatus()));
+            transactionResponse.setErrorCode(new BigInteger(receipt.getStatus(), 16).intValue());
+
+            VerifiedTransaction verifiedTransaction =
+                    new VerifiedTransaction(
+                            blockNumber,
+                            transactionHash,
+                            receipt.getContractAddress(),
+                            transactionRequest,
+                            transactionResponse);
+            return verifiedTransaction;
+        } catch (IOException e) {
+            logger.warn(" Exception: {}", e);
+            return null;
+        }
     }
 
     private void checkRequest(TransactionContext<TransactionRequest> request) {

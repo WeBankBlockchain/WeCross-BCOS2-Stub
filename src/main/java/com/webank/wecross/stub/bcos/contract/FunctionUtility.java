@@ -21,7 +21,7 @@ public class FunctionUtility {
 
     private FunctionUtility() {}
 
-    public static final List<TypeReference<?>> outputParameters =
+    public static final List<TypeReference<?>> abiTypeReferenceOutputs =
             Collections.singletonList(new TypeReference<DynamicArray<Utf8String>>() {});
 
     public static Function newFunction(String funcName, List<String> params) {
@@ -33,7 +33,7 @@ public class FunctionUtility {
                                 : new DynamicArray<>(
                                         org.fisco.bcos.web3j.abi.Utils.typeMap(
                                                 params, Utf8String.class))),
-                outputParameters);
+                abiTypeReferenceOutputs);
     }
 
     public static List<String> convertToStringList(List<Type> typeList) {

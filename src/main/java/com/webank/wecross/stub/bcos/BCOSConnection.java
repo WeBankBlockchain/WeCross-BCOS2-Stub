@@ -184,6 +184,7 @@ public class BCOSConnection implements Connection {
 
             TransactionReceipt receipt = web3jWrapper.getTransactionReceipt(txHash);
 
+            // transaction receipt not exist
             if (Objects.isNull(receipt)
                     || Objects.isNull(receipt.getTransactionHash())
                     || "".equals(receipt.getTransactionHash())) {

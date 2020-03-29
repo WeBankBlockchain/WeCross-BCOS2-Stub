@@ -14,7 +14,6 @@ import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
-import com.webank.wecross.stub.VerifiedTransaction;
 import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperFaildMock;
@@ -247,13 +246,6 @@ public class BCOSDriverTest {
 
         Request request = new Request();
         request.setType(BCOSRequestType.GET_TRANSACTION_RECEIPT);
-
-        VerifiedTransaction verifiedTransaction =
-                driver.getVerifiedTransaction(
-                        "0xcd0ec220b00a97115e367749be2dedec848236781f6a242a3ffa1d956dbf8ec5",
-                        1,
-                        blockHeaderManager,
-                        connection);
     }
 
     @Test
@@ -261,12 +253,5 @@ public class BCOSDriverTest {
 
         Request request = new Request();
         request.setType(BCOSRequestType.GET_TRANSACTION_RECEIPT);
-
-        VerifiedTransaction verifiedTransaction =
-                driver.getVerifiedTransaction(
-                        "0xcd0ec220b00a97115e367749be2dedec848236781f6a242a3ffa1d956dbf8ec5",
-                        1,
-                        blockHeaderManager,
-                        failedConnection);
     }
 }
