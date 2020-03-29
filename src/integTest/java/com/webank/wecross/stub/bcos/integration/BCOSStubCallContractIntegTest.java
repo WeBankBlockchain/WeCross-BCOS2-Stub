@@ -1,5 +1,7 @@
 package com.webank.wecross.stub.bcos.integration;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import com.webank.wecross.stub.Account;
@@ -11,18 +13,21 @@ import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
+import com.webank.wecross.stub.VerifiedTransaction;
 import com.webank.wecross.stub.bcos.BCOSConnection;
-import com.webank.wecross.stub.bcos.BCOSConnectionFactory;
+import com.webank.wecross.stub.bcos.BCOSDriver;
 import com.webank.wecross.stub.bcos.BCOSStubFactory;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
-import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
+
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.fisco.bcos.web3j.tx.gas.StaticGasProvider;
 import org.junit.Before;
 import org.junit.Test;
@@ -109,11 +114,12 @@ public class BCOSStubCallContractIntegTest {
 
         BCOSStubFactory bcosStubFactory = new BCOSStubFactory();
         driver = bcosStubFactory.newDriver();
-        account = BCOSAccountFactory.build("IntegBCOSAccount", "accounts/bcos");
-        connection = BCOSConnectionFactory.build("stub-sample.toml", null);
+        account = bcosStubFactory.newAccount("IntegBCOSAccount", "classpath:/accounts/bcos");
+        connection = bcosStubFactory.newConnection("stub-sample.toml");
 
         Web3jWrapper web3jWrapper = ((BCOSConnection) connection).getWeb3jWrapper();
         Web3jWrapperImpl web3jWrapperImpl = (Web3jWrapperImpl) web3jWrapper;
+
         BCOSAccount bcosAccount = (BCOSAccount) account;
         blockHeaderManager = new IntegTestBlockHeaderManagerImpl(web3jWrapper);
 
@@ -150,12 +156,15 @@ public class BCOSStubCallContractIntegTest {
         byte[] blockHeader = driver.getBlockHeader(blockNumber, connection);
         assertTrue(blockHeader.length > 0);
         BlockHeader blockHeader1 = driver.decodeBlockHeader(blockHeader);
+        assertTrue(Objects.nonNull(blockHeader1));
         assertTrue(blockHeader1.getNumber() == blockNumber);
     }
 
     @Test
     public void getBlockHeaderFailedIntegTest() {
-        byte[] blockHeader = driver.getBlockHeader(11111111, connection);
+        long blockNumber = driver.getBlockNumber(connection);
+        assertTrue(blockNumber > 0);
+        byte[] blockHeader = driver.getBlockHeader(blockNumber + 1, connection);
         assertTrue(Objects.isNull(blockHeader));
     }
 
@@ -169,6 +178,9 @@ public class BCOSStubCallContractIntegTest {
 
         assertTrue(transactionResponse.getErrorCode() == 0);
         assertTrue(transactionResponse.getResult().length == params.size());
+        for (int i=0;i<transactionResponse.getResult().length;++i) {
+            assertEquals(transactionResponse.getResult()[i], params.get(i));
+        }
     }
 
     @Test
@@ -193,10 +205,13 @@ public class BCOSStubCallContractIntegTest {
 
         assertTrue(transactionResponse.getErrorCode() == 0);
         assertTrue(transactionResponse.getResult().length == params.size());
+        for (int i=0;i<transactionResponse.getResult().length;++i) {
+            assertEquals(transactionResponse.getResult()[i], params.get(i));
+        }
     }
 
     @Test
-    public void emptyParmasSendTransactionIntegTest() {
+    public void emptyParamsSendTransactionIntegTest() {
         List<String> params = Arrays.asList("aa", "bb", "cc", "dd");
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTxRequestContext("set", params);
@@ -205,5 +220,87 @@ public class BCOSStubCallContractIntegTest {
 
         assertTrue(transactionResponse.getErrorCode() == 0);
         assertTrue(transactionResponse.getResult().length == params.size());
+    }
+
+    @Test
+    public void getTransactionReceiptTest() throws IOException {
+        List<String> params = Arrays.asList("aa", "bb", "cc", "dd");
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTxRequestContext("set", params);
+        TransactionResponse transactionResponse =
+                driver.sendTransaction(requestTransactionContext, connection);
+        assertTrue(transactionResponse.getErrorCode() == 0);
+
+        TransactionReceipt receipt = ((BCOSDriver) driver).requestTransactionReceipt(transactionResponse.getHash(), connection);
+        assertTrue(receipt.getTransactionHash().equals(transactionResponse.getHash()));
+    }
+
+    @Test
+    public void getVerifiedTransactionEmptyParamsTest() throws IOException {
+        List<String> params = Arrays.asList();
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTxRequestContext("set", params);
+
+        TransactionResponse transactionResponse =
+                driver.sendTransaction(requestTransactionContext, connection);
+        assertTrue(transactionResponse.getErrorCode() == 0);
+
+        TransactionReceipt receipt = ((BCOSDriver) driver).requestTransactionReceipt(transactionResponse.getHash(), connection);
+
+        VerifiedTransaction verifiedTransaction = driver.getVerifiedTransaction(transactionResponse.getHash(), transactionResponse.getBlockNumber(), blockHeaderManager, connection);
+
+        assertEquals(verifiedTransaction.getBlockNumber(), transactionResponse.getBlockNumber());
+        assertEquals(verifiedTransaction.getTransactionHash(), transactionResponse.getHash());
+        assertEquals(verifiedTransaction.getRealAddress(), receipt.getContractAddress());
+
+        TransactionRequest transactionRequest = verifiedTransaction.getTransactionRequest();
+        assertEquals(transactionRequest.getArgs().length, params.size());
+
+        TransactionResponse transactionResponse1 = verifiedTransaction.getTransactionResponse();
+        assertEquals(transactionResponse1.getErrorCode().intValue(), 0);
+        assertEquals(transactionResponse1.getHash(), receipt.getTransactionHash());
+        assertEquals(transactionResponse1.getBlockNumber(), receipt.getBlockNumber().longValue());
+        assertEquals(transactionResponse1.getResult().length, params.size());
+        for (int i=0;i<transactionResponse1.getResult().length;++i) {
+            assertEquals(transactionResponse1.getResult()[i], params.get(i));
+        }
+    }
+
+    @Test
+    public void getVerifiedTransactionTest() throws IOException {
+        List<String> params = Arrays.asList("aa", "bb", "cc", "dd");
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTxRequestContext("set", params);
+
+        TransactionResponse transactionResponse =
+                driver.sendTransaction(requestTransactionContext, connection);
+        assertTrue(transactionResponse.getErrorCode() == 0);
+
+        TransactionReceipt receipt = ((BCOSDriver) driver).requestTransactionReceipt(transactionResponse.getHash(), connection);
+
+        VerifiedTransaction verifiedTransaction = driver.getVerifiedTransaction(transactionResponse.getHash(), transactionResponse.getBlockNumber(), blockHeaderManager, connection);
+
+        assertEquals(verifiedTransaction.getBlockNumber(), transactionResponse.getBlockNumber());
+        assertEquals(verifiedTransaction.getTransactionHash(), transactionResponse.getHash());
+        assertEquals(verifiedTransaction.getRealAddress(), receipt.getContractAddress());
+
+        TransactionRequest transactionRequest = verifiedTransaction.getTransactionRequest();
+        assertEquals(transactionRequest.getArgs().length, params.size());
+
+        TransactionResponse transactionResponse1 = verifiedTransaction.getTransactionResponse();
+        assertEquals(transactionResponse1.getErrorCode().intValue(), 0);
+        assertEquals(transactionResponse1.getHash(), receipt.getTransactionHash());
+        assertEquals(transactionResponse1.getBlockNumber(), receipt.getBlockNumber().longValue());
+        assertEquals(transactionResponse1.getResult().length, params.size());
+        for (int i=0;i<transactionResponse1.getResult().length;++i) {
+            assertEquals(transactionResponse1.getResult()[i], params.get(i));
+        }
+    }
+
+    @Test
+    public void getVerifiedTransactionNotExistTest() {
+        String transactionHash = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
+        VerifiedTransaction verifiedTransaction = driver.getVerifiedTransaction(transactionHash, 1, blockHeaderManager, connection);
+        assertTrue(Objects.isNull(verifiedTransaction));
     }
 }

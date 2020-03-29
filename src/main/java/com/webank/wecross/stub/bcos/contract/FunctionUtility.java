@@ -4,11 +4,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import org.fisco.bcos.web3j.abi.FunctionReturnDecoder;
 import org.fisco.bcos.web3j.abi.TypeReference;
+import org.fisco.bcos.web3j.abi.Utils;
 import org.fisco.bcos.web3j.abi.datatypes.DynamicArray;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
 import org.fisco.bcos.web3j.abi.datatypes.Type;
 import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
+import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.fisco.bcos.web3j.utils.Numeric;
 
 /**
  * Function object used across blockchain chain. Wecross requires that a cross-chain contract
@@ -21,7 +26,7 @@ public class FunctionUtility {
 
     private FunctionUtility() {}
 
-    public static final List<TypeReference<?>> outputParameters =
+    public static final List<TypeReference<?>> abiTypeReferenceOutputs =
             Collections.singletonList(new TypeReference<DynamicArray<Utf8String>>() {});
 
     public static Function newFunction(String funcName, List<String> params) {
@@ -33,7 +38,7 @@ public class FunctionUtility {
                                 : new DynamicArray<>(
                                         org.fisco.bcos.web3j.abi.Utils.typeMap(
                                                 params, Utf8String.class))),
-                outputParameters);
+                abiTypeReferenceOutputs);
     }
 
     public static List<String> convertToStringList(List<Type> typeList) {
@@ -46,5 +51,68 @@ public class FunctionUtility {
             }
         }
         return stringList;
+    }
+
+    /**
+     * decode TransactionReceipt input field
+     *
+     * @param receipt
+     * @return
+     */
+    public static String[] decodeInput(TransactionReceipt receipt) {
+        if (Objects.isNull(receipt) || Objects.isNull(receipt.getInput())) {
+            return new String[0];
+        }
+
+        return decodeInput(receipt.getInput());
+    }
+
+    /**
+     * @param input
+     * @return
+     */
+    public static String[] decodeInput(String input) {
+        if (Objects.isNull(input)
+                || "".equals(input)
+                || input.length() <= 8
+                || (Numeric.containsHexPrefix(input) && input.length() <= 10)) {
+            return new String[0];
+        }
+
+        if (Numeric.containsHexPrefix(input)) {
+            return decodeOutput(input.substring(10));
+        }
+
+        return decodeOutput(input.substring(8));
+    }
+
+    /**
+     * decode TransactionReceipt output field
+     *
+     * @param receipt
+     * @return
+     */
+    public static String[] decodeOutput(TransactionReceipt receipt) {
+        if (Objects.isNull(receipt)
+                || Objects.isNull(receipt.getOutput())
+                || !receipt.isStatusOK()) {
+            return new String[0];
+        }
+
+        return decodeOutput(receipt.getOutput());
+    }
+
+    /**
+     * decode abi encode data
+     *
+     * @param output
+     * @return
+     */
+    public static String[] decodeOutput(String output) {
+        List<Type> outputTypes =
+                FunctionReturnDecoder.decode(
+                        output, Utils.convert(FunctionUtility.abiTypeReferenceOutputs));
+        List<String> outputArgs = FunctionUtility.convertToStringList(outputTypes);
+        return outputArgs.toArray(new String[0]);
     }
 }
