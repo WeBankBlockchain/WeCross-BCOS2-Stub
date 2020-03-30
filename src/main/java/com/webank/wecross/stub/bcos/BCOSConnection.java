@@ -8,11 +8,14 @@ import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.Response;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
+import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
@@ -22,9 +25,9 @@ import org.slf4j.LoggerFactory;
 
 public class BCOSConnection implements Connection {
 
-    private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
+    private static final Logger logger = LoggerFactory.getLogger(BCOSConnection.class);
 
-    private static Logger logger = LoggerFactory.getLogger(BCOSConnection.class);
+    private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
 
     private List<ResourceInfo> resourceInfoList;
 
@@ -32,6 +35,7 @@ public class BCOSConnection implements Connection {
 
     public BCOSConnection(Web3jWrapper web3jWrapper) {
         this.web3jWrapper = web3jWrapper;
+        this.objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     }
 
     public List<ResourceInfo> getResourceInfoList() {
@@ -52,7 +56,7 @@ public class BCOSConnection implements Connection {
     }
 
     public List<ResourceInfo> getResourceInfoList(List<BCOSStubConfig.Resource> resourceList) {
-        List<ResourceInfo> resourceInfoList = new ArrayList<>();
+        List<ResourceInfo> resourceInfos = new ArrayList<>();
         org.fisco.bcos.web3j.crypto.SHA3Digest sha3Digest =
                 new org.fisco.bcos.web3j.crypto.SHA3Digest();
         for (int i = 0; i < resourceList.size(); ++i) {
@@ -60,8 +64,7 @@ public class BCOSConnection implements Connection {
             BCOSStubConfig.Resource resource = resourceList.get(i);
 
             resourceInfo.setName(resource.getName());
-            resourceInfo.setStubType("BCOS2.0");
-            // resourceInfo.setType(resource.getType());
+            resourceInfo.setStubType(BCOSConstant.BCOS_ACCOUNT);
             resourceInfo.setChecksum(sha3Digest.hash(resource.getValue()));
 
             resourceInfo.getProperties().put(resource.getName(), resource.getValue());
@@ -76,27 +79,29 @@ public class BCOSConnection implements Connection {
                             BCOSConstant.BCOS_RESOURCEINFO_CHAIN_ID,
                             resourceList.get(i).getChain().getChainID());
 
-            resourceInfoList.add(resourceInfo);
+            resourceInfos.add(resourceInfo);
         }
 
-        logger.info(" resource list: {}", resourceInfoList);
+        logger.info(" resource list: {}", resourceInfos);
 
-        return resourceInfoList;
+        return resourceInfos;
     }
 
     @Override
     public Response send(Request request) {
         switch (request.getType()) {
-            case BCOSConstant.BCOS_CALL:
+            case BCOSRequestType.CALL:
                 return handleCallRequest(request);
-            case BCOSConstant.BCOS_SEND_TRANSACTION:
+            case BCOSRequestType.SEND_TRANSACTION:
                 return handleTransactionRequest(request);
-            case BCOSConstant.BCOS_GET_BLOCK_HEADER:
+            case BCOSRequestType.GET_BLOCK_HEADER:
                 return handleGetBlockHeaderRequest(request);
-            case BCOSConstant.BCOS_GET_BLOCK_NUMBER:
+            case BCOSRequestType.GET_BLOCK_NUMBER:
                 return handleGetBlockNumberRequest(request);
+            case BCOSRequestType.GET_TRANSACTION_RECEIPT:
+                return handleGetTransactionReceipt(request);
             default:
-                logger.warn("unrecognized request type, type: {}", request.getType());
+                logger.warn(" unrecognized request type, type: {}", request.getType());
                 Response response = new Response();
                 response.setErrorCode(-1);
                 response.setErrorMessage(" unrecognized request type, type: " + request.getType());
@@ -107,18 +112,22 @@ public class BCOSConnection implements Connection {
     public Response handleCallRequest(Request request) {
         Response response = new Response();
         try {
-            String params = new String(request.getData(), "UTF-8");
+            String params = new String(request.getData(), StandardCharsets.UTF_8);
             String[] split = params.split(",");
 
-            logger.debug(" contractAddress: {}, ABI: {}", split[0], split[1]);
-
             Call.CallOutput callOutput = web3jWrapper.call(split[0], split[1]);
+
+            logger.debug(
+                    " contractAddress: {}, abi: {}, status: {}, blk: {}, output: {}",
+                    split[0],
+                    split[1],
+                    callOutput.getStatus(),
+                    callOutput.getCurrentBlockNumber(),
+                    callOutput.getOutput());
 
             response.setErrorCode(0);
             response.setErrorMessage("success");
             response.setData(objectMapper.writeValueAsBytes(callOutput));
-            logger.debug(" call {}", callOutput);
-
         } catch (Exception e) {
             logger.warn(" Exception, e: {}", e);
             response.setErrorCode(-1);
@@ -130,7 +139,7 @@ public class BCOSConnection implements Connection {
     public Response handleTransactionRequest(Request request) {
         Response response = new Response();
         try {
-            String signTx = new String(request.getData(), "UTF-8");
+            String signTx = new String(request.getData(), StandardCharsets.UTF_8);
 
             logger.trace(" signTx: {}", signTx);
 
@@ -138,12 +147,12 @@ public class BCOSConnection implements Connection {
 
             response.setErrorCode(0);
             response.setErrorMessage("success");
-            objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+
             response.setData(objectMapper.writeValueAsBytes(receipt));
-            logger.debug(" sendTransaction, result: {}", receipt);
+            logger.debug(" sendTransaction, receipt: {}", receipt);
 
         } catch (Exception e) {
-            logger.warn(" Exception, e: {}", e);
+            logger.warn(" Exception, request type: {}, e: {}", request.getType(), e);
             response.setErrorCode(-1);
             response.setErrorMessage(" errorMessage: " + e.getMessage());
         }
@@ -168,8 +177,36 @@ public class BCOSConnection implements Connection {
         return response;
     }
 
+    public Response handleGetTransactionReceipt(Request request) {
+        Response response = new Response();
+        try {
+            String txHash = new String(request.getData(), StandardCharsets.UTF_8);
+
+            TransactionReceipt receipt = web3jWrapper.getTransactionReceipt(txHash);
+
+            if (Objects.isNull(receipt)
+                    || Objects.isNull(receipt.getTransactionHash())
+                    || "".equals(receipt.getTransactionHash())) {
+                throw new RuntimeException(" Not found transaction receipt, tx hash: " + txHash);
+            }
+
+            response.setErrorCode(0);
+            response.setErrorMessage("success");
+
+            response.setData(objectMapper.writeValueAsBytes(receipt));
+            logger.debug(" getTransactionReceipt, tx hash: {}, receipt: {}", txHash, receipt);
+
+        } catch (Exception e) {
+            logger.warn(" Exception, e: {}", e);
+            response.setErrorCode(-1);
+            response.setErrorMessage(" errorMessage: " + e.getMessage());
+        }
+
+        return response;
+    }
+
     /**
-     * convert BcosBlock to BlockHeader object
+     * convert Block to BlockHeader
      *
      * @param block
      * @return
@@ -189,12 +226,12 @@ public class BCOSConnection implements Connection {
         Response response = new Response();
         try {
             BigInteger blockNumber = new BigInteger(request.getData());
-            BcosBlock.Block bcosBlock = web3jWrapper.getBlockByNumber(blockNumber.longValue());
+            BcosBlock.Block block = web3jWrapper.getBlockByNumber(blockNumber.longValue());
 
             response.setErrorCode(0);
             response.setErrorMessage("success");
-            response.setData(objectMapper.writeValueAsBytes(toBlockHeader(bcosBlock)));
-            logger.debug(" getBlockByNumber, blk: {}, block: {}", blockNumber, bcosBlock);
+            response.setData(objectMapper.writeValueAsBytes(toBlockHeader(block)));
+            logger.debug(" getBlockByNumber, blk: {}, block: {}", blockNumber, block);
         } catch (Exception e) {
             logger.warn(" Exception, e: {}", e);
             response.setErrorCode(-1);

@@ -1,13 +1,10 @@
 package com.webank.wecross.stub.bcos.config;
 
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Resolve the BCOS stub.toml to get BCOSConfig object */
 public class BCOSStubConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(BCOSStubConfig.class);
     /** stub name */
     private String stub;
     /** stub type, BCOS */

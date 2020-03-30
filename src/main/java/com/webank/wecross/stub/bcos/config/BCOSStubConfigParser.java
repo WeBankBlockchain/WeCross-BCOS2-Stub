@@ -44,7 +44,7 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
 
         Map<String, Object> chainConfigValue = (Map<String, Object>) stubConfig.get("chain");
         requireItemNotNull(chainConfigValue, "chain", getConfigPath());
-        BCOSStubConfig.Chain chain = getChainConfig(getConfigPath(), chainConfigValue);
+        BCOSStubConfig.Chain chain = getChainConfig(chainConfigValue);
 
         Map<String, Object> channelServiceConfigValue =
                 (Map<String, Object>) stubConfig.get("channelService");
@@ -69,8 +69,7 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         return bcosStubConfig;
     }
 
-    public BCOSStubConfig.Chain getChainConfig(
-            String configFile, Map<String, Object> chainConfigValue) {
+    public BCOSStubConfig.Chain getChainConfig(Map<String, Object> chainConfigValue) {
         // groupId field
         Long groupId = (Long) chainConfigValue.get("groupId");
         // chain field

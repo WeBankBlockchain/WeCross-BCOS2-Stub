@@ -9,14 +9,10 @@ public abstract class AbstractBCOSConfigParser {
         this.configPath = configPath;
     }
 
-    private String configPath;
+    private final String configPath;
 
     public String getConfigPath() {
         return configPath;
-    }
-
-    public void setConfigPath(String configPath) {
-        this.configPath = configPath;
     }
 
     public void requireItemNotNull(Object object, String item, String configFile) {

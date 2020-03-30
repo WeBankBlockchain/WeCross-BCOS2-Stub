@@ -5,9 +5,10 @@
 [chain]
     groupId = 111 # default 1
     chainId = 123 # default 1
-    enableGM = true # default false
+    enableGM = false # default false
 
 [channelService]
+    enableTest = true
     caCert = 'classpath:/stubs/bcos/ca.crt'
     sslCert = 'classpath:/stubs/bcos/sdk.crt'
     sslKey = 'classpath:/stubs/bcos/sdk.key'
@@ -27,4 +28,4 @@
     # name cannot be repeated
     name = 'Hello'
     type = 'BCOS_CONTRACT' # BCOS_CONTRACT or BCOS_SM_CONTRACT
-    contractAddress = '0x8827cca7f0f38b861b62dae6d711efe92a1e3602'
+    contractAddress = '0x8827cca7f0f38b861b62dae6d711efe92a1e3603'

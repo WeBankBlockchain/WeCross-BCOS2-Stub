@@ -1,3 +1,5 @@
+package com.webank.wecross.stub.bcos.integration;
+
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;

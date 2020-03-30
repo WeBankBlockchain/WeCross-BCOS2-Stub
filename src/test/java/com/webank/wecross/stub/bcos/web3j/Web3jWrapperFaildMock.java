@@ -1,4 +1,5 @@
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
+package com.webank.wecross.stub.bcos.web3j;
+
 import java.io.IOException;
 import java.math.BigInteger;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
@@ -19,6 +20,11 @@ public class Web3jWrapperFaildMock implements Web3jWrapper {
 
     @Override
     public TransactionReceipt sendTransaction(String signedTransactionData) throws IOException {
+        throw new IOException(" test IOException");
+    }
+
+    @Override
+    public TransactionReceipt getTransactionReceipt(String hash) throws IOException {
         throw new IOException(" test IOException");
     }
 

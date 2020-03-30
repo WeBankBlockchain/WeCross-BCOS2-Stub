@@ -21,7 +21,7 @@ public class BCOSStubFactory implements StubFactory {
     @Override
     public Connection newConnection(String path) {
         try {
-            return BCOSConnectionFactory.build(path);
+            return BCOSConnectionFactory.build(path, null);
         } catch (Exception e) {
             logger.error(" newConnection, e: ", e);
             return null;
@@ -31,7 +31,8 @@ public class BCOSStubFactory implements StubFactory {
     @Override
     public Account newAccount(String name, String path) {
         try {
-            return BCOSAccountFactory.build(name, "file:" + path);
+            return BCOSAccountFactory.build(
+                    name, path.startsWith("classpath") ? path : "file:" + path);
         } catch (Exception e) {
             logger.error(" newAccount, e: ", e);
             return null;

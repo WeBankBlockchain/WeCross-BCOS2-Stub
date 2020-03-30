@@ -1,8 +1,8 @@
+package com.webank.wecross.stub.bcos.contract;
+
 import static junit.framework.TestCase.assertEquals;
 
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
-import com.webank.wecross.stub.bcos.contract.FunctionUtility;
-import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -27,7 +27,7 @@ public class TransactionSignTest {
         Function function = FunctionUtility.newFunction(funcName, params);
         String abiData = FunctionEncoder.encode(function);
 
-        String to = "0xb3c223fc0bf6646959f254ac4e4a7e355b50a344";
+        String to = "0xb3c223fc0bf6646959f254ac4e4a7e355b50a355";
         String extraData = "extraData";
 
         String sign =

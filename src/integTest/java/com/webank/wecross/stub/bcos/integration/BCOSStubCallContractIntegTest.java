@@ -1,3 +1,5 @@
+package com.webank.wecross.stub.bcos.integration;
+
 import static junit.framework.TestCase.assertTrue;
 
 import com.webank.wecross.stub.Account;
@@ -19,6 +21,9 @@ import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+
+import org.fisco.bcos.web3j.tx.gas.StaticGasProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -85,13 +90,13 @@ public class BCOSStubCallContractIntegTest {
         this.blockHeaderManager = blockHeaderManager;
     }
 
-    public TransactionContext<TransactionRequest> creteTranscactionRequestContext(
+    public TransactionContext<TransactionRequest> createTxRequestContext(
             String method, List<String> args) {
         TransactionRequest transactionRequest =
                 new TransactionRequest(method, args.toArray(new String[0]));
         TransactionContext<TransactionRequest> requestTransactionContext =
-                new TransactionContext<TransactionRequest>(
-                        transactionRequest, account, resourceInfo);
+                new TransactionContext<>(
+                        transactionRequest, account, resourceInfo, blockHeaderManager);
         requestTransactionContext.setAccount(account);
         requestTransactionContext.setBlockHeaderManager(blockHeaderManager);
         requestTransactionContext.setData(transactionRequest);
@@ -105,7 +110,7 @@ public class BCOSStubCallContractIntegTest {
         BCOSStubFactory bcosStubFactory = new BCOSStubFactory();
         driver = bcosStubFactory.newDriver();
         account = BCOSAccountFactory.build("IntegBCOSAccount", "accounts/bcos");
-        connection = BCOSConnectionFactory.build("stub-sample.toml");
+        connection = BCOSConnectionFactory.build("stub-sample.toml", null);
 
         Web3jWrapper web3jWrapper = ((BCOSConnection) connection).getWeb3jWrapper();
         Web3jWrapperImpl web3jWrapperImpl = (Web3jWrapperImpl) web3jWrapper;
@@ -113,12 +118,11 @@ public class BCOSStubCallContractIntegTest {
         blockHeaderManager = new IntegTestBlockHeaderManagerImpl(web3jWrapper);
 
         helloWeCross =
-                this.helloWeCross
+                HelloWeCross
                         .deploy(
                                 web3jWrapperImpl.getWeb3j(),
                                 bcosAccount.getCredentials(),
-                                SignTransaction.gasPrice,
-                                SignTransaction.gasPrice)
+                                new StaticGasProvider(SignTransaction.gasPrice, SignTransaction.gasLimit))
                         .send();
 
         logger.info(" HelloWeCross address: {}", helloWeCross.getContractAddress());
@@ -134,35 +138,32 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
-    public void getBlockNumberIntegIntegTest() throws Exception {
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                creteTranscactionRequestContext("getBlockNumber", Arrays.asList());
+    public void getBlockNumberIntegIntegTest() {
         long blockNumber = driver.getBlockNumber(connection);
         assertTrue(blockNumber > 0);
     }
 
     @Test
-    public void getBlockHeaderIntegTest() throws Exception {
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                creteTranscactionRequestContext("getBlockHeader", Arrays.asList());
-        byte[] blockHeader = driver.getBlockHeader(1, connection);
+    public void getBlockHeaderIntegTest() {
+        long blockNumber = driver.getBlockNumber(connection);
+        assertTrue(blockNumber > 0);
+        byte[] blockHeader = driver.getBlockHeader(blockNumber, connection);
         assertTrue(blockHeader.length > 0);
         BlockHeader blockHeader1 = driver.decodeBlockHeader(blockHeader);
-        logger.info(
-                " BlockHeader => blockNumber: {}, hash: {}, prehash: {}, state: {}, receipt: {}, transaction :{}",
-                blockHeader1.getNumber(),
-                blockHeader1.getHash(),
-                blockHeader1.getPrevHash(),
-                blockHeader1.getStateRoot(),
-                blockHeader1.getReceiptRoot(),
-                blockHeader1.getTransactionRoot());
+        assertTrue(blockHeader1.getNumber() == blockNumber);
     }
 
     @Test
-    public void callIntegTest() throws Exception {
+    public void getBlockHeaderFailedIntegTest() {
+        byte[] blockHeader = driver.getBlockHeader(11111111, connection);
+        assertTrue(Objects.isNull(blockHeader));
+    }
+
+    @Test
+    public void callIntegTest() {
         List<String> params = Arrays.asList("aa", "bb", "cc", "dd");
         TransactionContext<TransactionRequest> requestTransactionContext =
-                creteTranscactionRequestContext("get", params);
+                createTxRequestContext("get", params);
         TransactionResponse transactionResponse =
                 driver.call(requestTransactionContext, connection);
 
@@ -171,10 +172,34 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
-    public void sendTransactionIntegTest() throws Exception {
+    public void emptyParamsCallIntegTest() {
+        List<String> params = Arrays.asList();
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTxRequestContext("get", params);
+        TransactionResponse transactionResponse =
+                driver.call(requestTransactionContext, connection);
+
+        assertTrue(transactionResponse.getErrorCode() == 0);
+        assertTrue(transactionResponse.getResult().length == params.size());
+    }
+
+    @Test
+    public void sendTransactionIntegTest() {
         List<String> params = Arrays.asList("aa", "bb", "cc", "dd");
         TransactionContext<TransactionRequest> requestTransactionContext =
-                creteTranscactionRequestContext("set", params);
+                createTxRequestContext("set", params);
+        TransactionResponse transactionResponse =
+                driver.sendTransaction(requestTransactionContext, connection);
+
+        assertTrue(transactionResponse.getErrorCode() == 0);
+        assertTrue(transactionResponse.getResult().length == params.size());
+    }
+
+    @Test
+    public void emptyParmasSendTransactionIntegTest() {
+        List<String> params = Arrays.asList("aa", "bb", "cc", "dd");
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTxRequestContext("set", params);
         TransactionResponse transactionResponse =
                 driver.sendTransaction(requestTransactionContext, connection);
 
