@@ -6,7 +6,7 @@ import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 
-public class Web3jWrapperFaildMock implements Web3jWrapper {
+public class Web3jWrapperWithExceptionMock implements Web3jWrapper {
 
     @Override
     public BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException {

@@ -23,18 +23,16 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidParameterException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
-import org.fisco.bcos.web3j.abi.FunctionReturnDecoder;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
-import org.fisco.bcos.web3j.abi.datatypes.Type;
 import org.fisco.bcos.web3j.crypto.Credentials;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.channel.StatusCode;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.fisco.bcos.web3j.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,13 +123,9 @@ public class BCOSDriver implements Driver {
                     callOutput.getStatus(),
                     callOutput.getCurrentBlockNumber());
             if (StatusCode.Success.equals(callOutput.getStatus())) {
-                List<Type> typeList =
-                        FunctionReturnDecoder.decode(
-                                callOutput.getOutput(), function.getOutputParameters());
-                List<String> outputs = FunctionUtility.convertToStringList(typeList);
                 response.setErrorCode(0);
                 response.setErrorMessage("success");
-                response.setResult(outputs.toArray(new String[0]));
+                response.setResult(FunctionUtility.decodeOutput(callOutput.getOutput()));
             } else {
                 response.setErrorCode(-1);
                 response.setErrorMessage(StatusCode.getStatusMessage(callOutput.getStatus()));
@@ -225,14 +219,11 @@ public class BCOSDriver implements Driver {
             if (Objects.nonNull(receipt.getTransactionHash())
                     && (!"".equals(receipt.getTransactionHash()))) {
                 response.setHash(receipt.getTransactionHash());
+                response.setBlockNumber(receipt.getBlockNumber().longValue());
             }
 
             if (receipt.isStatusOK()) {
-                List<Type> typeList =
-                        FunctionReturnDecoder.decode(
-                                receipt.getOutput(), function.getOutputParameters());
-                List<String> outputs = FunctionUtility.convertToStringList(typeList);
-                response.setResult(outputs.toArray(new String[0]));
+                response.setResult(FunctionUtility.decodeOutput(receipt));
                 response.setErrorCode(0);
             } else {
                 response.setErrorCode(-1);
@@ -285,13 +276,73 @@ public class BCOSDriver implements Driver {
         return response.getData();
     }
 
+    /**
+     * send getTransactionReceipt request
+     *
+     * @param transactionHash
+     * @param connection
+     * @return
+     * @throws IOException
+     */
+    public TransactionReceipt requestTransactionReceipt(
+            String transactionHash, Connection connection) throws IOException {
+        Request request = new Request();
+        request.setType(BCOSRequestType.GET_TRANSACTION_RECEIPT);
+        request.setData(transactionHash.getBytes(StandardCharsets.UTF_8));
+
+        Response resp = connection.send(request);
+        if (resp.getErrorCode() != 0) {
+            throw new RuntimeException(resp.getErrorMessage());
+        }
+
+        TransactionReceipt receipt =
+                objectMapper.readValue(resp.getData(), TransactionReceipt.class);
+
+        logger.debug(" hash: {}, receipt: {}", transactionHash, receipt);
+        return receipt;
+    }
+
     @Override
     public VerifiedTransaction getVerifiedTransaction(
             String transactionHash,
             long blockNumber,
             BlockHeaderManager blockHeaderManager,
             Connection connection) {
-        return null;
+        try {
+            // get transaction receipt first
+            TransactionReceipt receipt = requestTransactionReceipt(transactionHash, connection);
+
+            /**
+             * set args for TransactionRequest, the method parameter cannot be recovered from the
+             * abi encoding
+             */
+            TransactionRequest transactionRequest = new TransactionRequest();
+            /** decode input args from input */
+            transactionRequest.setArgs(FunctionUtility.decodeInput(receipt));
+
+            TransactionResponse transactionResponse = new TransactionResponse();
+            transactionResponse.setHash(transactionHash);
+            transactionResponse.setBlockNumber(receipt.getBlockNumber().longValue());
+            /** decode output from output */
+            transactionResponse.setResult(FunctionUtility.decodeOutput(receipt));
+
+            /** set error code and error message info */
+            transactionResponse.setErrorMessage(StatusCode.getStatusMessage(receipt.getStatus()));
+            BigInteger statusCode = new BigInteger(Numeric.cleanHexPrefix(receipt.getStatus()), 16);
+            transactionResponse.setErrorCode(statusCode.intValue());
+
+            VerifiedTransaction verifiedTransaction =
+                    new VerifiedTransaction(
+                            blockNumber,
+                            transactionHash,
+                            receipt.getContractAddress(),
+                            transactionRequest,
+                            transactionResponse);
+            return verifiedTransaction;
+        } catch (Exception e) {
+            logger.warn(" Exception: {}", e);
+            return null;
+        }
     }
 
     private void checkRequest(TransactionContext<TransactionRequest> request) {

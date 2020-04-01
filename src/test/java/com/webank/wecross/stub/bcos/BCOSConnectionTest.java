@@ -23,9 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
-import org.fisco.bcos.web3j.abi.FunctionReturnDecoder;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
-import org.fisco.bcos.web3j.abi.datatypes.Type;
 import org.fisco.bcos.web3j.crypto.gm.GenCredential;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
@@ -155,13 +153,12 @@ public class BCOSConnectionTest {
         assertEquals(callOutput.getStatus(), "0x0");
 
         String data = callOutput.getOutput();
-        List<Type> typeList = FunctionReturnDecoder.decode(data, function.getOutputParameters());
 
-        List<String> stringList = FunctionUtility.convertToStringList(typeList);
-        assertEquals(stringList.size(), params.size());
+        String[] strings = FunctionUtility.decodeOutput(data);
+        assertEquals(strings.length, params.size());
 
         for (int i = 0; i < params.size(); i++) {
-            assertEquals(stringList.get(i), params.get(i));
+            assertEquals(strings[i], params.get(i));
         }
     }
 
