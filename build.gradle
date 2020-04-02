@@ -8,7 +8,7 @@ plugins {
 
     id 'org.ajoberstar.grgit' version '4.0.1'
     id 'com.github.sherter.google-java-format' version '0.8'
-	id 'com.github.johnrengelman.shadow' version '2.0.4'
+    id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
 apply plugin: 'com.github.johnrengelman.shadow'
@@ -61,10 +61,7 @@ configurations {
 dependencies {
 
     // implementation 'com.webank:wecross-java-stub:1.0.0-rc2-0326-SNAPSHOT'
-    implementation ('com.webank:wecross-java-stub:1.0.0-rc2-04010-SNAPSHOT') {
-        exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
-    }
-
+    implementation 'com.webank:wecross-java-stub:1.0.0-rc2-0402-SNAPSHOT'
     implementation 'org.slf4j:slf4j-api:1.7.25'
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'
@@ -104,10 +101,10 @@ project.tasks.assemble.dependsOn project.tasks.shadowJar
 shadowJar {
     destinationDir file('dist/apps')
     archiveName project.name + '.jar'
-	exclude '**/*.xml'
-	exclude '**/*.toml'
-	exclude '**/*.properties'
-	exclude '**/*.yml'
+    exclude '**/*.xml'
+    exclude '**/*.toml'
+    exclude '**/*.properties'
+    exclude '**/*.yml'
 
     manifest {
 /*
@@ -154,18 +151,18 @@ shadowJar {
 }
 
 task integTest(type: Test) {
-	description = 'Runs integration tests.'
+    description = 'Runs integration tests.'
 
-	testClassesDirs = sourceSets.integTest.output.classesDirs
-	classpath = sourceSets.integTest.runtimeClasspath
-	mustRunAfter test
+    testClassesDirs = sourceSets.integTest.output.classesDirs
+    classpath = sourceSets.integTest.runtimeClasspath
+    mustRunAfter test
 }
 
 check.dependsOn integTest
 check.dependsOn.remove(integTest)
 
 // clean dist and log dir
-task cleanDistAndLogDir(type:Delete) {
+task cleanDistAndLogDir(type: Delete) {
     delete 'dist'
     delete 'log'
     delete 'out'
