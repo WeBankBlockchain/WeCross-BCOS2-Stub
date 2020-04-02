@@ -335,7 +335,7 @@ public class BCOSDriver implements Driver {
                     new VerifiedTransaction(
                             blockNumber,
                             transactionHash,
-                            receipt.getContractAddress(),
+                            receipt.getTo(),
                             transactionRequest,
                             transactionResponse);
             return verifiedTransaction;

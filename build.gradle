@@ -61,7 +61,9 @@ configurations {
 dependencies {
 
     // implementation 'com.webank:wecross-java-stub:1.0.0-rc2-0326-SNAPSHOT'
-    implementation 'com.webank:wecross-java-stub:1.0.0-rc2-03264-SNAPSHOT'
+    implementation ('com.webank:wecross-java-stub:1.0.0-rc2-04010-SNAPSHOT') {
+        exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
+    }
 
     implementation 'org.slf4j:slf4j-api:1.7.25'
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'

@@ -251,7 +251,7 @@ public class BCOSStubCallContractIntegTest {
 
         assertEquals(verifiedTransaction.getBlockNumber(), transactionResponse.getBlockNumber());
         assertEquals(verifiedTransaction.getTransactionHash(), transactionResponse.getHash());
-        assertEquals(verifiedTransaction.getRealAddress(), receipt.getContractAddress());
+        assertEquals(verifiedTransaction.getRealAddress(), helloWeCross.getContractAddress());
 
         TransactionRequest transactionRequest = verifiedTransaction.getTransactionRequest();
         assertEquals(transactionRequest.getArgs().length, params.size());
@@ -282,7 +282,7 @@ public class BCOSStubCallContractIntegTest {
 
         assertEquals(verifiedTransaction.getBlockNumber(), transactionResponse.getBlockNumber());
         assertEquals(verifiedTransaction.getTransactionHash(), transactionResponse.getHash());
-        assertEquals(verifiedTransaction.getRealAddress(), receipt.getContractAddress());
+        assertEquals(verifiedTransaction.getRealAddress(), helloWeCross.getContractAddress());
 
         TransactionRequest transactionRequest = verifiedTransaction.getTransactionRequest();
         assertEquals(transactionRequest.getArgs().length, params.size());
