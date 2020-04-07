@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BCOSConnectionFactory {
-    private static Logger logger = LoggerFactory.getLogger(BCOSConnectionFactory.class);
+    private static final Logger logger = LoggerFactory.getLogger(BCOSConnectionFactory.class);
 
     private BCOSConnectionFactory() {}
 
@@ -19,8 +19,8 @@ public class BCOSConnectionFactory {
             throws Exception {
         /** load stub.toml config */
         logger.info(" stubConfigPath: {} ", stubConfigPath);
-        BCOSStubConfigParser loader = new BCOSStubConfigParser(stubConfigPath);
-        BCOSStubConfig bcosStubConfig = loader.loadConfig();
+        BCOSStubConfigParser bcosStubConfigParser = new BCOSStubConfigParser(stubConfigPath);
+        BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
 
         /** web3jWrapper is null ,create default one */
         if (Objects.isNull(web3jWrapper)) {
@@ -30,8 +30,7 @@ public class BCOSConnectionFactory {
         }
 
         BCOSConnection bcosConnection = new BCOSConnection(web3jWrapper);
-        bcosConnection.setResourceInfoList(
-                bcosConnection.getResourceInfoList(bcosStubConfig.getResources()));
+        bcosConnection.setResourceInfoList(bcosStubConfig.convertToResourceInfos());
         return bcosConnection;
     }
 }

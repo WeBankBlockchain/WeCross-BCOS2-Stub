@@ -11,6 +11,7 @@ import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.Response;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
+import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
@@ -28,7 +29,6 @@ import org.fisco.bcos.web3j.crypto.gm.GenCredential;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.junit.Test;
 
 public class BCOSConnectionTest {
@@ -42,7 +42,8 @@ public class BCOSConnectionTest {
         BcosBlock.Block block = objectMapper.readValue(blockJson, BcosBlock.Block.class);
 
         BCOSConnection connection = new BCOSConnection(null);
-        BlockHeader blockHeader = connection.toBlockHeader(block);
+        BlockHeader blockHeader = connection.convertToBlockHeader(block);
+
         assertEquals(blockHeader.getHash(), block.getHash());
         assertEquals(blockHeader.getPrevHash(), block.getParentHash());
         assertEquals(blockHeader.getReceiptRoot(), block.getReceiptsRoot());
@@ -55,10 +56,8 @@ public class BCOSConnectionTest {
     public void resourceInfoListTest() throws IOException {
         BCOSStubConfigParser bcosStubConfigParser = new BCOSStubConfigParser("stub-sample-ut.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
-        Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
-        BCOSConnection connection = new BCOSConnection(web3jWrapper);
-        List<ResourceInfo> resourceInfoList =
-                connection.getResourceInfoList(bcosStubConfig.getResources());
+
+        List<ResourceInfo> resourceInfoList = bcosStubConfig.convertToResourceInfos();
 
         assertEquals(resourceInfoList.size(), bcosStubConfig.getResources().size());
         assertFalse(resourceInfoList.isEmpty());
@@ -79,7 +78,7 @@ public class BCOSConnectionTest {
         Request request = new Request();
         request.setType(2000);
         Response response = connection.send(request);
-        assertEquals(response.getErrorCode(), -1);
+        assertEquals(response.getErrorCode(), BCOSStatusCode.UnrecognizedRequestType);
     }
 
     @Test
@@ -164,7 +163,6 @@ public class BCOSConnectionTest {
 
     @Test
     public void handleSendTransactionTest() throws IOException {
-        BCOSDriver driver = new BCOSDriver();
 
         Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
         BCOSConnection connection = new BCOSConnection(web3jWrapper);
@@ -196,26 +194,5 @@ public class BCOSConnectionTest {
     }
 
     @Test
-    public void handleGetTransactionReceiptTest() throws IOException {
-        BCOSDriver driver = new BCOSDriver();
-
-        Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
-        BCOSConnection connection = new BCOSConnection(web3jWrapper);
-
-        Request request = new Request();
-        request.setType(BCOSRequestType.GET_TRANSACTION_RECEIPT);
-        request.setData(
-                "0xcd0ec220b00a97115e367749be2dedec848236781f6a242a3ffa1d956dbf8ec5"
-                        .getBytes(StandardCharsets.UTF_8));
-
-        Response response = connection.send(request);
-        TransactionReceipt receipt =
-                ObjectMapperFactory.getObjectMapper()
-                        .readValue(response.getData(), TransactionReceipt.class);
-
-        assertEquals(response.getErrorCode(), 0);
-        assertEquals(
-                receipt.getTransactionHash(),
-                "0xcd0ec220b00a97115e367749be2dedec848236781f6a242a3ffa1d956dbf8ec5");
-    }
+    public void handleGetTransactionProofTest() {}
 }

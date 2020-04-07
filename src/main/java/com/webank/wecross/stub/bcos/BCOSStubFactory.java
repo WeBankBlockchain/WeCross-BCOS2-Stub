@@ -38,4 +38,10 @@ public class BCOSStubFactory implements StubFactory {
             return null;
         }
     }
+
+    @Override
+    public void generateAccount(String s, String[] strings) {}
+
+    @Override
+    public void generateConnection(String s, String[] strings) {}
 }

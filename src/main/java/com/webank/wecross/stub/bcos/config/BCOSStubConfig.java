@@ -1,10 +1,15 @@
 package com.webank.wecross.stub.bcos.config;
 
+import com.webank.wecross.stub.ResourceInfo;
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
+import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Resolve the BCOS stub.toml to get BCOSConfig object */
 public class BCOSStubConfig {
-
+    private static Logger logger = LoggerFactory.getLogger(BCOSStubConfig.class);
     /** stub name */
     private String stub;
     /** stub type, BCOS */
@@ -242,5 +247,37 @@ public class BCOSStubConfig {
                 + ", resourceConfig="
                 + resources
                 + '}';
+    }
+
+    public List<ResourceInfo> convertToResourceInfos() {
+        List<ResourceInfo> resourceInfos = new ArrayList<>();
+        org.fisco.bcos.web3j.crypto.SHA3Digest sha3Digest =
+                new org.fisco.bcos.web3j.crypto.SHA3Digest();
+        for (int i = 0; i < resources.size(); ++i) {
+            ResourceInfo resourceInfo = new ResourceInfo();
+            BCOSStubConfig.Resource resource = resources.get(i);
+
+            resourceInfo.setName(resource.getName());
+            resourceInfo.setStubType(BCOSConstant.BCOS_ACCOUNT);
+            resourceInfo.setChecksum(sha3Digest.hash(resource.getValue()));
+
+            resourceInfo.getProperties().put(resource.getName(), resource.getValue());
+            resourceInfo
+                    .getProperties()
+                    .put(
+                            BCOSConstant.BCOS_RESOURCEINFO_GROUP_ID,
+                            resources.get(i).getChain().getGroupID());
+            resourceInfo
+                    .getProperties()
+                    .put(
+                            BCOSConstant.BCOS_RESOURCEINFO_CHAIN_ID,
+                            resources.get(i).getChain().getChainID());
+
+            resourceInfos.add(resourceInfo);
+        }
+
+        logger.info(" resource list: {}", resourceInfos);
+
+        return resourceInfos;
     }
 }

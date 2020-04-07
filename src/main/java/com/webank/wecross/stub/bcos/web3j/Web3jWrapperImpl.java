@@ -7,12 +7,16 @@ import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.core.DefaultBlockParameter;
 import org.fisco.bcos.web3j.protocol.core.DefaultBlockParameterName;
+import org.fisco.bcos.web3j.protocol.core.Request;
 import org.fisco.bcos.web3j.protocol.core.methods.request.Transaction;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosTransactionReceipt;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BlockNumber;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
+import org.fisco.bcos.web3j.protocol.core.methods.response.SendTransaction;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof;
+import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof.ReceiptAndProof;
+import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof;
 
 public class Web3jWrapperImpl implements Web3jWrapper {
 
@@ -47,9 +51,19 @@ public class Web3jWrapperImpl implements Web3jWrapper {
     }
 
     @Override
-    public TransactionReceipt getTransactionReceipt(String hash) throws IOException {
-        BcosTransactionReceipt bcosTransactionReceipt = web3j.getTransactionReceipt(hash).send();
-        return bcosTransactionReceipt.getResult();
+    public ReceiptAndProof getTransactionReceiptByHashWithProof(String transactionHash)
+            throws IOException {
+        TransactionReceiptWithProof transactionReceiptWithProof =
+                web3j.getTransactionReceiptByHashWithProof(transactionHash).send();
+        return transactionReceiptWithProof.getResult();
+    }
+
+    @Override
+    public TransactionWithProof.TransAndProof getTransactionByHashWithProof(String transactionHash)
+            throws IOException {
+        TransactionWithProof transactionWithProof =
+                web3j.getTransactionByHashWithProof(transactionHash).send();
+        return transactionWithProof.getResult();
     }
 
     @Override
@@ -87,7 +101,11 @@ public class Web3jWrapperImpl implements Web3jWrapper {
 
         Callback callback = new Callback();
         try {
-            web3j.sendRawTransaction(signTx, callback);
+            Request<?, SendTransaction> request = web3j.sendRawTransaction(signTx);
+            request.setNeedTransCallback(true);
+            request.setTransactionSucCallback(callback);
+            request.sendOnly();
+
             callback.semaphore.acquire(1);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

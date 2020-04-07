@@ -29,11 +29,18 @@ public class FunctionUtility {
     public static final List<TypeReference<?>> abiTypeReferenceOutputs =
             Collections.singletonList(new TypeReference<DynamicArray<Utf8String>>() {});
 
+    /**
+     * Get the function object used to encode and decode the abi parameters
+     *
+     * @param funcName
+     * @param params
+     * @return Function
+     */
     public static Function newFunction(String funcName, List<String> params) {
         return new Function(
                 funcName,
                 Arrays.asList(
-                        params.isEmpty()
+                        (Objects.isNull(params) || params.isEmpty())
                                 ? DynamicArray.empty("string[]")
                                 : new DynamicArray<>(
                                         org.fisco.bcos.web3j.abi.Utils.typeMap(
@@ -61,7 +68,7 @@ public class FunctionUtility {
      */
     public static String[] decodeInput(TransactionReceipt receipt) {
         if (Objects.isNull(receipt) || Objects.isNull(receipt.getInput())) {
-            return new String[0];
+            return null;
         }
 
         return decodeInput(receipt.getInput());
@@ -76,7 +83,7 @@ public class FunctionUtility {
                 || "".equals(input)
                 || input.length() <= 8
                 || (Numeric.containsHexPrefix(input) && input.length() <= 10)) {
-            return new String[0];
+            return null;
         }
 
         if (Numeric.containsHexPrefix(input)) {
@@ -96,7 +103,7 @@ public class FunctionUtility {
         if (Objects.isNull(receipt)
                 || Objects.isNull(receipt.getOutput())
                 || !receipt.isStatusOK()) {
-            return new String[0];
+            return null;
         }
 
         return decodeOutput(receipt.getOutput());

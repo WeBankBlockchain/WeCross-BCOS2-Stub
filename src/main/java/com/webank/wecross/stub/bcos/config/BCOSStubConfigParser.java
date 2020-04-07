@@ -3,6 +3,7 @@ package com.webank.wecross.stub.bcos.config;
 import com.moandjiezana.toml.Toml;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSToml;
+import com.webank.wecross.stub.bcos.web3j.Web3jDefaultConfig;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -79,8 +80,14 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
 
         BCOSStubConfig.Chain chain = new BCOSStubConfig.Chain();
         chain.setEnableGM(!Objects.isNull(enableGM) ? enableGM : false);
-        chain.setChainID(!Objects.isNull(chainId) ? chainId.intValue() : 1);
-        chain.setGroupID(!Objects.isNull(groupId) ? groupId.intValue() : 1);
+        chain.setChainID(
+                Objects.nonNull(chainId)
+                        ? chainId.intValue()
+                        : Web3jDefaultConfig.DEFAULT_CHAIN_ID);
+        chain.setGroupID(
+                Objects.nonNull(groupId)
+                        ? groupId.intValue()
+                        : Web3jDefaultConfig.DEFAULT_GROUP_ID);
 
         return chain;
     }
@@ -111,7 +118,7 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         BCOSStubConfig.ChannelService channelServiceConfig = new BCOSStubConfig.ChannelService();
         channelServiceConfig.setTimeout(
                 Objects.isNull(timeout)
-                        ? BCOSConstant.CHANNELSERVICE_TIMEOUT_DEFAULT
+                        ? Web3jDefaultConfig.CHANNEL_SERVICE_DEFAULT_TIMEOUT
                         : timeout.intValue());
 
         channelServiceConfig.setCaCert(caCertPath);
