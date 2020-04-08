@@ -84,7 +84,7 @@ public class BCOSDriver implements Driver {
         try {
             return objectMapper.readValue(data, BlockHeader.class);
         } catch (Exception e) {
-            logger.error(" Exception: {}", e);
+            logger.error(" decodeBlockHeader Exception: {}", e);
             return null;
         }
     }
@@ -399,6 +399,10 @@ public class BCOSDriver implements Driver {
                             receipt.getTo(),
                             transactionRequest,
                             transactionResponse);
+
+            if (logger.isTraceEnabled()) {
+                logger.trace(" VerifiedTransaction: {}", verifiedTransaction);
+            }
 
             return verifiedTransaction;
         } catch (Exception e) {

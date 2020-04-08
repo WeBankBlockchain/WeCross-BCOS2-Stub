@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 @Stub("BCOS2.0")
 public class BCOSStubFactory implements StubFactory {
-    private Logger logger = LoggerFactory.getLogger(BCOSStubFactory.class);
+    private static final Logger logger = LoggerFactory.getLogger(BCOSStubFactory.class);
 
     @Override
     public Driver newDriver() {

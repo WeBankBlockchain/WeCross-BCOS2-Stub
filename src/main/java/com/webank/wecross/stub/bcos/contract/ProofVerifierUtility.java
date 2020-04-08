@@ -56,6 +56,9 @@ public class ProofVerifierUtility {
         byte[] byteIndex =
                 RlpEncoder.encode(RlpString.create(transactionReceipt.getTransactionIndex()));
 
+        if (!transactionReceipt.getGasUsedRaw().startsWith("0x")) {
+            transactionReceipt.setGasUsed("0x" + transactionReceipt.getGasUsed().toString(16));
+        }
         String receiptRlp = ReceiptEncoder.encode(transactionReceipt);
         String rlpHash = Hash.sha3(receiptRlp);
         String input = Numeric.toHexString(byteIndex) + rlpHash.substring(2);

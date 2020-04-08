@@ -3,8 +3,6 @@ package com.webank.wecross.stub.bcos.common;
 /** BCOS stub status code and message definition */
 public class BCOSStatusCode {
     public static final int Success = 0;
-    public static final int CallNotSuccessStatus = 1;
-    public static final int SendTransactionNotSuccessStatus = 2;
 
     public static final int InvalidParameter = 2000;
     public static final int UnrecognizedRequestType = 2001;
@@ -23,6 +21,9 @@ public class BCOSStatusCode {
     public static final int HandleGetBlockNumberFailed = 2023;
     public static final int HandleGetBlockHeaderFailed = 2024;
     public static final int HandleGetTransactionProofFailed = 2024;
+
+    public static final int CallNotSuccessStatus = 2030;
+    public static final int SendTransactionNotSuccessStatus = 2030;
 
     public static final int UnclassifiedError = 2100;
 
