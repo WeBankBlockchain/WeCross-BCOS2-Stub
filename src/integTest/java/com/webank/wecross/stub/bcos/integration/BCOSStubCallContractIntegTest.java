@@ -162,6 +162,10 @@ public class BCOSStubCallContractIntegTest {
         BlockHeader blockHeader1 = driver.decodeBlockHeader(blockHeader);
         assertTrue(Objects.nonNull(blockHeader1));
         assertTrue(Objects.nonNull(blockHeader1.getHash()));
+        assertTrue(Objects.nonNull(blockHeader1.getReceiptRoot()));
+        assertTrue(Objects.nonNull(blockHeader1.getTransactionRoot()));
+        assertTrue(Objects.nonNull(blockHeader1.getPrevHash()));
+        assertTrue(Objects.nonNull(blockHeader1.getStateRoot()));
         assertTrue(blockHeader1.getNumber() == blockNumber);
     }
 
@@ -186,6 +190,18 @@ public class BCOSStubCallContractIntegTest {
         for (int i=0;i<transactionResponse.getResult().length;++i) {
             assertEquals(transactionResponse.getResult()[i], params.get(i));
         }
+    }
+
+    @Test
+    public void callNotExistMethodIntegTest() {
+        List<String> params = Arrays.asList("aa", "bb", "cc", "dd");
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTransactionRequestContext("getNotExist", params);
+        TransactionResponse transactionResponse =
+                driver.call(requestTransactionContext, connection);
+
+        assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.HandleCallRequestFailed);
+        assertTrue(Objects.isNull(transactionResponse.getResult()));
     }
 
     @Test
@@ -217,6 +233,17 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
+    public void sendTransactionNotExistIntegTest() {
+        List<String> params = Arrays.asList("aa", "bb", "cc", "dd");
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTransactionRequestContext("setNotExist", params);
+        TransactionResponse transactionResponse =
+                driver.sendTransaction(requestTransactionContext, connection);
+
+        assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.SendTransactionNotSuccessStatus);
+    }
+
+    @Test
     public void emptyParamsSendTransactionIntegTest() {
         List<String> params = Arrays.asList();
         TransactionContext<TransactionRequest> requestTransactionContext =
@@ -241,7 +268,9 @@ public class BCOSStubCallContractIntegTest {
         TransactionProof transactionProof = ((BCOSDriver) driver).requestTransactionProof(transactionResponse.getHash(), connection);
         TransactionReceipt transactionReceipt = transactionProof.getReceiptAndProof().getTransactionReceipt();
 
-        assertTrue(transactionReceipt.getTransactionHash().equals(transactionResponse.getHash()));
+        assertEquals(transactionReceipt.getTransactionHash(), transactionResponse.getHash());
+        assertEquals(transactionReceipt.getBlockNumber().longValue(), transactionResponse.getBlockNumber());
+
     }
 
     @Test

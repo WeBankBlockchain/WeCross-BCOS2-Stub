@@ -21,16 +21,8 @@ public class TransactionProof {
         return transAndProof;
     }
 
-    public void setTransAndProof(TransactionWithProof.TransAndProof transAndProof) {
-        this.transAndProof = transAndProof;
-    }
-
     public TransactionReceiptWithProof.ReceiptAndProof getReceiptAndProof() {
         return receiptAndProof;
-    }
-
-    public void setReceiptAndProof(TransactionReceiptWithProof.ReceiptAndProof receiptAndProof) {
-        this.receiptAndProof = receiptAndProof;
     }
 
     @Override

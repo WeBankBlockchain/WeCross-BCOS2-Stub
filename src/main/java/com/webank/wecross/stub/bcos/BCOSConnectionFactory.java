@@ -13,8 +13,6 @@ import org.slf4j.LoggerFactory;
 public class BCOSConnectionFactory {
     private static final Logger logger = LoggerFactory.getLogger(BCOSConnectionFactory.class);
 
-    private BCOSConnectionFactory() {}
-
     public static BCOSConnection build(String stubConfigPath, Web3jWrapper web3jWrapper)
             throws Exception {
         /** load stub.toml config */

@@ -11,8 +11,6 @@ import org.fisco.bcos.web3j.utils.Numeric;
 
 public class SignTransaction {
 
-    private SignTransaction() {}
-
     public static final BigInteger gasPrice = BigInteger.valueOf(300000000000L);
     public static final BigInteger gasLimit = BigInteger.valueOf(300000000000L);
 

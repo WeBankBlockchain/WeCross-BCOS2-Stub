@@ -24,8 +24,6 @@ import org.fisco.bcos.web3j.utils.Numeric;
 @SuppressWarnings("rawtypes")
 public class FunctionUtility {
 
-    private FunctionUtility() {}
-
     public static final List<TypeReference<?>> abiTypeReferenceOutputs =
             Collections.singletonList(new TypeReference<DynamicArray<Utf8String>>() {});
 
