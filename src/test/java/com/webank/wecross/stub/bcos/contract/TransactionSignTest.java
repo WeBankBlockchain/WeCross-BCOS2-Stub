@@ -5,8 +5,6 @@ import static junit.framework.TestCase.assertEquals;
 import com.webank.wecross.stub.bcos.web3j.Web3jDefaultConfig;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.List;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
 import org.fisco.bcos.web3j.crypto.Credentials;
@@ -23,7 +21,7 @@ public class TransactionSignTest {
         BigInteger blockNumber = BigInteger.valueOf(1111111);
 
         String funcName = "testFuncName";
-        List<String> params = Arrays.asList("aaa", "bbbb", "ccc");
+        String[] params = new String[] {"aaa", "bbbb", "ccc"};
         Function function = FunctionUtility.newFunction(funcName, params);
         String abiData = FunctionEncoder.encode(function);
 

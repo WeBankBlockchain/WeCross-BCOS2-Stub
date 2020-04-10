@@ -38,7 +38,8 @@ public class Web3jWrapperWithExceptionMock implements Web3jWrapper {
     }
 
     @Override
-    public Call.CallOutput call(String contractAddress, String data) throws IOException {
+    public Call.CallOutput call(String accountAddress, String contractAddress, String data)
+            throws IOException {
         throw new IOException(" IOException");
     }
 }

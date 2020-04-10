@@ -21,19 +21,22 @@ import com.webank.wecross.stub.bcos.common.BCOSStubException;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.ProofVerifierUtility;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
+import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
 import org.fisco.bcos.web3j.crypto.Credentials;
+import org.fisco.bcos.web3j.crypto.ExtendedRawTransaction;
+import org.fisco.bcos.web3j.crypto.ExtendedTransactionDecoder;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.channel.StatusCode;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
+import org.fisco.bcos.web3j.protocol.core.methods.response.Transaction;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.fisco.bcos.web3j.utils.Numeric;
 import org.slf4j.Logger;
@@ -70,7 +73,48 @@ public class BCOSDriver implements Driver {
 
     @Override
     public TransactionContext<TransactionRequest> decodeTransactionRequest(byte[] data) {
-        return null;
+        try {
+            TransactionParams transactionParams =
+                    objectMapper.readValue(data, TransactionParams.class);
+
+            logger.debug(" TransactionParams: {}", transactionParams);
+
+            Objects.requireNonNull(
+                    transactionParams.getTransactionRequest(), "TransactionRequest is null");
+            Objects.requireNonNull(transactionParams.getData(), "Data is null");
+
+            TransactionRequest transactionRequest = transactionParams.getTransactionRequest();
+            // Validating abi
+            String abi = transactionParams.getData();
+            if (Objects.isNull(transactionParams.getTo())) {
+                // SendTransaction Operation
+                ExtendedRawTransaction extendedRawTransaction =
+                        ExtendedTransactionDecoder.decode(transactionParams.getData());
+                abi = "0x" + extendedRawTransaction.getData();
+            }
+
+            Function function =
+                    FunctionUtility.newFunction(
+                            transactionRequest.getMethod(), transactionRequest.getArgs());
+
+            String encodeAbi = FunctionEncoder.encode(function);
+
+            if (!encodeAbi.equals(abi)) {
+                logger.error(
+                        " Validating abi failed, method: {}, args: {}, abi: {}, encodeAbi: {} ",
+                        transactionRequest.getMethod(),
+                        transactionRequest.getArgs(),
+                        abi,
+                        encodeAbi);
+                throw new IllegalArgumentException(" Validating abi failed ");
+            }
+
+            return new TransactionContext<TransactionRequest>(transactionRequest, null, null, null);
+
+        } catch (Exception e) {
+            logger.error(" decodeTransactionRequest Exception: {}", e);
+            return null;
+        }
     }
 
     @Override
@@ -107,8 +151,11 @@ public class BCOSDriver implements Driver {
             // Function object
             Function function =
                     FunctionUtility.newFunction(
-                            request.getData().getMethod(),
-                            Arrays.asList(request.getData().getArgs()));
+                            request.getData().getMethod(), request.getData().getArgs());
+
+            // BCOSAccount to get credentials to sign the transaction
+            BCOSAccount bcosAccount = (BCOSAccount) request.getAccount();
+            Credentials credentials = bcosAccount.getCredentials();
 
             logger.debug(
                     " name:{}, address: {}, method: {}, args: {}",
@@ -117,10 +164,15 @@ public class BCOSDriver implements Driver {
                     request.getData().getMethod(),
                     request.getData().getArgs());
 
+            TransactionParams transaction =
+                    new TransactionParams(
+                            request.getData(),
+                            FunctionEncoder.encode(function),
+                            credentials.getAddress(),
+                            contractAddress);
             Request req =
                     requestBuilder(
-                            BCOSRequestType.CALL,
-                            contractAddress + "," + FunctionEncoder.encode(function));
+                            BCOSRequestType.CALL, objectMapper.writeValueAsBytes(transaction));
             Response resp = connection.send(req);
             if (resp.getErrorCode() != BCOSStatusCode.Success) {
                 throw new BCOSStubException(resp.getErrorCode(), resp.getErrorMessage());
@@ -190,8 +242,7 @@ public class BCOSDriver implements Driver {
             // Function object
             Function function =
                     FunctionUtility.newFunction(
-                            request.getData().getMethod(),
-                            Arrays.asList(request.getData().getArgs()));
+                            request.getData().getMethod(), request.getData().getArgs());
 
             logger.debug(
                     " contractAddress: {}, blockNumber: {}, method: {}, args: {}",
@@ -210,7 +261,11 @@ public class BCOSDriver implements Driver {
                             BigInteger.valueOf(blockNumber),
                             FunctionEncoder.encode(function));
 
-            Request req = requestBuilder(BCOSRequestType.SEND_TRANSACTION, signTx);
+            TransactionParams transaction = new TransactionParams(request.getData(), signTx);
+            Request req =
+                    requestBuilder(
+                            BCOSRequestType.SEND_TRANSACTION,
+                            objectMapper.writeValueAsBytes(transaction));
             Response resp = connection.send(req);
             if (resp.getErrorCode() != BCOSStatusCode.Success) {
                 throw new BCOSStubException(resp.getErrorCode(), resp.getErrorMessage());
@@ -223,6 +278,7 @@ public class BCOSDriver implements Driver {
 
             verifyTransactionProof(
                     receipt.getBlockNumber().longValue(),
+                    receipt.getTransactionHash(),
                     request.getBlockHeaderManager(),
                     transactionProof);
 
@@ -319,6 +375,7 @@ public class BCOSDriver implements Driver {
      */
     public void verifyTransactionProof(
             long blockNumber,
+            String hash,
             BlockHeaderManager blockHeaderManager,
             TransactionProof transactionProof)
             throws BCOSStubException {
@@ -350,7 +407,9 @@ public class BCOSDriver implements Driver {
                 transactionProof.getReceiptAndProof())) {
             throw new BCOSStubException(
                     BCOSStatusCode.TransactionProofVerifyFailed,
-                    BCOSStatusCode.getStatusMessage(BCOSStatusCode.TransactionProofVerifyFailed));
+                    BCOSStatusCode.getStatusMessage(BCOSStatusCode.TransactionProofVerifyFailed)
+                            + ", hash="
+                            + hash);
         }
     }
 
@@ -366,7 +425,7 @@ public class BCOSDriver implements Driver {
                     requestTransactionProof(transactionHash, connection);
             TransactionReceipt receipt =
                     transactionProof.getReceiptAndProof().getTransactionReceipt();
-
+            Transaction transaction = transactionProof.getTransAndProof().getTransaction();
             if (blockNumber != receipt.getBlockNumber().longValue()) {
                 logger.warn(
                         " invalid blockNumber, blockNumber: {}, receipt blockNumber: {}",
@@ -375,7 +434,8 @@ public class BCOSDriver implements Driver {
                 blockNumber = receipt.getBlockNumber().longValue();
             }
 
-            verifyTransactionProof(blockNumber, blockHeaderManager, transactionProof);
+            verifyTransactionProof(
+                    blockNumber, transactionHash, blockHeaderManager, transactionProof);
 
             TransactionRequest transactionRequest = new TransactionRequest();
             /** decode input args from input */
@@ -400,9 +460,7 @@ public class BCOSDriver implements Driver {
                             transactionRequest,
                             transactionResponse);
 
-            if (logger.isTraceEnabled()) {
-                logger.trace(" VerifiedTransaction: {}", verifiedTransaction);
-            }
+            logger.trace(" VerifiedTransaction: {}", verifiedTransaction);
 
             return verifiedTransaction;
         } catch (Exception e) {
