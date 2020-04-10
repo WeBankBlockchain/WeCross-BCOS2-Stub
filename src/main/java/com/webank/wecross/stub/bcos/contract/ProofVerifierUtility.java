@@ -38,13 +38,24 @@ public class ProofVerifierUtility {
         String proof = Merkle.calculateMerkleRoot(transAndProof.getTxProof(), input);
 
         logger.debug(
-                " transaction hash: {}, index: {}, root: {}, proof: {}",
+                " transaction hash: {}, transaction index: {}, root: {}, proof: {}",
                 transaction.getHash(),
                 transaction.getTransactionIndex(),
                 transactionRoot,
                 proof);
 
-        return proof.equals(transactionRoot);
+        boolean verifyOk = proof.equals(transactionRoot);
+
+        if (!verifyOk) {
+            logger.warn(
+                    " transaction verify failed, hash: {}, index: {}, transaction root: {}, proof:{}",
+                    transaction.getHash(),
+                    transaction.getTransactionIndex(),
+                    transactionRoot,
+                    proof);
+        }
+
+        return verifyOk;
     }
 
     public static boolean verifyTransactionReceipt(
@@ -67,12 +78,23 @@ public class ProofVerifierUtility {
         String proof = Merkle.calculateMerkleRoot(receiptAndProof.getReceiptProof(), input);
 
         logger.debug(
-                " transaction hash: {}, index: {}, root: {}, proof: {}",
+                " transaction hash: {}, receipt index: {}, root: {}, proof: {}, receipt: {}",
                 transactionReceipt.getTransactionHash(),
                 transactionReceipt.getTransactionIndex(),
                 receiptRoot,
-                proof);
+                proof,
+                receiptAndProof.getTransactionReceipt());
 
-        return proof.equals(receiptRoot);
+        boolean verifyOk = proof.equals(receiptRoot);
+
+        if (!verifyOk) {
+            logger.warn(
+                    " transaction receipt verify failed, transaction receipt: {}, receipt root: {}, proof:{}",
+                    transactionReceipt,
+                    receiptRoot,
+                    proof);
+        }
+
+        return verifyOk;
     }
 }

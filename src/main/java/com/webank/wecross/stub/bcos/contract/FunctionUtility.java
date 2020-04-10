@@ -13,16 +13,22 @@ import org.fisco.bcos.web3j.abi.datatypes.Function;
 import org.fisco.bcos.web3j.abi.datatypes.Type;
 import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.fisco.bcos.web3j.utils.Numeric;
 
 /**
  * Function object used across blockchain chain. Wecross requires that a cross-chain contract
  * interface must conform to the following format:
  *
  * <p>function funcName(string[] params) public returns(string[])
+ *
+ * <p>or
+ *
+ * <p>function funcName() public returns(string[])
  */
 @SuppressWarnings("rawtypes")
 public class FunctionUtility {
+
+    public static final int MethodIDLength = 8;
+    public static final int MethodIDWithHexPrefixLength = MethodIDLength + 2;
 
     public static final List<TypeReference<?>> abiTypeReferenceOutputs =
             Collections.singletonList(new TypeReference<DynamicArray<Utf8String>>() {});
@@ -34,15 +40,22 @@ public class FunctionUtility {
      * @param params
      * @return Function
      */
-    public static Function newFunction(String funcName, List<String> params) {
+    public static Function newFunction(String funcName, String[] params) {
+
+        if (Objects.isNull(params)) {
+            // public func() returns(string[])
+            return new Function(funcName, Arrays.<Type>asList(), abiTypeReferenceOutputs);
+        }
+
+        // public func(string[]) returns(string[])
         return new Function(
                 funcName,
                 Arrays.asList(
-                        (Objects.isNull(params) || params.isEmpty())
+                        (0 == params.length)
                                 ? DynamicArray.empty("string[]")
                                 : new DynamicArray<>(
                                         org.fisco.bcos.web3j.abi.Utils.typeMap(
-                                                params, Utf8String.class))),
+                                                Arrays.asList(params), Utf8String.class))),
                 abiTypeReferenceOutputs);
     }
 
@@ -77,18 +90,16 @@ public class FunctionUtility {
      * @return
      */
     public static String[] decodeInput(String input) {
-        if (Objects.isNull(input)
-                || "".equals(input)
-                || input.length() <= 8
-                || (Numeric.containsHexPrefix(input) && input.length() <= 10)) {
+        if (Objects.isNull(input) || input.length() < MethodIDWithHexPrefixLength) {
             return null;
         }
 
-        if (Numeric.containsHexPrefix(input)) {
-            return decodeOutput(input.substring(10));
+        // function funcName() public returns(string[])
+        if (input.length() == MethodIDWithHexPrefixLength) {
+            return null;
         }
 
-        return decodeOutput(input.substring(8));
+        return decodeOutput(input.substring(MethodIDWithHexPrefixLength));
     }
 
     /**
@@ -98,9 +109,7 @@ public class FunctionUtility {
      * @return
      */
     public static String[] decodeOutput(TransactionReceipt receipt) {
-        if (Objects.isNull(receipt)
-                || Objects.isNull(receipt.getOutput())
-                || !receipt.isStatusOK()) {
+        if (Objects.isNull(receipt) || !receipt.isStatusOK()) {
             return null;
         }
 
@@ -114,6 +123,10 @@ public class FunctionUtility {
      * @return
      */
     public static String[] decodeOutput(String output) {
+        if (Objects.isNull(output) || output.length() < MethodIDWithHexPrefixLength) {
+            return null;
+        }
+
         List<Type> outputTypes =
                 FunctionReturnDecoder.decode(
                         output, Utils.convert(FunctionUtility.abiTypeReferenceOutputs));
