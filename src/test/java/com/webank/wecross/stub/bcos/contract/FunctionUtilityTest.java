@@ -7,6 +7,7 @@ import static junit.framework.TestCase.assertTrue;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.FunctionReturnDecoder;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
@@ -102,10 +103,10 @@ public class FunctionUtilityTest {
     @Test
     public void decodeInputTest() throws IOException {
         String[] input = FunctionUtility.decodeInput("0x");
-        assertTrue(input.length == 0);
+        assertTrue(Objects.isNull(input));
 
         String[] input0 = FunctionUtility.decodeInput("");
-        assertTrue(input0.length == 0);
+        assertTrue(Objects.isNull(input0));
 
         String funcName = "funcName";
         List<String> params0 = Arrays.asList();
@@ -143,7 +144,7 @@ public class FunctionUtilityTest {
         String[] inputs = FunctionUtility.decodeInput(receipt);
         assertTrue(inputs.length == params.size());
         String[] outputs = FunctionUtility.decodeOutput(receipt);
-        assertTrue(outputs.length == 0);
+        assertTrue(Objects.isNull(outputs));
     }
 
     @Test
@@ -179,6 +180,6 @@ public class FunctionUtilityTest {
         String[] inputs = FunctionUtility.decodeInput(receipt);
         assertTrue(inputs.length == params.size());
         String[] outputs = FunctionUtility.decodeOutput(receipt);
-        assertTrue(outputs.length == 0);
+        assertTrue(Objects.isNull(outputs));
     }
 }

@@ -20,8 +20,6 @@ import org.slf4j.LoggerFactory;
 
 public class BCOSAccountFactory {
 
-    private BCOSAccountFactory() {}
-
     private static final Logger logger = LoggerFactory.getLogger(BCOSAccountFactory.class);
 
     public static BCOSAccount build(String name, String accountPath)

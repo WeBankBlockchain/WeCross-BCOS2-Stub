@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 @Stub("BCOS2.0")
 public class BCOSStubFactory implements StubFactory {
-    private Logger logger = LoggerFactory.getLogger(BCOSStubFactory.class);
+    private static final Logger logger = LoggerFactory.getLogger(BCOSStubFactory.class);
 
     @Override
     public Driver newDriver() {
@@ -38,4 +38,10 @@ public class BCOSStubFactory implements StubFactory {
             return null;
         }
     }
+
+    @Override
+    public void generateAccount(String s, String[] strings) {}
+
+    @Override
+    public void generateConnection(String s, String[] strings) {}
 }

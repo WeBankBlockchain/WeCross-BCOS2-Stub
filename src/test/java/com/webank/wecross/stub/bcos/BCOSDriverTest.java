@@ -17,8 +17,8 @@ import com.webank.wecross.stub.TransactionResponse;
 import com.webank.wecross.stub.VerifiedTransaction;
 import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
+import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImplMock;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperNoneZeroStatusMock;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperNotExistMock;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperWithExceptionMock;
 import java.io.IOException;
@@ -26,8 +26,6 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import org.fisco.bcos.web3j.protocol.channel.StatusCode;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -38,7 +36,6 @@ public class BCOSDriverTest {
     private Connection connection = null;
     private Connection failedConnection = null;
     private Connection notExistConnection = null;
-    private Connection nonZeroStatusConnection = null;
     private ResourceInfo resourceInfo = null;
     private BlockHeaderManager blockHeaderManager = null;
 
@@ -66,9 +63,6 @@ public class BCOSDriverTest {
         failedConnection =
                 BCOSConnectionFactory.build(
                         "stub-sample-ut.toml", new Web3jWrapperWithExceptionMock());
-        nonZeroStatusConnection =
-                BCOSConnectionFactory.build(
-                        "stub-sample-ut.toml", new Web3jWrapperNoneZeroStatusMock());
         notExistConnection =
                 BCOSConnectionFactory.build("stub-sample-ut.toml", new Web3jWrapperNotExistMock());
         blockHeaderManager = new BlockHeaderManagerImplMock(new Web3jWrapperImplMock());
@@ -95,7 +89,7 @@ public class BCOSDriverTest {
         request.setType(BCOSRequestType.GET_BLOCK_HEADER);
         assertFalse(driver.isTransaction(request));
 
-        request.setType(BCOSRequestType.GET_TRANSACTION_RECEIPT);
+        request.setType(BCOSRequestType.GET_TRANSACTION_PROOF);
         assertFalse(driver.isTransaction(request));
 
         request.setType(11111);
@@ -205,29 +199,12 @@ public class BCOSDriverTest {
         TransactionResponse transactionResponse =
                 driver.call(requestTransactionContext, failedConnection);
 
-        assertTrue(transactionResponse.getErrorCode() < 0);
+        assertEquals(
+                transactionResponse.getErrorCode().intValue(),
+                BCOSStatusCode.HandleCallRequestFailed);
     }
 
-    @Test
-    public void callNonZeroStatusTest() throws IOException {
-
-        Request request = new Request();
-        request.setType(BCOSRequestType.CALL);
-
-        String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
-        String funName = "funcName";
-        List<String> params = Arrays.asList("abc", "def", "hig", "xxxxx");
-
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(funName, params);
-        TransactionResponse transactionResponse =
-                driver.call(requestTransactionContext, nonZeroStatusConnection);
-
-        assertTrue(transactionResponse.getErrorCode() < 0);
-        assertTrue(
-                transactionResponse.getErrorMessage().equals(StatusCode.getStatusMessage("0x16")));
-    }
-
+    /*
     @Test
     public void sendTransactionTest() throws IOException {
 
@@ -249,7 +226,7 @@ public class BCOSDriverTest {
                         .getHash()
                         .equals(
                                 "0xcd0ec220b00a97115e367749be2dedec848236781f6a242a3ffa1d956dbf8ec5"));
-    }
+    }*/
 
     @Test
     public void sendTransactionFailedTest() throws IOException {
@@ -266,49 +243,11 @@ public class BCOSDriverTest {
         TransactionResponse transactionResponse =
                 driver.sendTransaction(requestTransactionContext, failedConnection);
 
-        assertTrue(transactionResponse.getErrorCode() < 0);
-    }
-
-    @Test
-    public void sendTransactionNonZeroStatusTest() throws IOException {
-
-        Request request = new Request();
-        request.setType(BCOSRequestType.SEND_TRANSACTION);
-
-        String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
-        String funName = "funcName";
-        List<String> params = Arrays.asList("abc", "def", "hig", "xxxxx");
-
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(funName, params);
-        TransactionResponse transactionResponse =
-                driver.sendTransaction(requestTransactionContext, nonZeroStatusConnection);
-
-        assertTrue(transactionResponse.getErrorCode() < 0);
         assertTrue(
-                transactionResponse.getErrorMessage().equals(StatusCode.getStatusMessage("0x16")));
+                transactionResponse.getErrorCode() == BCOSStatusCode.HandleSendTransactionFailed);
     }
 
-    @Test
-    public void getTransactionReceiptTest() throws IOException {
-        String transactionHash =
-                "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
-        TransactionReceipt receipt =
-                ((BCOSDriver) driver).requestTransactionReceipt(transactionHash, connection);
-        assertTrue(!receipt.getTransactionHash().isEmpty());
-    }
-
-    @Test
-    public void getTransactionReceiptNoneZeroStatusTest() throws IOException {
-        String transactionHash =
-                "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
-        TransactionReceipt receipt =
-                ((BCOSDriver) driver)
-                        .requestTransactionReceipt(transactionHash, nonZeroStatusConnection);
-        assertTrue(!receipt.getTransactionHash().isEmpty());
-        assertTrue(receipt.getStatus().equals("0x16"));
-    }
-
+    /*
     @Test
     public void getVerifyTransactionTest() throws IOException {
         String transactionHash =
@@ -319,21 +258,7 @@ public class BCOSDriverTest {
                         transactionHash, blockNumber, blockHeaderManager, connection);
         assertEquals(verifiedTransaction.getBlockNumber(), blockNumber);
         assertEquals(verifiedTransaction.getTransactionHash(), transactionHash);
-    }
-
-    @Test
-    public void getVerifyTransactionNonZeroStatusTest() throws IOException {
-        String transactionHash =
-                "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
-        long blockNumber = 11111;
-        VerifiedTransaction verifiedTransaction =
-                driver.getVerifiedTransaction(
-                        transactionHash, blockNumber, blockHeaderManager, nonZeroStatusConnection);
-        assertTrue(Objects.nonNull(verifiedTransaction));
-        assertEquals(verifiedTransaction.getTransactionRequest().getArgs().length, 4);
-        assertEquals(verifiedTransaction.getTransactionResponse().getResult().length, 0);
-        assertEquals(verifiedTransaction.getTransactionResponse().getErrorCode().intValue(), 22);
-    }
+    }*/
 
     @Test
     public void getVerifyTransactionNotExistTest() throws IOException {

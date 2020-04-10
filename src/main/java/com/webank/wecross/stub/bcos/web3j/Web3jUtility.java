@@ -1,6 +1,5 @@
 package com.webank.wecross.stub.bcos.web3j;
 
-import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +35,7 @@ public class Web3jUtility {
                         channelServiceConfig.getChain().isEnableGM()
                                 ? EncryptType.SM2_TYPE
                                 : EncryptType.ECDSA_TYPE);
-        logger.trace(" EncryptType: {}", encryptType.getEncryptType());
+        // logger.trace(" EncryptType: {}", encryptType.getEncryptType());
 
         List<ChannelConnections> allChannelConnections = new ArrayList<>();
         ChannelConnections channelConnections = new ChannelConnections();
@@ -58,10 +57,7 @@ public class Web3jUtility {
 
         Service service = new Service();
 
-        /** Initialize the Web3J service */
-        service.setConnectSeconds(BCOSConstant.WE3J_START_TIMEOUT_DEFAULT);
         service.setGroupId(channelServiceConfig.getChain().getGroupID());
-
         service.setAllChannelConnections(groupChannelConnectionsConfig);
 
         /** service run */

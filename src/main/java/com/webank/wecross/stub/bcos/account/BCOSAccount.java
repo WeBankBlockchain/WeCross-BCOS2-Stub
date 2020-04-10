@@ -2,7 +2,6 @@ package com.webank.wecross.stub.bcos.account;
 
 import com.webank.wecross.stub.Account;
 import org.fisco.bcos.web3j.crypto.Credentials;
-import org.fisco.bcos.web3j.crypto.Keys;
 import org.fisco.bcos.web3j.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +21,7 @@ public class BCOSAccount implements Account {
         this.credentials = credentials;
         this.publicKey =
                 Numeric.toHexStringWithPrefixZeroPadded(
-                        credentials.getEcKeyPair().getPublicKey(), Keys.PUBLIC_KEY_LENGTH_IN_HEX);
+                        credentials.getEcKeyPair().getPublicKey(), 128);
         logger.info(" name: {}, type: {}, publicKey: {}", name, type, publicKey);
     }
 
