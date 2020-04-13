@@ -3,6 +3,7 @@ package com.webank.wecross.stub.bcos.config;
 public class BCOSAccountConfig {
     private String accountFile;
     private String passwd;
+    private String isGM;
     private String type;
 
     public void setAccountFile(String accountFile) {
@@ -27,5 +28,31 @@ public class BCOSAccountConfig {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getIsGM() {
+        return isGM;
+    }
+
+    public void setIsGM(String isGM) {
+        this.isGM = isGM;
+    }
+
+    @Override
+    public String toString() {
+        return "BCOSAccountConfig{"
+                + "accountFile='"
+                + accountFile
+                + '\''
+                + ", passwd='"
+                + passwd
+                + '\''
+                + ", isGM='"
+                + isGM
+                + '\''
+                + ", type='"
+                + type
+                + '\''
+                + '}';
     }
 }

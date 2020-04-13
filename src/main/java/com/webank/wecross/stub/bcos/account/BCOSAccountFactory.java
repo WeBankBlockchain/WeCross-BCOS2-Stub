@@ -14,6 +14,7 @@ import org.fisco.bcos.channel.client.P12Manager;
 import org.fisco.bcos.channel.client.PEMManager;
 import org.fisco.bcos.web3j.crypto.Credentials;
 import org.fisco.bcos.web3j.crypto.ECKeyPair;
+import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.fisco.bcos.web3j.crypto.gm.GenCredential;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,11 @@ public class BCOSAccountFactory {
 
         String accountFile = accountPath + File.separator + bcosAccountConfig.getAccountFile();
         String passwd = bcosAccountConfig.getPasswd();
+        String gm = bcosAccountConfig.getIsGM();
 
+        int oldEncryptType = EncryptType.encryptType;
+        EncryptType encryptType =
+                new EncryptType("true".equals(gm) ? EncryptType.SM2_TYPE : EncryptType.ECDSA_TYPE);
         Credentials credentials = null;
         if (accountFile.endsWith("p12")) {
             logger.debug("Loading account p12: {}", accountFile);
@@ -43,6 +48,7 @@ public class BCOSAccountFactory {
             logger.debug("Loading account pem: {}", accountFile);
             credentials = loadPemAccount(accountFile);
         }
+        encryptType = new EncryptType(oldEncryptType);
 
         return new BCOSAccount(name, bcosAccountConfig.getType(), credentials);
     }
