@@ -46,8 +46,8 @@ public class SignTransaction {
                         contractAddress,
                         BigInteger.ZERO,
                         abi,
-                        groupId,
                         chainId,
+                        groupId,
                         "");
 
         byte[] signedMessage = ExtendedTransactionEncoder.signMessage(rawTransaction, credentials);

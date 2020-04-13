@@ -2,7 +2,6 @@ package com.webank.wecross.stub.bcos.contract;
 
 import static junit.framework.TestCase.assertEquals;
 
-import com.webank.wecross.stub.bcos.web3j.Web3jDefaultConfig;
 import java.io.IOException;
 import java.math.BigInteger;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
@@ -28,14 +27,10 @@ public class TransactionSignTest {
         String to = "0xb3c223fc0bf6646959f254ac4e4a7e355b50a355";
         String extraData = "extraData";
 
-        String sign =
-                SignTransaction.sign(
-                        credentials,
-                        to,
-                        BigInteger.valueOf(Web3jDefaultConfig.DEFAULT_GROUP_ID),
-                        BigInteger.valueOf(Web3jDefaultConfig.DEFAULT_CHAIN_ID),
-                        blockNumber,
-                        abiData);
+        BigInteger groupID = BigInteger.valueOf(111);
+        BigInteger chainID = BigInteger.valueOf(222);
+
+        String sign = SignTransaction.sign(credentials, to, groupID, chainID, blockNumber, abiData);
         ExtendedRawTransaction decodeExtendedRawTransaction =
                 ExtendedTransactionDecoder.decode(sign);
 
@@ -44,8 +39,7 @@ public class TransactionSignTest {
         assertEquals(to, decodeExtendedRawTransaction.getTo());
         assertEquals(BigInteger.ZERO, decodeExtendedRawTransaction.getValue());
         assertEquals(abiData, "0x" + decodeExtendedRawTransaction.getData());
-        assertEquals(
-                BigInteger.valueOf(Web3jDefaultConfig.DEFAULT_GROUP_ID),
-                decodeExtendedRawTransaction.getGroupId());
+        assertEquals(groupID, decodeExtendedRawTransaction.getGroupId());
+        assertEquals(chainID, decodeExtendedRawTransaction.getFiscoChainId());
     }
 }
