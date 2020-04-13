@@ -10,6 +10,7 @@ import com.webank.wecross.stub.Response;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.BCOSStubException;
+import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import java.io.IOException;
@@ -18,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
+import org.fisco.bcos.web3j.protocol.channel.StatusCode;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -87,15 +89,18 @@ public class BCOSConnection implements Connection {
     public Response handleCallRequest(Request request) {
         Response response = new Response();
         try {
-            String params = new String(request.getData(), StandardCharsets.UTF_8);
-            String[] split = params.split(",");
+            TransactionParams transaction =
+                    objectMapper.readValue(request.getData(), TransactionParams.class);
 
-            Call.CallOutput callOutput = web3jWrapper.call(split[0], split[1]);
+            Call.CallOutput callOutput =
+                    web3jWrapper.call(
+                            transaction.getFrom(), transaction.getTo(), transaction.getData());
 
             logger.debug(
-                    " contractAddress: {}, data: {}, status: {}, current blk: {}, output: {}",
-                    split[0],
-                    split[1],
+                    " accountAddress: {}, contractAddress: {}, data: {}, status: {}, current blk: {}, output: {}",
+                    transaction.getFrom(),
+                    transaction.getTo(),
+                    transaction.getData(),
                     callOutput.getStatus(),
                     callOutput.getCurrentBlockNumber(),
                     callOutput.getOutput());
@@ -114,9 +119,9 @@ public class BCOSConnection implements Connection {
     public Response handleTransactionRequest(Request request) {
         Response response = new Response();
         try {
-            String signTx = new String(request.getData(), StandardCharsets.UTF_8);
-
-            logger.debug(" signTx: {}", signTx);
+            TransactionParams transaction =
+                    objectMapper.readValue(request.getData(), TransactionParams.class);
+            String signTx = transaction.getData();
 
             TransactionReceipt receipt = web3jWrapper.sendTransaction(signTx);
             if (Objects.isNull(receipt)
@@ -127,13 +132,20 @@ public class BCOSConnection implements Connection {
                         BCOSStatusCode.getStatusMessage(BCOSStatusCode.TransactionReceiptNotExist));
             }
 
+            // transaction  failed
+            if (!receipt.isStatusOK()) {
+                throw new BCOSStubException(
+                        BCOSStatusCode.SendTransactionNotSuccessStatus,
+                        StatusCode.getStatusMessage(receipt.getStatus()));
+            }
+
             TransactionProof transactionProof = getTransactionProof(receipt.getTransactionHash());
 
             response.setErrorCode(BCOSStatusCode.Success);
             response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
-            response.setData(objectMapper.writeValueAsBytes(transactionProof));
-            logger.debug(" sendTransaction, transaction proof: {}", transactionProof);
-
+            String proof = objectMapper.writeValueAsString(transactionProof);
+            response.setData(proof.getBytes(StandardCharsets.UTF_8));
+            logger.debug(" sendTransaction, tx: {}, proof: {}", signTx, proof);
         } catch (BCOSStubException e) {
             response.setErrorCode(e.getErrorCode());
             response.setErrorMessage(e.getMessage());
@@ -213,7 +225,6 @@ public class BCOSConnection implements Connection {
                     txHash,
                     transactionProof.getTransAndProof(),
                     transactionProof.getReceiptAndProof());
-
         } catch (BCOSStubException e) {
             response.setErrorCode(e.getErrorCode());
             response.setErrorMessage(e.getMessage());
