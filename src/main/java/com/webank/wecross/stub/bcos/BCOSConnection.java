@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
+import org.fisco.bcos.web3j.protocol.channel.StatusCode;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -129,6 +130,13 @@ public class BCOSConnection implements Connection {
                 throw new BCOSStubException(
                         BCOSStatusCode.TransactionReceiptNotExist,
                         BCOSStatusCode.getStatusMessage(BCOSStatusCode.TransactionReceiptNotExist));
+            }
+
+            // transaction  failed
+            if (!receipt.isStatusOK()) {
+                throw new BCOSStubException(
+                        BCOSStatusCode.SendTransactionNotSuccessStatus,
+                        StatusCode.getStatusMessage(receipt.getStatus()));
             }
 
             TransactionProof transactionProof = getTransactionProof(receipt.getTransactionHash());
