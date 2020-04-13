@@ -61,7 +61,7 @@ configurations {
 dependencies {
 
     // implementation 'com.webank:wecross-java-stub:1.0.0-rc2-0326-SNAPSHOT'
-    implementation 'com.webank:wecross-java-stub:1.0.0-rc2-0402-SNAPSHOT'
+    implementation 'com.webank:wecross-java-stub:1.0.0-rc2-0408-SNAPSHOT'
     implementation 'org.slf4j:slf4j-api:1.7.25'
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'
