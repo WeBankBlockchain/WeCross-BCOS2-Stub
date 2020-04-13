@@ -2,7 +2,7 @@ package com.webank.wecross.stub.bcos.contract;
 
 import static junit.framework.TestCase.assertEquals;
 
-import com.webank.wecross.stub.bcos.common.BCOSConstant;
+import com.webank.wecross.stub.bcos.web3j.Web3jDefaultConfig;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -34,8 +34,8 @@ public class TransactionSignTest {
                 SignTransaction.sign(
                         credentials,
                         to,
-                        BigInteger.valueOf(BCOSConstant.BCOS_DEFAULT_GROUP_ID),
-                        BigInteger.valueOf(BCOSConstant.BCOS_DEFAULT_CHAIN_ID),
+                        BigInteger.valueOf(Web3jDefaultConfig.DEFAULT_GROUP_ID),
+                        BigInteger.valueOf(Web3jDefaultConfig.DEFAULT_CHAIN_ID),
                         blockNumber,
                         abiData);
         ExtendedRawTransaction decodeExtendedRawTransaction =
@@ -47,7 +47,7 @@ public class TransactionSignTest {
         assertEquals(BigInteger.ZERO, decodeExtendedRawTransaction.getValue());
         assertEquals(abiData, "0x" + decodeExtendedRawTransaction.getData());
         assertEquals(
-                BigInteger.valueOf(BCOSConstant.BCOS_DEFAULT_GROUP_ID),
+                BigInteger.valueOf(Web3jDefaultConfig.DEFAULT_GROUP_ID),
                 decodeExtendedRawTransaction.getGroupId());
     }
 }

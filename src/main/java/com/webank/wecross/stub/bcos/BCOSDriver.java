@@ -16,12 +16,15 @@ import com.webank.wecross.stub.VerifiedTransaction;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
+import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
+import com.webank.wecross.stub.bcos.common.BCOSStubException;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
+import com.webank.wecross.stub.bcos.contract.ProofVerifierUtility;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
+import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidParameterException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
@@ -36,14 +39,33 @@ import org.fisco.bcos.web3j.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** Driver implementation for BCOS */
 public class BCOSDriver implements Driver {
 
-    private static Logger logger = LoggerFactory.getLogger(BCOSDriver.class);
+    private static final Logger logger = LoggerFactory.getLogger(BCOSDriver.class);
 
     private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
 
     public BCOSDriver() {
         objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+    }
+
+    /**
+     * create Request object
+     *
+     * @param type
+     * @param content
+     * @return Request
+     */
+    private Request requestBuilder(int type, String content) {
+        return requestBuilder(type, content.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private Request requestBuilder(int type, byte[] content) {
+        Request request = new Request();
+        request.setType(type);
+        request.setData(content);
+        return request;
     }
 
     @Override
@@ -61,8 +83,8 @@ public class BCOSDriver implements Driver {
     public BlockHeader decodeBlockHeader(byte[] data) {
         try {
             return objectMapper.readValue(data, BlockHeader.class);
-        } catch (IOException e) {
-            logger.warn(" IOException: {}", e);
+        } catch (Exception e) {
+            logger.error(" decodeBlockHeader Exception: {}", e);
             return null;
         }
     }
@@ -74,68 +96,62 @@ public class BCOSDriver implements Driver {
         TransactionResponse response = new TransactionResponse();
 
         try {
-            // check
-            checkRequest(request);
-
-            // get contractAddress from resourceInfo
             ResourceInfo resourceInfo = request.getResourceInfo();
             Map<Object, Object> properties = resourceInfo.getProperties();
 
-            logger.trace(
-                    " resource => name: {}, type: {}, properties: {}",
-                    resourceInfo.getName(),
-                    resourceInfo.getStubType(),
-                    resourceInfo.getProperties());
+            // input validation
+            checkRequest(request);
+            checkProperties(resourceInfo.getName(), properties);
 
             String contractAddress = (String) properties.get(resourceInfo.getName());
-            Objects.requireNonNull(
-                    contractAddress,
-                    " Not found contract address, resource name: " + resourceInfo.getName());
-
             // Function object
             Function function =
                     FunctionUtility.newFunction(
                             request.getData().getMethod(),
                             Arrays.asList(request.getData().getArgs()));
-            // ABI data
-            String data = FunctionEncoder.encode(function);
 
             logger.debug(
-                    " address: {}, method: {}, args: {}, abi: {}",
+                    " name:{}, address: {}, method: {}, args: {}",
+                    resourceInfo.getName(),
                     contractAddress,
                     request.getData().getMethod(),
-                    request.getData().getArgs(),
-                    data);
+                    request.getData().getArgs());
 
-            Request req = new Request();
-            req.setType(BCOSRequestType.CALL);
-            req.setData((contractAddress + "," + data).getBytes(StandardCharsets.UTF_8));
+            Request req =
+                    requestBuilder(
+                            BCOSRequestType.CALL,
+                            contractAddress + "," + FunctionEncoder.encode(function));
             Response resp = connection.send(req);
-            if (resp.getErrorCode() != 0) {
-                throw new RuntimeException(resp.getErrorMessage());
+            if (resp.getErrorCode() != BCOSStatusCode.Success) {
+                throw new BCOSStubException(resp.getErrorCode(), resp.getErrorMessage());
             }
 
             Call.CallOutput callOutput =
                     objectMapper.readValue(resp.getData(), Call.CallOutput.class);
 
             logger.debug(
-                    " CallOutput,  status: {}, current blk: {}",
+                    " call result, status: {}, blk: {}",
                     callOutput.getStatus(),
                     callOutput.getCurrentBlockNumber());
+
             if (StatusCode.Success.equals(callOutput.getStatus())) {
-                response.setErrorCode(0);
-                response.setErrorMessage("success");
+                response.setErrorCode(BCOSStatusCode.Success);
+                response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
                 response.setResult(FunctionUtility.decodeOutput(callOutput.getOutput()));
             } else {
-                response.setErrorCode(-1);
+                response.setErrorCode(BCOSStatusCode.CallNotSuccessStatus);
                 response.setErrorMessage(StatusCode.getStatusMessage(callOutput.getStatus()));
             }
 
+        } catch (BCOSStubException e) {
+            response.setErrorCode(e.getErrorCode());
+            response.setErrorMessage(e.getMessage());
         } catch (Exception e) {
             logger.warn(" Exception: {}", e);
-            response.setErrorCode(-1);
+            response.setErrorCode(BCOSStatusCode.UnclassifiedError);
             response.setErrorMessage(" errorMessage: " + e.getMessage());
         }
+
         logger.trace(
                 " errorCode: {}, errorMessage: {}, output: {}",
                 response.getErrorCode(),
@@ -152,36 +168,20 @@ public class BCOSDriver implements Driver {
         TransactionResponse response = new TransactionResponse();
 
         try {
-            // check
-            checkRequest(request);
-
-            // get contractAddress, groupId, chainId from resourceInfo
             ResourceInfo resourceInfo = request.getResourceInfo();
-
-            logger.trace(
-                    " resource name: {}, type: {}, properties: {}",
-                    resourceInfo.getName(),
-                    resourceInfo.getStubType(),
-                    resourceInfo.getProperties());
-
             Map<Object, Object> properties = resourceInfo.getProperties();
+            // input validation
+            checkRequest(request);
+            checkProperties(resourceInfo.getName(), properties);
 
             // contractAddress
             String contractAddress = (String) properties.get(resourceInfo.getName());
-            Objects.requireNonNull(
-                    contractAddress,
-                    " Not found contract address, resource name: " + resourceInfo.getName());
-
+            // groupId
             Integer groupId = (Integer) properties.get(BCOSConstant.BCOS_RESOURCEINFO_GROUP_ID);
-            Objects.requireNonNull(
-                    groupId, " Not found groupId, resource name: " + resourceInfo.getName());
-
+            // chainId
             Integer chainId = (Integer) properties.get(BCOSConstant.BCOS_RESOURCEINFO_CHAIN_ID);
-            Objects.requireNonNull(
-                    chainId, " Not found chainId, resource name: " + resourceInfo.getName());
 
             long blockNumber = request.getBlockHeaderManager().getBlockNumber();
-            logger.trace(" blockNumber: {}", blockNumber);
 
             // BCOSAccount to get credentials to sign the transaction
             BCOSAccount bcosAccount = (BCOSAccount) request.getAccount();
@@ -192,8 +192,13 @@ public class BCOSDriver implements Driver {
                     FunctionUtility.newFunction(
                             request.getData().getMethod(),
                             Arrays.asList(request.getData().getArgs()));
-            // ABI data
-            String data = FunctionEncoder.encode(function);
+
+            logger.debug(
+                    " contractAddress: {}, blockNumber: {}, method: {}, args: {}",
+                    contractAddress,
+                    blockNumber,
+                    request.getData().getMethod(),
+                    request.getData().getArgs());
 
             // get signed transaction hex string
             String signTx =
@@ -203,35 +208,41 @@ public class BCOSDriver implements Driver {
                             BigInteger.valueOf(groupId),
                             BigInteger.valueOf(chainId),
                             BigInteger.valueOf(blockNumber),
-                            data);
+                            FunctionEncoder.encode(function));
 
-            Request req = new Request();
-            req.setType(BCOSRequestType.SEND_TRANSACTION);
-            req.setData(signTx.getBytes(StandardCharsets.UTF_8));
+            Request req = requestBuilder(BCOSRequestType.SEND_TRANSACTION, signTx);
             Response resp = connection.send(req);
-            if (resp.getErrorCode() != 0) {
-                throw new RuntimeException(resp.getErrorMessage());
+            if (resp.getErrorCode() != BCOSStatusCode.Success) {
+                throw new BCOSStubException(resp.getErrorCode(), resp.getErrorMessage());
             }
 
+            TransactionProof transactionProof =
+                    objectMapper.readValue(resp.getData(), TransactionProof.class);
             TransactionReceipt receipt =
-                    objectMapper.readValue(resp.getData(), TransactionReceipt.class);
+                    transactionProof.getReceiptAndProof().getTransactionReceipt();
 
-            if (Objects.nonNull(receipt.getTransactionHash())
-                    && (!"".equals(receipt.getTransactionHash()))) {
-                response.setHash(receipt.getTransactionHash());
-                response.setBlockNumber(receipt.getBlockNumber().longValue());
-            }
+            verifyTransactionProof(
+                    receipt.getBlockNumber().longValue(),
+                    request.getBlockHeaderManager(),
+                    transactionProof);
+
+            response.setBlockNumber(receipt.getBlockNumber().longValue());
+            response.setHash(receipt.getTransactionHash());
+            response.setResult(FunctionUtility.decodeOutput(receipt));
 
             if (receipt.isStatusOK()) {
-                response.setResult(FunctionUtility.decodeOutput(receipt));
-                response.setErrorCode(0);
+                response.setErrorCode(BCOSStatusCode.Success);
+                response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
             } else {
-                response.setErrorCode(-1);
+                response.setErrorCode(BCOSStatusCode.SendTransactionNotSuccessStatus);
                 response.setErrorMessage(StatusCode.getStatusMessage(receipt.getStatus()));
             }
+        } catch (BCOSStubException e) {
+            response.setErrorCode(e.getErrorCode());
+            response.setErrorMessage(e.getMessage());
         } catch (Exception e) {
             logger.warn(" Exception: {}", e);
-            response.setErrorCode(-1);
+            response.setErrorCode(BCOSStatusCode.UnclassifiedError);
             response.setErrorMessage(" errorMessage: " + e.getMessage());
         }
 
@@ -240,30 +251,28 @@ public class BCOSDriver implements Driver {
 
     @Override
     public long getBlockNumber(Connection connection) {
-        Request request = new Request();
-        request.setType(BCOSRequestType.GET_BLOCK_NUMBER);
-        Response response = connection.send(request);
+        Request req = requestBuilder(BCOSRequestType.GET_BLOCK_NUMBER, "");
+        Response resp = connection.send(req);
 
         // Returns an invalid value to indicate that the function performed incorrectly
-        if (response.getErrorCode() != 0) {
+        if (resp.getErrorCode() != 0) {
             logger.warn(
                     " errorCode: {},  errorMessage: {}",
-                    response.getErrorCode(),
-                    response.getErrorMessage());
+                    resp.getErrorCode(),
+                    resp.getErrorMessage());
             return -1;
         }
 
-        BigInteger blockNumber = new BigInteger(response.getData());
+        BigInteger blockNumber = new BigInteger(resp.getData());
         logger.debug(" blockNumber: {}", blockNumber);
         return blockNumber.longValue();
     }
 
     @Override
     public byte[] getBlockHeader(long number, Connection connection) {
-
-        Request request = new Request();
-        request.setType(BCOSRequestType.GET_BLOCK_HEADER);
-        request.setData(BigInteger.valueOf(number).toByteArray());
+        Request request =
+                requestBuilder(
+                        BCOSRequestType.GET_BLOCK_HEADER, BigInteger.valueOf(number).toByteArray());
         Response response = connection.send(request);
         if (response.getErrorCode() != 0) {
             logger.warn(
@@ -277,29 +286,72 @@ public class BCOSDriver implements Driver {
     }
 
     /**
-     * send getTransactionReceipt request
-     *
      * @param transactionHash
      * @param connection
      * @return
      * @throws IOException
      */
-    public TransactionReceipt requestTransactionReceipt(
-            String transactionHash, Connection connection) throws IOException {
-        Request request = new Request();
-        request.setType(BCOSRequestType.GET_TRANSACTION_RECEIPT);
-        request.setData(transactionHash.getBytes(StandardCharsets.UTF_8));
+    public TransactionProof requestTransactionProof(String transactionHash, Connection connection)
+            throws IOException, BCOSStubException {
 
+        Request request = requestBuilder(BCOSRequestType.GET_TRANSACTION_PROOF, transactionHash);
         Response resp = connection.send(request);
-        if (resp.getErrorCode() != 0) {
-            throw new RuntimeException(resp.getErrorMessage());
+        if (resp.getErrorCode() != BCOSStatusCode.Success) {
+            throw new BCOSStubException(resp.getErrorCode(), resp.getErrorMessage());
         }
 
-        TransactionReceipt receipt =
-                objectMapper.readValue(resp.getData(), TransactionReceipt.class);
+        TransactionProof transactionProof =
+                objectMapper.readValue(resp.getData(), TransactionProof.class);
 
-        logger.debug(" hash: {}, receipt: {}", transactionHash, receipt);
-        return receipt;
+        logger.debug(
+                " transactionHash: {}, transactionProof: {}", transactionHash, transactionProof);
+
+        return transactionProof;
+    }
+
+    /**
+     * s
+     *
+     * @param blockNumber
+     * @param blockHeaderManager
+     * @param transactionProof
+     * @throws BCOSStubException
+     */
+    public void verifyTransactionProof(
+            long blockNumber,
+            BlockHeaderManager blockHeaderManager,
+            TransactionProof transactionProof)
+            throws BCOSStubException {
+        // fetch block header
+        byte[] bytesBlockHeader = blockHeaderManager.getBlockHeader(blockNumber);
+        if (Objects.isNull(bytesBlockHeader) || bytesBlockHeader.length == 0) {
+            throw new BCOSStubException(
+                    BCOSStatusCode.FetchBlockHeaderFailed,
+                    BCOSStatusCode.getStatusMessage(BCOSStatusCode.FetchBlockHeaderFailed)
+                            + ", blockNumber: "
+                            + blockNumber);
+        }
+
+        // decode block header
+        BlockHeader blockHeader = decodeBlockHeader(bytesBlockHeader);
+        if (Objects.isNull(blockHeader)) {
+            throw new BCOSStubException(
+                    BCOSStatusCode.InvalidEncodedBlockHeader,
+                    BCOSStatusCode.getStatusMessage(BCOSStatusCode.InvalidEncodedBlockHeader)
+                            + ", blockNumber: "
+                            + blockNumber);
+        }
+
+        // verify transaction
+        if (!ProofVerifierUtility.verify(
+                blockHeader.getTransactionRoot(),
+                blockHeader.getReceiptRoot(),
+                transactionProof.getTransAndProof(),
+                transactionProof.getReceiptAndProof())) {
+            throw new BCOSStubException(
+                    BCOSStatusCode.TransactionProofVerifyFailed,
+                    BCOSStatusCode.getStatusMessage(BCOSStatusCode.TransactionProofVerifyFailed));
+        }
     }
 
     @Override
@@ -309,13 +361,22 @@ public class BCOSDriver implements Driver {
             BlockHeaderManager blockHeaderManager,
             Connection connection) {
         try {
-            // get transaction receipt first
-            TransactionReceipt receipt = requestTransactionReceipt(transactionHash, connection);
+            // get transaction proof
+            TransactionProof transactionProof =
+                    requestTransactionProof(transactionHash, connection);
+            TransactionReceipt receipt =
+                    transactionProof.getReceiptAndProof().getTransactionReceipt();
 
-            /**
-             * set args for TransactionRequest, the method parameter cannot be recovered from the
-             * abi encoding
-             */
+            if (blockNumber != receipt.getBlockNumber().longValue()) {
+                logger.warn(
+                        " invalid blockNumber, blockNumber: {}, receipt blockNumber: {}",
+                        blockNumber,
+                        receipt.getBlockNumber());
+                blockNumber = receipt.getBlockNumber().longValue();
+            }
+
+            verifyTransactionProof(blockNumber, blockHeaderManager, transactionProof);
+
             TransactionRequest transactionRequest = new TransactionRequest();
             /** decode input args from input */
             transactionRequest.setArgs(FunctionUtility.decodeInput(receipt));
@@ -338,28 +399,86 @@ public class BCOSDriver implements Driver {
                             receipt.getTo(),
                             transactionRequest,
                             transactionResponse);
+
+            if (logger.isTraceEnabled()) {
+                logger.trace(" VerifiedTransaction: {}", verifiedTransaction);
+            }
+
             return verifiedTransaction;
         } catch (Exception e) {
-            logger.warn(" Exception: {}", e);
+            logger.warn(" transactionHash: {}, Exception: {}", transactionHash, e);
             return null;
         }
     }
 
-    private void checkRequest(TransactionContext<TransactionRequest> request) {
-        if (request.getAccount() == null) {
-            throw new InvalidParameterException("Unknown account");
+    /**
+     * @param name
+     * @param properties
+     * @throws BCOSStubException
+     */
+    public void checkProperties(String name, Map<Object, Object> properties)
+            throws BCOSStubException {
+        try {
+            // contractAddress
+            String contractAddress = (String) properties.get(name);
+            if (Objects.isNull(contractAddress)) {
+                throw new BCOSStubException(
+                        BCOSStatusCode.InvalidParameter,
+                        " Not found contract address, resource: " + name);
+            }
+
+            Integer groupId = (Integer) properties.get(BCOSConstant.BCOS_RESOURCEINFO_GROUP_ID);
+            if (Objects.isNull(groupId)) {
+                throw new BCOSStubException(
+                        BCOSStatusCode.InvalidParameter, " Not found groupId, resource: " + name);
+            }
+
+            Integer chainId = (Integer) properties.get(BCOSConstant.BCOS_RESOURCEINFO_CHAIN_ID);
+            if (Objects.isNull(chainId)) {
+                throw new BCOSStubException(
+                        BCOSStatusCode.InvalidParameter, " Not found chainId, resource: " + name);
+            }
+        } catch (BCOSStubException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BCOSStubException(
+                    BCOSStatusCode.InvalidParameter, "errorMessage: " + e.getMessage());
+        }
+    }
+
+    /**
+     * check request field valid
+     *
+     * @param request
+     * @throws BCOSStubException
+     */
+    public void checkRequest(TransactionContext<TransactionRequest> request)
+            throws BCOSStubException {
+        if (Objects.isNull(request)) {
+            throw new BCOSStubException(
+                    BCOSStatusCode.InvalidParameter, "TransactionContext is null");
         }
 
-        if (request.getBlockHeaderManager() == null) {
-            throw new InvalidParameterException("blockHeaderManager is null");
+        if (Objects.isNull(request.getAccount())) {
+            throw new BCOSStubException(BCOSStatusCode.InvalidParameter, "Account is null");
         }
 
-        if (request.getResourceInfo() == null) {
-            throw new InvalidParameterException("resourceInfo is null");
+        if (Objects.isNull(request.getBlockHeaderManager())) {
+            throw new BCOSStubException(
+                    BCOSStatusCode.InvalidParameter, "BlockHeaderManager is null");
         }
 
-        if (request.getData() == null) {
-            throw new InvalidParameterException("TransactionRequest is null");
+        if (Objects.isNull(request.getResourceInfo())) {
+            throw new BCOSStubException(BCOSStatusCode.InvalidParameter, "ResourceInfo is null");
+        }
+
+        if (Objects.isNull(request.getData())) {
+            throw new BCOSStubException(BCOSStatusCode.InvalidParameter, "Data is null");
+        }
+
+        if (Objects.isNull(request.getData().getMethod())
+                || "".equals(request.getData().getMethod())) {
+            throw new BCOSStubException(BCOSStatusCode.InvalidParameter, "Method is null");
         }
     }
 }

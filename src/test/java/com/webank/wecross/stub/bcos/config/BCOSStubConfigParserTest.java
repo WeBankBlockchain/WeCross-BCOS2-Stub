@@ -1,8 +1,10 @@
 package com.webank.wecross.stub.bcos.config;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
 import java.io.IOException;
+import java.util.Objects;
 import org.junit.Test;
 
 public class BCOSStubConfigParserTest {
@@ -13,6 +15,7 @@ public class BCOSStubConfigParserTest {
         assertEquals(bcosStubConfig.getStub(), "bcos-ut");
         assertEquals(bcosStubConfig.getType(), "BCOS-UT");
         BCOSStubConfig.ChannelService channelService = bcosStubConfig.getChannelService();
+        assertTrue(Objects.nonNull(channelService.getChain()));
         assertEquals(channelService.getChain().getChainID(), 123);
         assertEquals(channelService.getChain().getGroupID(), 111);
         assertEquals(channelService.getChain().isEnableGM(), false);
