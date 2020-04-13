@@ -124,7 +124,7 @@ public class BCOSStubFactory implements StubFactory {
                             + "    # name cannot be repeated\n"
                             + "    name = 'HelloWeCross'\n"
                             + "    type = 'BCOS_CONTRACT'\n"
-                            + "    contractAddress = '0x3b6e77eee76089bfd41337886730652eb7d06f57'";
+                            + "    contractAddress = '0x0'";
             String confFilePath = path + "/stub.toml";
             File confFile = new File(confFilePath);
             if (!confFile.createNewFile()) {
