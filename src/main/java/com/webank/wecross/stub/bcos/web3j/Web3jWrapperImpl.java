@@ -65,11 +65,12 @@ public class Web3jWrapperImpl implements Web3jWrapper {
     }
 
     @Override
-    public Call.CallOutput call(String contractAddress, String data) throws IOException {
+    public Call.CallOutput call(String accountAddress, String contractAddress, String data)
+            throws IOException {
         Call ethCall =
                 web3j.call(
                                 Transaction.createEthCallTransaction(
-                                        contractAddress, contractAddress, data),
+                                        accountAddress, contractAddress, data),
                                 DefaultBlockParameterName.LATEST)
                         .send();
         return ethCall.getResult();

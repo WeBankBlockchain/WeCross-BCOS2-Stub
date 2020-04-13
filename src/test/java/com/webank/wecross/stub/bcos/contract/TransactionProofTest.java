@@ -42,6 +42,9 @@ public class TransactionProofTest {
                                 transactionReceiptAndProofJson0,
                                 TransactionReceiptWithProof.ReceiptAndProof.class);
         TransactionProof transactionProof = new TransactionProof(transAndProof0, receiptAndProof0);
+        assertTrue(
+                Objects.nonNull(transactionProof.toString())
+                        && !transactionProof.toString().isEmpty());
         assertTrue(Objects.nonNull(transactionProof.getReceiptAndProof()));
         assertEquals(
                 transactionProof.getReceiptAndProof().getTransactionReceipt().getTransactionHash(),

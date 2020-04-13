@@ -103,7 +103,8 @@ public class Web3jWrapperImplMock implements Web3jWrapper {
     }
 
     @Override
-    public Call.CallOutput call(String contractAddress, String data) throws IOException {
+    public Call.CallOutput call(String accountAddress, String contractAddress, String data)
+            throws IOException {
         Call.CallOutput callOutput = new Call.CallOutput();
         callOutput.setCurrentBlockNumber("0x1111");
         callOutput.setStatus("0x0");

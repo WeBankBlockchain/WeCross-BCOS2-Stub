@@ -9,7 +9,13 @@ contract HelloWeCross {
         return ss;
     }
 
-    function get(string[] memory ss) public constant returns(string[] memory) {
+    function getAndClear() public constant returns(string[] memory) {
+        string[] memory _ss = ss;
+        ss.length = 0;
+        return _ss;
+    }
+
+    function get() public constant returns(string[] memory) {
         return ss;
     }
 }
