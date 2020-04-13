@@ -20,5 +20,6 @@ public interface Web3jWrapper {
 
     TransAndProof getTransactionByHashWithProof(String transactionHash) throws IOException;
 
-    Call.CallOutput call(String contractAddress, String data) throws IOException;
+    Call.CallOutput call(String accountAddress, String contractAddress, String data)
+            throws IOException;
 }
