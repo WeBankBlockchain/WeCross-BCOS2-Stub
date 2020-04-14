@@ -70,8 +70,6 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.slf4j:slf4j-log4j12:1.7.25'
     testImplementation 'org.springframework.boot:spring-boot-starter-test:2.1.4.RELEASE'
-	
-	implementation ''
 }
 
 sourceSets {
