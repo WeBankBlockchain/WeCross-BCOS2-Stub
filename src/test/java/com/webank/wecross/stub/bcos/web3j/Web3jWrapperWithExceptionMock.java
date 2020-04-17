@@ -21,8 +21,9 @@ public class Web3jWrapperWithExceptionMock implements Web3jWrapper {
     }
 
     @Override
-    public TransactionReceipt sendTransaction(String signedTransactionData) throws IOException {
-        throw new IOException(" test IOException");
+    public TransactionReceipt sendTransactionAndGetProof(String signedTransactionData)
+            throws IOException {
+        throw new IOException(" IOException");
     }
 
     @Override

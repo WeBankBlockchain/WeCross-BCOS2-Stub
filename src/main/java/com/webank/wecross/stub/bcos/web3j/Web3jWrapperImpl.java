@@ -96,11 +96,11 @@ public class Web3jWrapperImpl implements Web3jWrapper {
     }
 
     @Override
-    public TransactionReceipt sendTransaction(String signTx) throws IOException {
-
+    public TransactionReceipt sendTransactionAndGetProof(String signedTransactionData)
+            throws IOException {
         Callback callback = new Callback();
         try {
-            web3j.sendRawTransaction(signTx, callback);
+            web3j.sendRawTransactionAndGetProof(signedTransactionData, callback);
             callback.semaphore.acquire(1);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

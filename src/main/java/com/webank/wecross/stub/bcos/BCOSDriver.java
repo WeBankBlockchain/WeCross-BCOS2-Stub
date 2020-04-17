@@ -19,7 +19,6 @@ import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.BCOSStubException;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
-import com.webank.wecross.stub.bcos.contract.ProofVerifierUtility;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
@@ -38,6 +37,7 @@ import org.fisco.bcos.web3j.protocol.channel.StatusCode;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Transaction;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.fisco.bcos.web3j.tx.MerkleProofUtility;
 import org.fisco.bcos.web3j.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -271,16 +271,14 @@ public class BCOSDriver implements Driver {
                 throw new BCOSStubException(resp.getErrorCode(), resp.getErrorMessage());
             }
 
-            TransactionProof transactionProof =
-                    objectMapper.readValue(resp.getData(), TransactionProof.class);
             TransactionReceipt receipt =
-                    transactionProof.getReceiptAndProof().getTransactionReceipt();
+                    objectMapper.readValue(resp.getData(), TransactionReceipt.class);
 
             verifyTransactionProof(
                     receipt.getBlockNumber().longValue(),
                     receipt.getTransactionHash(),
                     request.getBlockHeaderManager(),
-                    transactionProof);
+                    receipt);
 
             response.setBlockNumber(receipt.getBlockNumber().longValue());
             response.setHash(receipt.getTransactionHash());
@@ -366,8 +364,6 @@ public class BCOSDriver implements Driver {
     }
 
     /**
-     * s
-     *
      * @param blockNumber
      * @param blockHeaderManager
      * @param transactionProof
@@ -400,11 +396,79 @@ public class BCOSDriver implements Driver {
         }
 
         // verify transaction
-        if (!ProofVerifierUtility.verify(
-                blockHeader.getTransactionRoot(),
+        if (!MerkleProofUtility.verifyTransactionReceipt(
+                blockHeader.getReceiptRoot(), transactionProof.getReceiptAndProof())) {
+            throw new BCOSStubException(
+                    BCOSStatusCode.TransactionReceiptProofVerifyFailed,
+                    BCOSStatusCode.getStatusMessage(
+                                    BCOSStatusCode.TransactionReceiptProofVerifyFailed)
+                            + ", hash="
+                            + hash);
+        }
+
+        // verify transaction
+        if (!MerkleProofUtility.verifyTransaction(
+                blockHeader.getTransactionRoot(), transactionProof.getTransAndProof())) {
+            throw new BCOSStubException(
+                    BCOSStatusCode.TransactionProofVerifyFailed,
+                    BCOSStatusCode.getStatusMessage(BCOSStatusCode.TransactionProofVerifyFailed)
+                            + ", hash="
+                            + hash);
+        }
+    }
+
+    /**
+     * @param blockNumber
+     * @param hash
+     * @param blockHeaderManager
+     * @param transactionReceipt
+     * @throws BCOSStubException
+     */
+    public void verifyTransactionProof(
+            long blockNumber,
+            String hash,
+            BlockHeaderManager blockHeaderManager,
+            TransactionReceipt transactionReceipt)
+            throws BCOSStubException {
+        // fetch block header
+        byte[] bytesBlockHeader = blockHeaderManager.getBlockHeader(blockNumber);
+        if (Objects.isNull(bytesBlockHeader) || bytesBlockHeader.length == 0) {
+            throw new BCOSStubException(
+                    BCOSStatusCode.FetchBlockHeaderFailed,
+                    BCOSStatusCode.getStatusMessage(BCOSStatusCode.FetchBlockHeaderFailed)
+                            + ", blockNumber: "
+                            + blockNumber);
+        }
+
+        // decode block header
+        BlockHeader blockHeader = decodeBlockHeader(bytesBlockHeader);
+        if (Objects.isNull(blockHeader)) {
+            throw new BCOSStubException(
+                    BCOSStatusCode.InvalidEncodedBlockHeader,
+                    BCOSStatusCode.getStatusMessage(BCOSStatusCode.InvalidEncodedBlockHeader)
+                            + ", blockNumber: "
+                            + blockNumber);
+        }
+
+        // verify transaction
+        if (!MerkleProofUtility.verifyTransactionReceipt(
                 blockHeader.getReceiptRoot(),
-                transactionProof.getTransAndProof(),
-                transactionProof.getReceiptAndProof())) {
+                transactionReceipt,
+                transactionReceipt.getReceiptProof())) {
+            throw new BCOSStubException(
+                    BCOSStatusCode.TransactionReceiptProofVerifyFailed,
+                    BCOSStatusCode.getStatusMessage(
+                                    BCOSStatusCode.TransactionReceiptProofVerifyFailed)
+                            + ", hash="
+                            + hash);
+        }
+
+        // verify transaction
+        if (!MerkleProofUtility.verifyTransaction(
+                transactionReceipt.getTransactionHash(),
+                transactionReceipt.getTransactionIndex(),
+                blockHeader.getTransactionRoot(),
+                transactionReceipt.getTxProof())) {
             throw new BCOSStubException(
                     BCOSStatusCode.TransactionProofVerifyFailed,
                     BCOSStatusCode.getStatusMessage(BCOSStatusCode.TransactionProofVerifyFailed)

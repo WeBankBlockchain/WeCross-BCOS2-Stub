@@ -9,6 +9,7 @@ public class BCOSStatusCode {
     public static final int FetchBlockHeaderFailed = 2002;
     public static final int InvalidEncodedBlockHeader = 2003;
     public static final int TransactionProofVerifyFailed = 2004;
+    public static final int TransactionReceiptProofVerifyFailed = 2005;
 
     public static final int TransactionReceiptNotExist = 2010;
     public static final int TransactionNotExist = 2011;
@@ -49,6 +50,9 @@ public class BCOSStatusCode {
                 break;
             case TransactionProofVerifyFailed:
                 message = " transaction verify failed";
+                break;
+            case TransactionReceiptProofVerifyFailed:
+                message = " transaction receipt verify failed";
                 break;
             case TransactionNotExist:
                 message = "transaction not exist";
