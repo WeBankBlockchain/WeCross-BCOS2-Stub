@@ -13,11 +13,12 @@ import org.slf4j.LoggerFactory;
 public class BCOSConnectionFactory {
     private static final Logger logger = LoggerFactory.getLogger(BCOSConnectionFactory.class);
 
-    public static BCOSConnection build(String stubConfigPath, Web3jWrapper web3jWrapper)
-            throws Exception {
+    public static BCOSConnection build(
+            String stubConfigPath, String configName, Web3jWrapper web3jWrapper) throws Exception {
         /** load stub.toml config */
         logger.info(" stubConfigPath: {} ", stubConfigPath);
-        BCOSStubConfigParser bcosStubConfigParser = new BCOSStubConfigParser(stubConfigPath);
+        BCOSStubConfigParser bcosStubConfigParser =
+                new BCOSStubConfigParser(stubConfigPath, configName);
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
 
         /** web3jWrapper is null ,create default one */

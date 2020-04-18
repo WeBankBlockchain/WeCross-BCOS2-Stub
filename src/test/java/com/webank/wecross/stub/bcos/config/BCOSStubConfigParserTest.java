@@ -11,7 +11,8 @@ import org.junit.Test;
 public class BCOSStubConfigParserTest {
     @Test
     public void stubConfigParserTest() throws IOException {
-        BCOSStubConfigParser bcosStubConfigParser = new BCOSStubConfigParser("./");
+        BCOSStubConfigParser bcosStubConfigParser =
+                new BCOSStubConfigParser("./", "stub-sample-ut.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
         assertEquals(bcosStubConfig.getType(), "BCOS-UT");
         BCOSStubConfig.ChannelService channelService = bcosStubConfig.getChannelService();

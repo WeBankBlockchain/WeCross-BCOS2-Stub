@@ -20,8 +20,8 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
 
     private final String stubDir;
 
-    public BCOSStubConfigParser(String configPath) {
-        super(configPath + File.separator + "stub.toml");
+    public BCOSStubConfigParser(String configPath, String configName) {
+        super(configPath + File.separator + configName);
         this.stubDir = configPath;
     }
 

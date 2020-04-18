@@ -30,7 +30,7 @@ public class BCOSStubFactory implements StubFactory {
     @Override
     public Connection newConnection(String path) {
         try {
-            return BCOSConnectionFactory.build(path, null);
+            return BCOSConnectionFactory.build(path, "stub.toml", null);
         } catch (Exception e) {
             logger.error(" newConnection, e: ", e);
             return null;
