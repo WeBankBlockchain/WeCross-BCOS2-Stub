@@ -16,8 +16,7 @@ public class BCOSConnectionFactoryTest {
     @Test
     public void buildTest() throws IOException {
         try {
-            Connection connection =
-                    BCOSConnectionFactory.build("stub-sample-ut.toml", new Web3jWrapperImplMock());
+            Connection connection = BCOSConnectionFactory.build("./", new Web3jWrapperImplMock());
             List<ResourceInfo> resources = connection.getResources();
             assertTrue(resources.size() == 2);
             ResourceInfo resourceInfo = resources.get(0);

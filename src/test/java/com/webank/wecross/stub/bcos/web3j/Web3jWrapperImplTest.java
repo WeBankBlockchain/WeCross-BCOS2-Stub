@@ -11,7 +11,7 @@ import org.junit.Test;
 public class Web3jWrapperImplTest {
     @Test
     public void web3jWrapperImplTest() throws IOException {
-        BCOSStubConfigParser bcosStubConfigParser = new BCOSStubConfigParser("stub-sample-ut.toml");
+        BCOSStubConfigParser bcosStubConfigParser = new BCOSStubConfigParser("./");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
 
         BCOSStubConfig.ChannelService channelService = bcosStubConfig.getChannelService();

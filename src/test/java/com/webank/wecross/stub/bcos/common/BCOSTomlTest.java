@@ -10,7 +10,7 @@ import org.junit.Test;
 public class BCOSTomlTest {
     @Test
     public void loadTomlTest() throws IOException {
-        String file = "stub-sample-ut.toml";
+        String file = "stub.toml";
         BCOSToml bcosToml = new BCOSToml(file);
         assertEquals(bcosToml.getPath(), file);
         assertTrue(Objects.nonNull(bcosToml.getToml()));

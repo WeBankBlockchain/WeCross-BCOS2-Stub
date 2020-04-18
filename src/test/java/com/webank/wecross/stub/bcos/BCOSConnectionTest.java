@@ -64,7 +64,7 @@ public class BCOSConnectionTest {
 
     @Test
     public void resourceInfoListTest() throws IOException {
-        BCOSStubConfigParser bcosStubConfigParser = new BCOSStubConfigParser("stub-sample-ut.toml");
+        BCOSStubConfigParser bcosStubConfigParser = new BCOSStubConfigParser("./");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
 
         List<ResourceInfo> resourceInfoList = bcosStubConfig.convertToResourceInfos();
