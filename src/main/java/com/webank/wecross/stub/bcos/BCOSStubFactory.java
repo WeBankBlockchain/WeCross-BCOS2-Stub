@@ -102,11 +102,13 @@ public class BCOSStubFactory implements StubFactory {
     @Override
     public void generateConnection(String path, String[] args) {
         try {
-        	String chainName = new File(path).getName();
-        	
+            String chainName = new File(path).getName();
+
             String accountTemplate =
                     "[common]\n"
-                            + "    name = '" + chainName + "'\n"
+                            + "    name = '"
+                            + chainName
+                            + "'\n"
                             + "    type = 'BCOS2.0' # BCOS\n"
                             + "\n"
                             + "[chain]\n"
@@ -115,9 +117,15 @@ public class BCOSStubFactory implements StubFactory {
                             + "    enableGM = false # default false\n"
                             + "\n"
                             + "[channelService]\n"
-                            + "    caCert = 'file:" + path + "/ca.crt'\n"
-                            + "    sslCert = 'file:" + path + "/sdk.crt'\n"
-                            + "    sslKey = 'file:" + path + "/sdk.key'\n"
+                            + "    caCert = 'file:"
+                            + path
+                            + "/ca.crt'\n"
+                            + "    sslCert = 'file:"
+                            + path
+                            + "/sdk.crt'\n"
+                            + "    sslKey = 'file:"
+                            + path
+                            + "/sdk.key'\n"
                             + "    timeout = 300000  # ms, default 60000ms\n"
                             + "    connectionsStr = ['127.0.0.1:20200']\n"
                             + "\n"
