@@ -4,6 +4,8 @@ import com.moandjiezana.toml.Toml;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSToml;
 import com.webank.wecross.stub.bcos.web3j.Web3jDefaultConfig;
+
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,8 +39,8 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         Map<String, Object> commonConfigValue = (Map<String, Object>) stubConfig.get("common");
         requireItemNotNull(commonConfigValue, "common", getConfigPath());
 
-        String stubName = (String) commonConfigValue.get("stub");
-        requireFieldNotNull(stubName, "common", "stub", getConfigPath());
+        String stubName = (String) commonConfigValue.get("name");
+        requireFieldNotNull(stubName, "common", "name", getConfigPath());
 
         String stubType = (String) commonConfigValue.get("type");
         requireFieldNotNull(stubType, "common", "type", getConfigPath());
