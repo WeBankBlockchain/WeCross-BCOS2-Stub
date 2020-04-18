@@ -6,12 +6,14 @@ import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Stub;
 import com.webank.wecross.stub.StubFactory;
 import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.Security;
+
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
@@ -135,7 +137,7 @@ public class BCOSStubFactory implements StubFactory {
                             + "    name = 'HelloWeCross'\n"
                             + "    type = 'BCOS_CONTRACT'\n"
                             + "    contractAddress = '0x0'";
-            String confFilePath = path + "/chain.toml";
+            String confFilePath = path + "/stub.toml";
             File confFile = new File(confFilePath);
             if (!confFile.createNewFile()) {
                 logger.error("Conf file exists! {}", confFile);
