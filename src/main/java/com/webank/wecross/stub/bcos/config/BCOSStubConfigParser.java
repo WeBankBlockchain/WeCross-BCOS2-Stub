@@ -37,8 +37,8 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         Map<String, Object> commonConfigValue = (Map<String, Object>) stubConfig.get("common");
         requireItemNotNull(commonConfigValue, "common", getConfigPath());
 
-        String stubName = (String) commonConfigValue.get("stub");
-        requireFieldNotNull(stubName, "common", "stub", getConfigPath());
+        String stubName = (String) commonConfigValue.get("name");
+        requireFieldNotNull(stubName, "common", "name", getConfigPath());
 
         String stubType = (String) commonConfigValue.get("type");
         requireFieldNotNull(stubType, "common", "type", getConfigPath());

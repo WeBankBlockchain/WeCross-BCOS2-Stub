@@ -1,5 +1,5 @@
 [common]
-    stub = 'bcos-ut' # stub must be same with directory name
+    name = 'bcos-ut' # stub must be same with directory name
     type = 'BCOS-UT' # BCOS
 
 [chain]
