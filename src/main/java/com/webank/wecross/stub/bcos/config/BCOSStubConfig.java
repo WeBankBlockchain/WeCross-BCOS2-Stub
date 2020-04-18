@@ -10,8 +10,6 @@ import org.slf4j.LoggerFactory;
 /** Resolve the BCOS stub.toml to get BCOSConfig object */
 public class BCOSStubConfig {
     private static Logger logger = LoggerFactory.getLogger(BCOSStubConfig.class);
-    /** stub name */
-    private String stub;
     /** stub type, BCOS */
     private String type;
     /** */
@@ -193,14 +191,6 @@ public class BCOSStubConfig {
         }
     }
 
-    public String getStub() {
-        return stub;
-    }
-
-    public void setStub(String stub) {
-        this.stub = stub;
-    }
-
     public String getType() {
         return type;
     }
@@ -236,10 +226,7 @@ public class BCOSStubConfig {
     @Override
     public String toString() {
         return "BCOSConfig{"
-                + "stub='"
-                + stub
-                + '\''
-                + ", type='"
+                + "type='"
                 + type
                 + '\''
                 + ", channelService="
