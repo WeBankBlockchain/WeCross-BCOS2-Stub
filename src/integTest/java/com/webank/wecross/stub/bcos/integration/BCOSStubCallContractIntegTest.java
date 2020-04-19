@@ -116,7 +116,7 @@ public class BCOSStubCallContractIntegTest {
         BCOSStubFactory bcosStubFactory = new BCOSStubFactory();
         driver = bcosStubFactory.newDriver();
         account = bcosStubFactory.newAccount("IntegBCOSAccount", "classpath:/accounts/bcos");
-        connection = bcosStubFactory.newConnection("stub-sample.toml");
+        connection = bcosStubFactory.newConnection("./chains/bcos/");
 
         Web3jWrapper web3jWrapper = ((BCOSConnection) connection).getWeb3jWrapper();
         Web3jWrapperImpl web3jWrapperImpl = (Web3jWrapperImpl) web3jWrapper;

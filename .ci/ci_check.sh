@@ -17,9 +17,9 @@ bash gradlew test
 bash gradlew jacocoTestReport
 
 # integration testing
-mkdir -p src/integTest/resources/stubs/bcos
-cp nodes/127.0.0.1/sdk/* src/integTest/resources/stubs/bcos
-cp src/test/resources/stub-sample.toml src/integTest/resources/
+mkdir -p src/integTest/resources/chains/bcos
+cp nodes/127.0.0.1/sdk/* src/integTest/resources/chains/bcos
+cp src/test/resources/stub.toml src/integTest/resources/chains/bcos/
 cp -r src/test/resources/accounts src/integTest/resources/
 cp -r src/test/resources/contract src/integTest/resources/
 bash gradlew integTest

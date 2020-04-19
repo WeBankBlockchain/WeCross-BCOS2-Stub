@@ -34,8 +34,6 @@ public class BCOSAccountConfigParser extends AbstractBCOSConfigParser {
             requireFieldNotNull(accountFile, "account", "password", getConfigPath());
         }
 
-        String gm = (String) accountValue.get("gm");
-
         String type = (String) accountValue.get("type");
         requireFieldNotNull(accountFile, "account", "type", getConfigPath());
         if (!type.equals(BCOSConstant.BCOS_ACCOUNT) && !type.equals(BCOSConstant.BCOS_SM_ACCOUNT)) {
@@ -46,7 +44,6 @@ public class BCOSAccountConfigParser extends AbstractBCOSConfigParser {
         bcosAccountConfig.setAccountFile(accountFile);
         bcosAccountConfig.setPasswd(passwd);
         bcosAccountConfig.setType(type);
-        bcosAccountConfig.setIsGM(gm);
 
         logger.info(" account: {}", bcosAccountConfig);
 

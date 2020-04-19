@@ -30,7 +30,7 @@ public class BCOSStubFactory implements StubFactory {
     @Override
     public Connection newConnection(String path) {
         try {
-            return BCOSConnectionFactory.build(path, null);
+            return BCOSConnectionFactory.build(path, "stub.toml", null);
         } catch (Exception e) {
             logger.error(" newConnection, e: ", e);
             return null;
@@ -117,15 +117,9 @@ public class BCOSStubFactory implements StubFactory {
                             + "    enableGM = false # default false\n"
                             + "\n"
                             + "[channelService]\n"
-                            + "    caCert = 'file:"
-                            + path
-                            + "/ca.crt'\n"
-                            + "    sslCert = 'file:"
-                            + path
-                            + "/sdk.crt'\n"
-                            + "    sslKey = 'file:"
-                            + path
-                            + "/sdk.key'\n"
+                            + "    caCert = 'ca.crt'\n"
+                            + "    sslCert = 'sdk.crt'\n"
+                            + "    sslKey = 'sdk.key'\n"
                             + "    timeout = 300000  # ms, default 60000ms\n"
                             + "    connectionsStr = ['127.0.0.1:20200']\n"
                             + "\n"
@@ -135,7 +129,7 @@ public class BCOSStubFactory implements StubFactory {
                             + "    name = 'HelloWeCross'\n"
                             + "    type = 'BCOS_CONTRACT'\n"
                             + "    contractAddress = '0x0'";
-            String confFilePath = path + "/chain.toml";
+            String confFilePath = path + "/stub.toml";
             File confFile = new File(confFilePath);
             if (!confFile.createNewFile()) {
                 logger.error("Conf file exists! {}", confFile);

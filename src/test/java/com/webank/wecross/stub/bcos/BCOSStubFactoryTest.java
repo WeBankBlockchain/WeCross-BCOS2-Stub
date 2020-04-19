@@ -23,7 +23,7 @@ public class BCOSStubFactoryTest {
 
     @Test
     public void newConnectionTest() {
-        Connection connection = stubFactory.newConnection("stub-sample-ut.toml");
+        Connection connection = stubFactory.newConnection("./");
         assertTrue(Objects.isNull(connection));
     }
 

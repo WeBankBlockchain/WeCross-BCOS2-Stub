@@ -86,17 +86,21 @@ public class BCOSDriverTest {
         BCOSStubFactory bcosStubFactory = new BCOSStubFactory();
         driver = bcosStubFactory.newDriver();
         account = BCOSAccountFactory.build("bcos", "classpath:/accounts/bcos");
-        connection = BCOSConnectionFactory.build("stub-sample-ut.toml", new Web3jWrapperImplMock());
+        connection =
+                BCOSConnectionFactory.build(
+                        "./", "stub-sample-ut.toml", new Web3jWrapperImplMock());
         exceptionConnection =
                 BCOSConnectionFactory.build(
-                        "stub-sample-ut.toml", new Web3jWrapperWithExceptionMock());
+                        "./", "stub-sample-ut.toml", new Web3jWrapperWithExceptionMock());
         nonExistConnection =
-                BCOSConnectionFactory.build("stub-sample-ut.toml", new Web3jWrapperWithNullMock());
+                BCOSConnectionFactory.build(
+                        "./", "stub-sample-ut.toml", new Web3jWrapperWithNullMock());
         callNotOkStatusConnection =
                 BCOSConnectionFactory.build(
-                        "stub-sample-ut.toml", new Web3jWrapperCallNotSucStatus());
+                        "./", "stub-sample-ut.toml", new Web3jWrapperCallNotSucStatus());
         txVerifyConnection =
-                BCOSConnectionFactory.build("stub-sample-ut.toml", new Web3jWrapperTxVerifyMock());
+                BCOSConnectionFactory.build(
+                        "./", "stub-sample-ut.toml", new Web3jWrapperTxVerifyMock());
         blockHeaderManager = new BlockHeaderManagerImplMock(new Web3jWrapperImplMock());
         txVerifyBlockHeaderManager = new BlockHeaderManagerImplMock(new Web3jWrapperTxVerifyMock());
         resourceInfo = ((BCOSConnection) connection).getResourceInfoList().get(0);

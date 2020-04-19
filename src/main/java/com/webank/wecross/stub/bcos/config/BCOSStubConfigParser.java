@@ -4,6 +4,7 @@ import com.moandjiezana.toml.Toml;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSToml;
 import com.webank.wecross.stub.bcos.web3j.Web3jDefaultConfig;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,8 +18,11 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
 
     private static final Logger logger = LoggerFactory.getLogger(BCOSStubConfigParser.class);
 
-    public BCOSStubConfigParser(String configPath) {
-        super(configPath);
+    private final String stubDir;
+
+    public BCOSStubConfigParser(String configPath, String configName) {
+        super(configPath + File.separator + configName);
+        this.stubDir = configPath;
     }
 
     /**
@@ -60,7 +64,6 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
                 getBCOSResourceConfig(getConfigPath(), chain, resourcesConfigValue);
 
         BCOSStubConfig bcosStubConfig = new BCOSStubConfig();
-        bcosStubConfig.setStub(stubName);
         bcosStubConfig.setType(stubType);
         bcosStubConfig.setChannelService(channelServiceConfig);
         bcosStubConfig.setResources(bcosResources);
@@ -98,15 +101,17 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         Long timeout = (Long) channelServiceConfigValue.get("timeout");
 
         // caCert field
-        String caCertPath = (String) channelServiceConfigValue.get("caCert");
+        String caCertPath =
+                stubDir + File.separator + (String) channelServiceConfigValue.get("caCert");
         requireFieldNotNull(caCertPath, "channelService", "caCert", configFile);
 
         // sslCert field
-        String sslCert = (String) channelServiceConfigValue.get("sslCert");
+        String sslCert =
+                stubDir + File.separator + (String) channelServiceConfigValue.get("sslCert");
         requireFieldNotNull(sslCert, "channelService", "sslCert", configFile);
 
         // sslKey field
-        String sslKey = (String) channelServiceConfigValue.get("sslKey");
+        String sslKey = stubDir + File.separator + (String) channelServiceConfigValue.get("sslKey");
         requireFieldNotNull(sslKey, "channelService", "sslKey", configFile);
 
         // connectionsStr field
