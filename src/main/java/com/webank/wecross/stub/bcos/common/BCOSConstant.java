@@ -7,7 +7,7 @@ public interface BCOSConstant {
     /** */
     String BCOS_ACCOUNT = "BCOS2.0";
     /** */
-    String BCOS_SM_ACCOUNT = "BCOS2.0_gm";
+    String BCOS_SM_ACCOUNT = "GM_BCOS2.0";
 
     String BCOS_RESOURCEINFO_GROUP_ID = "BCOS_PROPERTY_GROUP_ID";
     String BCOS_RESOURCEINFO_CHAIN_ID = "BCOS_PROPERTY_CHAIN_ID";

@@ -22,7 +22,7 @@ public class BCOSStubConfig {
     public static class Chain {
         private int groupID;
         private int chainID;
-        private boolean enableGM;
+        // private boolean enableGM;
 
         public int getGroupID() {
             return groupID;
@@ -40,24 +40,9 @@ public class BCOSStubConfig {
             this.chainID = chainID;
         }
 
-        public boolean isEnableGM() {
-            return enableGM;
-        }
-
-        public void setEnableGM(boolean enableGM) {
-            this.enableGM = enableGM;
-        }
-
         @Override
         public String toString() {
-            return "Chain{"
-                    + "groupID="
-                    + groupID
-                    + ", chainID="
-                    + chainID
-                    + ", enableGM="
-                    + enableGM
-                    + '}';
+            return "Chain{" + "groupID=" + groupID + ", chainID=" + chainID + '}';
         }
     }
 
