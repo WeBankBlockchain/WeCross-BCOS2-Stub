@@ -82,7 +82,6 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         Boolean enableGM = (Boolean) chainConfigValue.get("enableGM");
 
         BCOSStubConfig.Chain chain = new BCOSStubConfig.Chain();
-        chain.setEnableGM(!Objects.isNull(enableGM) ? enableGM : false);
         chain.setChainID(
                 Objects.nonNull(chainId)
                         ? chainId.intValue()

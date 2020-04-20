@@ -6,7 +6,6 @@ import java.util.List;
 import org.fisco.bcos.channel.client.Service;
 import org.fisco.bcos.channel.handler.ChannelConnections;
 import org.fisco.bcos.channel.handler.GroupChannelConnectionsConfig;
-import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.channel.ChannelEthereumService;
 import org.slf4j.Logger;
@@ -30,11 +29,13 @@ public class Web3jUtility {
 
         logger.info(" ChannelService: {}", channelServiceConfig);
 
+        /*
         EncryptType encryptType =
                 new EncryptType(
                         channelServiceConfig.getChain().isEnableGM()
                                 ? EncryptType.SM2_TYPE
                                 : EncryptType.ECDSA_TYPE);
+        */
         // logger.trace(" EncryptType: {}", encryptType.getEncryptType());
 
         List<ChannelConnections> allChannelConnections = new ArrayList<>();

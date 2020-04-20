@@ -8,7 +8,7 @@ plugins {
 
     id 'org.ajoberstar.grgit' version '4.0.1'
     id 'com.github.sherter.google-java-format' version '0.8'
-    id 'com.github.johnrengelman.shadow' version '2.0.4'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
 }
 
 apply plugin: 'com.github.johnrengelman.shadow'
@@ -97,60 +97,57 @@ sourceSets {
     }
 }
 
-jar.enabled = false
-project.tasks.assemble.dependsOn project.tasks.shadowJar
-
 shadowJar {
+    mergeServiceFiles()
+}
+
+
+task makeJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar, dependsOn: shadowJar) {
+
     destinationDir file('dist/apps')
-    archiveName project.name + '.jar'
+    archiveName 'bcos-stub.jar'
     exclude '**/*.xml'
     exclude '**/*.toml'
     exclude '**/*.properties'
     exclude '**/*.yml'
+    exclude '**/BCOSGMStubFactory.*'
 
     manifest {
-/*
-        def repo = null;
-        try {
-            def repo = grgit.open()
 
-            def user = System.getProperty("user.name")
-            def date = new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-            def branch = repo.branch.getCurrent().getName()
-            def commit = repo.head().getAbbreviatedId(40)
-
-            attributes(["Built-By"                : user,
-                        "Implementation-Timestamp": date,
-                        "Git-Branch"              : branch,
-                        "Git-Commit"              : commit
-            ])
-
-            logger.info("  Commit : ")
-            logger.info("  => user: {}", user)
-            logger.info("  => date: {}", date)
-            logger.info("  => branch: {}", branch)
-            logger.info("  => commit: {}", commit)
-        } catch (Exception e) {
-            logger.warn(' .git not exist, cannot found commit id')
-        }
-        */
     }
 
-    doLast {
-        copy {
-            from file('src/main/resources/')
-            into 'dist/conf'
-        }
-        copy {
-            from file('.').listFiles().findAll { File f -> (f.name.endsWith('.sh') || f.name.endsWith('.env')) }
-            into 'dist'
-        }
-        copy {
-            from file('scripts/')
-            into 'dist'
-        }
-    }
+    //minimize()
+
+    relocate 'org.fisco.bcos', 'org.fisco.bcos.wecross.normal'
+    relocate 'com.webank.wecross.stub.bcos', 'com.webank.wecross.stub.bcos.normal'
+
+    from zipTree(shadowJar.archivePath)
 }
+
+task makeGMJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar, dependsOn: shadowJar) {
+
+    destinationDir file('dist/apps')
+    archiveName 'bcos-stub-gm.jar'
+    exclude '**/*.xml'
+    exclude '**/*.toml'
+    exclude '**/*.properties'
+    exclude '**/*.yml'
+    exclude '**/BCOSStubFactory.*'
+
+    manifest {
+    }
+
+    //minimize()
+
+    relocate 'org.fisco.bcos', 'org.fisco.bcos.wecross.guomi'
+    relocate 'com.webank.wecross.stub.bcos', 'com.webank.wecross.stub.bcos.guomi'
+
+    from zipTree(shadowJar.archivePath)
+}
+
+jar.enabled = false
+project.tasks.assemble.dependsOn(makeJar)
+project.tasks.assemble.dependsOn(makeGMJar)
 
 task integTest(type: Test) {
     description = 'Runs integration tests.'
@@ -189,54 +186,54 @@ jacocoTestReport {
 }
 
 publishing {
-	publications {
-		mavenJava(MavenPublication) {
-			groupId = 'com.webank'
-			artifactId = 'wecross-bcos-stub'
-			from components.java
-			artifacts = [shadowJar]
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = 'com.webank'
+            artifactId = 'wecross-bcos-stub'
+            from components.java
+            artifacts = [shadowJar]
 
-			// https://docs.gradle.org/current/dsl/org.gradle.api.publish.maven.MavenPublication.html
-			pom {
-				name = "WeCross-BCOS-Stub"
-				description = "Stub interface for WeCross"
-				url = "https://github.com/WeBankFinTech/WeCross"
-				licenses {
-					license {
-						name = "The Apache License, Version 2.0"
-						url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
-					}
-				}
-				developers {
-					developer {
-						id = "Shareong"
-						name = "Shareong"
-						email = "740310627@qq.com"
-					}
-				}
-				scm {
-					connection = "scm:git:git://github.com/WeBankFinTech/WeCross.git"
-					developerConnection = "scm:git:ssh://github.com/WeBankFinTech/WeCross.git"
-					url = "https://github.com/WeBankFinTech/WeCross"
-				}
-			}
-		}
-	}
-	repositories {
-		maven {
-			def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-			def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
-			url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            // https://docs.gradle.org/current/dsl/org.gradle.api.publish.maven.MavenPublication.html
+            pom {
+                name = "WeCross-BCOS-Stub"
+                description = "Stub interface for WeCross"
+                url = "https://github.com/WeBankFinTech/WeCross"
+                licenses {
+                    license {
+                        name = "The Apache License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                    }
+                }
+                developers {
+                    developer {
+                        id = "Shareong"
+                        name = "Shareong"
+                        email = "740310627@qq.com"
+                    }
+                }
+                scm {
+                    connection = "scm:git:git://github.com/WeBankFinTech/WeCross.git"
+                    developerConnection = "scm:git:ssh://github.com/WeBankFinTech/WeCross.git"
+                    url = "https://github.com/WeBankFinTech/WeCross"
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+            def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
 
-			//*
-			def NEXUS_USERNAME = ''
-			def NEXUS_PASSWORD = ''
-			//*/
-			credentials {
-				username = NEXUS_USERNAME
-				password = NEXUS_PASSWORD
-			}
+            //*
+            def NEXUS_USERNAME = ''
+            def NEXUS_PASSWORD = ''
+            //*/
+            credentials {
+                username = NEXUS_USERNAME
+                password = NEXUS_PASSWORD
+            }
 
-		}
-	}
+        }
+    }
 }

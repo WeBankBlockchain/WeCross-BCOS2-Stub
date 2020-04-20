@@ -19,7 +19,6 @@ public class BCOSStubConfigParserTest {
         assertTrue(Objects.nonNull(channelService.getChain()));
         assertEquals(channelService.getChain().getChainID(), 123);
         assertEquals(channelService.getChain().getGroupID(), 111);
-        assertEquals(channelService.getChain().isEnableGM(), false);
         assertEquals(channelService.getTimeout(), 111100);
         assertEquals(channelService.getCaCert(), "./" + File.separator + "ca.crt");
         assertEquals(channelService.getSslCert(), "./" + File.separator + "sdk.crt");

@@ -19,12 +19,12 @@ import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Stub("BCOS2.0")
-public class BCOSStubFactory implements StubFactory {
-    private Logger logger = LoggerFactory.getLogger(BCOSStubFactory.class);
+@Stub("GM_BCOS2.0")
+public class BCOSGMStubFactory implements StubFactory {
+    private Logger logger = LoggerFactory.getLogger(BCOSGMStubFactory.class);
 
-    public BCOSStubFactory() {
-        EncryptType encryptType = new EncryptType(EncryptType.ECDSA_TYPE);
+    public BCOSGMStubFactory() {
+        EncryptType encryptType = new EncryptType(EncryptType.SM2_TYPE);
         logger.info(" EncryptType: {}", encryptType.getEncryptType());
     }
 
@@ -67,6 +67,7 @@ public class BCOSStubFactory implements StubFactory {
 
             keyPairGenerator.initialize(256);
             KeyPair keyPair = keyPairGenerator.generateKeyPair();
+
             PrivateKey ecPrivateKey = keyPair.getPrivate();
 
             String keyFile = path + "/account.key";
@@ -86,7 +87,7 @@ public class BCOSStubFactory implements StubFactory {
 
             String accountTemplate =
                     "[account]\n"
-                            + "    type='BCOS2.0'\n"
+                            + "    type='GM_BCOS2.0'\n"
                             + "    accountFile='account.key'\n"
                             + "    password=''";
             String confFilePath = path + "/account.toml";
@@ -111,18 +112,15 @@ public class BCOSStubFactory implements StubFactory {
     @Override
     public void generateConnection(String path, String[] args) {
         try {
-            String chainName = new File(path).getName();
-
             String accountTemplate =
                     "[common]\n"
-                            + "    name = '"
-                            + chainName
-                            + "'\n"
-                            + "    type = 'BCOS2.0' # BCOS\n"
+                            + ""
+                            + "    type = 'GM_BCOS2.0' # BCOS\n"
                             + "\n"
                             + "[chain]\n"
                             + "    groupId = 1 # default 1\n"
                             + "    chainId = 1 # default 1\n"
+                            + "    enableGM = false # default false\n"
                             + "\n"
                             + "[channelService]\n"
                             + "    caCert = 'ca.crt'\n"
