@@ -286,18 +286,16 @@ public class BCOSConnectionTest {
         Response response = connection.send(request);
 
         assertEquals(response.getErrorCode(), BCOSStatusCode.Success);
-        TransactionProof transactionProof =
-                ObjectMapperFactory.getObjectMapper()
-                        .readValue(response.getData(), TransactionProof.class);
         TransactionReceipt transactionReceipt =
-                transactionProof.getReceiptAndProof().getTransactionReceipt();
-        Transaction transaction = transactionProof.getTransAndProof().getTransaction();
+                ObjectMapperFactory.getObjectMapper()
+                        .readValue(response.getData(), TransactionReceipt.class);
 
-        assertEquals(transactionReceipt.getBlockNumber().longValue(), 35);
-        assertEquals(transaction.getBlockNumber().longValue(), 35);
+        assertEquals(transactionReceipt.getBlockNumber().longValue(), 9);
         assertEquals(
                 transactionReceipt.getTransactionHash(),
-                "0x633a3386a189455354c058af6606d705697f3b216ad555958dc680f68cc4e99d");
+                "0x8b3946912d1133f9fb0722a7b607db2456d468386c2e86b035e81ef91d94eb90");
+        assertFalse(transactionReceipt.getTxProof().isEmpty());
+        assertFalse(transactionReceipt.getReceiptProof().isEmpty());
     }
 
     @Test

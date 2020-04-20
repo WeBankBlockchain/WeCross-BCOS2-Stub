@@ -123,7 +123,7 @@ public class BCOSConnection implements Connection {
                     objectMapper.readValue(request.getData(), TransactionParams.class);
             String signTx = transaction.getData();
 
-            TransactionReceipt receipt = web3jWrapper.sendTransaction(signTx);
+            TransactionReceipt receipt = web3jWrapper.sendTransactionAndGetProof(signTx);
             if (Objects.isNull(receipt)
                     || Objects.isNull(receipt.getTransactionHash())
                     || "".equals(receipt.getTransactionHash())) {
@@ -139,13 +139,10 @@ public class BCOSConnection implements Connection {
                         StatusCode.getStatusMessage(receipt.getStatus()));
             }
 
-            TransactionProof transactionProof = getTransactionProof(receipt.getTransactionHash());
-
             response.setErrorCode(BCOSStatusCode.Success);
             response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
-            String proof = objectMapper.writeValueAsString(transactionProof);
-            response.setData(proof.getBytes(StandardCharsets.UTF_8));
-            logger.debug(" sendTransaction, tx: {}, proof: {}", signTx, proof);
+            response.setData(objectMapper.writeValueAsBytes(receipt));
+            logger.debug(" sendTransaction, tx: {}, proof: {}", signTx, receipt);
         } catch (BCOSStubException e) {
             response.setErrorCode(e.getErrorCode());
             response.setErrorMessage(e.getMessage());

@@ -14,7 +14,7 @@ public interface Web3jWrapper {
 
     BigInteger getBlockNumber() throws IOException;
 
-    TransactionReceipt sendTransaction(String signedTransactionData) throws IOException;
+    TransactionReceipt sendTransactionAndGetProof(String signedTransactionData) throws IOException;
 
     ReceiptAndProof getTransactionReceiptByHashWithProof(String transactionHash) throws IOException;
 
