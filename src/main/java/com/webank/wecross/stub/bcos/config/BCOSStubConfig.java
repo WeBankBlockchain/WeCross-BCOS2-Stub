@@ -230,7 +230,7 @@ public class BCOSStubConfig {
             BCOSStubConfig.Resource resource = resources.get(i);
 
             resourceInfo.setName(resource.getName());
-            resourceInfo.setStubType(BCOSConstant.BCOS_ACCOUNT);
+            resourceInfo.setStubType(this.type);
             resourceInfo.setChecksum(sha3Digest.hash(resource.getValue()));
 
             resourceInfo.getProperties().put(resource.getName(), resource.getValue());
