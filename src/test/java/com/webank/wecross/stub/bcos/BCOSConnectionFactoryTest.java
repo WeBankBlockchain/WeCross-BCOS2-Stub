@@ -34,7 +34,7 @@ public class BCOSConnectionFactoryTest {
 
             ResourceInfo resourceInfo0 = resources.get(1);
             assertEquals(resourceInfo0.getName(), "Hello");
-            assertEquals(resourceInfo0.getStubType(), "BCOS2.0");
+            assertEquals(resourceInfo0.getStubType(), "BCOS-UT");
             assertEquals(
                     resourceInfo0.getProperties().get(resourceInfo0.getName()),
                     "0x8827cca7f0f38b861b62dae6d711efe92a1e3603");
