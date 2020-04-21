@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.IOException;
 import java.math.BigInteger;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
+import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -111,5 +112,10 @@ public class Web3jWrapperImplMock implements Web3jWrapper {
         callOutput.setStatus("0x0");
         callOutput.setOutput(data.substring(10));
         return callOutput;
+    }
+
+    @Override
+    public Web3j getWeb3j() {
+        return null;
     }
 }

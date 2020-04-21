@@ -2,6 +2,7 @@ package com.webank.wecross.stub.bcos.web3j;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -42,5 +43,10 @@ public class Web3jWrapperWithExceptionMock implements Web3jWrapper {
     public Call.CallOutput call(String accountAddress, String contractAddress, String data)
             throws IOException {
         throw new IOException(" IOException");
+    }
+
+    @Override
+    public Web3j getWeb3j() {
+        return null;
     }
 }

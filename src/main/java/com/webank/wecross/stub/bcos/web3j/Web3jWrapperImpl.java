@@ -24,6 +24,7 @@ public class Web3jWrapperImpl implements Web3jWrapper {
         this.web3j = web3j;
     }
 
+    @Override
     public Web3j getWeb3j() {
         return web3j;
     }
