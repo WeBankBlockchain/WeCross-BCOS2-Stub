@@ -74,7 +74,7 @@ public class BCOSConnectionTest {
         assertFalse(resourceInfoList.isEmpty());
         for (int i = 0; i < resourceInfoList.size(); i++) {
             ResourceInfo resourceInfo = resourceInfoList.get(i);
-            assertEquals(resourceInfo.getStubType(), "BCOS2.0");
+            assertEquals(resourceInfo.getStubType(), bcosStubConfig.getType());
             assertEquals(
                     resourceInfo.getProperties().get(BCOSConstant.BCOS_RESOURCEINFO_CHAIN_ID), 123);
             assertEquals(

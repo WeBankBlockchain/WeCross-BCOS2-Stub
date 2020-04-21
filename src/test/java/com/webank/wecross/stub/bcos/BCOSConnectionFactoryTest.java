@@ -23,7 +23,7 @@ public class BCOSConnectionFactoryTest {
             assertTrue(resources.size() == 2);
             ResourceInfo resourceInfo = resources.get(0);
             assertEquals(resourceInfo.getName(), "HelloWeCross");
-            assertEquals(resourceInfo.getStubType(), "BCOS2.0");
+            assertEquals(resourceInfo.getStubType(), "BCOS-UT");
             assertEquals(
                     resourceInfo.getProperties().get(resourceInfo.getName()),
                     "0x8827cca7f0f38b861b62dae6d711efe92a1e3602");
