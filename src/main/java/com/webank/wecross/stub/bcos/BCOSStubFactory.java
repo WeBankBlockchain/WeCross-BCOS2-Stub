@@ -154,4 +154,12 @@ public class BCOSStubFactory implements StubFactory {
             logger.error("Exception: ", e);
         }
     }
+
+    public static void main(String[] args) throws Exception {
+        System.out.println("BCOS2.0 Stub Plugin. Please copy this file to router/plugin/");
+        System.out.println(
+                "For pure chain performance test, please run the command for more info:");
+        System.out.println(
+                "    java -cp conf/:lib/*:plugin/bcos-stub.jar com.webank.wecross.stub.bcos.normal.performance.normal.PerformanceTest");
+    }
 }

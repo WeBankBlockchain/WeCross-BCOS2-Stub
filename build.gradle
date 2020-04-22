@@ -46,7 +46,6 @@ configurations {
     all*.exclude group: 'de.vandermeer', module: '*'
     all*.exclude group: 'net.bytebuddy', module: 'byte-buddy'
     all*.exclude group: 'com.alibaba', module: 'druid'
-    all*.exclude group: 'com.google.guava', module: 'guava'
     all*.exclude group: 'org.apache.httpcomponents', module: 'httpclient'
     all*.exclude group: 'org.mockito', module: 'mockito-core'
     all*.exclude group: 'io.reactivex', module: 'rxjava'
@@ -63,11 +62,11 @@ configurations {
 }
 
 dependencies {
-    // implementation 'com.webank:wecross-java-stub:1.0.0-rc2-0326-SNAPSHOT'
     implementation 'com.webank:wecross-java-stub:1.0.0-rc2-0408-SNAPSHOT'
     implementation 'org.slf4j:slf4j-api:1.7.25'
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'
+    implementation 'com.google.guava:guava:28.1-jre'
     implementation 'org.fisco-bcos:web3sdk:2.4.0-0417-SNAPSHOT'
 
     // Use JUnit test framework
@@ -99,6 +98,7 @@ sourceSets {
 
 shadowJar {
     mergeServiceFiles()
+    minimize()
 }
 
 
@@ -111,12 +111,14 @@ task makeJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar, d
     exclude '**/*.properties'
     exclude '**/*.yml'
     exclude '**/BCOSGMStubFactory.*'
+    exclude '**/performance/guomi/*'
 
     manifest {
-
+        attributes(
+                'Main-Class': 'com.webank.wecross.stub.bcos.normal.BCOSStubFactory',
+                'version': project.version,
+        )
     }
-
-    //minimize()
 
     relocate 'org.fisco.bcos', 'org.fisco.bcos.wecross.normal'
     relocate 'com.webank.wecross.stub.bcos', 'com.webank.wecross.stub.bcos.normal'
@@ -133,11 +135,14 @@ task makeGMJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar,
     exclude '**/*.properties'
     exclude '**/*.yml'
     exclude '**/BCOSStubFactory.*'
+    exclude '**/performance/normal/*'
 
     manifest {
+        attributes(
+                'Main-Class': 'com.webank.wecross.stub.bcos.guomi.BCOSGMStubFactory',
+                'version': project.version,
+        )
     }
-
-    //minimize()
 
     relocate 'org.fisco.bcos', 'org.fisco.bcos.wecross.guomi'
     relocate 'com.webank.wecross.stub.bcos', 'com.webank.wecross.stub.bcos.guomi'
