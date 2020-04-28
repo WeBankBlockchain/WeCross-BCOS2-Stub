@@ -105,7 +105,7 @@ shadowJar {
 task makeJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar, dependsOn: shadowJar) {
 
     destinationDir file('dist/apps')
-    archiveName 'bcos-stub.jar'
+    archiveName project.name + "-" + project.version + '.jar'
     exclude '**/*.xml'
     exclude '**/*.toml'
     exclude '**/*.properties'
@@ -129,7 +129,7 @@ task makeJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar, d
 task makeGMJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar, dependsOn: shadowJar) {
 
     destinationDir file('dist/apps')
-    archiveName 'bcos-stub-gm.jar'
+    archiveName project.name + "-gm-" + project.version + '.jar'
     exclude '**/*.xml'
     exclude '**/*.toml'
     exclude '**/*.properties'
