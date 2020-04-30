@@ -55,10 +55,6 @@ configurations {
 
     integTestImplementation.extendsFrom implementation
     integTestTestImplementation.extendsFrom testImplementation
-
-    all*.resolutionStrategy {
-        force 'com.alibaba:fastjson:1.2.67'
-    }
 }
 
 dependencies {
@@ -67,7 +63,7 @@ dependencies {
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'
     implementation 'com.google.guava:guava:28.1-jre'
-    implementation 'org.fisco-bcos:web3sdk:2.4.0-0417-SNAPSHOT'
+    implementation 'org.fisco-bcos:web3sdk:2.4.0'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
