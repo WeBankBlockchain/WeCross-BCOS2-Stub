@@ -27,11 +27,11 @@ git clone https://github.com/WeBankFinTech/WeCross-BCOS2-Stub.git
 cd WeCross-BCOS2-Stub
 ./gradlew assemble
 ```
-如果编译成功，将在当前目录生成一个dist/apps目录，该目录下会有两个jar包，一个是国密版插件，一个是非国密版插件。
+如果编译成功，将在当前目录的dist/apps目录下生成两个jar包，分别是国密版和非国密版插件。
 
 ## 插件使用
 
-插件的详细使用方式请参阅[WeCross技术文档](https://wecross.readthedocs.io/zh_CN/release-rc2/docs/stubs/bcos.html#id2)
+插件的详细使用方式请参阅[WeCross技术文档](https://wecross.readthedocs.io/zh_CN/latest/docs/stubs/bcos.html#id2)
 
 ## 贡献说明
 
@@ -50,4 +50,4 @@ cd WeCross-BCOS2-Stub
 
 ![license](http://img.shields.io/badge/license-Apache%20v2-blue.svg)
 
-WeCross-BCOS2-Stub的开源协议为[Apache License 2.0](http://www.apache.org/licenses/). 详情参考[LICENSE](./LICENSE)。
+WeCross BCOS2 Stub的开源协议为[Apache License 2.0](http://www.apache.org/licenses/). 详情参考[LICENSE](./LICENSE)。
