@@ -1,0 +1,4 @@
+[account]
+    type = "BCOS2.0"
+    accountFile = '0x4c9e341a015ce8200060a028ce45dfea8bf33e15.p12'
+    password = '123456'  # if you choose .p12, then password is required
