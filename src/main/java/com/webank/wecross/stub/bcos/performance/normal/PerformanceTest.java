@@ -14,14 +14,14 @@ public class PerformanceTest {
         System.out.println("Usage:");
 
         System.out.println(
-                " \t java -cp conf/:lib/*:plugin/bcos-stub.jar com.webank.wecross.stub.bcos.normal.performance.normal.PerformanceTest [chainName] [accountName] call [count] [qps]");
+                " \t java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.normal.performance.normal.PerformanceTest [chainName] [accountName] call [count] [qps]");
         System.out.println(
-                " \t java -cp conf/:lib/*:plugin/bcos-stub.jar com.webank.wecross.stub.bcos.normal.performance.normal.PerformanceTest [chainName] [accountName] sendTransaction [count] [qps]");
+                " \t java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.normal.performance.normal.PerformanceTest [chainName] [accountName] sendTransaction [count] [qps]");
         System.out.println("Example:");
         System.out.println(
-                " \t java -cp conf/:lib/*:plugin/bcos-stub.jar com.webank.wecross.stub.bcos.normal.performance.normal.PerformanceTest chains/bcos bcos_user1 call 10000 1000");
+                " \t java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.normal.performance.normal.PerformanceTest chains/bcos bcos_user1 call 10000 1000");
         System.out.println(
-                " \t java -cp conf/:lib/*:plugin/bcos-stub.jar com.webank.wecross.stub.bcos.normal.performance.normal.PerformanceTest chains/bcos bcos_user1 sendTransaction 10000 1000");
+                " \t java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.normal.performance.normal.PerformanceTest chains/bcos bcos_user1 sendTransaction 10000 1000");
 
         exit();
     }
