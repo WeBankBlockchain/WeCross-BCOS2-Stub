@@ -270,7 +270,7 @@ public class BCOSDriverTest {
     }
 
     @Test
-    public void callTest() throws IOException {
+    public void callTest() throws Exception {
 
         Request request = new Request();
         request.setType(BCOSRequestType.CALL);
@@ -293,7 +293,7 @@ public class BCOSDriverTest {
     }
 
     @Test
-    public void callFailedTest() throws IOException {
+    public void callFailedTest() throws Exception {
 
         Request request = new Request();
         request.setType(BCOSRequestType.CALL);
@@ -313,7 +313,7 @@ public class BCOSDriverTest {
     }
 
     @Test
-    public void callFailedTest0() throws IOException {
+    public void callFailedTest0() throws Exception {
 
         Request request = new Request();
         request.setType(BCOSRequestType.CALL);
@@ -332,7 +332,7 @@ public class BCOSDriverTest {
     }
 
     @Test
-    public void sendTransactionTest() throws IOException {
+    public void sendTransactionTest() throws Exception {
 
         Request request = new Request();
         request.setType(BCOSRequestType.SEND_TRANSACTION);
@@ -351,7 +351,7 @@ public class BCOSDriverTest {
     }
 
     @Test
-    public void sendTransactionFailedTest() throws IOException {
+    public void sendTransactionFailedTest() throws Exception {
 
         Request request = new Request();
         request.setType(BCOSRequestType.SEND_TRANSACTION);
@@ -370,7 +370,7 @@ public class BCOSDriverTest {
     }
 
     @Test
-    public void sendTransactionFailedTest0() throws IOException {
+    public void sendTransactionFailedTest0() throws Exception {
 
         Request request = new Request();
         request.setType(BCOSRequestType.SEND_TRANSACTION);

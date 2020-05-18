@@ -10,6 +10,7 @@ import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.TransactionContext;
+import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
 import com.webank.wecross.stub.VerifiedTransaction;
@@ -175,7 +176,7 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
-    public void callIntegTest() {
+    public void callIntegTest() throws TransactionException {
         String[] params = null;
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext("get", params);
@@ -187,7 +188,7 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
-    public void callNotExistMethodIntegTest() {
+    public void callNotExistMethodIntegTest() throws TransactionException {
         String[] params = new String[]{"aa", "bb", "cc", "dd"};
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext("getNotExist", params);
@@ -199,7 +200,7 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
-    public void sendTransactionIntegTest() {
+    public void sendTransactionIntegTest() throws TransactionException {
         String[] params = new String[]{"aa", "bb", "cc", "dd"};
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext("set", params);
@@ -234,7 +235,7 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
-    public void sendTransactionNotExistIntegTest() {
+    public void sendTransactionNotExistIntegTest() throws TransactionException {
         String[] params = new String[] {"aa", "bb", "cc", "dd"};
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext("setNotExist", params);
@@ -245,7 +246,7 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
-    public void emptyParamsSendTransactionIntegTest() {
+    public void emptyParamsSendTransactionIntegTest() throws TransactionException {
         String[] params = new String[0];
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext("set", params);
@@ -268,7 +269,7 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
-    public void getTransactionReceiptTest() throws IOException, BCOSStubException {
+    public void getTransactionReceiptTest() throws IOException, BCOSStubException, TransactionException {
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext("getAndClear", null);
         TransactionResponse transactionResponse =
@@ -285,7 +286,7 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
-    public void getVerifiedTransactionEmptyParamsTest() throws IOException, BCOSStubException {
+    public void getVerifiedTransactionEmptyParamsTest() throws IOException, BCOSStubException, TransactionException {
         String[] params = new String[0];
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext("set", params);
@@ -320,7 +321,7 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
-    public void getVerifiedTransactionTest() throws IOException, BCOSStubException {
+    public void getVerifiedTransactionTest() throws IOException, BCOSStubException, TransactionException {
         String[] params = new String[] {"aa", "bb", "cc", "dd"};
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext("set", params);

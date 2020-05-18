@@ -24,7 +24,7 @@ public class BCOSStatusCode {
     public static final int HandleGetTransactionProofFailed = 2024;
 
     public static final int CallNotSuccessStatus = 2030;
-    public static final int SendTransactionNotSuccessStatus = 2030;
+    public static final int SendTransactionNotSuccessStatus = 2031;
 
     public static final int UnclassifiedError = 2100;
 

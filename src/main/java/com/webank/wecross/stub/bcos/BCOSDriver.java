@@ -10,6 +10,7 @@ import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.Response;
 import com.webank.wecross.stub.TransactionContext;
+import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
 import com.webank.wecross.stub.VerifiedTransaction;
@@ -135,7 +136,8 @@ public class BCOSDriver implements Driver {
 
     @Override
     public TransactionResponse call(
-            TransactionContext<TransactionRequest> request, Connection connection) {
+            TransactionContext<TransactionRequest> request, Connection connection)
+            throws TransactionException {
 
         TransactionResponse response = new TransactionResponse();
 
@@ -215,7 +217,8 @@ public class BCOSDriver implements Driver {
 
     @Override
     public TransactionResponse sendTransaction(
-            TransactionContext<TransactionRequest> request, Connection connection) {
+            TransactionContext<TransactionRequest> request, Connection connection)
+            throws TransactionException {
 
         TransactionResponse response = new TransactionResponse();
 
@@ -532,6 +535,18 @@ public class BCOSDriver implements Driver {
             return null;
         }
     }
+
+    @Override
+    public void asyncCall(
+            TransactionContext<TransactionRequest> request,
+            Connection connection,
+            Callback callback) {}
+
+    @Override
+    public void asyncSendTransaction(
+            TransactionContext<TransactionRequest> request,
+            Connection connection,
+            Callback callback) {}
 
     /**
      * @param name
