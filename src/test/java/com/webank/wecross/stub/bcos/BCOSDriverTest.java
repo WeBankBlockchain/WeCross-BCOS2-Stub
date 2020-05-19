@@ -12,6 +12,7 @@ import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.TransactionContext;
+import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
 import com.webank.wecross.stub.VerifiedTransaction;
@@ -270,7 +271,7 @@ public class BCOSDriverTest {
     }
 
     @Test
-    public void callTest() throws IOException {
+    public void callTest() throws Exception {
 
         Request request = new Request();
         request.setType(BCOSRequestType.CALL);
@@ -293,7 +294,7 @@ public class BCOSDriverTest {
     }
 
     @Test
-    public void callFailedTest() throws IOException {
+    public void callFailedTest() {
 
         Request request = new Request();
         request.setType(BCOSRequestType.CALL);
@@ -304,16 +305,18 @@ public class BCOSDriverTest {
 
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext(funName, params);
-        TransactionResponse transactionResponse =
-                driver.call(requestTransactionContext, exceptionConnection);
+        TransactionResponse transactionResponse = null;
+        try {
+            transactionResponse = driver.call(requestTransactionContext, exceptionConnection);
+        } catch (TransactionException e) {
+            assertEquals(e.getErrorCode().intValue(), BCOSStatusCode.HandleCallRequestFailed);
+        }
 
-        assertEquals(
-                transactionResponse.getErrorCode().intValue(),
-                BCOSStatusCode.HandleCallRequestFailed);
+        assertTrue(Objects.isNull(transactionResponse));
     }
 
     @Test
-    public void callFailedTest0() throws IOException {
+    public void callFailedTest0() throws Exception {
 
         Request request = new Request();
         request.setType(BCOSRequestType.CALL);
@@ -332,7 +335,7 @@ public class BCOSDriverTest {
     }
 
     @Test
-    public void sendTransactionTest() throws IOException {
+    public void sendTransactionTest() throws Exception {
 
         Request request = new Request();
         request.setType(BCOSRequestType.SEND_TRANSACTION);
@@ -351,7 +354,7 @@ public class BCOSDriverTest {
     }
 
     @Test
-    public void sendTransactionFailedTest() throws IOException {
+    public void sendTransactionFailedTest() {
 
         Request request = new Request();
         request.setType(BCOSRequestType.SEND_TRANSACTION);
@@ -362,15 +365,19 @@ public class BCOSDriverTest {
 
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext(funName, params);
-        TransactionResponse transactionResponse =
-                driver.sendTransaction(requestTransactionContext, exceptionConnection);
+        TransactionResponse transactionResponse = null;
+        try {
+            transactionResponse =
+                    driver.sendTransaction(requestTransactionContext, exceptionConnection);
+        } catch (TransactionException e) {
+            assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.HandleSendTransactionFailed);
+        }
 
-        assertTrue(
-                transactionResponse.getErrorCode() == BCOSStatusCode.HandleSendTransactionFailed);
+        assertTrue(Objects.isNull(transactionResponse));
     }
 
     @Test
-    public void sendTransactionFailedTest0() throws IOException {
+    public void sendTransactionFailedTest0() {
 
         Request request = new Request();
         request.setType(BCOSRequestType.SEND_TRANSACTION);
@@ -381,10 +388,15 @@ public class BCOSDriverTest {
 
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext(funName, params);
-        TransactionResponse transactionResponse =
-                driver.sendTransaction(requestTransactionContext, nonExistConnection);
+        TransactionResponse transactionResponse = null;
+        try {
+            transactionResponse =
+                    driver.sendTransaction(requestTransactionContext, nonExistConnection);
+        } catch (TransactionException e) {
+            assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.TransactionReceiptNotExist);
+        }
 
-        assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.TransactionReceiptNotExist);
+        assertTrue(Objects.isNull(transactionResponse));
     }
 
     @Test

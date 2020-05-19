@@ -3,6 +3,7 @@ codecov:
 coverage:
   ignore:
     - "src/integTest/**/*"
+    - "src/java/com/webank/wecross/stub/bcos/performance/*"
   status:
     project:
       default:
