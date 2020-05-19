@@ -2,10 +2,10 @@ package com.webank.wecross.stub.bcos.web3j;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof.ReceiptAndProof;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof.TransAndProof;
 
@@ -15,7 +15,8 @@ public interface Web3jWrapper {
 
     BigInteger getBlockNumber() throws IOException;
 
-    TransactionReceipt sendTransactionAndGetProof(String signedTransactionData) throws IOException;
+    void sendTransactionAndGetProof(String signedTransactionData, TransactionSucCallback callback)
+            throws IOException;
 
     ReceiptAndProof getTransactionReceiptByHashWithProof(String transactionHash) throws IOException;
 
