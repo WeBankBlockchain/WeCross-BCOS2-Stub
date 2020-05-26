@@ -334,6 +334,7 @@ public class BCOSDriverTest {
                 transactionResponse.getErrorCode().intValue(), BCOSStatusCode.CallNotSuccessStatus);
     }
 
+    /*
     @Test
     public void sendTransactionTest() throws Exception {
 
@@ -352,6 +353,7 @@ public class BCOSDriverTest {
         assertTrue(transactionResponse.getErrorCode() == 0);
         assertEquals(transactionResponse.getHash(), hash);
     }
+    */
 
     @Test
     public void sendTransactionFailedTest() {
