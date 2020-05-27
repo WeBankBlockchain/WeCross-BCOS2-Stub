@@ -416,28 +416,76 @@ public class BCOSDriver implements Driver {
                                                 response.getData(), TransactionReceipt.class);
 
                                 if (receipt.isStatusOK()) {
-                                    verifyTransactionProof(
-                                            receipt.getBlockNumber().longValue(),
-                                            receipt.getTransactionHash(),
-                                            request.getBlockHeaderManager(),
-                                            receipt);
+                                    request.getBlockHeaderManager()
+                                            .asyncGetBlockHeader(
+                                                    receipt.getBlockNumber().longValue(),
+                                                    new BlockHeaderManager.BlockHeaderCallback() {
+                                                        @Override
+                                                        public void onBlockHeader(
+                                                                byte[] blockHeader) {
+                                                            try {
+                                                                verifyTransactionProof(
+                                                                        receipt.getBlockNumber()
+                                                                                .longValue(),
+                                                                        receipt
+                                                                                .getTransactionHash(),
+                                                                        blockHeader,
+                                                                        receipt);
 
-                                    transactionResponse.setBlockNumber(
-                                            receipt.getBlockNumber().longValue());
-                                    transactionResponse.setHash(receipt.getTransactionHash());
-                                    transactionResponse.setResult(
-                                            FunctionUtility.decodeOutput(receipt));
-                                    transactionResponse.setErrorCode(BCOSStatusCode.Success);
-                                    transactionResponse.setErrorMessage(
-                                            BCOSStatusCode.getStatusMessage(
-                                                    BCOSStatusCode.Success));
+                                                                transactionResponse.setBlockNumber(
+                                                                        receipt.getBlockNumber()
+                                                                                .longValue());
+                                                                transactionResponse.setHash(
+                                                                        receipt
+                                                                                .getTransactionHash());
+                                                                transactionResponse.setResult(
+                                                                        FunctionUtility
+                                                                                .decodeOutput(
+                                                                                        receipt));
+                                                                transactionResponse.setErrorCode(
+                                                                        BCOSStatusCode.Success);
+                                                                transactionResponse.setErrorMessage(
+                                                                        BCOSStatusCode
+                                                                                .getStatusMessage(
+                                                                                        BCOSStatusCode
+                                                                                                .Success));
+                                                                callback.onTransactionResponse(
+                                                                        null, transactionResponse);
+                                                                if (logger.isDebugEnabled()) {
+                                                                    logger.debug(
+                                                                            " hash: {}, response: {}",
+                                                                            receipt
+                                                                                    .getTransactionHash(),
+                                                                            transactionResponse);
+                                                                }
+                                                            } catch (BCOSStubException e) {
+                                                                logger.warn(" e: {}", e);
+                                                                callback.onTransactionResponse(
+                                                                        new TransactionException(
+                                                                                e.getErrorCode(),
+                                                                                e.getMessage()),
+                                                                        null);
+                                                            } catch (Exception e) {
+                                                                logger.warn(" e: {}", e);
+                                                                callback.onTransactionResponse(
+                                                                        new TransactionException(
+                                                                                BCOSStatusCode
+                                                                                        .UnclassifiedError,
+                                                                                " errorMessage: "
+                                                                                        + e
+                                                                                                .getMessage()),
+                                                                        null);
+                                                            }
+                                                        }
+                                                    });
+
                                 } else {
                                     transactionResponse.setErrorCode(
                                             BCOSStatusCode.SendTransactionNotSuccessStatus);
                                     transactionResponse.setErrorMessage(
                                             StatusCode.getStatusMessage(receipt.getStatus()));
+                                    callback.onTransactionResponse(null, transactionResponse);
                                 }
-                                callback.onTransactionResponse(null, transactionResponse);
                             } catch (BCOSStubException e) {
                                 logger.warn(" e: {}", e);
                                 callback.onTransactionResponse(
@@ -583,16 +631,17 @@ public class BCOSDriver implements Driver {
     /**
      * @param blockNumber
      * @param hash
-     * @param blockHeaderManager
+     * @param bytesBlockHeader
      * @param transactionReceipt
      * @throws BCOSStubException
      */
     public void verifyTransactionProof(
             long blockNumber,
             String hash,
-            BlockHeaderManager blockHeaderManager,
+            byte[] bytesBlockHeader,
             TransactionReceipt transactionReceipt)
             throws BCOSStubException {
+        /*
         // fetch block header
         byte[] bytesBlockHeader = blockHeaderManager.getBlockHeader(blockNumber);
         if (Objects.isNull(bytesBlockHeader) || bytesBlockHeader.length == 0) {
@@ -602,6 +651,7 @@ public class BCOSDriver implements Driver {
                             + ", blockNumber: "
                             + blockNumber);
         }
+        */
 
         // decode block header
         BlockHeader blockHeader = decodeBlockHeader(bytesBlockHeader);

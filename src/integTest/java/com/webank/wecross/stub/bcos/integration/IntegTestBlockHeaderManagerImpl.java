@@ -39,4 +39,10 @@ public class IntegTestBlockHeaderManagerImpl implements BlockHeaderManager {
             return null;
         }
     }
+
+    @Override
+    public void asyncGetBlockHeader(long blockNumber, BlockHeaderCallback callback) {
+        final byte[] blockHeader = getBlockHeader(blockNumber);
+        callback.onBlockHeader(blockHeader);
+    }
 }
