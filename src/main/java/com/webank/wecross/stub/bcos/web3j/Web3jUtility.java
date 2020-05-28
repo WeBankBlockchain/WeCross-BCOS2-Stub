@@ -19,17 +19,19 @@ public class Web3jUtility {
 
     private Web3jUtility() {}
 
-    public static ThreadPoolTaskExecutor build(int threadNum, String name) {
+    public static ThreadPoolTaskExecutor buildThreadPool(
+            int threadNum, int queueCapacity, String name) {
         logger.info(
-                " initializing Web3j ThreadPoolTaskExecutor, threadC: {}, threadName: {}",
+                " initializing Web3j ThreadPoolTaskExecutor, threadC: {}, queueCapacity: {}, threadName: {}",
                 threadNum,
+                queueCapacity,
                 name);
         // init default thread pool
 
         ThreadPoolTaskExecutor threadPool = new ThreadPoolTaskExecutor();
         threadPool.setCorePoolSize(threadNum);
         threadPool.setMaxPoolSize(threadNum);
-        threadPool.setQueueCapacity(1000);
+        threadPool.setQueueCapacity(queueCapacity);
         threadPool.setThreadNamePrefix(name);
         threadPool.initialize();
         return threadPool;
@@ -66,7 +68,11 @@ public class Web3jUtility {
         groupChannelConnectionsConfig.setAllChannelConnections(allChannelConnections);
 
         Service service = new Service();
-        service.setThreadPool(build(8, "web3j_callback"));
+        service.setThreadPool(
+                buildThreadPool(
+                        channelServiceConfig.getThreadNum(),
+                        channelServiceConfig.getQueueCapacity(),
+                        "web3j_callback"));
 
         service.setGroupId(channelServiceConfig.getChain().getGroupID());
         service.setAllChannelConnections(groupChannelConnectionsConfig);
