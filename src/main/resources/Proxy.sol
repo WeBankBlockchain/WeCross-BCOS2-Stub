@@ -4,57 +4,66 @@
 *   main entrance of all contract call
 */
 
-pragma solidity >=0.5.0 <0.7.0;
+pragma solidity >=0.5.0 <0.6.0;
+import "./CNSPrecompiled.sol";
 pragma experimental ABIEncoderV2;
 
 contract Proxy {
-    
+
     event WarningMsg(bytes msg);
-        
+
     // per step of transaction
     struct TransactionStep {
         string path;
         uint256 timestamp;
-        address contractAddress; 
-        string abi;
-        bytes args;   
+        address contractAddress;
+        string func;
+        bytes args;
     }
-    
+
     // information of transaction
     struct TransactionInfo {
-        address[] contractAddresses;  
-        uint8 status;    // 0-Start 1-Commit 2-Rollback 
+        address[] contractAddresses;
+        uint8 status;    // 0-Start 1-Commit 2-Rollback
         uint256 startTimestamp;
         uint256 commitTimestamp;
         uint256 rollbackTimestamp;
         uint256[] seqs;   // sequence of each step
         uint256 stepNum;  // step number
     }
-    
+
     struct ContractInfo {
         bool locked;     // isolation control, read-committed
         string path;
         string transactionID;
     }
-    
-    mapping(address => ContractInfo) lockedContracts;             
-    
+
+    mapping(address => ContractInfo) lockedContracts;
+
     mapping(string => TransactionInfo) transactions;      // key: transactionID
-    
+
     mapping(string => TransactionStep) transactionSteps;  // key: transactionID||seq
-    
+
     /*
     * record all tansactionIDs
     * head: point to the current tansaction to be checked
     * tail: point to the next position for added tansaction
     */
-    uint256 head = 0;       
-    uint256 tail = 0;   
+    uint256 head = 0;
+    uint256 tail = 0;
     string[] tansactionQueue;
-    
+
     string constant revertFlag = "_revert";
     string constant nullFlag = "null";
-    uint256 maxStep = 16;
+    byte   constant separator = '.';
+    uint256 constant addressLen = 42;
+    uint256 maxStep = 32;
+    string[] pathCache;
+
+    CNSPrecompiled cns;
+    constructor() public {
+        cns = CNSPrecompiled(0x1004);
+    }
 
     function getMaxStep() public view
     returns(uint256)
@@ -67,34 +76,54 @@ contract Proxy {
         maxStep = _maxStep;
     }
 
+    function addPath(string memory _path) public
+    {
+        pathCache.push(_path);
+    }
+
+    function getPaths() public view
+    returns (string[] memory)
+    {
+        return pathCache;
+    }
+
+    function deletePathCache() public
+    {
+        pathCache.length = 0;
+    }
+
     // constant call
-    function constantCall(string memory _transactionID, address _contractAddress, string memory _abi, bytes memory _args) public
+    function constantCall(string memory _transactionID, string memory _path, string memory _func, bytes memory _args) public
     returns(bytes memory)
     {
+        address addr = getAddressByPath(_path);
+
         if(sameString(_transactionID, "0")) {
-             return callContract(_contractAddress, _abi, _args);
+             return callContract(addr, _func, _args);
         }
 
         if(!isExistedTransaction(_transactionID)) {
             emit WarningMsg("transaction id not found");
         }
 
-        if(!sameString(lockedContracts[_contractAddress].transactionID, _transactionID)) {
+        if(!sameString(lockedContracts[addr].transactionID, _transactionID)) {
             emit WarningMsg("unregistered contract address");
         }
 
-        return callContract(_contractAddress, _abi, _args);
+        return callContract(addr, _func, _args);
     }
 
     // non-constant call
-    function sendTransaction(string memory _transactionID, uint256 _seq, uint256 _timestamp, string memory _path, address _contractAddress, string memory _abi, bytes memory _args) public
+    function sendTransaction(string memory _transactionID, uint256 _seq, string memory _path, string memory _func, bytes memory _args) public
     returns(bytes memory)
     {
+        address addr = getAddressByPath(_path);
+
         if(sameString(_transactionID, "0")) {
-            if(lockedContracts[_contractAddress].locked) {
+            if(lockedContracts[addr].locked) {
                 revert("contract is locked by unfinished transaction");
             }
-             return callContract(_contractAddress, _abi, _args);
+             return callContract(addr, _func, _args);
         }
 
         if(!isExistedTransaction(_transactionID)) {
@@ -102,18 +131,18 @@ contract Proxy {
         }
 
         if(transactions[_transactionID].status == 1) {
-            revert("has commited");
+            revert("has committed");
         }
 
         if(transactions[_transactionID].status == 2) {
             revert("has rolledback");
         }
 
-        if(!sameString(lockedContracts[_contractAddress].transactionID, _transactionID)) {
-            revert("unregistered contract address");
+        if(!sameString(lockedContracts[addr].transactionID, _transactionID)) {
+            revert("unregistered contract");
         }
 
-        if(!sameString(lockedContracts[_contractAddress].path, _path)) {
+        if(!sameString(lockedContracts[addr].path, _path)) {
             revert("unregistered path");
         }
 
@@ -122,8 +151,8 @@ contract Proxy {
         transactionSteps[getTransactionStepKey(_transactionID, _seq)] = TransactionStep(
             _path,
             now,
-            _contractAddress,
-            _abi,
+            addr,
+            _func,
             _args
         );
 
@@ -134,13 +163,13 @@ contract Proxy {
             transactions[_transactionID].stepNum = num + 1;
         }
 
-        return callContract(_contractAddress, _abi, _args);
+        return callContract(addr, _func, _args);
     }
 
     /*
-    * result: 0-success, 1-transaction_existed, 2-contract_path_inconsistent, 3-contract_conflict
+    * result: 0-success, 1-transaction_existed, 2-contract_conflict
     */
-    function startTransaction(string memory _transactionID, uint256 _timestamp, address[] memory _contractAddresses, string[] memory _paths) public
+    function startTransaction(string memory _transactionID, string[] memory _paths) public
     returns(uint256 result)
     {
         if(isExistedTransaction(_transactionID)) {
@@ -148,28 +177,27 @@ contract Proxy {
             return 1;
         }
 
-        uint256 len1 = _contractAddresses.length;
-        uint256 len2 = _paths.length;
-        if(len1 != len2) {
-            emit WarningMsg("length of contract list and path list is inconsistent");
-            return 2;
-        }
+        uint256 len = _paths.length;
+        address[] memory contracts = new address[](len);
 
         // recode ACL
-        for(uint256 i = 0; i < len1; i++) {
-            if(lockedContracts[_contractAddresses[i]].locked) {
+        for(uint256 i = 0; i < len; i++) {
+            address addr = getAddressByPath(_paths[i]);
+            contracts[i] = addr;
+
+            if(lockedContracts[addr].locked) {
                 emit WarningMsg("contract conflict");
-                return 3;
+                return 2;
             }
-            lockedContracts[_contractAddresses[i]].locked = true;
-            lockedContracts[_contractAddresses[i]].path = _paths[i];
-            lockedContracts[_contractAddresses[i]].transactionID = _transactionID;
+            lockedContracts[addr].locked = true;
+            lockedContracts[addr].path = _paths[i];
+            lockedContracts[addr].transactionID = _transactionID;
         }
 
         uint256[] memory temp = new uint256[](maxStep);
         // recode transaction
         transactions[_transactionID] = TransactionInfo(
-            _contractAddresses,
+            contracts,
             0,
             now,
             0,
@@ -178,14 +206,14 @@ contract Proxy {
             0
         );
 
-        addTansaction(_transactionID);
+        addTransaction(_transactionID);
         return 0;
     }
 
     /*
     * result: 0-success, 1-transaction_not_found, 2-rolledback
     */
-    function commitTransaction(string memory _transactionID, uint256 _timestamp) public
+    function commitTransaction(string memory _transactionID) public
     returns(uint256 result)
     {
         if(!isExistedTransaction(_transactionID)) {
@@ -214,7 +242,7 @@ contract Proxy {
     /*
     * result: 0-success, 1-transaction_not_found, 2-commited, 3-not_yet
     */
-    function rollbackTransaction(string memory _transactionID, uint256 _timestamp) public
+    function rollbackTransaction(string memory _transactionID) public
     returns(uint256)
     {
         if(!isExistedTransaction(_transactionID)) {
@@ -239,12 +267,12 @@ contract Proxy {
             uint256 seq = transactions[_transactionID].seqs[i];
             string memory key = getTransactionStepKey(_transactionID, seq);
 
-            string memory abiStr = transactionSteps[key].abi;
+            string memory abiStr = transactionSteps[key].func;
             address contractAddress = transactionSteps[key].contractAddress;
             bytes memory args = transactionSteps[key].args;
 
             // call revert function
-           callContract(contractAddress, getRevertAbi(abiStr, revertFlag), args);
+           callContract(contractAddress, getRevertFunc(abiStr, revertFlag), args);
 
            if(i == 0) {
                break;
@@ -265,22 +293,24 @@ contract Proxy {
     * example:
     {
     	"transactionID": "1",
-    	"status": "1",
+    	"status": 1,
     	"startTimestamp": "123",
     	"commitTimestamp": "456",
     	"rollbackTimestamp": "789",
     	"transactionSteps": [{
-    			"contractAddress": "0x12",
+            	"seq": 0,
+    			"contract": "0x12",
     			"path": "a.b.c",
     			"timestamp": "123",
-    			"abi": "test1(string)",
+    			"func": "test1(string)",
     			"args": "aaa"
     		},
     		{
-    			"contractAddress": "0x12",
+    		    "seq": 1,
+    			"contract": "0x12",
     			"path": "a.b.c",
     			"timestamp": "123",
-    			"abi": "test2(string)",
+    			"func": "test2(string)",
     			"args": "bbb"
     		}
     	]
@@ -318,17 +348,17 @@ contract Proxy {
     }
 
      // internal call
-    function callContract(address _contractAddress, string memory _abi, bytes memory _args) internal
+    function callContract(address _contractAddress, string memory _sig, bytes memory _args) internal
     returns(bytes memory result)
     {
-        bytes memory sig = abi.encodeWithSignature(_abi);
+        bytes memory sig = abi.encodeWithSignature(_sig);
         bool success;
         (success, result) = address(_contractAddress).call(abi.encodePacked(sig, _args));
         require(success);
     }
 
     // called by router to delete finished transaction
-    function deleteTansaction(string memory _transactionID) public
+    function deleteTransaction(string memory _transactionID) public
     returns (uint256)
     {
         if(head == tail || !sameString(tansactionQueue[head], _transactionID)) {
@@ -338,13 +368,71 @@ contract Proxy {
         return 0;
     }
 
-    function addTansaction(string memory _transactionID) internal
+    function addTransaction(string memory _transactionID) internal
     {
         tail++;
         tansactionQueue.push(_transactionID);
     }
 
-    // "transactionSteps": [{"contractAddress": "0x12","path": "a.b.c","timestamp": "123","abi": "test1(string)","args": "aaa"},{"contractAddress": "0x12","path": "a.b.c","timestamp": "123","abi": "test2(string)","args": "bbb"}]
+    // retrive address from CNS
+    function getAddressByPath(string memory _path) internal view
+    returns (address)
+    {
+        string memory name = getNameByPath(_path);
+        string memory strJson = cns.selectByName(name);
+
+        bytes memory str = bytes(strJson);
+        uint256 len = str.length;
+        bytes memory inverseStr = new bytes(len);
+
+        // get inverse str
+        for(uint256 i = 0; i < len; i++) {
+            inverseStr[i] = str[len - i -1];
+        }
+        uint256 index = len - kmpAlgorithm(inverseStr, bytes("\"sserdda\""));
+
+        bytes memory addr = new bytes(addressLen);
+        uint256 start = 0;
+        for(uint256 i = index; i < len; i++) {
+            if(str[i] == byte('0') && str[i+1] == byte('x')) {
+                start = i;
+                break;
+            }
+        }
+
+        for(uint256 i = 0; i < addressLen; i++) {
+            addr[i] = str[start + i];
+        }
+
+        return bytesToAddress(addr);
+    }
+
+    // input must be a valid path like "zone.chain.resource"
+    function getNameByPath(string memory _path) internal pure
+    returns (string memory)
+    {
+        bytes memory path = bytes(_path);
+        uint256 len = path.length;
+        uint256 nameLen = 0;
+        uint256 index = 0;
+        for(uint256 i = len - 1; i > 0; i--) {
+            if(path[i] == separator) {
+                index = i + 1;
+                break;
+            } else {
+                nameLen++;
+            }
+        }
+
+        bytes memory name = new bytes(nameLen);
+        for(uint256 i = 0; i < nameLen; i++) {
+            name[i] = path[index++];
+        }
+
+        return string(name);
+    }
+
+    // "transactionSteps": [{"seq": 0, "contract": "0x12","path": "a.b.c","timestamp": "123","func": "test1(string)","args": "aaa"},{"seq": 1, "contract": "0x12","path": "a.b.c","timestamp": "123","func": "test2(string)","args": "bbb"}]
     function transactionStepArrayToJson(string memory _transactionID, uint256[] memory _seqs, uint256 _len) internal view
     returns(string memory result)
     {
@@ -352,33 +440,34 @@ contract Proxy {
             return "\"transactionSteps\":[]";
         }
 
-        result = string(abi.encodePacked("\"transactionSteps\":[", transactionStepToJson(transactionSteps[getTransactionStepKey(_transactionID, _seqs[0])])));
+        result = string(abi.encodePacked("\"transactionSteps\":[", transactionStepToJson(transactionSteps[getTransactionStepKey(_transactionID, _seqs[0])], _seqs[0])));
         for(uint256 i = 1; i < _len; i++) {
-                    result = string(abi.encodePacked(result, ",", transactionStepToJson(transactionSteps[getTransactionStepKey(_transactionID, _seqs[i])])));
+                    result = string(abi.encodePacked(result, ",", transactionStepToJson(transactionSteps[getTransactionStepKey(_transactionID, _seqs[i])], _seqs[i])));
         }
 
         return string(abi.encodePacked(result, "]"));
     }
 
-    // {"contractAddress": "0x12","path": "a.b.c","timestamp": "123","abi": "test2(string)","args": "bbb"}
-    function transactionStepToJson(TransactionStep memory _step) internal pure
+    // {"seq": 0, "contract": "0x12","path": "a.b.c","timestamp": "123","func": "test2(string)","args": "bbb"}
+    function transactionStepToJson(TransactionStep memory _step, uint256 _seq) internal pure
     returns(string memory)
     {
-        return string(abi.encodePacked("{\"contractAddress\":", "\"", addressToString(_step.contractAddress), "\",",
+        return string(abi.encodePacked("{\"seq\":", uint256ToString(_seq), ",",
+                "\"contract\":", "\"", addressToString(_step.contractAddress), "\",",
                 "\"path\":", "\"", _step.path, "\",",
                 "\"timestamp\":", "\"", uint256ToString(_step.timestamp), "\",",
-                "\"abi\":", "\"", _step.abi, "\",",
-                "\"args\":", "\"", _step.args, "\"}")
+                "\"func\":", "\"", _step.func, "\",",
+                "\"args\":", "\"", bytesToHexString(_step.args), "\"}")
                 );
     }
-    
-    function isExistedTransaction(string memory _transactionID) internal view 
+
+    function isExistedTransaction(string memory _transactionID) internal view
     returns (bool)
     {
         return transactions[_transactionID].startTimestamp != 0;
     }
 
-    function isNewStep(string memory _transactionID, uint256 _seq) internal view 
+    function isNewStep(string memory _transactionID, uint256 _seq) internal view
     returns(bool)
     {
         for(uint256 i = 0; i < transactions[_transactionID].stepNum; i++) {
@@ -388,7 +477,7 @@ contract Proxy {
         }
         return true;
     }
-    
+
     function deleteLockedContracts(string memory _transactionID) internal
     {
         uint256 len = transactions[_transactionID].contractAddresses.length;
@@ -397,47 +486,101 @@ contract Proxy {
             delete lockedContracts[contractAddress];
         }
     }
-    
+
     function getTransactionStepKey(string memory _transactionID, uint256 _seq) internal pure
     returns(string memory)
     {
         return string(abi.encodePacked(_transactionID, uint256ToString(_seq)));
     }
-    
+
+    // famous algorithm for finding substring
+    function kmpAlgorithm(bytes memory _str, bytes memory _target) internal pure
+    returns (uint256)
+    {
+        uint256 strLen = _str.length;
+        uint256 tarLen = _target.length;
+        uint256[] memory nextArray = new uint256[](strLen);
+
+        // init nextArray
+        next(_target, nextArray);
+
+        uint256 i = 1;
+        uint256 j = 1;
+
+        while (i <= strLen && j <= tarLen) {
+            if (j == 0 || _str[i-1] == _target[j-1]) {
+                i++;
+                j++;
+            }
+            else{
+                j = nextArray[j];
+            }
+        }
+
+        if ( j > tarLen) {
+            return i - tarLen;
+        }
+
+        return 0;
+    }
+
+    function next(bytes memory _target, uint256[] memory _next) internal pure
+    {
+        uint256 i = 1;
+        _next[1] = 0;
+        uint256 j = 0;
+
+        uint256 len = _target.length;
+        while (i < len) {
+            if (j == 0 || _target[i-1] == _target[j-1]) {
+                i++;
+                j++;
+                if (_target[i-1] != _target[j-1]) {
+                   _next[i] = j;
+                }
+                else{
+                    _next[i] = _next[j];
+                }
+            }else{
+                j = _next[j];
+            }
+        }
+    }
+
     // func(string,uint256) => func_flag(string,uint256)
-    function getRevertAbi(string memory _abi, string memory _revertFlag) internal pure 
+    function getRevertFunc(string memory _func, string memory _revertFlag) internal pure
     returns(string memory)
     {
-        bytes memory abiBytes = bytes(_abi);
+        bytes memory funcBytes = bytes(_func);
         bytes memory flagBytes = bytes(_revertFlag);
-        uint256 abiLen = abiBytes.length;
+        uint256 funcLen = funcBytes.length;
         uint256 flagLen = flagBytes.length;
-        bytes memory newAbi = new bytes(abiLen + flagLen);
-        
+        bytes memory newFunc = new bytes(funcLen + flagLen);
+
         byte c = byte('(');
         uint256 index = 0;
         uint256 point = 0;
-        
-        for(uint256 i = 0; i < abiLen; i++) {
-            if(abiBytes[i] != c) {
-                newAbi[index++] = abiBytes[i];
+
+        for(uint256 i = 0; i < funcLen; i++) {
+            if(funcBytes[i] != c) {
+                newFunc[index++] = funcBytes[i];
             } else {
                 point = i;
                 break;
             }
         }
-        
+
         for(uint256 i = 0; i < flagLen; i++) {
-            newAbi[index++] = flagBytes[i];
+            newFunc[index++] = flagBytes[i];
         }
-        
-        for(uint256 i = point; i < abiLen; i++) {
-            newAbi[index++] = abiBytes[i];
+
+        for(uint256 i = point; i < funcLen; i++) {
+            newFunc[index++] = funcBytes[i];
         }
-        
-        return string(newAbi);
+
+        return string(newFunc);
     }
-    
+
     function sameString(string memory _str1, string memory _str2) internal pure
     returns (bool)
     {
@@ -471,7 +614,7 @@ contract Proxy {
             return 10 + _char - uint8(byte('A'));
         }
     }
-    
+
     function uint256ToString(uint256 _value) internal pure
     returns (string memory)
     {
@@ -487,7 +630,7 @@ contract Proxy {
         }
         return bytes32ToString(result);
     }
-    
+
     function bytes32ToString(bytes32 _bts32) internal pure
     returns (string memory)
     {
@@ -501,7 +644,37 @@ contract Proxy {
 
        return string(result);
     }
-    
+
+    function bytesToAddress(bytes memory _address) public pure
+    returns (address)
+    {
+        uint160 result = 0;
+        uint160 b1;
+        uint160 b2;
+        for (uint i = 2; i < 2 + 2 * 20; i += 2) {
+            result *= 256;
+            b1 = uint160(uint8(_address[i]));
+            b2 = uint160(uint8(_address[i + 1]));
+            if ((b1 >= 97) && (b1 <= 102)) {
+                b1 -= 87;
+            } else if ((b1 >= 65) && (b1 <= 70)) {
+                b1 -= 55;
+            } else if ((b1 >= 48) && (b1 <= 57)) {
+            b1 -= 48;
+            }
+
+            if ((b2 >= 97) && (b2 <= 102)) {
+                b2 -= 87;
+            } else if ((b2 >= 65) && (b2 <= 70)) {
+                b2 -= 55;
+            } else if ((b2 >= 48) && (b2 <= 57)) {
+                b2 -= 48;
+            }
+            result += (b1 * 16 + b2);
+        }
+        return address(result);
+    }
+
     function addressToString(address _addr) internal pure
     returns (string memory)
     {
@@ -514,6 +687,21 @@ contract Proxy {
             result[2 * i + 1] = convert(b2);
         }
         return string(abi.encodePacked("0x", string(result)));
+    }
+
+    function bytesToHexString(bytes memory _bts) internal pure
+    returns (string memory result)
+    {
+        uint256 len = _bts.length;
+        bytes memory s = new bytes(len * 2);
+        for (uint256 i = 0; i < len; i++) {
+            byte befor = byte(_bts[i]);
+            byte high = byte(uint8(befor) / 16);
+            byte low = byte(uint8(befor) - 16 * uint8(high));
+            s[i*2] = convert(high);
+            s[i*2+1] = convert(low);
+        }
+        result = string(s);
     }
     
     function convert(byte _b) internal pure
