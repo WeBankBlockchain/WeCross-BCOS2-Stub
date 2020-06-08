@@ -78,8 +78,6 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         Long groupId = (Long) chainConfigValue.get("groupId");
         // chain field
         Long chainId = (Long) chainConfigValue.get("chainId");
-        // chainId field
-        Boolean enableGM = (Boolean) chainConfigValue.get("enableGM");
 
         BCOSStubConfig.Chain chain = new BCOSStubConfig.Chain();
         chain.setChainID(
@@ -98,6 +96,10 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
             String configFile, Map<String, Object> channelServiceConfigValue) {
         // timeout field
         Long timeout = (Long) channelServiceConfigValue.get("timeout");
+        // thread num
+        Long threadNum = (Long) channelServiceConfigValue.get("threadNum");
+        // thread threadQueueCapacity
+        Long threadQueueCapacity = (Long) channelServiceConfigValue.get("threadQueueCapacity");
 
         // caCert field
         String caCertPath =
@@ -124,6 +126,16 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
                 Objects.isNull(timeout)
                         ? Web3jDefaultConfig.CHANNEL_SERVICE_DEFAULT_TIMEOUT
                         : timeout.intValue());
+
+        channelServiceConfig.setThreadNum(
+                Objects.isNull(threadNum)
+                        ? Web3jDefaultConfig.CHANNEL_SERVICE_DEFAULT_THREAD_NUMBER
+                        : threadNum.intValue());
+
+        channelServiceConfig.setQueueCapacity(
+                Objects.isNull(threadQueueCapacity)
+                        ? Web3jDefaultConfig.CHANNEL_SERVICE_DEFAULT_THREAD_QUEUE_CAPACITY
+                        : threadQueueCapacity.intValue());
 
         channelServiceConfig.setCaCert(caCertPath);
         channelServiceConfig.setSslCert(sslCert);

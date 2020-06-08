@@ -22,7 +22,6 @@ public class BCOSStubConfig {
     public static class Chain {
         private int groupID;
         private int chainID;
-        // private boolean enableGM;
 
         public int getGroupID() {
             return groupID;
@@ -53,6 +52,8 @@ public class BCOSStubConfig {
         private String sslKey;
         private List<String> connectionsStr;
         private Chain chain;
+        private int threadNum;
+        private int queueCapacity;
 
         public int getTimeout() {
             return timeout;
@@ -102,6 +103,22 @@ public class BCOSStubConfig {
             this.chain = chain;
         }
 
+        public int getThreadNum() {
+            return threadNum;
+        }
+
+        public void setThreadNum(int threadNum) {
+            this.threadNum = threadNum;
+        }
+
+        public int getQueueCapacity() {
+            return queueCapacity;
+        }
+
+        public void setQueueCapacity(int queueCapacity) {
+            this.queueCapacity = queueCapacity;
+        }
+
         @Override
         public String toString() {
             return "ChannelService{"
@@ -118,6 +135,12 @@ public class BCOSStubConfig {
                     + '\''
                     + ", connectionsStr="
                     + connectionsStr
+                    + ", chain="
+                    + chain
+                    + ", threadNum="
+                    + threadNum
+                    + ", queueCapacity="
+                    + queueCapacity
                     + '}';
         }
     }

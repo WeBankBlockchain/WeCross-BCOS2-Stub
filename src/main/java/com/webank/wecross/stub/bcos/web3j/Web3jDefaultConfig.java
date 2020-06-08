@@ -8,4 +8,9 @@ public class Web3jDefaultConfig {
 
     /** ChannelService default timeout: 60s */
     public static final int CHANNEL_SERVICE_DEFAULT_TIMEOUT = 60000;
+
+    /** ChannelService default thread number */
+    public static final int CHANNEL_SERVICE_DEFAULT_THREAD_NUMBER = 16;
+
+    public static final int CHANNEL_SERVICE_DEFAULT_THREAD_QUEUE_CAPACITY = 10000;
 }
