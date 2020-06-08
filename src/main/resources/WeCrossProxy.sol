@@ -8,7 +8,7 @@ pragma solidity >=0.5.0 <0.6.0;
 import "./CNSPrecompiled.sol";
 pragma experimental ABIEncoderV2;
 
-contract Proxy {
+contract WeCrossProxy {
 
     // per step of transaction
     struct TransactionStep {
