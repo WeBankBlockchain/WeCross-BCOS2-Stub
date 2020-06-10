@@ -88,7 +88,7 @@ public class MerkleValidation {
         blockHeaderManager.asyncGetBlockHeader(
                 blockNumber,
                 (blockHeaderException, bytesBlockHeader) -> {
-                    if (Objects.isNull(blockHeaderException) || bytesBlockHeader.length == 0) {
+                    if (Objects.nonNull(blockHeaderException) || bytesBlockHeader.length == 0) {
                         callback.onResponse(
                                 new BCOSStubException(
                                         BCOSStatusCode.FetchBlockHeaderFailed,

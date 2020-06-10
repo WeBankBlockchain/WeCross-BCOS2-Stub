@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.TypeReference;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
@@ -31,8 +30,6 @@ public class RegisterCnsHandler implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RegisterCnsHandler.class);
 
     private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
-
-    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     /** @param args version || address || abi */
     @Override
     public void handle(
@@ -56,11 +53,6 @@ public class RegisterCnsHandler implements CommandHandler {
         String address = (String) args[1];
         String abi = (String) args[2];
 
-        // store abi
-        lock.writeLock();
-        abiMap.put(path.toString(), abi);
-        lock.writeLock().unlock();
-
         Map<String, String> properties = connection.getProperties();
         int groupId = Integer.parseInt(properties.get(BCOSConstant.BCOS_GROUP_ID));
         int chainId = Integer.parseInt(properties.get(BCOSConstant.BCOS_CHAIN_ID));
@@ -77,7 +69,7 @@ public class RegisterCnsHandler implements CommandHandler {
 
                     Function function =
                             new Function(
-                                    BCOSConstant.CNS_INSERT_METHOD,
+                                    BCOSConstant.CNS_METHOD_INSERT,
                                     Arrays.<Type>asList(
                                             new Utf8String(name),
                                             new Utf8String(version),
@@ -106,7 +98,7 @@ public class RegisterCnsHandler implements CommandHandler {
                     }
 
                     TransactionRequest transactionRequest = new TransactionRequest();
-                    transactionRequest.setMethod(BCOSConstant.CNS_INSERT_METHOD);
+                    transactionRequest.setMethod(BCOSConstant.CNS_METHOD_INSERT);
                     transactionRequest.setArgs(new String[] {name, version, address, abi});
                     TransactionParams transaction =
                             new TransactionParams(new TransactionRequest(), signTx);
@@ -134,7 +126,7 @@ public class RegisterCnsHandler implements CommandHandler {
 
                                     if (receipt.isStatusOK()) {
                                         blockHeaderManager.asyncGetBlockHeader(
-                                                blockNumber,
+                                                receipt.getBlockNumber().longValue(),
                                                 (blockHeaderException, blockHeader) -> {
                                                     if (Objects.nonNull(blockHeaderException)) {
                                                         callback.onResponse(
@@ -164,6 +156,9 @@ public class RegisterCnsHandler implements CommandHandler {
                                                                 null);
                                                         return;
                                                     }
+
+                                                    // store abi
+                                                    abiMap.put(path.toString(), abi);
 
                                                     callback.onResponse(null, "success");
                                                 });

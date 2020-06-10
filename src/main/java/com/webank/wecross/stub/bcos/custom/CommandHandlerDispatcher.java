@@ -1,5 +1,6 @@
 package com.webank.wecross.stub.bcos.custom;
 
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -22,10 +23,10 @@ public class CommandHandlerDispatcher {
 
     public void initializeCommandMapper() {
         DeployContractHandler deployContractHandler = new DeployContractHandler();
-        registerCommandHandler("deploy", deployContractHandler);
+        registerCommandHandler(BCOSConstant.CUSTOM_COMMAND_DEPLOY, deployContractHandler);
 
         RegisterCnsHandler registerCnsHandler = new RegisterCnsHandler();
-        registerCommandHandler("register", registerCnsHandler);
+        registerCommandHandler(BCOSConstant.CUSTOM_COMMAND_REGISTER, registerCnsHandler);
         logger.info("initialize size: {}", commandMapper.size());
         logger.info("commands: {} ", commandMapper.keySet());
     }

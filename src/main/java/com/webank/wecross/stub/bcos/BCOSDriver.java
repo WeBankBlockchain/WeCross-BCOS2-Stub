@@ -213,14 +213,13 @@ public class BCOSDriver implements Driver {
         TransactionResponse transactionResponse = new TransactionResponse();
 
         try {
-            ResourceInfo resourceInfo = request.getResourceInfo();
-            Map<Object, Object> properties = resourceInfo.getProperties();
+            Map<String, String> properties = connection.getProperties();
 
             // input validation
             checkRequest(request);
-            checkProperties(resourceInfo.getName(), properties);
+            checkProperties(properties);
 
-            String contractAddress = (String) properties.get(resourceInfo.getName());
+            String contractAddress = properties.get(BCOSConstant.BCOS_PROXY_NAME);
             // Function object
             Function function =
                     FunctionUtility.newFunction(
@@ -233,7 +232,7 @@ public class BCOSDriver implements Driver {
             if (logger.isDebugEnabled()) {
                 logger.debug(
                         " name:{}, address: {}, method: {}, args: {}",
-                        resourceInfo.getName(),
+                        BCOSConstant.BCOS_PROXY_NAME,
                         contractAddress,
                         request.getData().getMethod(),
                         request.getData().getArgs());
@@ -350,18 +349,18 @@ public class BCOSDriver implements Driver {
         TransactionResponse transactionResponse = new TransactionResponse();
 
         try {
-            ResourceInfo resourceInfo = request.getResourceInfo();
-            Map<Object, Object> properties = resourceInfo.getProperties();
+            Map<String, String> properties = connection.getProperties();
+
             // input validation
             checkRequest(request);
-            checkProperties(resourceInfo.getName(), properties);
+            checkProperties(properties);
 
             // contractAddress
-            String contractAddress = (String) properties.get(resourceInfo.getName());
+            String contractAddress = properties.get(BCOSConstant.BCOS_PROXY_NAME);
             // groupId
-            int groupId = (int) properties.get(BCOSConstant.BCOS_GROUP_ID);
+            int groupId = Integer.parseInt(properties.get(BCOSConstant.BCOS_GROUP_ID));
             // chainId
-            int chainId = (int) properties.get(BCOSConstant.BCOS_CHAIN_ID);
+            int chainId = Integer.parseInt(properties.get(BCOSConstant.BCOS_CHAIN_ID));
 
             request.getBlockHeaderManager()
                     .asyncGetBlockNumber(
@@ -632,7 +631,7 @@ public class BCOSDriver implements Driver {
                     blockHeaderManager,
                     transactionProof,
                     verifyException -> {
-                        if (Objects.isNull(verifyException)) {
+                        if (Objects.nonNull(verifyException)) {
                             callback.onResponse(
                                     new Exception(
                                             "verifying transaction failed "
@@ -715,41 +714,61 @@ public class BCOSDriver implements Driver {
         }
 
         commandHandler.handle(
-                path, args, account, blockHeaderManager, connection, abiMap, callback);
+                path,
+                args,
+                account,
+                blockHeaderManager,
+                connection,
+                abiMap,
+                (error, response) -> {
+                    callback.onResponse(error, response);
+
+                    if (Objects.isNull(error)
+                            && BCOSConstant.CUSTOM_COMMAND_DEPLOY.equals(command)) {
+                        // add path into proxy contract
+                        TransactionRequest request =
+                                new TransactionRequest(
+                                        BCOSConstant.PROXY_METHOD_ADDPATH,
+                                        new String[] {path.toString()});
+                        TransactionContext<TransactionRequest> context =
+                                new TransactionContext<>(
+                                        request, account, new ResourceInfo(), blockHeaderManager);
+                        try {
+                            TransactionResponse transactionResponse =
+                                    sendTransaction(context, connection);
+                            if (transactionResponse.getErrorCode() != 0) {
+                                logger.warn(
+                                        "setting path into proxy contract failed: {}",
+                                        transactionResponse.getErrorMessage());
+                            }
+                        } catch (TransactionException e) {
+                            logger.warn("setting path into proxy contract failed,", e);
+                        }
+                    }
+                });
     }
 
     /**
-     * @param name
      * @param properties
      * @throws BCOSStubException
      */
-    public void checkProperties(String name, Map<Object, Object> properties)
-            throws BCOSStubException {
-        try {
-            // contractAddress
-            String contractAddress = (String) properties.get(name);
-            if (Objects.isNull(contractAddress)) {
-                throw new BCOSStubException(
-                        BCOSStatusCode.InvalidParameter,
-                        " Not found contract address, resource: " + name);
-            }
-
-            Integer groupId = (Integer) properties.get(BCOSConstant.BCOS_GROUP_ID);
-            if (Objects.isNull(groupId)) {
-                throw new BCOSStubException(
-                        BCOSStatusCode.InvalidParameter, " Not found groupId, resource: " + name);
-            }
-
-            Integer chainId = (Integer) properties.get(BCOSConstant.BCOS_CHAIN_ID);
-            if (Objects.isNull(chainId)) {
-                throw new BCOSStubException(
-                        BCOSStatusCode.InvalidParameter, " Not found chainId, resource: " + name);
-            }
-        } catch (BCOSStubException e) {
-            throw e;
-        } catch (Exception e) {
+    public void checkProperties(Map<String, String> properties) throws BCOSStubException {
+        if (!properties.containsKey(BCOSConstant.BCOS_PROXY_NAME)) {
             throw new BCOSStubException(
-                    BCOSStatusCode.InvalidParameter, "errorMessage: " + e.getMessage());
+                    BCOSStatusCode.InvalidParameter,
+                    " Not found proxy contract address, resource: " + BCOSConstant.BCOS_PROXY_NAME);
+        }
+
+        if (!properties.containsKey(BCOSConstant.BCOS_GROUP_ID)) {
+            throw new BCOSStubException(
+                    BCOSStatusCode.InvalidParameter,
+                    " Not found groupId, resource: " + BCOSConstant.BCOS_PROXY_NAME);
+        }
+
+        if (!properties.containsKey(BCOSConstant.BCOS_CHAIN_ID)) {
+            throw new BCOSStubException(
+                    BCOSStatusCode.InvalidParameter,
+                    " Not found chainId, resource: " + BCOSConstant.BCOS_PROXY_NAME);
         }
     }
 

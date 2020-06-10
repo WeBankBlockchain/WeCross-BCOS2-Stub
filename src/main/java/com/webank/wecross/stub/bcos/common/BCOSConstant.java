@@ -11,9 +11,17 @@ public interface BCOSConstant {
 
     String BCOS_GROUP_ID = "BCOS_PROPERTY_GROUP_ID";
     String BCOS_CHAIN_ID = "BCOS_PROPERTY_CHAIN_ID";
+    String BCOS_STUB_TYPE = "BCOS_PROPERTY_STUB_TYPE";
+    String BCOS_PROXY_NAME = "WeCrossProxy";
 
-    String PROXY_CONTRACT = "WeCrossProxy";
+    String CUSTOM_COMMAND_DEPLOY = "deploy";
+    String CUSTOM_COMMAND_REGISTER = "register";
+    String METHOD_DEPLOY = "deploy";
     String CNS_PRECOMPILED_ADDRESS = "0x0000000000000000000000000000000000001004";
-    String CNS_INSERT_METHOD = "insert";
-    String DEPLOY_METHOD = "deploy";
+    String DEFAULT_ADDRESS = "0x1111111111111111111111111111111111111111";
+    String CNS_METHOD_INSERT = "insert";
+    String CNS_METHOD_SELECTBYNAME = "selectByName";
+    String CNS_METHOD_SELECTBYNAMEANDVERSION = "selectByNameAndVersion";
+    String PROXY_METHOD_ADDPATH = "addPath";
+    String PROXY_METHOD_GETPATHS = "getPaths";
 }
