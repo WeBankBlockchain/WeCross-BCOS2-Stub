@@ -147,32 +147,39 @@ public class BCOSStubCallContractIntegTest {
 
     @Test
     public void getBlockNumberIntegIntegTest() {
-        long blockNumber = driver.getBlockNumber(connection);
-        assertTrue(blockNumber > 0);
+        driver.asyncGetBlockNumber(connection, (e, blockNumber) -> assertTrue(blockNumber > 0));
     }
 
     @Test
     public void getBlockHeaderIntegTest() {
-        long blockNumber = driver.getBlockNumber(connection);
-        assertTrue(blockNumber > 0);
-        byte[] blockHeader = driver.getBlockHeader(blockNumber, connection);
-        assertTrue(blockHeader.length > 0);
-        BlockHeader blockHeader1 = driver.decodeBlockHeader(blockHeader);
-        assertTrue(Objects.nonNull(blockHeader1));
-        assertTrue(Objects.nonNull(blockHeader1.getHash()));
-        assertTrue(Objects.nonNull(blockHeader1.getReceiptRoot()));
-        assertTrue(Objects.nonNull(blockHeader1.getTransactionRoot()));
-        assertTrue(Objects.nonNull(blockHeader1.getPrevHash()));
-        assertTrue(Objects.nonNull(blockHeader1.getStateRoot()));
-        assertTrue(blockHeader1.getNumber() == blockNumber);
+        driver.asyncGetBlockNumber(connection, (e1, blockNumber) -> {
+            assertTrue(blockNumber > 0);
+
+            driver.asyncGetBlockHeader(blockNumber, connection, (e2, bytesBlockHeader) -> {
+                assertTrue(bytesBlockHeader.length > 0);
+
+                BlockHeader blockHeader = driver.decodeBlockHeader(bytesBlockHeader);
+                assertTrue(Objects.nonNull(blockHeader));
+                assertTrue(Objects.nonNull(blockHeader.getHash()));
+                assertTrue(Objects.nonNull(blockHeader.getReceiptRoot()));
+                assertTrue(Objects.nonNull(blockHeader.getTransactionRoot()));
+                assertTrue(Objects.nonNull(blockHeader.getPrevHash()));
+                assertTrue(Objects.nonNull(blockHeader.getStateRoot()));
+                assertTrue(blockHeader.getNumber() == blockNumber);
+            });
+        });
     }
 
     @Test
     public void getBlockHeaderFailedIntegTest() {
-        long blockNumber = driver.getBlockNumber(connection);
-        assertTrue(blockNumber > 0);
-        byte[] blockHeader = driver.getBlockHeader(blockNumber + 1, connection);
-        assertTrue(Objects.isNull(blockHeader));
+        driver.asyncGetBlockNumber(connection, (e1, blockNumber) -> {
+            assertTrue(blockNumber > 0);
+
+            driver.asyncGetBlockHeader(blockNumber + 1, connection, (e2, bytesBlockHeader) -> {
+                assertTrue(Objects.isNull(bytesBlockHeader));
+            });
+        });
+
     }
 
     @Test
@@ -343,23 +350,23 @@ public class BCOSStubCallContractIntegTest {
         assertEquals(transaction.getHash(), transactionReceipt.getTransactionHash());
         assertEquals(transaction.getBlockNumber().longValue(), transactionReceipt.getBlockNumber().longValue());
 
-        VerifiedTransaction verifiedTransaction = driver.getVerifiedTransaction(transactionResponse.getHash(), transactionResponse.getBlockNumber(), blockHeaderManager, connection);
+        driver.asyncGetVerifiedTransaction(transactionResponse.getHash(), transactionResponse.getBlockNumber(), blockHeaderManager, connection, (e, verifiedTransaction) -> {
+            assertEquals(verifiedTransaction.getBlockNumber(), transactionResponse.getBlockNumber());
+            assertEquals(verifiedTransaction.getTransactionHash(), transactionResponse.getHash());
+            assertEquals(verifiedTransaction.getRealAddress(), helloWeCross.getContractAddress());
 
-        assertEquals(verifiedTransaction.getBlockNumber(), transactionResponse.getBlockNumber());
-        assertEquals(verifiedTransaction.getTransactionHash(), transactionResponse.getHash());
-        assertEquals(verifiedTransaction.getRealAddress(), helloWeCross.getContractAddress());
+            TransactionRequest transactionRequest = verifiedTransaction.getTransactionRequest();
+            assertEquals(transactionRequest.getArgs().length, params.length);
 
-        TransactionRequest transactionRequest = verifiedTransaction.getTransactionRequest();
-        assertEquals(transactionRequest.getArgs().length, params.length);
-
-        TransactionResponse transactionResponse1 = verifiedTransaction.getTransactionResponse();
-        assertEquals(transactionResponse1.getErrorCode().intValue(), BCOSStatusCode.Success);
-        assertEquals(transactionResponse1.getHash(), transactionReceipt.getTransactionHash());
-        assertEquals(transactionResponse1.getBlockNumber(), transactionReceipt.getBlockNumber().longValue());
-        assertEquals(transactionResponse1.getResult().length, params.length);
-        for (int i=0;i<transactionResponse1.getResult().length;++i) {
-            assertEquals(transactionResponse1.getResult()[i], params[i]);
-        }
+            TransactionResponse transactionResponse1 = verifiedTransaction.getTransactionResponse();
+            assertEquals(transactionResponse1.getErrorCode().intValue(), BCOSStatusCode.Success);
+            assertEquals(transactionResponse1.getHash(), transactionReceipt.getTransactionHash());
+            assertEquals(transactionResponse1.getBlockNumber(), transactionReceipt.getBlockNumber().longValue());
+            assertEquals(transactionResponse1.getResult().length, params.length);
+            for (int i=0;i<transactionResponse1.getResult().length;++i) {
+                assertEquals(transactionResponse1.getResult()[i], params[i]);
+            }
+        });
     }
 
     @Test
@@ -379,29 +386,28 @@ public class BCOSStubCallContractIntegTest {
         assertEquals(transaction.getHash(), transactionReceipt.getTransactionHash());
         assertEquals(transaction.getBlockNumber().longValue(), transactionReceipt.getBlockNumber().longValue());
 
-        VerifiedTransaction verifiedTransaction = driver.getVerifiedTransaction(transactionResponse.getHash(), transactionResponse.getBlockNumber(), blockHeaderManager, connection);
+        driver.asyncGetVerifiedTransaction(transactionResponse.getHash(), transactionResponse.getBlockNumber(), blockHeaderManager, connection, (e, verifiedTransaction) -> {
+            assertEquals(verifiedTransaction.getBlockNumber(), transactionResponse.getBlockNumber());
+            assertEquals(verifiedTransaction.getTransactionHash(), transactionResponse.getHash());
+            assertEquals(verifiedTransaction.getRealAddress(), helloWeCross.getContractAddress());
 
-        assertEquals(verifiedTransaction.getBlockNumber(), transactionResponse.getBlockNumber());
-        assertEquals(verifiedTransaction.getTransactionHash(), transactionResponse.getHash());
-        assertEquals(verifiedTransaction.getRealAddress(), helloWeCross.getContractAddress());
+            TransactionRequest transactionRequest = verifiedTransaction.getTransactionRequest();
+            assertEquals(transactionRequest.getArgs().length, params.length);
 
-        TransactionRequest transactionRequest = verifiedTransaction.getTransactionRequest();
-        assertEquals(transactionRequest.getArgs().length, params.length);
-
-        TransactionResponse transactionResponse1 = verifiedTransaction.getTransactionResponse();
-        assertEquals(transactionResponse1.getErrorCode().intValue(), 0);
-        assertEquals(transactionResponse1.getHash(), transactionReceipt.getTransactionHash());
-        assertEquals(transactionResponse1.getBlockNumber(), transactionReceipt.getBlockNumber().longValue());
-        assertEquals(transactionResponse1.getResult().length, params.length);
-        for (int i=0;i<transactionResponse1.getResult().length;++i) {
-            assertEquals(transactionResponse1.getResult()[i], params[i]);
-        }
+            TransactionResponse transactionResponse1 = verifiedTransaction.getTransactionResponse();
+            assertEquals(transactionResponse1.getErrorCode().intValue(), 0);
+            assertEquals(transactionResponse1.getHash(), transactionReceipt.getTransactionHash());
+            assertEquals(transactionResponse1.getBlockNumber(), transactionReceipt.getBlockNumber().longValue());
+            assertEquals(transactionResponse1.getResult().length, params.length);
+            for (int i=0;i<transactionResponse1.getResult().length;++i) {
+                assertEquals(transactionResponse1.getResult()[i], params[i]);
+            }
+        });
     }
 
     @Test
     public void getVerifiedTransactionNotExistTest() {
         String transactionHash = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
-        VerifiedTransaction verifiedTransaction = driver.getVerifiedTransaction(transactionHash, 1, blockHeaderManager, connection);
-        assertTrue(Objects.isNull(verifiedTransaction));
+        driver.asyncGetVerifiedTransaction(transactionHash, 1, blockHeaderManager, connection, (e, verifiedTransaction) -> assertTrue(Objects.isNull(verifiedTransaction)));
     }
 }

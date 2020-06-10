@@ -1,5 +1,6 @@
 package com.webank.wecross.stub.bcos;
 
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.web3j.Web3jUtility;
@@ -30,6 +31,11 @@ public class BCOSConnectionFactory {
 
         BCOSConnection bcosConnection = new BCOSConnection(web3jWrapper);
         bcosConnection.setResourceInfoList(bcosStubConfig.convertToResourceInfos());
+
+        bcosConnection.addPropertie(
+                BCOSConstant.BCOS_GROUP_ID, String.valueOf(bcosStubConfig.getChain().getGroupID()));
+        bcosConnection.addPropertie(
+                BCOSConstant.BCOS_CHAIN_ID, String.valueOf(bcosStubConfig.getChain().getChainID()));
         return bcosConnection;
     }
 }

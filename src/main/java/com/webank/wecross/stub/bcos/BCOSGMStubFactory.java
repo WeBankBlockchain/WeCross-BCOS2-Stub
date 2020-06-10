@@ -1,11 +1,8 @@
 package com.webank.wecross.stub.bcos;
 
-import com.webank.wecross.stub.Account;
-import com.webank.wecross.stub.Connection;
-import com.webank.wecross.stub.Driver;
-import com.webank.wecross.stub.Stub;
-import com.webank.wecross.stub.StubFactory;
+import com.webank.wecross.stub.*;
 import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
+import com.webank.wecross.stub.bcos.custom.CommandHandlerDispatcher;
 import java.io.File;
 import java.io.FileWriter;
 import java.security.KeyPair;
@@ -29,9 +26,16 @@ public class BCOSGMStubFactory implements StubFactory {
     }
 
     @Override
+    public void init(WeCrossContext context) {}
+
+    @Override
     public Driver newDriver() {
         logger.info("New driver type:{}", EncryptType.encryptType);
-        return new BCOSDriver();
+        BCOSDriver driver = new BCOSDriver();
+        CommandHandlerDispatcher commandHandlerDispatcher = new CommandHandlerDispatcher();
+        commandHandlerDispatcher.initializeCommandMapper();
+        driver.setCommandHandlerDispatcher(commandHandlerDispatcher);
+        return driver;
     }
 
     @Override

@@ -17,7 +17,9 @@ import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
@@ -41,6 +43,8 @@ public class BCOSConnection implements Connection {
 
     private final Web3jWrapper web3jWrapper;
 
+    private Map<String, String> properties = new HashMap<>();
+
     public BCOSConnection(Web3jWrapper web3jWrapper) {
         this.web3jWrapper = web3jWrapper;
         this.objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
@@ -63,6 +67,19 @@ public class BCOSConnection implements Connection {
         return resourceInfoList;
     }
 
+    @Override
+    public Map<String, String> getProperties() {
+        return null;
+    }
+
+    public void setProperties(Map<String, String> properties) {
+        this.properties = properties;
+    }
+
+    public void addPropertie(String key, String value) {
+        this.properties.put(key, value);
+    }
+
     /**
      * sync operations
      *
@@ -76,10 +93,6 @@ public class BCOSConnection implements Connection {
                 return handleCallRequest(request);
             case BCOSRequestType.SEND_TRANSACTION:
                 return handleTransactionRequest(request);
-            case BCOSRequestType.GET_BLOCK_HEADER:
-                return handleGetBlockHeaderRequest(request);
-            case BCOSRequestType.GET_BLOCK_NUMBER:
-                return handleGetBlockNumberRequest(request);
             case BCOSRequestType.GET_TRANSACTION_PROOF:
                 return handleGetTransactionProof(request);
             default:
@@ -102,12 +115,19 @@ public class BCOSConnection implements Connection {
      */
     @Override
     public void asyncSend(Request request, Callback callback) {
-
-        if (request.getType() == BCOSRequestType.SEND_TRANSACTION) {
-            handleAsyncTransactionRequest(request, callback);
-        } else {
-            // Does not support asynchronous operation, async to sync
-            callback.onResponse(send(request));
+        switch (request.getType()) {
+            case BCOSRequestType.SEND_TRANSACTION:
+                handleAsyncTransactionRequest(request, callback);
+                break;
+            case BCOSRequestType.GET_BLOCK_HEADER:
+                handleAsyncGetBlockHeaderRequest(request, callback);
+                break;
+            case BCOSRequestType.GET_BLOCK_NUMBER:
+                handleAsyncGetBlockNumberRequest(callback);
+                break;
+            default:
+                // Does not support asynchronous operation, async to sync
+                callback.onResponse(send(request));
         }
     }
 
@@ -243,7 +263,7 @@ public class BCOSConnection implements Connection {
         return sendTxResponse.getResponse();
     }
 
-    public Response handleGetBlockNumberRequest(Request request) {
+    public void handleAsyncGetBlockNumberRequest(Callback callback) {
         Response response = new Response();
         try {
             BigInteger blockNumber = web3jWrapper.getBlockNumber();
@@ -258,7 +278,7 @@ public class BCOSConnection implements Connection {
             response.setErrorCode(BCOSStatusCode.HandleGetBlockNumberFailed);
             response.setErrorMessage(" errorMessage: " + e.getMessage());
         }
-        return response;
+        callback.onResponse(response);
     }
 
     /**
@@ -339,7 +359,7 @@ public class BCOSConnection implements Connection {
         return blockHeader;
     }
 
-    public Response handleGetBlockHeaderRequest(Request request) {
+    public void handleAsyncGetBlockHeaderRequest(Request request, Callback callback) {
         Response response = new Response();
         try {
             BigInteger blockNumber = new BigInteger(request.getData());
@@ -354,6 +374,6 @@ public class BCOSConnection implements Connection {
             response.setErrorCode(BCOSStatusCode.HandleGetBlockHeaderFailed);
             response.setErrorMessage(" errorMessage: " + e.getMessage());
         }
-        return response;
+        callback.onResponse(response);
     }
 }

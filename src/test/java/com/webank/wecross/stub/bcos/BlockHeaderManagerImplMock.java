@@ -16,7 +16,6 @@ public class BlockHeaderManagerImplMock implements BlockHeaderManager {
         this.web3jWrapper = web3jWrapper;
     }
 
-    @Override
     public long getBlockNumber() {
         try {
             BigInteger blockNumber = web3jWrapper.getBlockNumber();
@@ -26,7 +25,6 @@ public class BlockHeaderManagerImplMock implements BlockHeaderManager {
         }
     }
 
-    @Override
     public byte[] getBlockHeader(long l) {
         try {
             BcosBlock.Block block = web3jWrapper.getBlockByNumber(l);
@@ -39,5 +37,14 @@ public class BlockHeaderManagerImplMock implements BlockHeaderManager {
     }
 
     @Override
-    public void asyncGetBlockHeader(long blockNumber, BlockHeaderCallback callback) {}
+    public void start() {}
+
+    @Override
+    public void stop() {}
+
+    @Override
+    public void asyncGetBlockNumber(GetBlockNumberCallback callback) {}
+
+    @Override
+    public void asyncGetBlockHeader(long blockNumber, GetBlockHeaderCallback callback) {}
 }
