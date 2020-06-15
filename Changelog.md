@@ -7,8 +7,6 @@
 * 操作区块链时，调用区块链的异步接口
 * 适配异步Driver接口，向Router提供异步的call/sendTrnasaction
 
-
-
 ### v1.0.0-rc2
 
 (2020-05-12)
