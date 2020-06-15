@@ -37,4 +37,7 @@ public class BlockHeaderManagerImplMock implements BlockHeaderManager {
             return new byte[0];
         }
     }
+
+    @Override
+    public void asyncGetBlockHeader(long blockNumber, BlockHeaderCallback callback) {}
 }

@@ -10,6 +10,7 @@ import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.TransactionContext;
+import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
 import com.webank.wecross.stub.VerifiedTransaction;
@@ -180,8 +181,14 @@ public class BCOSStubCallContractIntegTest {
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext("get", params);
         TransactionResponse transactionResponse =
-                driver.call(requestTransactionContext, connection);
+                null;
+        try {
+            transactionResponse = driver.call(requestTransactionContext, connection);
+        } catch (TransactionException e) {
+            // e.printStackTrace();
+        }
 
+        assertTrue(Objects.nonNull(transactionResponse));
         assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.Success);
         assertTrue(transactionResponse.getResult().length == 0);
     }
@@ -192,10 +199,14 @@ public class BCOSStubCallContractIntegTest {
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext("getNotExist", params);
         TransactionResponse transactionResponse =
-                driver.call(requestTransactionContext, connection);
+                null;
+        try {
+            transactionResponse = driver.call(requestTransactionContext, connection);
+        } catch (TransactionException e) {
+            assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.HandleCallRequestFailed);
+        }
 
-        assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.HandleCallRequestFailed);
-        assertTrue(Objects.isNull(transactionResponse.getResult()));
+        assertTrue(Objects.isNull(transactionResponse));
     }
 
     @Test
@@ -204,8 +215,13 @@ public class BCOSStubCallContractIntegTest {
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext("set", params);
         TransactionResponse transactionResponse =
-                driver.sendTransaction(requestTransactionContext, connection);
+                null;
+        try {
+            transactionResponse = driver.sendTransaction(requestTransactionContext, connection);
+        } catch (TransactionException e) {
+        }
 
+        assertTrue(Objects.nonNull(transactionResponse));
         assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.Success);
         assertTrue(transactionResponse.getBlockNumber() > 0);
         assertTrue(transactionResponse.getResult().length == params.length);
@@ -216,16 +232,27 @@ public class BCOSStubCallContractIntegTest {
         TransactionContext<TransactionRequest> requestTransactionContext0 =
                 createTransactionRequestContext("get", null);
         TransactionResponse transactionResponse0 =
-                driver.call(requestTransactionContext0, connection);
+                null;
+        try {
+            transactionResponse0 = driver.call(requestTransactionContext0, connection);
+        } catch (TransactionException e) {
+        }
 
+        assertTrue(Objects.nonNull(transactionResponse0));
         assertTrue(transactionResponse0.getErrorCode() == BCOSStatusCode.Success);
         assertTrue(transactionResponse0.getResult().length == params.length);
 
         TransactionContext<TransactionRequest> getRequestTransactionContext =
                 createTransactionRequestContext("get", null);
         TransactionResponse getTransactionResponse =
-                driver.call(getRequestTransactionContext, connection);
+                null;
+        try {
+            getTransactionResponse = driver.call(getRequestTransactionContext, connection);
+        } catch (TransactionException e) {
+            //
+        }
 
+        assertTrue(Objects.nonNull(getTransactionResponse));
         assertTrue(getTransactionResponse.getErrorCode() == BCOSStatusCode.Success);
         assertTrue(getTransactionResponse.getResult().length == params.length);
         for (int i=0;i<getTransactionResponse.getResult().length;++i) {
@@ -239,8 +266,14 @@ public class BCOSStubCallContractIntegTest {
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext("setNotExist", params);
         TransactionResponse transactionResponse =
-                driver.sendTransaction(requestTransactionContext, connection);
+                null;
+        try {
+            transactionResponse = driver.sendTransaction(requestTransactionContext, connection);
+        } catch (TransactionException e) {
+            // assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.SendTransactionNotSuccessStatus);
+        }
 
+        assertTrue(Objects.nonNull(transactionResponse));
         assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.SendTransactionNotSuccessStatus);
     }
 
@@ -250,16 +283,26 @@ public class BCOSStubCallContractIntegTest {
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext("set", params);
         TransactionResponse transactionResponse =
-                driver.sendTransaction(requestTransactionContext, connection);
+                null;
+        try {
+            transactionResponse = driver.sendTransaction(requestTransactionContext, connection);
+        } catch (TransactionException e) {
+        }
 
+        assertTrue(Objects.nonNull(transactionResponse));
         assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.Success);
         assertTrue(transactionResponse.getResult().length == params.length);
 
         TransactionContext<TransactionRequest> getRequestTransactionContext =
                 createTransactionRequestContext("get", null);
         TransactionResponse getTransactionResponse =
-                driver.call(getRequestTransactionContext, connection);
+                null;
+        try {
+            getTransactionResponse = driver.call(getRequestTransactionContext, connection);
+        } catch (TransactionException e) {
+        }
 
+        assertTrue(Objects.nonNull(getTransactionResponse));
         assertTrue(getTransactionResponse.getErrorCode() == BCOSStatusCode.Success);
         assertTrue(getTransactionResponse.getResult().length == params.length);
         for (int i=0;i<getTransactionResponse.getResult().length;++i) {
@@ -268,7 +311,7 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
-    public void getTransactionReceiptTest() throws IOException, BCOSStubException {
+    public void getTransactionReceiptTest() throws IOException, BCOSStubException, TransactionException {
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext("getAndClear", null);
         TransactionResponse transactionResponse =
@@ -285,7 +328,7 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
-    public void getVerifiedTransactionEmptyParamsTest() throws IOException, BCOSStubException {
+    public void getVerifiedTransactionEmptyParamsTest() throws IOException, BCOSStubException, TransactionException {
         String[] params = new String[0];
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext("set", params);
@@ -320,7 +363,7 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
-    public void getVerifiedTransactionTest() throws IOException, BCOSStubException {
+    public void getVerifiedTransactionTest() throws IOException, BCOSStubException, TransactionException {
         String[] params = new String[] {"aa", "bb", "cc", "dd"};
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext("set", params);

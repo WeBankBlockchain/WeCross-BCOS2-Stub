@@ -11,12 +11,32 @@ import org.fisco.bcos.web3j.protocol.channel.ChannelEthereumService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 public class Web3jUtility {
 
     private static final Logger logger = LoggerFactory.getLogger(Web3jUtility.class);
 
     private Web3jUtility() {}
+
+    public static ThreadPoolTaskExecutor buildThreadPool(
+            int threadNum, int queueCapacity, String name) {
+        logger.info(
+                " initializing Web3j ThreadPoolTaskExecutor, threadC: {}, queueCapacity: {}, threadName: {}",
+                threadNum,
+                queueCapacity,
+                name);
+        // init default thread pool
+
+        ThreadPoolTaskExecutor threadPool = new ThreadPoolTaskExecutor();
+        threadPool.setCorePoolSize(threadNum);
+        threadPool.setMaxPoolSize(threadNum);
+        threadPool.setQueueCapacity(queueCapacity);
+        threadPool.setThreadNamePrefix(name);
+        threadPool.initialize();
+        return threadPool;
+    }
+
     /**
      * Initialize the web3j service
      *
@@ -28,15 +48,6 @@ public class Web3jUtility {
             throws Exception {
 
         logger.info(" ChannelService: {}", channelServiceConfig);
-
-        /*
-        EncryptType encryptType =
-                new EncryptType(
-                        channelServiceConfig.getChain().isEnableGM()
-                                ? EncryptType.SM2_TYPE
-                                : EncryptType.ECDSA_TYPE);
-        */
-        // logger.trace(" EncryptType: {}", encryptType.getEncryptType());
 
         List<ChannelConnections> allChannelConnections = new ArrayList<>();
         ChannelConnections channelConnections = new ChannelConnections();
@@ -57,6 +68,11 @@ public class Web3jUtility {
         groupChannelConnectionsConfig.setAllChannelConnections(allChannelConnections);
 
         Service service = new Service();
+        service.setThreadPool(
+                buildThreadPool(
+                        channelServiceConfig.getThreadNum(),
+                        channelServiceConfig.getQueueCapacity(),
+                        "web3j_callback"));
 
         service.setGroupId(channelServiceConfig.getChain().getGroupID());
         service.setAllChannelConnections(groupChannelConnectionsConfig);

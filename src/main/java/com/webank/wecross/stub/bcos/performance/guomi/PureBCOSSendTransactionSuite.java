@@ -58,6 +58,26 @@ public class PureBCOSSendTransactionSuite implements PerformanceSuite {
 
     @Override
     public void call(PerformanceSuiteCallback callback) {
+
+        try {
+            this.web3j.sendRawTransactionAndGetProof(
+                    helloWeCross.setSeq(ss),
+                    new TransactionSucCallback() {
+
+                        @Override
+                        public void onResponse(TransactionReceipt response) {
+                            if (response.isStatusOK()) {
+                                callback.onSuccess("Success");
+
+                            } else {
+                                callback.onFailed("Failed! status: " + response.getStatus());
+                            }
+                        }
+                    });
+        } catch (Exception e) {
+            callback.onFailed("Call failed: " + e);
+        }
+        /*
         try {
             helloWeCross.set(
                     ss,
@@ -77,5 +97,6 @@ public class PureBCOSSendTransactionSuite implements PerformanceSuite {
         } catch (Exception e) {
             callback.onFailed("SendTransaction failed: " + e);
         }
+        */
     }
 }

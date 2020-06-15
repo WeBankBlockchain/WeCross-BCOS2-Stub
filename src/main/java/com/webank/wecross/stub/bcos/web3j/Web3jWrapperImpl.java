@@ -2,7 +2,6 @@ package com.webank.wecross.stub.bcos.web3j;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.concurrent.Semaphore;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.core.DefaultBlockParameter;
@@ -11,7 +10,6 @@ import org.fisco.bcos.web3j.protocol.core.methods.request.Transaction;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BlockNumber;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof.ReceiptAndProof;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof;
@@ -77,36 +75,9 @@ public class Web3jWrapperImpl implements Web3jWrapper {
         return ethCall.getResult();
     }
 
-    class Callback extends TransactionSucCallback {
-        Callback() {
-            try {
-                semaphore.acquire(1);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-
-        @Override
-        public void onResponse(TransactionReceipt receipt) {
-            this.receipt = receipt;
-            semaphore.release();
-        }
-
-        public TransactionReceipt receipt;
-        public Semaphore semaphore = new Semaphore(1, true);
-    }
-
     @Override
-    public TransactionReceipt sendTransactionAndGetProof(String signedTransactionData)
-            throws IOException {
-        Callback callback = new Callback();
-        try {
-            web3j.sendRawTransactionAndGetProof(signedTransactionData, callback);
-            callback.semaphore.acquire(1);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        return callback.receipt;
+    public void sendTransactionAndGetProof(
+            String signedTransactionData, TransactionSucCallback callback) throws IOException {
+        web3j.sendRawTransactionAndGetProof(signedTransactionData, callback);
     }
 }

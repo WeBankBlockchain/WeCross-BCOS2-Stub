@@ -1,6 +1,7 @@
 package com.webank.wecross.stub.bcos.web3j;
 
 import java.io.IOException;
+import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof;
@@ -15,10 +16,10 @@ public class Web3jWrapperWithNullMock extends Web3jWrapperImplMock {
     }
 
     @Override
-    public TransactionReceipt sendTransactionAndGetProof(String signedTransactionData)
-            throws IOException {
+    public void sendTransactionAndGetProof(
+            String signedTransactionData, TransactionSucCallback callback) throws IOException {
         TransactionReceipt receipt = new TransactionReceipt();
-        return receipt;
+        callback.onResponse(receipt);
     }
 
     @Override
