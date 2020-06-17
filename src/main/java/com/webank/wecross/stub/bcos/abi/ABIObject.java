@@ -1,5 +1,6 @@
 package com.webank.wecross.stub.bcos.abi;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -7,6 +8,7 @@ import org.fisco.bcos.web3j.abi.TypeEncoder;
 import org.fisco.bcos.web3j.abi.datatypes.Address;
 import org.fisco.bcos.web3j.abi.datatypes.Bytes;
 import org.fisco.bcos.web3j.abi.datatypes.NumericType;
+import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
 import org.fisco.bcos.web3j.abi.datatypes.generated.Uint256;
 
 public class ABIObject {
@@ -39,6 +41,27 @@ public class ABIObject {
 		}
 	}
 
+	private class Buffer {
+		private List<Offset> offsets = new LinkedList<Offset>();
+		private StringBuffer buffer = new StringBuffer();
+
+		public List<Offset> getOffsets() {
+			return offsets;
+		}
+
+		public void setOffsets(List<Offset> offsets) {
+			this.offsets = offsets;
+		}
+
+		public StringBuffer getBuffer() {
+			return buffer;
+		}
+
+		public void setBuffer(StringBuffer buffer) {
+			this.buffer = buffer;
+		}
+	}
+
 	private ObjectType type;
 	private String name; // field name
 
@@ -50,123 +73,141 @@ public class ABIObject {
 	private boolean isDynamicStruct;
 	private List<ABIObject> structFields; // for struct
 
+	private int listLength = 0; // >0 for string
 	private ABIObject listValueType; // for list
 	private List<ABIObject> listValues; // for list
-	
+
 	public ABIObject(ObjectType type) {
 		this.type = type;
+		switch (type) {
+		case VALUE: {
+			break;
+		}
+		case STRUCT: {
+			structFields = new LinkedList<ABIObject>();
+			break;
+		}
+		case LIST: {
+			listValues = new LinkedList<ABIObject>();
+			break;
+		}
+		}
 	}
-	
+
 	public ABIObject(NumericType number) {
 		this.type = ObjectType.VALUE;
 		this.valueType = ValueType.NUMERIC;
 		this.numericValue = number;
 	}
-	
+
 	public ABIObject(Bytes bytes) {
 		this.type = ObjectType.VALUE;
 		this.valueType = ValueType.BYTES;
 		this.bytesValue = bytes;
 	}
-	
+
 	public ABIObject(Address address) {
 		this.type = ObjectType.VALUE;
 		this.valueType = ValueType.ADDRESS;
 		this.addressValue = address;
 	}
-	
-	public String encode() {
-		StringBuffer staticBuffer = new StringBuffer();
-		StringBuffer dynamicBuffer = new StringBuffer();
-		
-		List<Offset> offsets = new LinkedList<Offset>();
-		
-		encode(false, offsets, staticBuffer, dynamicBuffer);
-		
-		// update offset
-		for (Offset offset : offsets) {
-			staticBuffer.replace(offset.getStaticOffset() * 2, offset.getStaticOffset() * 2 + 64,
-					TypeEncoder.encode(new Uint256(staticBuffer.length() / 2 + offset.getDynamicOffset())));
-		}
 
-		return staticBuffer.toString() + dynamicBuffer.toString();
-	}
-	
-	private void encode(boolean insideDynamic, List<Offset> offsets, StringBuffer staticBuffer, StringBuffer dynamicBuffer) {
-		switch (type) {
-		case VALUE: {
-			StringBuffer encodedTarget = staticBuffer;
-			if (insideDynamic) {
-				encodedTarget = dynamicBuffer;
+	public ABIObject(Utf8String string) {
+		this.type = ObjectType.LIST;
+		this.listValues = new ArrayList<ABIObject>();
+
+		String value = string.getValue();
+		for (int i = 0; i < value.length(); i += 32) {
+			int start = i;
+			int end = i + 32;
+
+			if (end > value.length()) {
+				end = value.length();
 			}
 
+			String substr = value.substring(start, end);
+			this.listValues.add(new ABIObject(new Bytes(substr.length(), substr.getBytes())));
+		}
+
+		this.listLength = value.length();
+	}
+
+	public String encode() {
+		StringBuffer fixedBuffer = new StringBuffer();
+		StringBuffer dynamicBuffer = new StringBuffer();
+
+		switch (type) {
+		case VALUE: {
 			switch (valueType) {
 			case NUMERIC: {
-				encodedTarget.append(TypeEncoder.encode(numericValue));
+				fixedBuffer.append(TypeEncoder.encode(numericValue));
 				break;
 			}
 			case BYTES: {
-				encodedTarget.append(TypeEncoder.encode(bytesValue));
+				fixedBuffer.append(TypeEncoder.encode(bytesValue));
 				break;
 			}
 			case ADDRESS: {
-				encodedTarget.append(TypeEncoder.encode(addressValue));
+				fixedBuffer.append(TypeEncoder.encode(addressValue));
 				break;
 			}
 			}
 			break;
 		}
-		case STRUCT: {
-			if(insideDynamic && isDynamicStruct) {
-				Uint256 offset = new Uint256(dynamicBuffer.length() / 2 + 32);
-				dynamicBuffer.append(TypeEncoder.encode(offset));
-			}
-			else if (!insideDynamic && isDynamicStruct){
-				Offset offset = new Offset();
-				offset.setStaticOffset(staticBuffer.length() / 2);
-				offset.setDynamicOffset(dynamicBuffer.length() / 2);
-
-				offsets.add(offset);
-				
-				Uint256 offsetNumber = new Uint256(0);
-				staticBuffer.append(TypeEncoder.encode(offsetNumber));
-			}
-			
+		case STRUCT:{
 			for (ABIObject abiObject : structFields) {
-				abiObject.encode(insideDynamic || isDynamicStruct, offsets, staticBuffer, dynamicBuffer);
+				if(abiObject.isDynamicStruct || abiObject.type.equals(ObjectType.LIST)) {
+					Uint256 offsetNumber = new Uint256(32 * structFields.size() + dynamicBuffer.length() / 2);
+					fixedBuffer.append(TypeEncoder.encode(offsetNumber));
+
+					dynamicBuffer.append(abiObject.encode());
+				}
+				else {
+					fixedBuffer.append(abiObject.encode());
+				}
 			}
+
 			break;
 		}
 		case LIST: {
-			if (insideDynamic) {
-				Uint256 offsetNumber = new Uint256(dynamicBuffer.length() / 2 + 32);
-				dynamicBuffer.append(TypeEncoder.encode(offsetNumber));
+			Uint256 length = null;
+			if (listLength > 0) {
+				length = new Uint256(listLength);
+			} else {
+				length = new Uint256(listValues.size());
 			}
-			else {
-				Offset offset = new Offset();
-				offset.setStaticOffset(staticBuffer.length() / 2);
-				offset.setDynamicOffset(dynamicBuffer.length() / 2);
-
-				offsets.add(offset);
-				
-				Uint256 offsetNumber = new Uint256(0);
-				staticBuffer.append(TypeEncoder.encode(offsetNumber));
-			}
-
-			// array length
-			Uint256 length = new Uint256(listValues.size());
-			dynamicBuffer.append(TypeEncoder.encode(length));
+			fixedBuffer.append(TypeEncoder.encode(length));
 
 			for (ABIObject abiObject : listValues) {
-				abiObject.encode(true, offsets, staticBuffer, dynamicBuffer);
+				if(abiObject.isDynamicStruct || abiObject.type.equals(ObjectType.LIST)) {
+					Uint256 offsetNumber = new Uint256(32 * listValues.size() + dynamicBuffer.length() / 2);
+					fixedBuffer.append(TypeEncoder.encode(offsetNumber));
+					
+					dynamicBuffer.append(abiObject.encode());
+				}
+				else {
+					fixedBuffer.append(abiObject.encode());
+				}
 			}
 			break;
 		}
 		}
+		
+		return fixedBuffer.toString() + dynamicBuffer.toString();
 	}
 
 	public void decode(String input) {
-
+		switch (type) {
+		case VALUE: {
+			break;
+		}
+		case STRUCT: {
+			break;
+		}
+		case LIST: {
+			break;
+		}
+		}
 	}
 
 	public ObjectType getType() {
@@ -234,6 +275,14 @@ public class ABIObject {
 	public void setStructFields(List<ABIObject> structFields) {
 		this.type = ObjectType.STRUCT;
 		this.structFields = structFields;
+	}
+
+	public int getListLength() {
+		return listLength;
+	}
+
+	public void setListLength(int listLength) {
+		this.listLength = listLength;
 	}
 
 	public ABIObject getListValueType() {
