@@ -26,6 +26,9 @@ public class BCOSStubConfigParserTest {
 
         assertEquals(channelService.getConnectionsStr().size(), 4);
 
+        assertEquals(channelService.getThreadNum(), 8);
+        assertEquals(channelService.getQueueCapacity(), 5000);
+
         assertEquals(bcosStubConfig.getResources().size(), 2);
         assertEquals(bcosStubConfig.getResources().get(0).getName(), "HelloWeCross");
         assertEquals(bcosStubConfig.getResources().get(0).getType(), "BCOS_CONTRACT");

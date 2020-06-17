@@ -5,7 +5,6 @@
 [chain]
     groupId = 1 # default 1
     chainId = 1 # default 1
-    enableGM = false # default false
 
 [channelService]
     caCert = 'ca.crt'
@@ -13,6 +12,8 @@
     sslKey = 'sdk.key'
     timeout = 300000  # ms, default 60000ms
     connectionsStr = ['127.0.0.1:20200', '127.0.0.1:20201', '127.0.0.1:20202']
+    threadNum = 18
+    threadQueueCapacity = 5000
 
 # resources is a list
 [[resources]]
