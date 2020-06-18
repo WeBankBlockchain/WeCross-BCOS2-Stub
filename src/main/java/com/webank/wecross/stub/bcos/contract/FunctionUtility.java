@@ -133,4 +133,21 @@ public class FunctionUtility {
         List<String> outputArgs = FunctionUtility.convertToStringList(outputTypes);
         return outputArgs.toArray(new String[0]);
     }
+
+    public static String decodeOutputAsString(String output) {
+        if (Objects.isNull(output) || output.length() < MethodIDWithHexPrefixLength) {
+            return null;
+        }
+
+        List<Type> outputTypes =
+                FunctionReturnDecoder.decode(
+                        output,
+                        Utils.convert(
+                                Collections.singletonList(new TypeReference<Utf8String>() {})));
+        if (Objects.isNull(outputTypes) || outputTypes.isEmpty()) {
+            return null;
+        }
+
+        return (String) outputTypes.get(0).getValue();
+    }
 }
