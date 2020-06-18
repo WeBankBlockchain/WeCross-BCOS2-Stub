@@ -90,27 +90,6 @@ public class ABIObject {
 
     public ABIObject(Utf8String string) {
         setStringValue(string);
-        /*
-        this.type = ObjectType.LIST;
-        this.listType = ListType.STRING;
-        this.listValues = new ArrayList<ABIObject>();
-        this.listValueType = new ABIObject(new Bytes(2, "0x".getBytes()));
-
-        String value = string.getValue();
-        this.listLength = value.length();
-
-        for (int i = 0; i < value.length(); i += 32) {
-            int start = i;
-            int end = i + 32;
-
-            if (end > value.length()) {
-                end = value.length();
-            }
-
-            String substr = value.substring(start, end);
-            this.listValues.add(new ABIObject(new Bytes(substr.length(), substr.getBytes())));
-        }
-        */
     }
 
     // clone itself
@@ -344,6 +323,8 @@ public class ABIObject {
                     } else {
                         loopLength = length.getValue().intValue();
                     }
+
+                    abiObject.getListValues().clear();
 
                     for (int i = 0; i < loopLength; ++i) {
                         ABIObject listItem = null;
