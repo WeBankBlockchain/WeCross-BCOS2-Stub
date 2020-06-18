@@ -89,6 +89,8 @@ public class ABIObject {
     }
 
     public ABIObject(Utf8String string) {
+        setStringValue(string);
+        /*
         this.type = ObjectType.LIST;
         this.listType = ListType.STRING;
         this.listValues = new ArrayList<ABIObject>();
@@ -108,18 +110,45 @@ public class ABIObject {
             String substr = value.substring(start, end);
             this.listValues.add(new ABIObject(new Bytes(substr.length(), substr.getBytes())));
         }
+        */
     }
 
+    // clone itself
     public ABIObject newObject() {
         ABIObject abiObject = new ABIObject(this.type);
         abiObject.valueType = this.valueType;
 
-        abiObject.listValueType = this.listValueType;
-        abiObject.listType = this.listType;
+        abiObject.name = this.name;
+        abiObject.valueType = this.valueType;
+        if (this.numericValue != null) {
+            abiObject.numericValue = new Uint256(this.numericValue.getValue());
+        }
 
+        if (this.bytesValue != null) {
+            abiObject.bytesValue =
+                    new Bytes(this.bytesValue.getValue().length, this.bytesValue.getValue());
+        }
+        if (this.addressValue != null) {
+            abiObject.addressValue = new Address(this.addressValue.toUint160());
+        }
         abiObject.isDynamicStruct = this.isDynamicStruct;
+
         if (this.structFields != null) {
-            abiObject.structFields = new LinkedList<ABIObject>(this.structFields);
+            for (ABIObject obj : this.structFields) {
+                abiObject.structFields.add(obj.newObject());
+            }
+        }
+
+        abiObject.listLength = this.listLength;
+        abiObject.listType = this.listType;
+        if (this.listValueType != null) {
+            abiObject.listValueType = this.listValueType.newObject();
+        }
+
+        if (this.listValues != null) {
+            for (ABIObject obj : this.listValues) {
+                abiObject.listValues.add(obj.newObject());
+            }
         }
 
         return abiObject;
@@ -398,6 +427,28 @@ public class ABIObject {
         this.type = ObjectType.VALUE;
         this.valueType = ValueType.ADDRESS;
         this.addressValue = addressValue;
+    }
+
+    public void setStringValue(Utf8String string) {
+        this.type = ObjectType.LIST;
+        this.listType = ListType.STRING;
+        this.listValues = new ArrayList<ABIObject>();
+        this.listValueType = new ABIObject(new Bytes(2, "0x".getBytes()));
+
+        String value = string.getValue();
+        this.listLength = value.length();
+
+        for (int i = 0; i < value.length(); i += 32) {
+            int start = i;
+            int end = i + 32;
+
+            if (end > value.length()) {
+                end = value.length();
+            }
+
+            String substr = value.substring(start, end);
+            this.listValues.add(new ABIObject(new Bytes(substr.length(), substr.getBytes())));
+        }
     }
 
     public boolean isDynamic() {
