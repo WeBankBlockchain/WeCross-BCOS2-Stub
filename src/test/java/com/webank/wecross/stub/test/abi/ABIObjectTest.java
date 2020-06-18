@@ -11,6 +11,15 @@ import org.junit.Test;
 public class ABIObjectTest {
     @Test
     public void testEncode() {
+        // int a, Info[] memory b, string memory c
+        /*
+         	 * {
+             "0": "int256: a 100",
+             "1": "tuple(string,int256,tuple(int256,int256,int256)[])[]: b Hello world!,100,1,2,3,Hello world2!,200,5,6,7",
+             "2": "string: c Hello world!"
+        }
+         	 */
+
         ABIObject input1 = new ABIObject(new Uint256(100));
         ABIObject input2 = new ABIObject(ObjectType.LIST);
 
@@ -146,6 +155,14 @@ public class ABIObjectTest {
 
     @Test
     public void testDecode() {
+        // int a, Info[] memory b, string memory c
+        /*
+         	 * {
+             "0": "int256: a 100",
+             "1": "tuple(string,int256,tuple(int256,int256,int256)[])[]: b Hello world!,100,1,2,3,Hello world2!,200,5,6,7",
+             "2": "string: c Hello world!"
+        }
+         	 */
         String encoded =
                 "0000000000000000000000000000000000000000000000000000000000000064"
                         + "0000000000000000000000000000000000000000000000000000000000000060"

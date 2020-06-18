@@ -6,66 +6,92 @@ import com.webank.wecross.stub.bcos.abi.ABIObject.ObjectType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import org.fisco.bcos.web3j.abi.datatypes.Address;
 import org.fisco.bcos.web3j.abi.datatypes.Bytes;
 import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
 import org.fisco.bcos.web3j.abi.datatypes.generated.Uint256;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ABIObjectJSONFactory {
+    private Logger logger = LoggerFactory.getLogger(ABIObjectJSONFactory.class);
     private ObjectMapper objectMapper = new ObjectMapper();
 
-    public ABIObject build(JsonNode jsonNode) {
+    public ABIObject buildCodec(JsonNode jsonNode) {
         try {
-            ABIObject abiObject = null;
+            ABIObject abiObject = new ABIObject(ObjectType.STRUCT);
+            Iterator<JsonNode> iterator = jsonNode.iterator();
 
-            String type = jsonNode.get("type").asText();
-            String name = jsonNode.get("name").asText();
+            while (iterator.hasNext()) {
+                JsonNode argNode = iterator.next();
+
+                abiObject.getStructFields().add(buildArgCodec(argNode));
+            }
+
+            return abiObject;
+        } catch (Exception e) {
+            logger.error("Error", e);
+        }
+
+        return null;
+    }
+
+    public ABIObject buildArgCodec(JsonNode argNode) {
+        try {
+            ABIObject codecObject = null;
+
+            String type = argNode.get("type").asText();
+            String name = argNode.get("name").asText();
 
             if (type.startsWith("int")) {
-                abiObject = new ABIObject(new Uint256(0));
+                codecObject = new ABIObject(new Uint256(0));
             } else if (type.startsWith("string")) {
-                abiObject = new ABIObject(new Utf8String(""));
+                codecObject = new ABIObject(new Utf8String(""));
             } else if (type.startsWith("bytes")) {
-                abiObject = new ABIObject(new Bytes(0, "".getBytes()));
+                codecObject = new ABIObject(new Bytes(0, "".getBytes()));
             } else if (type.startsWith("address")) {
-                abiObject = new ABIObject(new Address(""));
+                codecObject = new ABIObject(new Address(""));
             } else if (type.startsWith("tuple")) {
-                abiObject = new ABIObject(ObjectType.STRUCT);
+                codecObject = new ABIObject(ObjectType.STRUCT);
 
-                JsonNode components = jsonNode.get("components");
+                JsonNode components = argNode.get("components");
                 Iterator<JsonNode> componentsIterator = components.elements();
 
                 while (componentsIterator.hasNext()) {
                     JsonNode innerArg = componentsIterator.next();
 
-                    ABIObject innerObject = build(innerArg);
+                    ABIObject innerObject = buildArgCodec(innerArg);
 
-                    abiObject.getStructFields().add(innerObject);
+                    codecObject.getStructFields().add(innerObject);
 
                     if (innerObject.getType() == ObjectType.LIST || innerObject.isDynamic()) {
-                        abiObject.setDynamic(true);
+                        codecObject.setDynamic(true);
                     }
                 }
             }
 
             if (type.endsWith("[]")) {
                 ABIObject arrayObject = new ABIObject(ObjectType.LIST);
-                arrayObject.setListValueType(abiObject);
+                arrayObject.setListValueType(codecObject);
 
-                abiObject = arrayObject;
+                codecObject = arrayObject;
             }
 
-            // if(type.re)
+            codecObject.setName(name);
 
-            abiObject.setName(name);
+            return codecObject;
         } catch (Exception e) {
-
+            logger.error("Error", e);
         }
 
         return null;
     }
 
-    public ABIObject build(InputStream inputStream) {
+    public Contract loadABIFile(InputStream inputStream) {
+        Contract contract = new Contract();
+
         try {
             JsonNode jsonNode = objectMapper.readTree(inputStream);
 
@@ -75,21 +101,49 @@ public class ABIObjectJSONFactory {
 
             Iterator<JsonNode> iterator = jsonNode.elements();
             while (iterator.hasNext()) {
-                JsonNode function = iterator.next();
+                JsonNode memberNode = iterator.next();
 
-                String type = function.get("type").asText();
+                String type = memberNode.get("type").asText();
                 if (type.equals("function")) {
-                    JsonNode inputs = function.get("inputs");
+                    Function function = new Function();
 
-                    ABIObject abiObject = build(inputs);
+                    String name = memberNode.get("name").asText();
+
+                    if (memberNode.has("inputs")) {
+                        JsonNode inputNode = memberNode.get("inputs");
+                        function.setInput(buildCodec(inputNode));
+                    }
+
+                    if (memberNode.has("outputs")) {
+                        JsonNode outputNode = memberNode.get("outputs");
+                        function.setOutput(buildCodec(outputNode));
+                    }
+
+                    List<Function> functions = contract.getFunctions().get(name);
+                    if (functions == null) {
+                        contract.getFunctions().put(name, new LinkedList<Function>());
+                        functions = contract.getFunctions().get(name);
+                    }
+
+                    functions.add(function);
+                } else if (type.equals("event")) {
+                    Event event = new Event();
+
+                    String name = memberNode.get("name").asText();
+
+                    if (memberNode.has("inputs")) {
+                        JsonNode inputNode = memberNode.get("inputs");
+                        event.setInput(buildCodec(inputNode));
+                    }
+
+                    contract.getEvents().put(name, event);
                 }
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error("Error", e);
         }
 
-        return null;
+        return contract;
     }
 
     /*
