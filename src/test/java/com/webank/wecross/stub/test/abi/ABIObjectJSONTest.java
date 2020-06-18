@@ -6,7 +6,7 @@ import com.webank.wecross.stub.bcos.abi.Contract;
 import com.webank.wecross.stub.bcos.abi.Function;
 import java.io.ByteArrayInputStream;
 import java.util.List;
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class ABIObjectJSONTest {
