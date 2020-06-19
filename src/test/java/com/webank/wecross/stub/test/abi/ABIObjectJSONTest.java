@@ -7,6 +7,8 @@ import com.webank.wecross.stub.bcos.abi.Function;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -205,12 +207,34 @@ public class ABIObjectJSONTest {
 
     // int a, Info[] memory b, string memory c
     /*
-     	 * {
-         "0": "int256: a 100",
-         "1": "tuple(string,int256,tuple(int256,int256,int256)[])[]: b Hello world!,100,1,2,3,Hello world2!,200,5,6,7",
-         "2": "string: c Hello world!"
+    	 * {
+        "0": "int256: a 100",
+        "1": "tuple(string,int256,tuple(int256,int256,int256)[])[]: b Hello world!,100,1,2,3,Hello world2!,200,5,6,7",
+        "2": "string: c Hello world!"
     }
-     	 */
+
+    struct Item {
+        int a;
+        int b;
+        int c;
+    }
+
+    struct Info {
+        string name;
+        int count;
+        Item[] items;
+    }
+
+    event output1(int a, Info[] b, string c);
+
+    function() external {
+
+    }
+
+    function test(int a, Inf\o[] memory b, string memory c) public returns(int) {
+        // emit output1(a, b, c);
+    }
+    	 */
     String encoded =
             "0000000000000000000000000000000000000000000000000000000000000064"
                     + "0000000000000000000000000000000000000000000000000000000000000060"
@@ -277,5 +301,18 @@ public class ABIObjectJSONTest {
         ABIObject encodedObj = abiFactory.encode(obj, args);
 
         Assert.assertEquals(encoded, encodedObj.encode());
+    }
+
+    public static void main(String[] args) {
+        Pattern pattern = Pattern.compile("\\[(\\d*)\\]");
+
+        String str = "tuple[10]";
+
+        Matcher matcher = pattern.matcher(str);
+
+        System.out.println("start...");
+        while (matcher.find()) {
+            System.out.println("count: " + matcher.group(1));
+        }
     }
 }

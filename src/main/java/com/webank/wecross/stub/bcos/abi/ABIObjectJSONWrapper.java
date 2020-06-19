@@ -23,19 +23,6 @@ public class ABIObjectJSONWrapper {
     private ObjectMapper objectMapper = new ObjectMapper();
     private Pattern suffixPattern = Pattern.compile("\\[(\\d*)\\]");
 
-    public static void main(String[] args) {
-        Pattern pattern = Pattern.compile("\\[(\\d*)\\]");
-
-        String str = "test";
-
-        Matcher matcher = pattern.matcher(str);
-
-        System.out.println("start...");
-        while (matcher.find()) {
-            System.out.println("count: " + matcher.group(0));
-        }
-    }
-
     public ABIObject buildCodec(JsonNode jsonNode) {
         try {
             ABIObject abiObject = new ABIObject(ObjectType.STRUCT);
@@ -93,7 +80,7 @@ public class ABIObjectJSONWrapper {
             List<Integer> lengths = new LinkedList<Integer>();
             Matcher matcher = suffixPattern.matcher(type);
             while (matcher.find()) {
-                String lengthStr = matcher.group();
+                String lengthStr = matcher.group(1);
                 if (lengthStr.isEmpty()) {
                     isDynamicArray = true;
                     lengths.add(0);
@@ -107,11 +94,13 @@ public class ABIObjectJSONWrapper {
                 arrayObject.setListValueType(codecObject);
 
                 codecObject = arrayObject;
-            } else {
+            } else if (lengths.size() > 0) {
                 int total = 1;
                 for (Integer length : lengths) {
                     total *= length;
                 }
+
+                // TODO: static array support
             }
 
             codecObject.setName(name);
