@@ -1,7 +1,7 @@
 package com.webank.wecross.stub.test.abi;
 
 import com.webank.wecross.stub.bcos.abi.ABIObject;
-import com.webank.wecross.stub.bcos.abi.ABIObjectJSONFactory;
+import com.webank.wecross.stub.bcos.abi.ABIObjectJSONWrapper;
 import com.webank.wecross.stub.bcos.abi.Contract;
 import com.webank.wecross.stub.bcos.abi.Function;
 import java.io.ByteArrayInputStream;
@@ -241,7 +241,7 @@ public class ABIObjectJSONTest {
 
     @Test
     public void testLoadABIJSON() {
-        ABIObjectJSONFactory abiFactory = new ABIObjectJSONFactory();
+        ABIObjectJSONWrapper abiFactory = new ABIObjectJSONWrapper();
 
         Contract contract = abiFactory.loadABIFile(new ByteArrayInputStream(abiDesc.getBytes()));
 
@@ -258,7 +258,7 @@ public class ABIObjectJSONTest {
 
     @Test
     public void testEncodeByJSON() throws Exception {
-        ABIObjectJSONFactory abiFactory = new ABIObjectJSONFactory();
+        ABIObjectJSONWrapper abiFactory = new ABIObjectJSONWrapper();
 
         Contract contract = abiFactory.loadABIFile(new ByteArrayInputStream(abiDesc.getBytes()));
 
