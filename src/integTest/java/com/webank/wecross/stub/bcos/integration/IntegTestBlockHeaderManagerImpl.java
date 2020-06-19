@@ -20,7 +20,6 @@ public class IntegTestBlockHeaderManagerImpl implements BlockHeaderManager {
         this.connection = new BCOSConnection(web3jWrapper);
     }
 
-    @Override
     public long getBlockNumber() {
         try {
             BigInteger blockNumber = web3jWrapper.getBlockNumber();
@@ -30,7 +29,6 @@ public class IntegTestBlockHeaderManagerImpl implements BlockHeaderManager {
         }
     }
 
-    @Override
     public byte[] getBlockHeader(long l) {
         try {
             BcosBlock.Block block = web3jWrapper.getBlockByNumber(l);
@@ -41,8 +39,28 @@ public class IntegTestBlockHeaderManagerImpl implements BlockHeaderManager {
     }
 
     @Override
-    public void asyncGetBlockHeader(long blockNumber, BlockHeaderCallback callback) {
+    public void start() {
+
+    }
+
+    @Override
+    public void stop() {
+
+    }
+
+    @Override
+    public void asyncGetBlockNumber(GetBlockNumberCallback callback) {
+        try {
+            BigInteger blockNumber = web3jWrapper.getBlockNumber();
+            callback.onResponse(null, blockNumber.longValue());
+        } catch (IOException e) {
+            callback.onResponse(e, -1);
+        }
+    }
+
+    @Override
+    public void asyncGetBlockHeader(long blockNumber, GetBlockHeaderCallback callback) {
         final byte[] blockHeader = getBlockHeader(blockNumber);
-        callback.onBlockHeader(blockHeader);
+        callback.onResponse(null, blockHeader);
     }
 }

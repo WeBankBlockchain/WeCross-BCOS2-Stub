@@ -8,20 +8,24 @@ import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.Response;
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.BCOSStubException;
+import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
+import org.fisco.bcos.web3j.abi.FunctionEncoder;
+import org.fisco.bcos.web3j.abi.datatypes.Function;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
+import org.fisco.bcos.web3j.protocol.channel.StatusCode;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -40,6 +44,8 @@ public class BCOSConnection implements Connection {
     private List<ResourceInfo> resourceInfoList;
 
     private final Web3jWrapper web3jWrapper;
+
+    private Map<String, String> properties = new HashMap<>();
 
     public BCOSConnection(Web3jWrapper web3jWrapper) {
         this.web3jWrapper = web3jWrapper;
@@ -60,7 +66,74 @@ public class BCOSConnection implements Connection {
 
     @Override
     public List<ResourceInfo> getResources() {
-        return resourceInfoList;
+        List<ResourceInfo> resources = new ArrayList<>();
+        resources.addAll(resourceInfoList);
+        String[] paths = listPaths();
+        if (Objects.nonNull(paths)) {
+            for (String path : paths) {
+                ResourceInfo resourceInfo = new ResourceInfo();
+                resourceInfo.setStubType(properties.get(BCOSConstant.BCOS_STUB_TYPE));
+                resourceInfo.setName(path.split("\\.")[2]);
+                Map<Object, Object> resourceProperties = new HashMap<>();
+                resourceProperties.put(
+                        BCOSConstant.BCOS_GROUP_ID, properties.get(BCOSConstant.BCOS_GROUP_ID));
+                resourceProperties.put(
+                        BCOSConstant.BCOS_CHAIN_ID, properties.get(BCOSConstant.BCOS_CHAIN_ID));
+                resourceInfo.setProperties(resourceProperties);
+                resources.add(resourceInfo);
+            }
+        }
+        return resources;
+    }
+
+    @Override
+    public Map<String, String> getProperties() {
+        return properties;
+    }
+
+    public void setProperty(Map<String, String> properties) {
+        this.properties = properties;
+    }
+
+    public void addProperty(String key, String value) {
+        this.properties.put(key, value);
+    }
+
+    /** list paths stored in proxy contract */
+    public String[] listPaths() {
+        Function function =
+                FunctionUtility.newFunction(BCOSConstant.PROXY_METHOD_GETPATHS, new String[] {});
+        String address = properties.get(BCOSConstant.BCOS_PROXY_NAME);
+        try {
+            Call.CallOutput callOutput =
+                    web3jWrapper.call(
+                            BCOSConstant.DEFAULT_ADDRESS,
+                            address,
+                            FunctionEncoder.encode(function));
+
+            if (logger.isDebugEnabled()) {
+                logger.debug(
+                        "call result, status: {}, blockNumber: {}",
+                        callOutput.getStatus(),
+                        callOutput.getCurrentBlockNumber());
+            }
+
+            if (StatusCode.Success.equals(callOutput.getStatus())) {
+                String[] paths = FunctionUtility.decodeOutput(callOutput.getOutput());
+                if (Objects.nonNull(paths) && paths.length != 0) {
+                    Set<String> set = new HashSet<>(Arrays.asList(paths));
+                    return set.toArray(new String[0]);
+                } else {
+                    return null;
+                }
+            } else {
+                logger.warn("getting paths failed: {}", callOutput.getStatus());
+                return null;
+            }
+        } catch (Exception e) {
+            logger.warn("getting paths failed,", e);
+            return null;
+        }
     }
 
     /**
@@ -76,10 +149,6 @@ public class BCOSConnection implements Connection {
                 return handleCallRequest(request);
             case BCOSRequestType.SEND_TRANSACTION:
                 return handleTransactionRequest(request);
-            case BCOSRequestType.GET_BLOCK_HEADER:
-                return handleGetBlockHeaderRequest(request);
-            case BCOSRequestType.GET_BLOCK_NUMBER:
-                return handleGetBlockNumberRequest(request);
             case BCOSRequestType.GET_TRANSACTION_PROOF:
                 return handleGetTransactionProof(request);
             default:
@@ -102,9 +171,12 @@ public class BCOSConnection implements Connection {
      */
     @Override
     public void asyncSend(Request request, Callback callback) {
-
         if (request.getType() == BCOSRequestType.SEND_TRANSACTION) {
             handleAsyncTransactionRequest(request, callback);
+        } else if (request.getType() == BCOSRequestType.GET_BLOCK_HEADER) {
+            handleAsyncGetBlockHeaderRequest(request, callback);
+        } else if (request.getType() == BCOSRequestType.GET_BLOCK_NUMBER) {
+            handleAsyncGetBlockNumberRequest(callback);
         } else {
             // Does not support asynchronous operation, async to sync
             callback.onResponse(send(request));
@@ -243,7 +315,7 @@ public class BCOSConnection implements Connection {
         return sendTxResponse.getResponse();
     }
 
-    public Response handleGetBlockNumberRequest(Request request) {
+    public void handleAsyncGetBlockNumberRequest(Callback callback) {
         Response response = new Response();
         try {
             BigInteger blockNumber = web3jWrapper.getBlockNumber();
@@ -258,7 +330,7 @@ public class BCOSConnection implements Connection {
             response.setErrorCode(BCOSStatusCode.HandleGetBlockNumberFailed);
             response.setErrorMessage(" errorMessage: " + e.getMessage());
         }
-        return response;
+        callback.onResponse(response);
     }
 
     /**
@@ -339,7 +411,7 @@ public class BCOSConnection implements Connection {
         return blockHeader;
     }
 
-    public Response handleGetBlockHeaderRequest(Request request) {
+    public void handleAsyncGetBlockHeaderRequest(Request request, Callback callback) {
         Response response = new Response();
         try {
             BigInteger blockNumber = new BigInteger(request.getData());
@@ -354,6 +426,6 @@ public class BCOSConnection implements Connection {
             response.setErrorCode(BCOSStatusCode.HandleGetBlockHeaderFailed);
             response.setErrorMessage(" errorMessage: " + e.getMessage());
         }
-        return response;
+        callback.onResponse(response);
     }
 }

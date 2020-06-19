@@ -63,12 +63,13 @@ configurations {
 
 dependencies {
     // implementation 'com.webank:wecross-java-stub:1.0.0-rc2'
-    implementation 'com.webank:wecross-java-stub:1.0.0-rc3-05260-SNAPSHOT'
+    implementation 'com.webank:wecross-java-stub:1.0.0-rc4-06097-SNAPSHOT'
     implementation 'org.slf4j:slf4j-api:1.7.25'
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'
     implementation 'com.google.guava:guava:28.1-jre'
     implementation 'org.fisco-bcos:web3sdk:2.4.0'
+    implementation 'org.fisco-bcos:solcJ:0.5.2-rc1'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
