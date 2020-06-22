@@ -8,6 +8,7 @@ import org.fisco.bcos.web3j.abi.TypeEncoder;
 import org.fisco.bcos.web3j.abi.TypeReference;
 import org.fisco.bcos.web3j.abi.datatypes.Address;
 import org.fisco.bcos.web3j.abi.datatypes.Bytes;
+import org.fisco.bcos.web3j.abi.datatypes.DynamicBytes;
 import org.fisco.bcos.web3j.abi.datatypes.NumericType;
 import org.fisco.bcos.web3j.abi.datatypes.StaticArray;
 import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
@@ -31,6 +32,7 @@ public class ABIObject {
         DYNAMIC,
         FIXED,
         STRING,
+        BYTES,
     }
 
     private ObjectType type;
@@ -90,6 +92,10 @@ public class ABIObject {
 
     public ABIObject(Utf8String string) {
         setStringValue(string);
+    }
+
+    public ABIObject(DynamicBytes bytes) {
+        setDynamicBytesValue(bytes);
     }
 
     // clone itself
@@ -180,7 +186,7 @@ public class ABIObject {
                 {
                     if (!listType.equals(ListType.FIXED)) {
                         Uint256 length = null;
-                        if (listType.equals(ListType.STRING)) {
+                        if (listType.equals(ListType.STRING) || listType.equals(ListType.BYTES)) {
                             length = new Uint256(listLength);
                         } else {
                             length = new Uint256(listValues.size());
@@ -315,7 +321,7 @@ public class ABIObject {
 
                     int loopLength = 0;
 
-                    if (listType.equals(ListType.STRING)) {
+                    if (listType.equals(ListType.STRING) || listType.equals(ListType.BYTES)) {
                         abiObject.setListLength(length.getValue().intValue());
                         loopLength =
                                 length.getValue().intValue() / 32
@@ -410,6 +416,12 @@ public class ABIObject {
         this.addressValue = addressValue;
     }
 
+    public Utf8String getStringValue() {
+        DynamicBytes bytes = getDynamicBytesValue();
+
+        return new Utf8String(new String(bytes.getValue()));
+    }
+
     public void setStringValue(Utf8String string) {
         this.type = ObjectType.LIST;
         this.listType = ListType.STRING;
@@ -429,6 +441,46 @@ public class ABIObject {
 
             String substr = value.substring(start, end);
             this.listValues.add(new ABIObject(new Bytes(substr.length(), substr.getBytes())));
+        }
+    }
+
+    public DynamicBytes getDynamicBytesValue() {
+        byte[] buffer = new byte[this.getListLength()];
+
+        for (int i = 0; i < this.listValues.size(); ++i) {
+            ABIObject abiObject = this.listValues.get(i);
+
+            byte[] splice = abiObject.getBytesValue().getValue();
+            for (int j = 0; j < splice.length && i * 32 + j < buffer.length; ++j) {
+                buffer[i * 32 + j] = splice[j];
+            }
+        }
+
+        return new DynamicBytes(buffer);
+    }
+
+    public void setDynamicBytesValue(DynamicBytes bytes) {
+        this.type = ObjectType.LIST;
+        this.listType = ListType.BYTES;
+        this.listValues = new ArrayList<ABIObject>();
+        this.listValueType = new ABIObject(new Bytes(2, "0x".getBytes()));
+
+        byte[] value = bytes.getValue();
+        this.listLength = value.length;
+
+        for (int i = 0; i < value.length; i += 32) {
+            int start = i;
+            int end = i + 32;
+
+            if (end > value.length) {
+                end = value.length;
+            }
+
+            byte[] subbytes = new byte[end - start];
+            for (int j = start; j < end; ++j) {
+                subbytes[j - start] = value[j];
+            }
+            this.listValues.add(new ABIObject(new Bytes(subbytes.length, subbytes)));
         }
     }
 
