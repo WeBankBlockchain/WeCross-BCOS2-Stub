@@ -2,10 +2,14 @@ package com.webank.wecross.stub.bcos.abi;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.webank.wecross.stub.bcos.abi.ABIObject.ListType;
 import com.webank.wecross.stub.bcos.abi.ABIObject.ObjectType;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,6 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.fisco.bcos.web3j.abi.datatypes.Address;
 import org.fisco.bcos.web3j.abi.datatypes.Bytes;
+import org.fisco.bcos.web3j.abi.datatypes.DynamicBytes;
 import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
 import org.fisco.bcos.web3j.abi.datatypes.generated.Uint256;
 import org.slf4j.Logger;
@@ -54,9 +59,11 @@ public class ABIObjectJSONWrapper {
             } else if (type.startsWith("string")) {
                 codecObject = new ABIObject(new Utf8String(""));
             } else if (type.startsWith("bytes")) {
-                codecObject = new ABIObject(new Bytes(0, "".getBytes()));
+                codecObject = new ABIObject(new DynamicBytes("".getBytes()));
             } else if (type.startsWith("address")) {
                 codecObject = new ABIObject(new Address(""));
+            } else if (type.startsWith("byte")) {
+                codecObject = new ABIObject(new Bytes(32, "".getBytes()));
             } else if (type.startsWith("tuple")) {
                 codecObject = new ABIObject(ObjectType.STRUCT);
 
@@ -254,7 +261,8 @@ public class ABIObjectJSONWrapper {
                                                     abiObject.getListValueType(),
                                                     listNode));
                         }
-                    } else if (abiObject.getListType() == ListType.STRING) {
+                    } else if (abiObject.getListType().equals(ListType.STRING)
+                            || abiObject.getListType().equals(ListType.BYTES)) {
                         if (!node.isTextual()) {
                             errorReport(path, "STRING", node.getNodeType().toString());
                         }
@@ -307,6 +315,7 @@ public class ABIObjectJSONWrapper {
 
         for (int i = 0; i < abiObject.getStructFields().size(); ++i) {
             ABIObject argObject = abiObject.getStructFields().get(i).newObject();
+
             switch (argObject.getType()) {
                 case VALUE:
                     {
@@ -340,7 +349,8 @@ public class ABIObjectJSONWrapper {
                     }
                 case LIST:
                     {
-                        if (argObject.getListType().equals(ListType.STRING)) {
+                        if (argObject.getListType().equals(ListType.STRING)
+                                || argObject.getListType().equals(ListType.BYTES)) {
                             argObject.setStringValue(new Utf8String(inputs.get(i)));
                         } else {
                             JsonNode argNode = objectMapper.readTree(inputs.get(i).getBytes());
@@ -357,7 +367,153 @@ public class ABIObjectJSONWrapper {
         return abiObject;
     }
 
-    List<String> decode(String buffer) {
+    public JsonNode decode(ABIObject abiObject) {
+        JsonNodeFactory jsonNodeFactory = objectMapper.getNodeFactory();
+
+        switch (abiObject.getType()) {
+            case VALUE:
+                {
+                    switch (abiObject.getValueType()) {
+                        case NUMERIC:
+                            {
+                                return jsonNodeFactory.numberNode(
+                                        abiObject.getNumericValue().getValue());
+                            }
+                        case ADDRESS:
+                            {
+                                return jsonNodeFactory.textNode(
+                                        abiObject.getAddressValue().toString());
+                            }
+                        case BYTES:
+                            {
+                                return jsonNodeFactory.binaryNode(
+                                        abiObject.getBytesValue().getValue());
+                            }
+                    }
+                    break;
+                }
+            case LIST:
+                {
+                    switch (abiObject.getListType()) {
+                        case DYNAMIC:
+                            {
+                                ArrayNode arrayNode = jsonNodeFactory.arrayNode();
+
+                                for (ABIObject arrayObject : abiObject.getListValues()) {
+                                    arrayNode.add(decode(arrayObject));
+                                }
+
+                                return arrayNode;
+                            }
+                        case BYTES:
+                            {
+                                DynamicBytes bytes = abiObject.getDynamicBytesValue();
+
+                                return jsonNodeFactory.binaryNode(bytes.getValue());
+                            }
+                        case STRING:
+                            {
+                                Utf8String str = abiObject.getStringValue();
+
+                                return jsonNodeFactory.textNode(str.getValue());
+                            }
+                        case FIXED:
+                            {
+                                // TODO FIXED ARRAY
+                                return null;
+                            }
+                    }
+                    break;
+                }
+            case STRUCT:
+                {
+                    ObjectNode structNode = jsonNodeFactory.objectNode();
+
+                    for (ABIObject structObject : abiObject.getStructFields()) {
+                        structNode.set(structObject.getName(), decode(structObject));
+                    }
+
+                    return structNode;
+                }
+        }
+
         return null;
+    }
+
+    public List<String> decode(ABIObject template, String buffer) {
+        ABIObject abiObject = template.decode(buffer);
+        JsonNode jsonNode = decode(abiObject);
+
+        List<String> result = new ArrayList<String>();
+        for (int i = 0; i < abiObject.getStructFields().size(); ++i) {
+            ABIObject argObject = abiObject.getStructFields().get(i);
+            JsonNode argNode = jsonNode.get(argObject.getName());
+
+            switch (argObject.getType()) {
+                case VALUE:
+                    {
+                        switch (argObject.getValueType()) {
+                            case NUMERIC:
+                                {
+                                    result.add(
+                                            String.valueOf(
+                                                    argObject
+                                                            .getNumericValue()
+                                                            .getValue()
+                                                            .longValue()));
+                                    break;
+                                }
+                            case ADDRESS:
+                                {
+                                    result.add(
+                                            String.valueOf(argObject.getAddressValue().toString()));
+                                    break;
+                                }
+                            case BYTES:
+                                {
+                                    result.add(
+                                            String.valueOf(argObject.getBytesValue().getValue()));
+                                    break;
+                                }
+                        }
+                        break;
+                    }
+                case LIST:
+                    {
+                        switch (argObject.getListType()) {
+                            case DYNAMIC:
+                                {
+                                    result.add(argNode.toPrettyString());
+                                    break;
+                                }
+                            case BYTES:
+                                {
+                                    // result.add(Numeric.toHexStringNoPrefix(argObject.getDynamicBytesValue().getValue()));
+                                    result.add(
+                                            new String(
+                                                    argObject.getDynamicBytesValue().getValue()));
+                                    break;
+                                }
+                            case STRING:
+                                {
+                                    result.add(argObject.getStringValue().getValue());
+                                    break;
+                                }
+                            case FIXED:
+                                {
+                                    // TODO
+                                    break;
+                                }
+                        }
+                        break;
+                    }
+                case STRUCT:
+                    {
+                        result.add(argNode.toPrettyString());
+                    }
+            }
+        }
+
+        return result;
     }
 }
