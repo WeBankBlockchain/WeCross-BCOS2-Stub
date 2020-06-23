@@ -27,6 +27,10 @@ public class BCOSStatusCode {
     public static final int CallNotSuccessStatus = 2030;
     public static final int SendTransactionNotSuccessStatus = 2031;
 
+    public static final int QueryAbiFailed = 2040;
+    public static final int EncodeAbiFailed = 2041;
+    public static final int MethodNotExist = 2042;
+
     public static final int UnclassifiedError = 2100;
 
     public static String getStatusMessage(int status) {

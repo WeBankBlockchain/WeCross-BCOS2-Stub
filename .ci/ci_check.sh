@@ -24,6 +24,7 @@ cp nodes/127.0.0.1/sdk/* src/integTest/resources/chains/bcos
 cp src/test/resources/stub.toml src/integTest/resources/chains/bcos/
 cp -r src/test/resources/accounts src/integTest/resources/
 cp -r src/test/resources/contract src/integTest/resources/
-cp src/main/resources/WeCrossProxy.sol src/integTest/resources/
+mkdir -p src/integTest/resources/solidity
+cp src/main/resources/* src/integTest/resources/solidity
 bash gradlew integTest
 ./gradlew jacocoTestReport
