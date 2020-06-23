@@ -6,6 +6,7 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
 import com.webank.wecross.stub.*;
+import com.webank.wecross.stub.bcos.AsyncCnsService;
 import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.BCOSDriver;
 import com.webank.wecross.stub.bcos.BCOSStubFactory;
@@ -13,6 +14,7 @@ import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.BCOSStubException;
+import com.webank.wecross.stub.bcos.common.BCOSFileUtils;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.custom.CommandHandler;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
@@ -20,6 +22,7 @@ import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Base64;
@@ -110,6 +113,21 @@ public class BCOSStubCallContractIntegTest {
         return requestTransactionContext;
     }
 
+    public TransactionContext<TransactionRequest> createTransactionRequestContext(
+            String path, String method, String[] args) {
+        TransactionRequest transactionRequest =
+                new TransactionRequest(method, args);
+        transactionRequest.setPath(path);
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                new TransactionContext<>(
+                        transactionRequest, account, resourceInfo, blockHeaderManager);
+        requestTransactionContext.setAccount(account);
+        requestTransactionContext.setBlockHeaderManager(blockHeaderManager);
+        requestTransactionContext.setData(transactionRequest);
+        requestTransactionContext.setResourceInfo(resourceInfo);
+        return requestTransactionContext;
+    }
+
     @Before
     public void initializer() throws Exception {
 
@@ -142,6 +160,26 @@ public class BCOSStubCallContractIntegTest {
                 resourceInfo.getName(),
                 resourceInfo.getStubType(),
                 resourceInfo.getProperties());
+        deployProxy();
+    }
+
+    private void deployProxy() throws Exception {
+        PathMatchingResourcePatternResolver resolver =
+                new PathMatchingResourcePatternResolver();
+        String path = resolver.getResource("classpath:solidity").getFile().getAbsolutePath();
+        BCOSFileUtils.zipDir(path);
+        File file = new File("solidity.zip");
+        byte[] contractBytes = Files.readAllBytes(file.toPath());
+        file.delete();
+
+        Object[] args = new Object[]{Base64.getEncoder().encodeToString(contractBytes), String.valueOf(System.currentTimeMillis())};
+        CommandHandler commandHandler = new DeployContractHandler();
+        commandHandler.handle(Path.decode("a.b.WeCrossProxy"), args, account, blockHeaderManager, connection, new HashMap<>(), (error, response) -> {
+            if(Objects.nonNull(error)) {
+                error.printStackTrace();
+            }
+        });
+        Thread.sleep(10000);
     }
 
     @Test
@@ -414,14 +452,68 @@ public class BCOSStubCallContractIntegTest {
     public void deployContractTest() throws Exception {
         PathMatchingResourcePatternResolver resolver =
                 new PathMatchingResourcePatternResolver();
-        byte[] contractBytes = Files.readAllBytes(resolver.getResource("classpath:WeCrossProxy.sol").getFile().toPath());
+        String path = resolver.getResource("classpath:solidity").getFile().getAbsolutePath();
+        BCOSFileUtils.zipDir(path);
+        File file = new File("solidity.zip");
+        byte[] contractBytes = Files.readAllBytes(file.toPath());
+        file.delete();
+
         Object[] args = new Object[]{Base64.getEncoder().encodeToString(contractBytes), String.valueOf(System.currentTimeMillis())};
-        Path path = Path.decode("a.b.WeCrossProxy");
         CommandHandler commandHandler = new DeployContractHandler();
-        commandHandler.handle(path, args, account, blockHeaderManager, connection, new HashMap<>(), (error, response) -> {
+        commandHandler.handle(Path.decode("a.b.HelloWorld"), args, account, blockHeaderManager, connection, new HashMap<>(), (error, response) -> {
             assertNull(error);
             assertNotNull(response);
         });
         Thread.sleep(10000);
     }
+
+//    @Test
+//    public void compressTest() throws IOException {
+//        PathMatchingResourcePatternResolver resolver =
+//                new PathMatchingResourcePatternResolver();
+//        String path = resolver.getResource("classpath:solidity").getFile().getAbsolutePath();
+//        BCOSFileUtils.zipDir(path);
+//        File file = new File("solidity.zip");
+//        byte[] fileContent = Files.readAllBytes(file.toPath());
+//        File file1 = new File("solidity1.zip");
+//        Files.write(file1.toPath(), fileContent);
+//        BCOSFileUtils.unZip("solidity1.zip", "./");
+//    }
+
+    @Test
+    public void CnsServiceTest() {
+        AsyncCnsService asyncCnsService = new AsyncCnsService();
+        asyncCnsService.selectByName(BCOSConstant.BCOS_PROXY_NAME, account, connection, (exception, infoList) -> {
+            System.out.println(infoList);
+        });
+    }
+
+    @Test
+    public void CallByProxyTest() throws InterruptedException {
+        String[] params = new String[]{"hello", "world"};
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTransactionRequestContext("a.b.HelloWorld","get2", params);
+
+        driver.asyncCallByProxy(requestTransactionContext, connection, (exception, res) -> {
+            assertTrue(Objects.nonNull(res));
+            assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
+            assertTrue(res.getResult().length != 0);
+        });
+
+        Thread.sleep(10000);
+    }
+
+//    @Test
+//    public void SendTransactionByProxyTest() throws InterruptedException {
+//        String[] params = new String[]{"hello world"};
+//        TransactionContext<TransactionRequest> requestTransactionContext =
+//                createTransactionRequestContext("a.b.HelloWorld","set", params);
+//
+//        driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
+//            assertTrue(Objects.nonNull(res));
+//            assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
+//        });
+//
+//        Thread.sleep(10000);
+//    }
 }

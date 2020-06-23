@@ -9,10 +9,7 @@ import com.webank.wecross.stub.bcos.abi.ABIObject.ListType;
 import com.webank.wecross.stub.bcos.abi.ABIObject.ObjectType;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.fisco.bcos.web3j.abi.datatypes.Address;
@@ -125,7 +122,6 @@ public class ABIObjectJSONWrapper {
 
         try {
             JsonNode jsonNode = objectMapper.readTree(inputStream);
-
             if (!jsonNode.isArray()) {
                 return null;
             }
@@ -515,5 +511,40 @@ public class ABIObjectJSONWrapper {
         }
 
         return result;
+    }
+
+    public String getSigbyMethod(String method, String abi) {
+        try {
+            JsonNode jsonNode = objectMapper.readTree(abi);
+            if (!jsonNode.isArray()) {
+                return null;
+            }
+
+            Iterator<JsonNode> iterator = jsonNode.elements();
+            while (iterator.hasNext()) {
+                JsonNode memberNode = iterator.next();
+
+                String name = memberNode.get("name").asText();
+                String types = "";
+                if (method.equals(name)) {
+                    JsonNode inputs = memberNode.get("inputs");
+                    Iterator<JsonNode> inputsIte = inputs.elements();
+                    while (inputsIte.hasNext()) {
+                        JsonNode inputNode = inputsIte.next();
+                        String type = inputNode.get("type").asText();
+                        types = types + type + ",";
+                    }
+                    if (types.length() > 0) {
+                        return method + "(" + types.substring(0, types.length() - 1) + ")";
+                    } else {
+                        return method + "()";
+                    }
+                }
+            }
+        } catch (IOException e) {
+            logger.error("Error", e);
+            return null;
+        }
+        return null;
     }
 }

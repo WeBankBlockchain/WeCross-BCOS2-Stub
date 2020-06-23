@@ -2,9 +2,9 @@ package com.webank.wecross.stub.bcos.custom;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.stub.*;
+import com.webank.wecross.stub.bcos.AsyncCnsService;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.common.*;
-import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.verify.MerkleValidation;
@@ -12,17 +12,9 @@ import java.io.*;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.util.*;
-import org.fisco.bcos.web3j.abi.FunctionEncoder;
-import org.fisco.bcos.web3j.abi.TypeReference;
-import org.fisco.bcos.web3j.abi.datatypes.Function;
-import org.fisco.bcos.web3j.abi.datatypes.Type;
-import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
 import org.fisco.bcos.web3j.crypto.Credentials;
 import org.fisco.bcos.web3j.crypto.EncryptType;
-import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
-import org.fisco.bcos.web3j.protocol.channel.StatusCode;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.fisco.solc.compiler.CompilationResult;
 import org.fisco.solc.compiler.SolidityCompiler;
@@ -34,7 +26,9 @@ public class DeployContractHandler implements CommandHandler {
 
     private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
 
-    /** @param args fileBytes || version */
+    private AsyncCnsService asyncCnsService = new AsyncCnsService();
+
+    /** @param args contractBytes || version */
     @Override
     public void handle(
             Path path,
@@ -65,7 +59,7 @@ public class DeployContractHandler implements CommandHandler {
         checkContractVersion(
                 name,
                 version,
-                credentials,
+                account,
                 connection,
                 checkVersionException -> {
                     if (Objects.nonNull(checkVersionException)) {
@@ -81,13 +75,17 @@ public class DeployContractHandler implements CommandHandler {
                     try {
                         boolean sm = EncryptType.encryptType != 0;
 
-                        File tempFile = new File("BCOS_Stub_Temp.sol");
+                        // save contractBytes as file temporarily
+                        String tempPath = String.valueOf(System.currentTimeMillis());
+                        File tempFile = new File(tempPath + ".zip");
                         Files.write(tempFile.toPath(), contractBytes);
+                        BCOSFileUtils.unZip(tempPath + ".zip", tempPath + "/");
+                        File desContract = new File(tempPath + "/solidity/" + name + ".sol");
 
                         // compile contract
                         SolidityCompiler.Result res =
                                 SolidityCompiler.compile(
-                                        tempFile,
+                                        desContract,
                                         sm,
                                         true,
                                         SolidityCompiler.Options.ABI,
@@ -96,6 +94,14 @@ public class DeployContractHandler implements CommandHandler {
                                         SolidityCompiler.Options.METADATA);
                         // delete temp file
                         tempFile.delete();
+                        BCOSFileUtils.deleteDir(new File(tempPath));
+
+                        if (res.isFailed()) {
+                            callback.onResponse(
+                                    new Exception("compiling contract failed, " + res.getErrors()),
+                                    null);
+                            return;
+                        }
 
                         CompilationResult result = CompilationResult.parse(res.getOutput());
                         metadata = result.getContract(name);
@@ -133,26 +139,39 @@ public class DeployContractHandler implements CommandHandler {
                                 }
 
                                 // register cns
-                                Object[] registerArgs =
-                                        new Object[] {version, address, metadata.abi};
-                                RegisterCnsHandler registerCnsHandler = new RegisterCnsHandler();
-                                registerCnsHandler.handle(
-                                        path,
-                                        registerArgs,
+                                asyncCnsService.insert(
+                                        name,
+                                        address,
+                                        version,
+                                        metadata.abi,
                                         account,
                                         blockHeaderManager,
                                         connection,
-                                        abiMap,
-                                        (registerException, registerResponse) -> {
-                                            if (Objects.nonNull(registerException)) {
+                                        insertException -> {
+                                            if (Objects.nonNull(insertException)) {
                                                 callback.onResponse(
                                                         new Exception(
                                                                 "registering cns failed: "
-                                                                        + registerException
+                                                                        + insertException
                                                                                 .getMessage()),
                                                         null);
-                                            } else {
-                                                callback.onResponse(null, address);
+                                                return;
+                                            }
+
+                                            callback.onResponse(null, address);
+                                            if (BCOSConstant.BCOS_PROXY_NAME.equals(name)) {
+                                                // save abi
+                                                try {
+                                                    File abiFile =
+                                                            new File(
+                                                                    BCOSConstant.BCOS_PROXY_NAME
+                                                                            + ".abi");
+                                                    Files.write(
+                                                            abiFile.toPath(),
+                                                            metadata.abi.getBytes());
+                                                } catch (IOException e) {
+                                                    logger.warn("exception occurs", e);
+                                                }
                                             }
                                         });
                             });
@@ -166,76 +185,26 @@ public class DeployContractHandler implements CommandHandler {
     private void checkContractVersion(
             String name,
             String version,
-            Credentials credentials,
+            Account account,
             Connection connection,
             CheckContractVersionCallback callback) {
-        Function function =
-                new Function(
-                        BCOSConstant.CNS_METHOD_SELECTBYNAMEANDVERSION,
-                        Arrays.<Type>asList(new Utf8String(name), new Utf8String(version)),
-                        Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}));
-        TransactionRequest transactionRequest = new TransactionRequest();
-        transactionRequest.setMethod(BCOSConstant.CNS_METHOD_SELECTBYNAMEANDVERSION);
-        transactionRequest.setArgs(new String[] {name, version});
-        TransactionParams transaction =
-                new TransactionParams(
-                        transactionRequest,
-                        FunctionEncoder.encode(function),
-                        credentials.getAddress(),
-                        BCOSConstant.CNS_PRECOMPILED_ADDRESS);
-        Request request = null;
-        try {
-            request =
-                    requestBuilder(
-                            BCOSRequestType.CALL, objectMapper.writeValueAsBytes(transaction));
-        } catch (Exception e) {
-            logger.warn("exception occurs", e);
-            callback.onResponse(e);
-        }
 
-        connection.asyncSend(
-                request,
-                connectionResponse -> {
-                    try {
-                        if (connectionResponse.getErrorCode() != BCOSStatusCode.Success) {
-                            callback.onResponse(
-                                    new Exception(connectionResponse.getErrorMessage()));
-                            return;
-                        }
+        asyncCnsService.selectByNameAndVersion(
+                name,
+                version,
+                account,
+                connection,
+                (exception, infoList) -> {
+                    if (Objects.nonNull(exception)) {
+                        callback.onResponse(exception);
+                        return;
+                    }
 
-                        Call.CallOutput callOutput =
-                                objectMapper.readValue(
-                                        connectionResponse.getData(), Call.CallOutput.class);
-
-                        if (logger.isDebugEnabled()) {
-                            logger.debug(
-                                    "call result, status: {}, blockNumber: {}",
-                                    callOutput.getStatus(),
-                                    callOutput.getCurrentBlockNumber());
-                        }
-
-                        if (StatusCode.Success.equals(callOutput.getStatus())) {
-                            String cnsInfo =
-                                    FunctionUtility.decodeOutputAsString(callOutput.getOutput());
-                            List<CnsInfo> infoList =
-                                    objectMapper.readValue(
-                                            cnsInfo,
-                                            objectMapper
-                                                    .getTypeFactory()
-                                                    .constructCollectionType(
-                                                            List.class, CnsInfo.class));
-                            if (Objects.nonNull(infoList) && !infoList.isEmpty()) {
-                                callback.onResponse(
-                                        new Exception("contract name and version already exist"));
-                            } else {
-                                callback.onResponse(null);
-                            }
-                        } else {
-                            callback.onResponse(new Exception(callOutput.getStatus()));
-                        }
-                    } catch (Exception e) {
-                        logger.warn("exception occurs", e);
-                        callback.onResponse(new Exception(e.getMessage()));
+                    if (Objects.nonNull(infoList) && !infoList.isEmpty()) {
+                        callback.onResponse(
+                                new Exception("contract name and version already exist"));
+                    } else {
+                        callback.onResponse(null);
                     }
                 });
     }
@@ -280,7 +249,7 @@ public class DeployContractHandler implements CommandHandler {
                     Request request;
                     try {
                         request =
-                                requestBuilder(
+                                RequestFactory.requestBuilder(
                                         BCOSRequestType.SEND_TRANSACTION,
                                         objectMapper.writeValueAsBytes(transaction));
                     } catch (Exception e) {
@@ -364,12 +333,5 @@ public class DeployContractHandler implements CommandHandler {
                                 }
                             });
                 });
-    }
-
-    private Request requestBuilder(int type, byte[] content) {
-        Request request = new Request();
-        request.setType(type);
-        request.setData(content);
-        return request;
     }
 }
