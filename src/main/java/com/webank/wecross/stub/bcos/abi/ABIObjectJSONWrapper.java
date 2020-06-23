@@ -9,21 +9,23 @@ import com.webank.wecross.stub.bcos.abi.ABIObject.ListType;
 import com.webank.wecross.stub.bcos.abi.ABIObject.ObjectType;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.fisco.bcos.web3j.abi.datatypes.Address;
+import org.fisco.bcos.web3j.abi.datatypes.Bool;
 import org.fisco.bcos.web3j.abi.datatypes.Bytes;
 import org.fisco.bcos.web3j.abi.datatypes.DynamicBytes;
 import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
 import org.fisco.bcos.web3j.abi.datatypes.generated.Uint256;
+import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
+import org.fisco.bcos.web3j.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ABIObjectJSONWrapper {
-    private Logger logger = LoggerFactory.getLogger(ABIObjectJSONWrapper.class);
-    private ObjectMapper objectMapper = new ObjectMapper();
-    private Pattern suffixPattern = Pattern.compile("\\[(\\d*)\\]");
+    private static final Logger logger = LoggerFactory.getLogger(ABIObjectJSONWrapper.class);
+
+    private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
 
     public ABIObject buildCodec(JsonNode jsonNode) {
         try {
@@ -50,18 +52,35 @@ public class ABIObjectJSONWrapper {
 
             String type = argNode.get("type").asText();
             String name = argNode.get("name").asText();
+            boolean indexed = false;
+            if (argNode.has("indexed")) {
+                indexed = argNode.get("indexed").asBoolean();
+            }
 
-            if (type.startsWith("int")) {
+            NamedType namedType = new NamedType(name, type, indexed);
+            NamedType.Type typeObj = namedType.getTypeObj();
+            String baseType = typeObj.getBaseName();
+
+            if (baseType.startsWith("uint")) {
                 codecObject = new ABIObject(new Uint256(0));
-            } else if (type.startsWith("string")) {
+            } else if (baseType.startsWith("int")) {
+                codecObject = new ABIObject(new Uint256(0));
+            } else if (baseType.startsWith("bool")) {
+                codecObject = new ABIObject(new Bool(false));
+            } else if (baseType.startsWith("string")) {
                 codecObject = new ABIObject(new Utf8String(""));
-            } else if (type.startsWith("bytes")) {
+            } else if (baseType.equals("bytes")) {
+                // bytes
                 codecObject = new ABIObject(new DynamicBytes("".getBytes()));
-            } else if (type.startsWith("address")) {
+            } else if (baseType.startsWith("bytes")) {
+                // bytes<M>
+                // codecObject = new ABIObject(new Bytes(32, "".getBytes()));
+                throw new UnsupportedOperationException("Unsupported types:" + type);
+            } else if (baseType.startsWith("address")) {
                 codecObject = new ABIObject(new Address(""));
-            } else if (type.startsWith("byte")) {
-                codecObject = new ABIObject(new Bytes(32, "".getBytes()));
-            } else if (type.startsWith("tuple")) {
+            } else if (baseType.startsWith("fixed") || baseType.startsWith("ufixed")) {
+                throw new UnsupportedOperationException("Unsupported types:" + type);
+            } else if (baseType.startsWith("tuple")) {
                 codecObject = new ABIObject(ObjectType.STRUCT);
 
                 JsonNode components = argNode.get("components");
@@ -80,31 +99,18 @@ public class ABIObjectJSONWrapper {
                 }
             }
 
-            boolean isDynamicArray = false;
-            List<Integer> lengths = new LinkedList<Integer>();
-            Matcher matcher = suffixPattern.matcher(type);
-            while (matcher.find()) {
-                String lengthStr = matcher.group(1);
-                if (lengthStr.isEmpty()) {
-                    isDynamicArray = true;
-                    lengths.add(0);
+            if (typeObj.isList()) {
+                // array type
+                if (typeObj.isDynamicList()) {
+                    ABIObject arrayObject = new ABIObject(ObjectType.LIST);
+                    arrayObject.setListValueType(codecObject);
+                    codecObject = arrayObject;
                 } else {
-                    lengths.add(Integer.parseInt(lengthStr));
+                    int dimension = typeObj.multiDimension();
+
+                    // TODO: static array support
+                    throw new UnsupportedOperationException("Unsupported types:" + type);
                 }
-            }
-
-            if (lengths.size() > 0 && isDynamicArray) {
-                ABIObject arrayObject = new ABIObject(ObjectType.LIST);
-                arrayObject.setListValueType(codecObject);
-
-                codecObject = arrayObject;
-            } else if (lengths.size() > 0) {
-                int total = 1;
-                for (Integer length : lengths) {
-                    total *= length;
-                }
-
-                // TODO: static array support
             }
 
             codecObject.setName(name);
@@ -194,16 +200,37 @@ public class ABIObjectJSONWrapper {
                     }
 
                     switch (template.getValueType()) {
-                        case NUMERIC:
+                        case BOOL:
                             {
-                                if (!node.isNumber()) {
+                                if (!(node.isNumber() || node.isBoolean())) {
                                     errorReport(
                                             path,
                                             template.getValueType().toString(),
                                             node.getNodeType().toString());
                                 }
 
-                                abiObject.setNumericValue(new Uint256(node.asLong()));
+                                if (node.isBoolean()) {
+                                    abiObject.setBoolValue(new Bool(node.asBoolean()));
+                                } else {
+                                    abiObject.setBoolValue(new Bool(node.asLong() == 0));
+                                }
+
+                                break;
+                            }
+                        case NUMERIC:
+                            {
+                                if (!node.isNumber() && !node.isBigInteger()) {
+                                    errorReport(
+                                            path,
+                                            template.getValueType().toString(),
+                                            node.getNodeType().toString());
+                                }
+
+                                if (node.isNumber()) {
+                                    abiObject.setNumericValue(new Uint256(node.asLong()));
+                                } else {
+                                    abiObject.setNumericValue(new Uint256(node.bigIntegerValue()));
+                                }
 
                                 break;
                             }
@@ -316,10 +343,20 @@ public class ABIObjectJSONWrapper {
                 case VALUE:
                     {
                         switch (argObject.getValueType()) {
+                            case BOOL:
+                                {
+                                    argObject.setBoolValue(
+                                            new Bool(inputs.get(i).trim().endsWith("1")));
+                                    break;
+                                }
                             case NUMERIC:
                                 {
+                                    String value = inputs.get(i);
                                     argObject.setNumericValue(
-                                            new Uint256(Long.valueOf(inputs.get(i))));
+                                            new Uint256(
+                                                    new BigInteger(
+                                                            Numeric.cleanHexPrefix(value),
+                                                            value.startsWith("0x") ? 16 : 10)));
                                     break;
                                 }
                             case ADDRESS:
@@ -370,6 +407,11 @@ public class ABIObjectJSONWrapper {
             case VALUE:
                 {
                     switch (abiObject.getValueType()) {
+                        case BOOL:
+                            {
+                                return jsonNodeFactory.booleanNode(
+                                        abiObject.getBoolValue().getValue());
+                            }
                         case NUMERIC:
                             {
                                 return jsonNodeFactory.numberNode(
@@ -449,14 +491,14 @@ public class ABIObjectJSONWrapper {
                 case VALUE:
                     {
                         switch (argObject.getValueType()) {
+                            case BOOL:
+                                {
+                                    result.add(String.valueOf(argObject.getBoolValue().getValue()));
+                                    break;
+                                }
                             case NUMERIC:
                                 {
-                                    result.add(
-                                            String.valueOf(
-                                                    argObject
-                                                            .getNumericValue()
-                                                            .getValue()
-                                                            .longValue()));
+                                    result.add(argObject.getNumericValue().getValue().toString());
                                     break;
                                 }
                             case ADDRESS:

@@ -241,12 +241,15 @@ public class BCOSDriver implements Driver {
                                 throw new BCOSStubException(
                                         BCOSStatusCode.MethodNotExist, "method not found in abi");
                             }
-                            ABIObject obj = functions.get(0).getInput();
+
+                            // Overloading is not supported ？？？
+                            ABIObject inputObj = functions.get(0).getInput();
 
                             if (Objects.isNull(args)) {
                                 encodedArgs = "";
                             } else {
-                                ABIObject encodedObj = abiFactory.encode(obj, Arrays.asList(args));
+                                ABIObject encodedObj =
+                                        abiFactory.encode(inputObj, Arrays.asList(args));
                                 encodedArgs = encodedObj.encode();
                             }
                             String transactionID =
@@ -327,12 +330,14 @@ public class BCOSDriver implements Driver {
                                                         BCOSStatusCode.getStatusMessage(
                                                                 BCOSStatusCode.Success));
 
+                                                ABIObject outputObj = functions.get(0).getOutput();
+
                                                 // decode outputs
                                                 String output =
                                                         callOutput.getOutput().substring(130);
                                                 transactionResponse.setResult(
                                                         abiFactory
-                                                                .decode(obj, output)
+                                                                .decode(outputObj, output)
                                                                 .toArray(new String[0]));
                                             } else {
                                                 transactionResponse.setErrorCode(
@@ -799,14 +804,14 @@ public class BCOSDriver implements Driver {
                                                             BCOSStatusCode.MethodNotExist,
                                                             "method not found in abi");
                                                 }
-                                                ABIObject obj = functions.get(0).getInput();
+                                                ABIObject inputObj = functions.get(0).getInput();
 
                                                 if (Objects.isNull(args)) {
                                                     encodedArgs = "";
                                                 } else {
                                                     ABIObject encodedObj =
                                                             abiFactory.encode(
-                                                                    obj, Arrays.asList(args));
+                                                                    inputObj, Arrays.asList(args));
                                                     encodedArgs = encodedObj.encode();
                                                 }
                                                 String transactionID =
@@ -954,11 +959,19 @@ public class BCOSDriver implements Driver {
                                                                                                             receipt.getOutput()
                                                                                                                     .substring(
                                                                                                                             130);
+
+                                                                                            ABIObject
+                                                                                                    outputObj =
+                                                                                                            functions
+                                                                                                                    .get(
+                                                                                                                            0)
+                                                                                                                    .getOutput();
+
                                                                                             transactionResponse
                                                                                                     .setResult(
                                                                                                             abiFactory
                                                                                                                     .decode(
-                                                                                                                            obj,
+                                                                                                                            outputObj,
                                                                                                                             output)
                                                                                                                     .toArray(
                                                                                                                             new String
