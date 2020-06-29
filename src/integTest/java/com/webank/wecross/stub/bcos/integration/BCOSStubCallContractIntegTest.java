@@ -103,6 +103,7 @@ public class BCOSStubCallContractIntegTest {
             String method, String[] args) {
         TransactionRequest transactionRequest =
                 new TransactionRequest(method, args);
+        transactionRequest.setOptions(new HashMap<>());
         TransactionContext<TransactionRequest> requestTransactionContext =
                 new TransactionContext<>(
                         transactionRequest, account, resourceInfo, blockHeaderManager);
@@ -117,6 +118,7 @@ public class BCOSStubCallContractIntegTest {
             String path, String method, String[] args) {
         TransactionRequest transactionRequest =
                 new TransactionRequest(method, args);
+        transactionRequest.setOptions(new HashMap<>());
         transactionRequest.setPath(path);
         TransactionContext<TransactionRequest> requestTransactionContext =
                 new TransactionContext<>(
@@ -503,17 +505,17 @@ public class BCOSStubCallContractIntegTest {
         Thread.sleep(10000);
     }
 
-//    @Test
-//    public void SendTransactionByProxyTest() throws InterruptedException {
-//        String[] params = new String[]{"hello world"};
-//        TransactionContext<TransactionRequest> requestTransactionContext =
-//                createTransactionRequestContext("a.b.HelloWorld","set", params);
-//
-//        driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
-//            assertTrue(Objects.nonNull(res));
-//            assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
-//        });
-//
-//        Thread.sleep(10000);
-//    }
+    @Test
+    public void SendTransactionByProxyTest() throws InterruptedException {
+        String[] params = new String[]{"hello world"};
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTransactionRequestContext("a.b.HelloWorld","get1", params);
+
+        driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
+            assertTrue(Objects.nonNull(res));
+            assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
+        });
+
+        Thread.sleep(100000);
+    }
 }
