@@ -25,6 +25,7 @@ import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.TypeReference;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
 import org.fisco.bcos.web3j.abi.datatypes.Type;
+import org.fisco.bcos.web3j.abi.datatypes.generated.Uint256;
 import org.fisco.bcos.web3j.crypto.Credentials;
 import org.fisco.bcos.web3j.crypto.ExtendedRawTransaction;
 import org.fisco.bcos.web3j.crypto.ExtendedTransactionDecoder;
@@ -248,13 +249,18 @@ public class BCOSDriver implements Driver {
                                 ABIObject encodedObj = abiFactory.encode(obj, Arrays.asList(args));
                                 encodedArgs = encodedObj.encode();
                             }
-
+                            String transactionID =
+                                    (String)
+                                            request.getData()
+                                                    .getOptions()
+                                                    .get(BCOSConstant.TRANSACTION_ID);
+                            String id = Objects.isNull(transactionID) ? "0" : transactionID;
                             Function function =
                                     new Function(
                                             "constantCall",
                                             Arrays.<Type>asList(
                                                     new org.fisco.bcos.web3j.abi.datatypes
-                                                            .Utf8String("0"),
+                                                            .Utf8String(id),
                                                     new org.fisco.bcos.web3j.abi.datatypes
                                                             .Utf8String(path),
                                                     new org.fisco.bcos.web3j.abi.datatypes
@@ -803,6 +809,31 @@ public class BCOSDriver implements Driver {
                                                                     obj, Arrays.asList(args));
                                                     encodedArgs = encodedObj.encode();
                                                 }
+                                                String transactionID =
+                                                        (String)
+                                                                request.getData()
+                                                                        .getOptions()
+                                                                        .get(
+                                                                                BCOSConstant
+                                                                                        .TRANSACTION_ID);
+                                                String id =
+                                                        Objects.isNull(transactionID)
+                                                                ? "0"
+                                                                : transactionID;
+
+                                                String transactionSeq =
+                                                        (String)
+                                                                request.getData()
+                                                                        .getOptions()
+                                                                        .get(
+                                                                                BCOSConstant
+                                                                                        .TRANSACTION_SEQ);
+                                                int seq =
+                                                        Objects.isNull(transactionSeq)
+                                                                ? 0
+                                                                : Integer.parseInt(transactionSeq);
+
+                                                String sig = abiFactory.getSigbyMethod(method, abi);
 
                                                 Function function =
                                                         new Function(
@@ -810,20 +841,14 @@ public class BCOSDriver implements Driver {
                                                                 Arrays.<Type>asList(
                                                                         new org.fisco.bcos.web3j.abi
                                                                                 .datatypes
-                                                                                .Utf8String("0"),
-                                                                        new org.fisco.bcos.web3j.abi
-                                                                                .datatypes
-                                                                                .Utf8String("0"),
+                                                                                .Utf8String(id),
+                                                                        new Uint256(seq),
                                                                         new org.fisco.bcos.web3j.abi
                                                                                 .datatypes
                                                                                 .Utf8String(path),
                                                                         new org.fisco.bcos.web3j.abi
                                                                                 .datatypes
-                                                                                .Utf8String(
-                                                                                abiFactory
-                                                                                        .getSigbyMethod(
-                                                                                                method,
-                                                                                                abi)),
+                                                                                .Utf8String(sig),
                                                                         new org.fisco.bcos.web3j.abi
                                                                                 .datatypes
                                                                                 .DynamicBytes(
@@ -843,6 +868,8 @@ public class BCOSDriver implements Driver {
                                                             request.getData().getArgs());
                                                 }
 
+                                                String encodedAbi =
+                                                        FunctionEncoder.encode(function);
                                                 // get signed transaction hex string
                                                 String signTx =
                                                         SignTransaction.sign(
@@ -851,7 +878,7 @@ public class BCOSDriver implements Driver {
                                                                 BigInteger.valueOf(groupId),
                                                                 BigInteger.valueOf(chainId),
                                                                 BigInteger.valueOf(blockNumber),
-                                                                FunctionEncoder.encode(function));
+                                                                encodedAbi);
 
                                                 TransactionParams transaction =
                                                         new TransactionParams(
