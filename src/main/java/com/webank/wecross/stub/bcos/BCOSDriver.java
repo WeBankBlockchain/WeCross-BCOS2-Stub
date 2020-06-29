@@ -249,14 +249,12 @@ public class BCOSDriver implements Driver {
                                 ABIObject encodedObj = abiFactory.encode(obj, Arrays.asList(args));
                                 encodedArgs = encodedObj.encode();
                             }
-
                             String transactionID =
                                     (String)
                                             request.getData()
                                                     .getOptions()
                                                     .get(BCOSConstant.TRANSACTION_ID);
                             String id = Objects.isNull(transactionID) ? "0" : transactionID;
-
                             Function function =
                                     new Function(
                                             "constantCall",
@@ -811,7 +809,6 @@ public class BCOSDriver implements Driver {
                                                                     obj, Arrays.asList(args));
                                                     encodedArgs = encodedObj.encode();
                                                 }
-
                                                 String transactionID =
                                                         (String)
                                                                 request.getData()
@@ -837,6 +834,7 @@ public class BCOSDriver implements Driver {
                                                                 : Integer.parseInt(transactionSeq);
 
                                                 String sig = abiFactory.getSigbyMethod(method, abi);
+
                                                 Function function =
                                                         new Function(
                                                                 "sendTransaction",

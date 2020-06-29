@@ -518,4 +518,5 @@ public class BCOSStubCallContractIntegTest {
 
         Thread.sleep(100000);
     }
+
 }
