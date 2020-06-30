@@ -91,6 +91,11 @@ public class BCOSConnection implements Connection {
         return properties;
     }
 
+    @Override
+    public void setConnectionEventHandler(ConnectionEventHandler eventHandler) {
+        // TODO: use listpath
+    }
+
     public void setProperty(Map<String, String> properties) {
         this.properties = properties;
     }
@@ -427,5 +432,9 @@ public class BCOSConnection implements Connection {
             response.setErrorMessage(" errorMessage: " + e.getMessage());
         }
         callback.onResponse(response);
+    }
+
+    public boolean hasProxyDeployed() {
+        return getProperties().containsKey(BCOSConstant.BCOS_PROXY_NAME);
     }
 }

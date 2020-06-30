@@ -8,6 +8,7 @@ import static junit.framework.TestCase.assertTrue;
 import com.webank.wecross.stub.*;
 import com.webank.wecross.stub.bcos.AsyncCnsService;
 import com.webank.wecross.stub.bcos.BCOSConnection;
+import com.webank.wecross.stub.bcos.BCOSConnectionFactory;
 import com.webank.wecross.stub.bcos.BCOSDriver;
 import com.webank.wecross.stub.bcos.BCOSStubFactory;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
@@ -136,7 +137,7 @@ public class BCOSStubCallContractIntegTest {
         BCOSStubFactory bcosStubFactory = new BCOSStubFactory();
         driver = bcosStubFactory.newDriver();
         account = bcosStubFactory.newAccount("IntegBCOSAccount", "classpath:/accounts/bcos");
-        connection = bcosStubFactory.newConnection("./chains/bcos/");
+        connection = BCOSConnectionFactory.build("./chains/bcos/", "stub.toml", null);
 
         Web3jWrapper web3jWrapper = ((BCOSConnection) connection).getWeb3jWrapper();
         Web3jWrapperImpl web3jWrapperImpl = (Web3jWrapperImpl) web3jWrapper;

@@ -242,7 +242,7 @@ public class BCOSDriver implements Driver {
                                         BCOSStatusCode.MethodNotExist, "method not found in abi");
                             }
 
-                            // Overloading is not supported ？？？
+                            // Overloading is not supported ???
                             ABIObject inputObj = functions.get(0).getInput();
 
                             if (Objects.isNull(args)) {
@@ -1275,7 +1275,7 @@ public class BCOSDriver implements Driver {
         if (!properties.containsKey(BCOSConstant.BCOS_PROXY_NAME)) {
             throw new BCOSStubException(
                     BCOSStatusCode.InvalidParameter,
-                    " Not found proxy contract address, resource: " + BCOSConstant.BCOS_PROXY_NAME);
+                    " Not found proxy contract address. resource: " + BCOSConstant.BCOS_PROXY_NAME);
         }
 
         if (!properties.containsKey(BCOSConstant.BCOS_GROUP_ID)) {

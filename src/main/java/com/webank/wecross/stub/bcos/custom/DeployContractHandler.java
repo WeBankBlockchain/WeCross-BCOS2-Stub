@@ -79,8 +79,22 @@ public class DeployContractHandler implements CommandHandler {
                         String tempPath = String.valueOf(System.currentTimeMillis());
                         File tempFile = new File(tempPath + ".zip");
                         Files.write(tempFile.toPath(), contractBytes);
-                        BCOSFileUtils.unZip(tempPath + ".zip", tempPath + "/");
-                        File desContract = new File(tempPath + "/solidity/" + name + ".sol");
+                        ArrayList<String> subDirs =
+                                BCOSFileUtils.unZip(tempPath + ".zip", tempPath + "/");
+
+                        // We assume that there is only 1 dir in the zip
+                        if (subDirs.size() != 1) {
+                            logger.warn("Illegal contract zip with not only 1 sub dir");
+                        }
+
+                        File desContract =
+                                new File(
+                                        tempPath
+                                                + File.separator
+                                                + subDirs.get(0)
+                                                + File.separator
+                                                + name
+                                                + ".sol");
 
                         // compile contract
                         SolidityCompiler.Result res =
@@ -159,20 +173,6 @@ public class DeployContractHandler implements CommandHandler {
                                             }
 
                                             callback.onResponse(null, address);
-                                            if (BCOSConstant.BCOS_PROXY_NAME.equals(name)) {
-                                                // save abi
-                                                try {
-                                                    File abiFile =
-                                                            new File(
-                                                                    BCOSConstant.BCOS_PROXY_NAME
-                                                                            + ".abi");
-                                                    Files.write(
-                                                            abiFile.toPath(),
-                                                            metadata.abi.getBytes());
-                                                } catch (IOException e) {
-                                                    logger.warn("exception occurs", e);
-                                                }
-                                            }
                                         });
                             });
                 });

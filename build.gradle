@@ -14,7 +14,7 @@ plugins {
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'com.webank.wecross'
-version '1.0.0-rc3'
+version '1.0.0-rc4-06301-SNAPSHOT'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -63,7 +63,7 @@ configurations {
 
 dependencies {
     // implementation 'com.webank:wecross-java-stub:1.0.0-rc2'
-    implementation 'com.webank:wecross-java-stub:1.0.0-rc4-06111-SNAPSHOT'
+    implementation 'com.webank:wecross-java-stub:1.0.0-rc4-06300-SNAPSHOT'
     implementation 'org.slf4j:slf4j-api:1.7.25'
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'
@@ -81,7 +81,13 @@ sourceSets {
 
     main {
         resources {
-            exclude '/*'
+            exclude '**/*.toml'
+            exclude '**/*.xml'
+            exclude '**/*.properties'
+            exclude '**/*.yml'
+            exclude '**/*.crt'
+            exclude '**/*.key'
+            include 'WeCrossProxy.sol'
         }
     }
 
