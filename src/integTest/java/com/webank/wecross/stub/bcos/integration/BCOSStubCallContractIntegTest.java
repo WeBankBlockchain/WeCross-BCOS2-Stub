@@ -499,7 +499,8 @@ public class BCOSStubCallContractIntegTest {
         driver.asyncCallByProxy(requestTransactionContext, connection, (exception, res) -> {
             assertTrue(Objects.nonNull(res));
             assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
-            assertTrue(res.getResult().length != 0);
+            assertTrue(res.getResult().length == 1);
+            assertTrue(res.getResult()[0].equals(params[0] + params[1]));
         });
 
         Thread.sleep(10000);
@@ -516,7 +517,38 @@ public class BCOSStubCallContractIntegTest {
             assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
         });
 
-        Thread.sleep(100000);
+        Thread.sleep(10000);
+    }
+
+    @Test
+    public void SendTransactionByProxyTest0() throws InterruptedException {
+        String[] params = new String[]{"hello", "world"};
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTransactionRequestContext("a.b.HelloWorld","get2", params);
+
+        driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
+            assertTrue(Objects.nonNull(res));
+            assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
+            assertTrue(res.getResult().length == 1);
+            assertTrue(res.getResult()[0].equals(params[0] + params[1]));
+        });
+
+        Thread.sleep(10000);
+    }
+
+    @Test
+    public void SendTransactionByProxyTes1() throws InterruptedException {
+        String[] params = new String[]{"hello"};
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTransactionRequestContext("a.b.HelloWorld","set", params);
+
+        driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
+            assertTrue(Objects.nonNull(res));
+            assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
+            assertTrue(res.getResult().length == 0);
+        });
+
+        Thread.sleep(10000);
     }
 
 }

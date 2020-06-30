@@ -7,6 +7,7 @@ import org.fisco.bcos.web3j.abi.TypeDecoder;
 import org.fisco.bcos.web3j.abi.TypeEncoder;
 import org.fisco.bcos.web3j.abi.TypeReference;
 import org.fisco.bcos.web3j.abi.datatypes.Address;
+import org.fisco.bcos.web3j.abi.datatypes.Bool;
 import org.fisco.bcos.web3j.abi.datatypes.Bytes;
 import org.fisco.bcos.web3j.abi.datatypes.DynamicBytes;
 import org.fisco.bcos.web3j.abi.datatypes.NumericType;
@@ -23,6 +24,7 @@ public class ABIObject {
     };
 
     public enum ValueType {
+        BOOL,
         NUMERIC,
         BYTES,
         ADDRESS,
@@ -42,6 +44,7 @@ public class ABIObject {
     private NumericType numericValue;
     private Bytes bytesValue;
     private Address addressValue;
+    private Bool boolValue;
 
     private boolean isDynamicStruct;
     private List<ABIObject> structFields; // for struct
@@ -70,6 +73,12 @@ public class ABIObject {
                     break;
                 }
         }
+    }
+
+    public ABIObject(Bool bool) {
+        this.type = ObjectType.VALUE;
+        this.valueType = ValueType.BOOL;
+        this.boolValue = bool;
     }
 
     public ABIObject(NumericType number) {
@@ -152,6 +161,11 @@ public class ABIObject {
                                 fixedBuffer.append(TypeEncoder.encode(numericValue));
                                 break;
                             }
+                        case BOOL:
+                            {
+                                fixedBuffer.append(TypeEncoder.encode(boolValue));
+                                break;
+                            }
                         case BYTES:
                             {
                                 fixedBuffer.append(TypeEncoder.encode(bytesValue));
@@ -220,6 +234,21 @@ public class ABIObject {
             case VALUE:
                 {
                     switch (valueType) {
+                        case BOOL:
+                            {
+                                abiObject.setBoolValue(
+                                        ((List<Bool>)
+                                                        TypeDecoder.decodeStaticArray(
+                                                                        input,
+                                                                        0,
+                                                                        new TypeReference<
+                                                                                StaticArray<
+                                                                                        Bool>>() {}.getType(),
+                                                                        1)
+                                                                .getValue())
+                                                .get(0));
+                                break;
+                            }
                         case NUMERIC:
                             {
                                 abiObject.setNumericValue(
@@ -388,6 +417,16 @@ public class ABIObject {
 
     public NumericType getNumericValue() {
         return numericValue;
+    }
+
+    public Bool getBoolValue() {
+        return boolValue;
+    }
+
+    public void setBoolValue(Bool boolValue) {
+        this.type = ObjectType.VALUE;
+        this.valueType = ValueType.BOOL;
+        this.boolValue = boolValue;
     }
 
     public void setNumericValue(NumericType numericValue) {
