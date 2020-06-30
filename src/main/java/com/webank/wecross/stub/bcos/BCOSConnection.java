@@ -428,4 +428,8 @@ public class BCOSConnection implements Connection {
         }
         callback.onResponse(response);
     }
+
+    public boolean hasProxyDeployed() {
+        return getProperties().containsKey(BCOSConstant.BCOS_PROXY_NAME);
+    }
 }

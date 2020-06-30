@@ -3,12 +3,15 @@ package com.webank.wecross.stub.bcos;
 import com.webank.wecross.stub.*;
 import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
 import com.webank.wecross.stub.bcos.custom.CommandHandlerDispatcher;
+import com.webank.wecross.stub.bcos.proxy.ProxyContractDeployment;
 import java.io.File;
 import java.io.FileWriter;
+import java.net.URL;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.Security;
+import org.apache.commons.io.FileUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
@@ -42,7 +45,18 @@ public class BCOSGMStubFactory implements StubFactory {
     public Connection newConnection(String path) {
         try {
             logger.info("New connection: {} type:{}", path, EncryptType.encryptType);
-            return BCOSConnectionFactory.build(path, "stub.toml", null);
+            BCOSConnection connection = BCOSConnectionFactory.build(path, "stub.toml", null);
+
+            // check proxy contract
+            if (!connection.hasProxyDeployed()) {
+                String errorMsg =
+                        "WeCrossProxy error: WeCrossProxy contract has not been deployed!";
+                String help =
+                        "Please deploy WeCrossProxy contract by: " + ProxyContractDeployment.USAGE;
+                System.out.println(errorMsg + "\n" + help);
+                throw new Exception(errorMsg);
+            }
+            return connection;
         } catch (Exception e) {
             logger.error(" newConnection, e: ", e);
             return null;
@@ -152,17 +166,35 @@ public class BCOSGMStubFactory implements StubFactory {
             } finally {
                 fileWriter.close();
             }
+
+            generateProxyContract(path);
+
         } catch (Exception e) {
             logger.error("Exception: ", e);
+        }
+    }
+
+    public void generateProxyContract(String path) {
+        try {
+            String proxyPath = "WeCrossProxy.sol";
+            URL proxyDir = getClass().getResource(File.separator + proxyPath);
+            File dest =
+                    new File(path + File.separator + "WeCrossProxy" + File.separator + proxyPath);
+            FileUtils.copyURLToFile(proxyDir, dest);
+        } catch (Exception e) {
+            System.out.println(e);
         }
     }
 
     public static void main(String[] args) throws Exception {
         System.out.println(
                 "This is BCOS2.0 Guomi Stub Plugin. Please copy this file to router/plugin/");
+        System.out.println("For deploy proxy contract:");
+        System.out.println(
+                "    java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.guomi.proxy.ProxyContractDeployment");
         System.out.println(
                 "For pure chain performance test, please run the command for more info:");
         System.out.println(
-                "    java -cp conf/:lib/*:plugin/bcos-stub-gm.jar com.webank.wecross.stub.bcos.guomi.performance.guomi.PerformanceTest");
+                "    java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.guomi.performance.guomi.PerformanceTest");
     }
 }

@@ -56,7 +56,6 @@ public class BCOSConnectionFactory {
         if (Objects.nonNull(address)) {
             bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_NAME, address);
         }
-
         return bcosConnection;
     }
 

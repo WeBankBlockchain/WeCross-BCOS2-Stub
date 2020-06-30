@@ -1,6 +1,7 @@
 package com.webank.wecross.stub.bcos.common;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Objects;
 import java.util.zip.*;
@@ -10,7 +11,7 @@ public class BCOSFileUtils {
     private static final String SUFFIX = ".zip";
     private static final int BUFFER_SIZE = 500000;
 
-    public static void zipDir(String dirPath) throws IOException {
+    public static String zipDir(String dirPath) throws IOException {
         File fileToZip = new File(dirPath);
         String name = fileToZip.getName();
         FileOutputStream fos = new FileOutputStream(name + SUFFIX);
@@ -18,6 +19,8 @@ public class BCOSFileUtils {
         zipFile(fileToZip, name, zipOut);
         zipOut.close();
         fos.close();
+
+        return name + ".zip";
     }
 
     private static void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut)
@@ -50,11 +53,13 @@ public class BCOSFileUtils {
         }
     }
 
-    public static void unZip(String unZipFile, String desPath) throws IOException {
+    public static ArrayList<String> unZip(String unZipFile, String desPath) throws IOException {
+        ArrayList<String> innterFiles = new ArrayList<>();
         try (ZipFile zipFile = new ZipFile(unZipFile)) {
             Enumeration<? extends ZipEntry> emu = zipFile.entries();
             while (emu.hasMoreElements()) {
                 ZipEntry entry = emu.nextElement();
+                innterFiles.add(entry.getName());
                 if (entry.isDirectory()) {
                     new File(desPath + entry.getName()).mkdirs();
                     continue;
@@ -77,6 +82,7 @@ public class BCOSFileUtils {
                 }
                 bis.close();
             }
+            return innterFiles;
         }
     }
 
