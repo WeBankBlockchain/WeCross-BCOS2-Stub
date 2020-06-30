@@ -91,6 +91,11 @@ public class BCOSConnection implements Connection {
         return properties;
     }
 
+    @Override
+    public void setConnectionEventHandler(ConnectionEventHandler eventHandler) {
+        // TODO: use listpath
+    }
+
     public void setProperty(Map<String, String> properties) {
         this.properties = properties;
     }
