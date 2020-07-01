@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 import org.fisco.bcos.web3j.protocol.core.methods.response.Transaction;
@@ -51,6 +52,7 @@ public class BCOSStubCallContractIntegTest {
     private Connection connection = null;
     private ResourceInfo resourceInfo = null;
     private BlockHeaderManager blockHeaderManager = null;
+    private ConnectionEventHandlerImplMock connectionEventHandlerImplMock = new ConnectionEventHandlerImplMock();
 
     public HelloWeCross getHelloWeCross() {
         return helloWeCross;
@@ -138,6 +140,7 @@ public class BCOSStubCallContractIntegTest {
         driver = bcosStubFactory.newDriver();
         account = bcosStubFactory.newAccount("IntegBCOSAccount", "classpath:/accounts/bcos");
         connection = BCOSConnectionFactory.build("./chains/bcos/", "stub.toml", null);
+        connection.setConnectionEventHandler(connectionEventHandlerImplMock);
 
         Web3jWrapper web3jWrapper = ((BCOSConnection) connection).getWeb3jWrapper();
         Web3jWrapperImpl web3jWrapperImpl = (Web3jWrapperImpl) web3jWrapper;
@@ -470,19 +473,6 @@ public class BCOSStubCallContractIntegTest {
         Thread.sleep(10000);
     }
 
-//    @Test
-//    public void compressTest() throws IOException {
-//        PathMatchingResourcePatternResolver resolver =
-//                new PathMatchingResourcePatternResolver();
-//        String path = resolver.getResource("classpath:solidity").getFile().getAbsolutePath();
-//        BCOSFileUtils.zipDir(path);
-//        File file = new File("solidity.zip");
-//        byte[] fileContent = Files.readAllBytes(file.toPath());
-//        File file1 = new File("solidity1.zip");
-//        Files.write(file1.toPath(), fileContent);
-//        BCOSFileUtils.unZip("solidity1.zip", "./");
-//    }
-
     @Test
     public void CnsServiceTest() {
         AsyncCnsService asyncCnsService = new AsyncCnsService();
@@ -550,6 +540,13 @@ public class BCOSStubCallContractIntegTest {
         });
 
         Thread.sleep(10000);
+    }
+
+    @Test
+    public void setConnectionEventHandlerTest() throws InterruptedException {
+        Thread.sleep(30000);
+        List<ResourceInfo> resourceInfos = connectionEventHandlerImplMock.getResourceInfos();
+        assertTrue(resourceInfos.size() == 1);
     }
 
 }
