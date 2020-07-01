@@ -1,18 +1,17 @@
-package com.webank.wecross.stub.test.abi;
+package com.webank.wecross.stub.abi;
 
+import com.webank.wecross.stub.bcos.abi.ABIDefinition;
+import com.webank.wecross.stub.bcos.abi.ABIDefinitionFactory;
 import com.webank.wecross.stub.bcos.abi.ABIObject;
-import com.webank.wecross.stub.bcos.abi.ABIObjectJSONWrapper;
-import com.webank.wecross.stub.bcos.abi.Contract;
-import com.webank.wecross.stub.bcos.abi.Function;
-import java.io.ByteArrayInputStream;
+import com.webank.wecross.stub.bcos.abi.ABIObjectCodecJsonWrapper;
+import com.webank.wecross.stub.bcos.abi.ABIObjectFactory;
+import com.webank.wecross.stub.bcos.abi.ContractABIDefinition;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ABIObjectJSONTest {
+public class ABIObjectCodecTest {
     String abiDesc =
             "[\n"
                     + "        {\n"
@@ -265,15 +264,15 @@ public class ABIObjectJSONTest {
 
     @Test
     public void testLoadABIJSON() {
-        ABIObjectJSONWrapper abiFactory = new ABIObjectJSONWrapper();
+        ContractABIDefinition contractABIDefinition = ABIDefinitionFactory.create(abiDesc);
 
-        Contract contract = abiFactory.loadABIFile(new ByteArrayInputStream(abiDesc.getBytes()));
+        Assert.assertEquals(2, contractABIDefinition.getFunctions().size());
+        Assert.assertEquals(1, contractABIDefinition.getEvents().size());
 
-        Assert.assertEquals(2, contract.getFunctions().size());
-        Assert.assertEquals(1, contract.getEvents().size());
-
-        List<Function> functions = contract.getFunctions().get("test");
-        ABIObject obj = functions.get(0).getInput().decode(encoded);
+        List<ABIDefinition> functions = contractABIDefinition.getFunctions().get("test");
+        ABIObjectFactory abiObjectFactory = new ABIObjectFactory();
+        ABIObject inputABIObject = abiObjectFactory.createInputABIObject(functions.get(0));
+        ABIObject obj = inputABIObject.decode(encoded);
 
         String buffer = obj.encode();
 
@@ -282,12 +281,13 @@ public class ABIObjectJSONTest {
 
     @Test
     public void testEncodeByJSON() throws Exception {
-        ABIObjectJSONWrapper abiFactory = new ABIObjectJSONWrapper();
+        ABIObjectCodecJsonWrapper abiFactory = new ABIObjectCodecJsonWrapper();
 
-        Contract contract = abiFactory.loadABIFile(new ByteArrayInputStream(abiDesc.getBytes()));
+        ContractABIDefinition contractABIDefinition = ABIDefinitionFactory.create(abiDesc);
 
-        List<Function> functions = contract.getFunctions().get("test");
-        ABIObject obj = functions.get(0).getInput();
+        List<ABIDefinition> functions = contractABIDefinition.getFunctions().get("test");
+        ABIObjectFactory abiObjectFactory = new ABIObjectFactory();
+        ABIObject inputABIObject = abiObjectFactory.createInputABIObject(functions.get(0));
 
         List<String> args = new ArrayList<String>();
         args.add("100");
@@ -298,7 +298,7 @@ public class ABIObjectJSONTest {
                 "[{\"name\": \"Hello world!\", \"count\": 100, \"items\": [{\"a\": 1, \"b\": 2, \"c\": 3}]}, {\"name\": \"Hello world2\", \"count\": 200, \"items\": [{\"a\": 5, \"b\": 6, \"c\": 7}]}]");
         args.add("Hello world!");
 
-        ABIObject encodedObj = abiFactory.encode(obj, args);
+        ABIObject encodedObj = abiFactory.encode(inputABIObject, args);
 
         Assert.assertEquals(encoded, encodedObj.encode());
     }
@@ -543,12 +543,12 @@ public class ABIObjectJSONTest {
                         + "	\"type\": \"constructor\"\n"
                         + "}]";
 
-        ABIObjectJSONWrapper abiFactory = new ABIObjectJSONWrapper();
+        ABIObjectCodecJsonWrapper abiFactory = new ABIObjectCodecJsonWrapper();
+        ContractABIDefinition contractABIDefinition = ABIDefinitionFactory.create(proxyDesc);
 
-        Contract contract = abiFactory.loadABIFile(new ByteArrayInputStream(proxyDesc.getBytes()));
-
-        List<Function> functions = contract.getFunctions().get("constantCall");
-        ABIObject obj = functions.get(0).getInput();
+        List<ABIDefinition> functions = contractABIDefinition.getFunctions().get("constantCall");
+        ABIObjectFactory abiObjectFactory = new ABIObjectFactory();
+        ABIObject inputABIObject = abiObjectFactory.createInputABIObject(functions.get(0));
 
         List<String> args = new ArrayList<String>();
         args.add("arg112345678901234567890123456789012345678901234567890");
@@ -556,24 +556,11 @@ public class ABIObjectJSONTest {
         args.add("arg312345678901234567890123456789012345678901234567890");
         args.add("0x123456789874321");
 
-        ABIObject encodedObj = abiFactory.encode(obj, args);
+        ABIObject encodedObj = abiFactory.encode(inputABIObject, args);
         String buffer = encodedObj.encode();
 
-        List<String> decodeArgs = abiFactory.decode(obj, buffer);
+        List<String> decodeArgs = abiFactory.decode(inputABIObject, buffer);
 
         Assert.assertArrayEquals(args.toArray(), decodeArgs.toArray());
-    }
-
-    public static void main(String[] args) {
-        Pattern pattern = Pattern.compile("\\[(\\d*)\\]");
-
-        String str = "tuple[10]";
-
-        Matcher matcher = pattern.matcher(str);
-
-        System.out.println("start...");
-        while (matcher.find()) {
-            System.out.println("count: " + matcher.group(1));
-        }
     }
 }

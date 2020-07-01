@@ -4,9 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.webank.wecross.stub.*;
+import com.webank.wecross.stub.bcos.abi.ABIDefinition;
+import com.webank.wecross.stub.bcos.abi.ABIDefinitionFactory;
 import com.webank.wecross.stub.bcos.abi.ABIObject;
-import com.webank.wecross.stub.bcos.abi.ABIObjectJSONWrapper;
-import com.webank.wecross.stub.bcos.abi.Contract;
+import com.webank.wecross.stub.bcos.abi.ABIObjectCodecJsonWrapper;
+import com.webank.wecross.stub.bcos.abi.ABIObjectFactory;
+import com.webank.wecross.stub.bcos.abi.ContractABIDefinition;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.common.*;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
@@ -16,7 +19,6 @@ import com.webank.wecross.stub.bcos.custom.CommandHandlerDispatcher;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.verify.MerkleValidation;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.*;
@@ -48,7 +50,7 @@ public class BCOSDriver implements Driver {
 
     private AsyncCnsService asyncCnsService = new AsyncCnsService();
 
-    ABIObjectJSONWrapper abiFactory = new ABIObjectJSONWrapper();
+    ABIObjectCodecJsonWrapper abiFactory = new ABIObjectCodecJsonWrapper();
 
     private Map<String, String> abiMap = new HashMap<>();
 
@@ -230,29 +232,30 @@ public class BCOSDriver implements Driver {
                             }
 
                             // encode
-                            String encodedArgs;
                             String[] args = request.getData().getArgs();
                             String method = request.getData().getMethod();
-                            Contract contract =
-                                    abiFactory.loadABIFile(
-                                            new ByteArrayInputStream(abi.getBytes()));
-                            List<com.webank.wecross.stub.bcos.abi.Function> functions =
-                                    contract.getFunctions().get(method);
+                            ContractABIDefinition contractABIDefinition =
+                                    ABIDefinitionFactory.create(abi);
+
+                            List<ABIDefinition> functions =
+                                    contractABIDefinition.getFunctions().get(method);
                             if (Objects.isNull(functions) || functions.isEmpty()) {
                                 throw new BCOSStubException(
                                         BCOSStatusCode.MethodNotExist, "method not found in abi");
                             }
 
+                            ABIObjectFactory abiObjectFactory = new ABIObjectFactory();
                             // Overloading is not supported ???
-                            ABIObject inputObj = functions.get(0).getInput();
+                            ABIObject inputObj =
+                                    abiObjectFactory.createInputABIObject(functions.get(0));
 
-                            if (Objects.isNull(args)) {
-                                encodedArgs = "";
-                            } else {
+                            String encodedArgs = "";
+                            if (!Objects.isNull(args)) {
                                 ABIObject encodedObj =
                                         abiFactory.encode(inputObj, Arrays.asList(args));
                                 encodedArgs = encodedObj.encode();
                             }
+
                             String transactionID =
                                     (String)
                                             request.getData()
@@ -269,7 +272,9 @@ public class BCOSDriver implements Driver {
                                                             .Utf8String(path.toString()),
                                                     new org.fisco.bcos.web3j.abi.datatypes
                                                             .Utf8String(
-                                                            abiFactory.getSigbyMethod(method, abi)),
+                                                            functions
+                                                                    .get(0)
+                                                                    .getMethodSignatureAsString()),
                                                     new org.fisco.bcos.web3j.abi.datatypes
                                                             .DynamicBytes(
                                                             Numeric.hexStringToByteArray(
@@ -331,7 +336,9 @@ public class BCOSDriver implements Driver {
                                                         BCOSStatusCode.getStatusMessage(
                                                                 BCOSStatusCode.Success));
 
-                                                ABIObject outputObj = functions.get(0).getOutput();
+                                                ABIObject outputObj =
+                                                        abiObjectFactory.createOutputABIObject(
+                                                                functions.get(0));
 
                                                 // decode outputs
                                                 String output =
@@ -789,32 +796,36 @@ public class BCOSDriver implements Driver {
                                                 }
 
                                                 // encode
-                                                String encodedArgs;
                                                 String[] args = request.getData().getArgs();
                                                 String method = request.getData().getMethod();
-                                                Contract contract =
-                                                        abiFactory.loadABIFile(
-                                                                new ByteArrayInputStream(
-                                                                        abi.getBytes()));
-                                                List<com.webank.wecross.stub.bcos.abi.Function>
-                                                        functions =
-                                                                contract.getFunctions().get(method);
+                                                ContractABIDefinition contractABIDefinition =
+                                                        ABIDefinitionFactory.create(abi);
+
+                                                List<ABIDefinition> functions =
+                                                        contractABIDefinition
+                                                                .getFunctions()
+                                                                .get(method);
                                                 if (Objects.isNull(functions)
                                                         || functions.isEmpty()) {
                                                     throw new BCOSStubException(
                                                             BCOSStatusCode.MethodNotExist,
                                                             "method not found in abi");
                                                 }
-                                                ABIObject inputObj = functions.get(0).getInput();
 
-                                                if (Objects.isNull(args)) {
-                                                    encodedArgs = "";
-                                                } else {
+                                                ABIObjectFactory abiObjectFactory =
+                                                        new ABIObjectFactory();
+                                                ABIObject inputObj =
+                                                        abiObjectFactory.createInputABIObject(
+                                                                functions.get(0));
+
+                                                String encodedArgs = "";
+                                                if (!Objects.isNull(args)) {
                                                     ABIObject encodedObj =
                                                             abiFactory.encode(
                                                                     inputObj, Arrays.asList(args));
                                                     encodedArgs = encodedObj.encode();
                                                 }
+
                                                 String transactionID =
                                                         (String)
                                                                 request.getData()
@@ -839,8 +850,6 @@ public class BCOSDriver implements Driver {
                                                                 ? 0
                                                                 : Integer.parseInt(transactionSeq);
 
-                                                String sig = abiFactory.getSigbyMethod(method, abi);
-
                                                 Function function =
                                                         new Function(
                                                                 "sendTransaction",
@@ -855,7 +864,10 @@ public class BCOSDriver implements Driver {
                                                                                 path.toString()),
                                                                         new org.fisco.bcos.web3j.abi
                                                                                 .datatypes
-                                                                                .Utf8String(sig),
+                                                                                .Utf8String(
+                                                                                functions
+                                                                                        .get(0)
+                                                                                        .getMethodSignatureAsString()),
                                                                         new org.fisco.bcos.web3j.abi
                                                                                 .datatypes
                                                                                 .DynamicBytes(
@@ -964,10 +976,11 @@ public class BCOSDriver implements Driver {
 
                                                                                             ABIObject
                                                                                                     outputObj =
-                                                                                                            functions
-                                                                                                                    .get(
-                                                                                                                            0)
-                                                                                                                    .getOutput();
+                                                                                                            abiObjectFactory
+                                                                                                                    .createOutputABIObject(
+                                                                                                                            functions
+                                                                                                                                    .get(
+                                                                                                                                            0));
 
                                                                                             transactionResponse
                                                                                                     .setResult(

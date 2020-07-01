@@ -6,9 +6,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.webank.wecross.stub.bcos.abi.ABIObject.ListType;
-import com.webank.wecross.stub.bcos.abi.ABIObject.ObjectType;
-import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.*;
 import org.fisco.bcos.web3j.abi.datatypes.Address;
@@ -22,162 +19,10 @@ import org.fisco.bcos.web3j.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ABIObjectJSONWrapper {
-    private static final Logger logger = LoggerFactory.getLogger(ABIObjectJSONWrapper.class);
+public class ABIObjectCodecJsonWrapper {
+    private static final Logger logger = LoggerFactory.getLogger(ABIObjectCodecJsonWrapper.class);
 
     private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
-
-    public ABIObject buildCodec(JsonNode jsonNode) {
-        try {
-            ABIObject abiObject = new ABIObject(ObjectType.STRUCT);
-            Iterator<JsonNode> iterator = jsonNode.iterator();
-
-            while (iterator.hasNext()) {
-                JsonNode argNode = iterator.next();
-
-                abiObject.getStructFields().add(buildArgCodec(argNode));
-            }
-
-            return abiObject;
-        } catch (Exception e) {
-            logger.error("Error", e);
-        }
-
-        return null;
-    }
-
-    public ABIObject buildArgCodec(JsonNode argNode) {
-        try {
-            ABIObject codecObject = null;
-
-            String type = argNode.get("type").asText();
-            String name = argNode.get("name").asText();
-            boolean indexed = false;
-            if (argNode.has("indexed")) {
-                indexed = argNode.get("indexed").asBoolean();
-            }
-
-            NamedType namedType = new NamedType(name, type, indexed);
-            NamedType.Type typeObj = namedType.getTypeObj();
-            String baseType = typeObj.getBaseName();
-
-            if (baseType.startsWith("uint")) {
-                codecObject = new ABIObject(new Uint256(0));
-            } else if (baseType.startsWith("int")) {
-                codecObject = new ABIObject(new Uint256(0));
-            } else if (baseType.startsWith("bool")) {
-                codecObject = new ABIObject(new Bool(false));
-            } else if (baseType.startsWith("string")) {
-                codecObject = new ABIObject(new Utf8String(""));
-            } else if (baseType.equals("bytes")) {
-                // bytes
-                codecObject = new ABIObject(new DynamicBytes("".getBytes()));
-            } else if (baseType.startsWith("bytes")) {
-                // bytes<M>
-                // codecObject = new ABIObject(new Bytes(32, "".getBytes()));
-                throw new UnsupportedOperationException("Unsupported types:" + type);
-            } else if (baseType.startsWith("address")) {
-                codecObject = new ABIObject(new Address(""));
-            } else if (baseType.startsWith("fixed") || baseType.startsWith("ufixed")) {
-                throw new UnsupportedOperationException("Unsupported types:" + type);
-            } else if (baseType.startsWith("tuple")) {
-                codecObject = new ABIObject(ObjectType.STRUCT);
-
-                JsonNode components = argNode.get("components");
-                Iterator<JsonNode> componentsIterator = components.elements();
-
-                while (componentsIterator.hasNext()) {
-                    JsonNode innerArg = componentsIterator.next();
-
-                    ABIObject innerObject = buildArgCodec(innerArg);
-
-                    codecObject.getStructFields().add(innerObject);
-
-                    if (innerObject.getType() == ObjectType.LIST || innerObject.isDynamic()) {
-                        codecObject.setDynamic(true);
-                    }
-                }
-            }
-
-            if (typeObj.isList()) {
-                // array type
-                if (typeObj.isDynamicList()) {
-                    ABIObject arrayObject = new ABIObject(ObjectType.LIST);
-                    arrayObject.setListValueType(codecObject);
-                    codecObject = arrayObject;
-                } else {
-                    int dimension = typeObj.multiDimension();
-
-                    // TODO: static array support
-                    throw new UnsupportedOperationException("Unsupported types:" + type);
-                }
-            }
-
-            codecObject.setName(name);
-
-            return codecObject;
-        } catch (Exception e) {
-            logger.error("Error", e);
-        }
-
-        return null;
-    }
-
-    public Contract loadABIFile(InputStream inputStream) {
-        Contract contract = new Contract();
-
-        try {
-            JsonNode jsonNode = objectMapper.readTree(inputStream);
-            if (!jsonNode.isArray()) {
-                return null;
-            }
-
-            Iterator<JsonNode> iterator = jsonNode.elements();
-            while (iterator.hasNext()) {
-                JsonNode memberNode = iterator.next();
-
-                String type = memberNode.get("type").asText();
-                if (type.equals("function")) {
-                    Function function = new Function();
-
-                    String name = memberNode.get("name").asText();
-
-                    if (memberNode.has("inputs")) {
-                        JsonNode inputNode = memberNode.get("inputs");
-                        function.setInput(buildCodec(inputNode));
-                    }
-
-                    if (memberNode.has("outputs")) {
-                        JsonNode outputNode = memberNode.get("outputs");
-                        function.setOutput(buildCodec(outputNode));
-                    }
-
-                    List<Function> functions = contract.getFunctions().get(name);
-                    if (functions == null) {
-                        contract.getFunctions().put(name, new LinkedList<Function>());
-                        functions = contract.getFunctions().get(name);
-                    }
-
-                    functions.add(function);
-                } else if (type.equals("event")) {
-                    Event event = new Event();
-
-                    String name = memberNode.get("name").asText();
-
-                    if (memberNode.has("inputs")) {
-                        JsonNode inputNode = memberNode.get("inputs");
-                        event.setInput(buildCodec(inputNode));
-                    }
-
-                    contract.getEvents().put(name, event);
-                }
-            }
-        } catch (IOException e) {
-            logger.error("Error", e);
-        }
-
-        return contract;
-    }
 
     private void errorReport(String path, String expected, String actual) throws Exception {
         String errorMessage =
@@ -553,40 +398,5 @@ public class ABIObjectJSONWrapper {
         }
 
         return result;
-    }
-
-    public String getSigbyMethod(String method, String abi) {
-        try {
-            JsonNode jsonNode = objectMapper.readTree(abi);
-            if (!jsonNode.isArray()) {
-                return null;
-            }
-
-            Iterator<JsonNode> iterator = jsonNode.elements();
-            while (iterator.hasNext()) {
-                JsonNode memberNode = iterator.next();
-
-                String name = memberNode.get("name").asText();
-                String types = "";
-                if (method.equals(name)) {
-                    JsonNode inputs = memberNode.get("inputs");
-                    Iterator<JsonNode> inputsIte = inputs.elements();
-                    while (inputsIte.hasNext()) {
-                        JsonNode inputNode = inputsIte.next();
-                        String type = inputNode.get("type").asText();
-                        types = types + type + ",";
-                    }
-                    if (types.length() > 0) {
-                        return method + "(" + types.substring(0, types.length() - 1) + ")";
-                    } else {
-                        return method + "()";
-                    }
-                }
-            }
-        } catch (IOException e) {
-            logger.error("Error", e);
-            return null;
-        }
-        return null;
     }
 }

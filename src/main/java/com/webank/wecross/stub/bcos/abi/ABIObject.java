@@ -5,13 +5,11 @@ import java.util.LinkedList;
 import java.util.List;
 import org.fisco.bcos.web3j.abi.TypeDecoder;
 import org.fisco.bcos.web3j.abi.TypeEncoder;
-import org.fisco.bcos.web3j.abi.TypeReference;
 import org.fisco.bcos.web3j.abi.datatypes.Address;
 import org.fisco.bcos.web3j.abi.datatypes.Bool;
 import org.fisco.bcos.web3j.abi.datatypes.Bytes;
 import org.fisco.bcos.web3j.abi.datatypes.DynamicBytes;
 import org.fisco.bcos.web3j.abi.datatypes.NumericType;
-import org.fisco.bcos.web3j.abi.datatypes.StaticArray;
 import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
 import org.fisco.bcos.web3j.abi.datatypes.generated.Bytes32;
 import org.fisco.bcos.web3j.abi.datatypes.generated.Uint256;
@@ -236,62 +234,25 @@ public class ABIObject {
                     switch (valueType) {
                         case BOOL:
                             {
-                                abiObject.setBoolValue(
-                                        ((List<Bool>)
-                                                        TypeDecoder.decodeStaticArray(
-                                                                        input,
-                                                                        0,
-                                                                        new TypeReference<
-                                                                                StaticArray<
-                                                                                        Bool>>() {}.getType(),
-                                                                        1)
-                                                                .getValue())
-                                                .get(0));
+                                abiObject.setBoolValue(TypeDecoder.decode(input, 0, Bool.class));
                                 break;
                             }
                         case NUMERIC:
                             {
                                 abiObject.setNumericValue(
-                                        ((List<Uint256>)
-                                                        TypeDecoder.decodeStaticArray(
-                                                                        input,
-                                                                        0,
-                                                                        new TypeReference<
-                                                                                StaticArray<
-                                                                                        Uint256>>() {}.getType(),
-                                                                        1)
-                                                                .getValue())
-                                                .get(0));
+                                        TypeDecoder.decode(input, 0, Uint256.class));
                                 break;
                             }
                         case BYTES:
                             {
                                 abiObject.setBytesValue(
-                                        ((List<Bytes32>)
-                                                        TypeDecoder.decodeStaticArray(
-                                                                        input,
-                                                                        0,
-                                                                        new TypeReference<
-                                                                                StaticArray<
-                                                                                        Bytes32>>() {}.getType(),
-                                                                        1)
-                                                                .getValue())
-                                                .get(0));
+                                        TypeDecoder.decode(input, 0, Bytes32.class));
                                 break;
                             }
                         case ADDRESS:
                             {
                                 abiObject.setAddressValue(
-                                        ((List<Address>)
-                                                        TypeDecoder.decodeStaticArray(
-                                                                        input,
-                                                                        0,
-                                                                        new TypeReference<
-                                                                                StaticArray<
-                                                                                        Address>>() {}.getType(),
-                                                                        1)
-                                                                .getValue())
-                                                .get(0));
+                                        TypeDecoder.decode(input, 0, Address.class));
                                 break;
                             }
                     }
@@ -306,16 +267,8 @@ public class ABIObject {
                         if (structObject.isDynamicStruct
                                 || structObject.type.equals(ObjectType.LIST)) {
                             Uint256 offset =
-                                    ((List<Uint256>)
-                                                    TypeDecoder.decodeStaticArray(
-                                                                    input.substring(i * 32 * 2),
-                                                                    0,
-                                                                    new TypeReference<
-                                                                            StaticArray<
-                                                                                    Uint256>>() {}.getType(),
-                                                                    1)
-                                                            .getValue())
-                                            .get(0);
+                                    TypeDecoder.decode(
+                                            input.substring(i * 32 * 2), 0, Uint256.class);
 
                             // abiObject.structFields.set(i,
                             // structObject.decode(input.substring(offset.getValue().intValue() *
@@ -336,17 +289,7 @@ public class ABIObject {
             case LIST:
                 {
                     ABIObject listObject = listValueType;
-                    Uint256 length =
-                            ((List<Uint256>)
-                                            TypeDecoder.decodeStaticArray(
-                                                            input,
-                                                            0,
-                                                            new TypeReference<
-                                                                    StaticArray<
-                                                                            Uint256>>() {}.getType(),
-                                                            1)
-                                                    .getValue())
-                                    .get(0);
+                    Uint256 length = TypeDecoder.decode(input, 0, Uint256.class);
 
                     int loopLength = 0;
 
@@ -366,17 +309,8 @@ public class ABIObject {
 
                         if (listObject.isDynamicStruct || listObject.type.equals(ObjectType.LIST)) {
                             Uint256 offset =
-                                    ((List<Uint256>)
-                                                    TypeDecoder.decodeStaticArray(
-                                                                    input.substring(
-                                                                            ((i + 1) * 32) * 2),
-                                                                    0,
-                                                                    new TypeReference<
-                                                                            StaticArray<
-                                                                                    Uint256>>() {}.getType(),
-                                                                    1)
-                                                            .getValue())
-                                            .get(0);
+                                    TypeDecoder.decode(
+                                            input.substring(((i + 1) * 32) * 2), 0, Uint256.class);
 
                             listItem =
                                     listObject.decode(

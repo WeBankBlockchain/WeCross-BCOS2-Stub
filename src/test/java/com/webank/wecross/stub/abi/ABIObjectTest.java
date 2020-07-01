@@ -1,4 +1,4 @@
-package com.webank.wecross.stub.test.abi;
+package com.webank.wecross.stub.abi;
 
 import com.webank.wecross.stub.bcos.abi.ABIObject;
 import com.webank.wecross.stub.bcos.abi.ABIObject.ObjectType;
