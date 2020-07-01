@@ -46,6 +46,8 @@ public class BCOSConnection implements Connection {
 
     private List<ResourceInfo> resourceInfoList;
 
+    private List<ResourceInfo> resourcesCache = null;
+
     private ConnectionEventHandler eventHandler = null;
 
     private final Web3jWrapper web3jWrapper;
@@ -62,8 +64,9 @@ public class BCOSConnection implements Connection {
                 () -> {
                     if (Objects.nonNull(eventHandler)) {
                         List<ResourceInfo> resources = getResources();
-                        if (!resources.isEmpty()) {
+                        if (!resources.equals(resourcesCache) && !resources.isEmpty()) {
                             eventHandler.onResourcesChange(resources);
+                            resourcesCache = resources;
                             if (logger.isDebugEnabled()) {
                                 logger.debug(" resources notify, resources: {}", resources);
                             }
@@ -85,6 +88,14 @@ public class BCOSConnection implements Connection {
 
     public Web3jWrapper getWeb3jWrapper() {
         return web3jWrapper;
+    }
+
+    public List<ResourceInfo> getResourcesCache() {
+        return resourcesCache;
+    }
+
+    public void setResourcesCache(List<ResourceInfo> resourcesCache) {
+        this.resourcesCache = resourcesCache;
     }
 
     @Override
