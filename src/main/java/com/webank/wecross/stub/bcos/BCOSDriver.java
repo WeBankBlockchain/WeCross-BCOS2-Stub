@@ -95,7 +95,8 @@ public class BCOSDriver implements Driver {
                 throw new IllegalArgumentException(" Validating abi failed ");
             }
 
-            return new TransactionContext<TransactionRequest>(transactionRequest, null, null, null);
+            return new TransactionContext<TransactionRequest>(
+                    transactionRequest, null, null, null, null);
 
         } catch (Exception e) {
             logger.error(" decodeTransactionRequest Exception: {}", e);
@@ -207,8 +208,8 @@ public class BCOSDriver implements Driver {
             checkProperties(properties);
 
             String contractAddress = properties.get(BCOSConstant.BCOS_PROXY_NAME);
-            String path = request.getData().getPath();
-            String name = path.split("\\.")[2];
+            Path path = request.getPath();
+            String name = path.getResource();
 
             // query abi
             asyncCnsService.queryABI(
@@ -265,7 +266,7 @@ public class BCOSDriver implements Driver {
                                                     new org.fisco.bcos.web3j.abi.datatypes
                                                             .Utf8String(id),
                                                     new org.fisco.bcos.web3j.abi.datatypes
-                                                            .Utf8String(path),
+                                                            .Utf8String(path.toString()),
                                                     new org.fisco.bcos.web3j.abi.datatypes
                                                             .Utf8String(
                                                             abiFactory.getSigbyMethod(method, abi)),
@@ -765,8 +766,8 @@ public class BCOSDriver implements Driver {
                                 BCOSAccount bcosAccount = (BCOSAccount) request.getAccount();
                                 Credentials credentials = bcosAccount.getCredentials();
 
-                                String path = request.getData().getPath();
-                                String name = path.split("\\.")[2];
+                                Path path = request.getPath();
+                                String name = path.getResource();
 
                                 // query abi
                                 asyncCnsService.queryABI(
@@ -850,7 +851,8 @@ public class BCOSDriver implements Driver {
                                                                         new Uint256(seq),
                                                                         new org.fisco.bcos.web3j.abi
                                                                                 .datatypes
-                                                                                .Utf8String(path),
+                                                                                .Utf8String(
+                                                                                path.toString()),
                                                                         new org.fisco.bcos.web3j.abi
                                                                                 .datatypes
                                                                                 .Utf8String(sig),
@@ -1251,7 +1253,11 @@ public class BCOSDriver implements Driver {
                                         new String[] {path.toString()});
                         TransactionContext<TransactionRequest> context =
                                 new TransactionContext<>(
-                                        request, account, new ResourceInfo(), blockHeaderManager);
+                                        request,
+                                        account,
+                                        path,
+                                        new ResourceInfo(),
+                                        blockHeaderManager);
                         try {
                             TransactionResponse transactionResponse =
                                     sendTransaction(context, connection);
