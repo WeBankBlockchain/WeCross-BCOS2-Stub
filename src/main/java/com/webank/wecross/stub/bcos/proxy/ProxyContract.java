@@ -44,6 +44,22 @@ public class ProxyContract {
         driver = bcosStubFactory.newDriver();
         connection = BCOSConnectionFactory.build(chainPath, "stub.toml", null);
         blockHeaderManager = new DirectBlockHeaderManager(driver, connection);
+
+        if (account == null) {
+            throw new Exception("Account " + accountName + " not found");
+        }
+
+        if (driver == null) {
+            throw new Exception("Init driver exception, please check log");
+        }
+
+        if (connection == null) {
+            throw new Exception("Init connection exception, please check log");
+        }
+
+        if (blockHeaderManager == null) {
+            throw new Exception("Init blockHeaderManager exception, please check log");
+        }
     }
 
     public void deploy() throws Exception {
