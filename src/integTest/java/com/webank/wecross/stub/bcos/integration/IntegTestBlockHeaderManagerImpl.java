@@ -1,6 +1,5 @@
 package com.webank.wecross.stub.bcos.integration;
 
-import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.BlockHeaderManager;
 import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
