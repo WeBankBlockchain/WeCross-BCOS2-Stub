@@ -1243,7 +1243,8 @@ public class BCOSDriver implements Driver {
                     callback.onResponse(error, response);
 
                     if (Objects.isNull(error)
-                            && BCOSConstant.CUSTOM_COMMAND_DEPLOY.equals(command)) {
+                            && (BCOSConstant.CUSTOM_COMMAND_DEPLOY.equals(command)
+                                    || BCOSConstant.CUSTOM_COMMAND_REGISTER.equals(command))) {
                         // add path into proxy contract
                         TransactionRequest request =
                                 new TransactionRequest(
