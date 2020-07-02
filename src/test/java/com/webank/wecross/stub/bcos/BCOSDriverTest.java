@@ -58,7 +58,7 @@ public class BCOSDriverTest {
         TransactionRequest transactionRequest = new TransactionRequest(method, args);
         TransactionContext<TransactionRequest> requestTransactionContext =
                 new TransactionContext<TransactionRequest>(
-                        transactionRequest, account, resourceInfo, blockHeaderManager);
+                        transactionRequest, account, null, resourceInfo, blockHeaderManager);
         requestTransactionContext.setAccount(account);
         requestTransactionContext.setBlockHeaderManager(blockHeaderManager);
         requestTransactionContext.setData(transactionRequest);
@@ -71,7 +71,7 @@ public class BCOSDriverTest {
         TransactionRequest transactionRequest = new TransactionRequest(method, args);
         TransactionContext<TransactionRequest> requestTransactionContext =
                 new TransactionContext<TransactionRequest>(
-                        transactionRequest, account, resourceInfo, blockHeaderManager);
+                        transactionRequest, account, null, resourceInfo, blockHeaderManager);
         requestTransactionContext.setAccount(account);
         requestTransactionContext.setBlockHeaderManager(txVerifyBlockHeaderManager);
         requestTransactionContext.setData(transactionRequest);
@@ -457,7 +457,7 @@ public class BCOSDriverTest {
             TransactionRequest transactionRequest) {
         TransactionContext<TransactionRequest> transactionContext =
                 new TransactionContext<>(
-                        transactionRequest, account, resourceInfo, blockHeaderManager);
+                        transactionRequest, account, null, resourceInfo, blockHeaderManager);
         return transactionContext;
     }
 

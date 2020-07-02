@@ -20,7 +20,10 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
@@ -43,13 +46,36 @@ public class BCOSConnection implements Connection {
 
     private List<ResourceInfo> resourceInfoList;
 
+    private List<ResourceInfo> resourcesCache = null;
+
+    private ConnectionEventHandler eventHandler = null;
+
     private final Web3jWrapper web3jWrapper;
+
+    private ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
 
     private Map<String, String> properties = new HashMap<>();
 
     public BCOSConnection(Web3jWrapper web3jWrapper) {
         this.web3jWrapper = web3jWrapper;
         this.objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+
+        this.scheduledExecutorService.scheduleAtFixedRate(
+                () -> {
+                    if (Objects.nonNull(eventHandler)) {
+                        List<ResourceInfo> resources = getResources();
+                        if (!resources.equals(resourcesCache) && !resources.isEmpty()) {
+                            eventHandler.onResourcesChange(resources);
+                            resourcesCache = resources;
+                            if (logger.isDebugEnabled()) {
+                                logger.debug(" resources notify, resources: {}", resources);
+                            }
+                        }
+                    }
+                },
+                10000,
+                30000,
+                TimeUnit.MILLISECONDS);
     }
 
     public List<ResourceInfo> getResourceInfoList() {
@@ -64,10 +90,23 @@ public class BCOSConnection implements Connection {
         return web3jWrapper;
     }
 
+    public List<ResourceInfo> getResourcesCache() {
+        return resourcesCache;
+    }
+
+    public void setResourcesCache(List<ResourceInfo> resourcesCache) {
+        this.resourcesCache = resourcesCache;
+    }
+
     @Override
     public List<ResourceInfo> getResources() {
-        List<ResourceInfo> resources = new ArrayList<>();
-        resources.addAll(resourceInfoList);
+        List<ResourceInfo> resources =
+                new ArrayList<ResourceInfo>() {
+                    {
+                        addAll(resourceInfoList);
+                    }
+                };
+
         String[] paths = listPaths();
         if (Objects.nonNull(paths)) {
             for (String path : paths) {
@@ -93,7 +132,7 @@ public class BCOSConnection implements Connection {
 
     @Override
     public void setConnectionEventHandler(ConnectionEventHandler eventHandler) {
-        // TODO: use listpath
+        this.eventHandler = eventHandler;
     }
 
     public void setProperty(Map<String, String> properties) {
@@ -118,9 +157,10 @@ public class BCOSConnection implements Connection {
 
             if (logger.isDebugEnabled()) {
                 logger.debug(
-                        "call result, status: {}, blockNumber: {}",
+                        " listPaths, status: {}, blk: {}, output: {}",
                         callOutput.getStatus(),
-                        callOutput.getCurrentBlockNumber());
+                        callOutput.getCurrentBlockNumber(),
+                        callOutput.getOutput());
             }
 
             if (StatusCode.Success.equals(callOutput.getStatus())) {
@@ -129,14 +169,15 @@ public class BCOSConnection implements Connection {
                     Set<String> set = new HashSet<>(Arrays.asList(paths));
                     return set.toArray(new String[0]);
                 } else {
+                    logger.debug(" listPaths empty");
                     return null;
                 }
             } else {
-                logger.warn("getting paths failed: {}", callOutput.getStatus());
+                logger.warn(" listPaths failed, status {}", callOutput.getStatus());
                 return null;
             }
         } catch (Exception e) {
-            logger.warn("getting paths failed,", e);
+            logger.warn(" listPaths failed,", e);
             return null;
         }
     }
