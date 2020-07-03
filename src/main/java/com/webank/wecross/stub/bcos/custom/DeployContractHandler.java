@@ -38,7 +38,7 @@ public class DeployContractHandler implements CommandHandler {
             Map<String, String> abiMap,
             Driver.CustomCommandCallback callback) {
 
-        if (Objects.isNull(args) || args.length < 2) {
+        if (Objects.isNull(args) || args.length < 4) {
             callback.onResponse(new Exception("incomplete args"), null);
             return;
         }
