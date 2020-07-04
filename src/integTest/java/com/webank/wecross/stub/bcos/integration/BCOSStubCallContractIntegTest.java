@@ -169,7 +169,7 @@ public class BCOSStubCallContractIntegTest {
 
         Object[] args =
                 new Object[] {
-                    "WeCrossProxy", new String(contractBytes), "WeCrossProxy", "1",
+                    "WeCrossProxy", new String(contractBytes), "WeCrossProxy", String.valueOf(System.currentTimeMillis()),
                 };
         
         CommandHandler commandHandler = new DeployContractHandler();
@@ -469,7 +469,7 @@ public class BCOSStubCallContractIntegTest {
 
         Object[] args =
                 new Object[] {
-                    "WeCrossProxy", new String(contractBytes), "WeCrossProxy", "1",
+                    "WeCrossProxy", new String(contractBytes), "WeCrossProxy", String.valueOf(System.currentTimeMillis()),
                 };
         
 
