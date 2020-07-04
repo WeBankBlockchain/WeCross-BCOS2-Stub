@@ -459,7 +459,7 @@ public class BCOSStubCallContractIntegTest {
         PathMatchingResourcePatternResolver resolver =
                 new PathMatchingResourcePatternResolver();
         String path =
-                resolver.getResource("classpath:solidity/WeCrossProxy.sol")
+                resolver.getResource("classpath:solidity/HelloWorld.sol")
                         .getFile()
                         .getAbsolutePath();
         
@@ -469,7 +469,7 @@ public class BCOSStubCallContractIntegTest {
 
         Object[] args =
                 new Object[] {
-                    "WeCrossProxy", new String(contractBytes), "WeCrossProxy", String.valueOf(System.currentTimeMillis()),
+                    "HelloWorld", new String(contractBytes), "HelloWorld", String.valueOf(System.currentTimeMillis()),
                 };
         
 
