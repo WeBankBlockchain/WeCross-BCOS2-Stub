@@ -116,6 +116,14 @@ public class FunctionUtility {
         return decodeOutput(receipt.getOutput());
     }
 
+    public static String[] decodeOutputForVerifiedTransaction(TransactionReceipt receipt) {
+        if (Objects.isNull(receipt) || !receipt.isStatusOK()) {
+            return null;
+        }
+
+        return new String[] {decodeOutputAsString(receipt.getOutput())};
+    }
+
     /**
      * decode abi encode data
      *

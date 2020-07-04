@@ -27,8 +27,6 @@ import org.fisco.bcos.web3j.abi.datatypes.Function;
 import org.fisco.bcos.web3j.abi.datatypes.Type;
 import org.fisco.bcos.web3j.abi.datatypes.generated.Uint256;
 import org.fisco.bcos.web3j.crypto.Credentials;
-import org.fisco.bcos.web3j.crypto.ExtendedRawTransaction;
-import org.fisco.bcos.web3j.crypto.ExtendedTransactionDecoder;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.channel.StatusCode;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
@@ -71,35 +69,38 @@ public class BCOSDriver implements Driver {
             Objects.requireNonNull(transactionParams.getData(), "Data is null");
 
             TransactionRequest transactionRequest = transactionParams.getTransactionRequest();
-            // Validating abi
-            String abi = transactionParams.getData();
-            if (Objects.isNull(transactionParams.getTo())) {
-                // SendTransaction Operation
-                ExtendedRawTransaction extendedRawTransaction =
-                        ExtendedTransactionDecoder.decode(transactionParams.getData());
-                abi = "0x" + extendedRawTransaction.getData();
-            }
+            /*
+                        TODO: verify two condition: to proxy or not to proxy
+                        // Validating abi
+                        String abi = transactionParams.getData();
+                        if (Objects.isNull(transactionParams.getTo())) {
+                            // SendTransaction Operation
+                            ExtendedRawTransaction extendedRawTransaction =
+                                    ExtendedTransactionDecoder.decode(transactionParams.getData());
+                            abi = "0x" + extendedRawTransaction.getData();
+                        }
 
-            Function function =
-                    FunctionUtility.newFunction(
-                            transactionRequest.getMethod(), transactionRequest.getArgs());
+                        Function function =
+                                FunctionUtility.newFunction(
+                                        transactionRequest.getMethod(), transactionRequest.getArgs());
 
-            String encodeAbi = FunctionEncoder.encode(function);
-            if (!encodeAbi.equals(abi)) {
-                logger.error(
-                        " Validating abi failed, method: {}, args: {}, abi: {}, encodeAbi: {} ",
-                        transactionRequest.getMethod(),
-                        transactionRequest.getArgs(),
-                        abi,
-                        encodeAbi);
-                throw new IllegalArgumentException(" Validating abi failed ");
-            }
+                        String encodeAbi = FunctionEncoder.encode(function);
 
+                        if (!encodeAbi.equals(abi)) {
+                            logger.error(
+                                    " Validating abi failed, method: {}, args: {}, abi: {}, encodeAbi: {} ",
+                                    transactionRequest.getMethod(),
+                                    transactionRequest.getArgs(),
+                                    abi,
+                                    encodeAbi);
+                            throw new IllegalArgumentException(" Validating abi failed ");
+                        }
+            */
             return new TransactionContext<TransactionRequest>(
                     transactionRequest, null, null, null, null);
 
         } catch (Exception e) {
-            logger.error(" decodeTransactionRequest Exception: {}", e);
+            logger.error(" decodeTransactionRequest Exception: " + e);
             return null;
         }
     }
@@ -1167,7 +1168,8 @@ public class BCOSDriver implements Driver {
                         transactionResponse.setHash(transactionHash);
                         transactionResponse.setBlockNumber(receipt.getBlockNumber().longValue());
                         /** decode output from output */
-                        transactionResponse.setResult(FunctionUtility.decodeOutput(receipt));
+                        transactionResponse.setResult(
+                                FunctionUtility.decodeOutputForVerifiedTransaction(receipt));
 
                         /** set error code and error message info */
                         transactionResponse.setErrorMessage(
@@ -1188,7 +1190,7 @@ public class BCOSDriver implements Driver {
                         callback.onResponse(null, verifiedTransaction);
                     });
         } catch (Exception e) {
-            logger.warn("transactionHash: {}", transactionHash, e);
+            logger.warn("transactionHash: {} exception: {}", transactionHash, e);
             callback.onResponse(e, null);
         }
     }
