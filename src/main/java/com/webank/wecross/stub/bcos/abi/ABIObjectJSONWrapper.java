@@ -75,7 +75,7 @@ public class ABIObjectJSONWrapper {
             } else if (baseType.startsWith("bytes")) {
                 // bytes<M>
                 // codecObject = new ABIObject(new Bytes(32, "".getBytes()));
-                throw new UnsupportedOperationException("Unsupported types:" + type);
+                // throw new UnsupportedOperationException("Unsupported types:" + type);
             } else if (baseType.startsWith("address")) {
                 codecObject = new ABIObject(new Address(""));
             } else if (baseType.startsWith("fixed") || baseType.startsWith("ufixed")) {
