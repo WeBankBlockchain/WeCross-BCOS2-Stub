@@ -563,7 +563,7 @@ public class BCOSDriver implements Driver {
 
                                 if (logger.isDebugEnabled()) {
                                     logger.debug(
-                                            " contractAddress: {}, blockNumber: {}, method: {}, args: {}",
+                                            "asyncSendTransaction contractAddress: {}, blockNumber: {}, method: {}, args: {}",
                                             contractAddress,
                                             blockNumber,
                                             request.getData().getMethod(),

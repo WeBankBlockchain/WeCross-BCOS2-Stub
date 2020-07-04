@@ -156,6 +156,7 @@ public class BCOSStubCallContractIntegTest {
     }
 
     private void deployProxy() throws Exception {
+        /*
         PathMatchingResourcePatternResolver resolver =
                 new PathMatchingResourcePatternResolver();
         String path = resolver.getResource("classpath:solidity").getFile().getAbsolutePath();
@@ -165,12 +166,35 @@ public class BCOSStubCallContractIntegTest {
         file.delete();
 
         Object[] args = new Object[]{Base64.getEncoder().encodeToString(contractBytes), String.valueOf(System.currentTimeMillis())};
+                 */
+        
+        PathMatchingResourcePatternResolver resolver =
+                new PathMatchingResourcePatternResolver();
+        String path =
+                resolver.getResource("classpath:solidity/WeCrossProxy.sol")
+                        .getFile()
+                        .getAbsolutePath();
+        
+        File file = new File(path);
+        byte[] contractBytes;
+        try {
+            contractBytes = Files.readAllBytes(file.toPath());
+        } finally {
+            file.delete();
+        }
+
+        Object[] args =
+                new Object[] {
+                    "WeCrossProxy", new String(contractBytes), "WeCrossProxy", "1",
+                };
+        
         CommandHandler commandHandler = new DeployContractHandler();
         commandHandler.handle(Path.decode("a.b.WeCrossProxy"), args, account, blockHeaderManager, connection, new HashMap<>(), (error, response) -> {
             if(Objects.nonNull(error)) {
                 error.printStackTrace();
             }
         });
+        
         Thread.sleep(10000);
     }
 
