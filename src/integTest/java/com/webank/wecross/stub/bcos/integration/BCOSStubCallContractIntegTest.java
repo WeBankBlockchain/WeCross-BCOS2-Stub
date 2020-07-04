@@ -156,18 +156,6 @@ public class BCOSStubCallContractIntegTest {
     }
 
     private void deployProxy() throws Exception {
-        /*
-        PathMatchingResourcePatternResolver resolver =
-                new PathMatchingResourcePatternResolver();
-        String path = resolver.getResource("classpath:solidity").getFile().getAbsolutePath();
-        BCOSFileUtils.zipDir(path);
-        File file = new File("solidity.zip");
-        byte[] contractBytes = Files.readAllBytes(file.toPath());
-        file.delete();
-
-        Object[] args = new Object[]{Base64.getEncoder().encodeToString(contractBytes), String.valueOf(System.currentTimeMillis())};
-                 */
-        
         PathMatchingResourcePatternResolver resolver =
                 new PathMatchingResourcePatternResolver();
         String path =
@@ -177,11 +165,7 @@ public class BCOSStubCallContractIntegTest {
         
         File file = new File(path);
         byte[] contractBytes;
-        try {
-            contractBytes = Files.readAllBytes(file.toPath());
-        } finally {
-            file.delete();
-        }
+        contractBytes = Files.readAllBytes(file.toPath());
 
         Object[] args =
                 new Object[] {
@@ -474,13 +458,21 @@ public class BCOSStubCallContractIntegTest {
     public void deployContractTest() throws Exception {
         PathMatchingResourcePatternResolver resolver =
                 new PathMatchingResourcePatternResolver();
-        String path = resolver.getResource("classpath:solidity").getFile().getAbsolutePath();
-        BCOSFileUtils.zipDir(path);
-        File file = new File("solidity.zip");
-        byte[] contractBytes = Files.readAllBytes(file.toPath());
-        file.delete();
+        String path =
+                resolver.getResource("classpath:solidity/WeCrossProxy.sol")
+                        .getFile()
+                        .getAbsolutePath();
+        
+        File file = new File(path);
+        byte[] contractBytes;
+        contractBytes = Files.readAllBytes(file.toPath());
 
-        Object[] args = new Object[]{Base64.getEncoder().encodeToString(contractBytes), String.valueOf(System.currentTimeMillis())};
+        Object[] args =
+                new Object[] {
+                    "WeCrossProxy", new String(contractBytes), "WeCrossProxy", "1",
+                };
+        
+
         CommandHandler commandHandler = new DeployContractHandler();
         commandHandler.handle(Path.decode("a.b.HelloWorld"), args, account, blockHeaderManager, connection, new HashMap<>(), (error, response) -> {
             assertNull(error);
