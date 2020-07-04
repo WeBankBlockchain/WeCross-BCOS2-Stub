@@ -8,12 +8,10 @@ import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.BCOSConnectionFactory;
 import com.webank.wecross.stub.bcos.BCOSStubFactory;
-import com.webank.wecross.stub.bcos.common.BCOSFileUtils;
 import com.webank.wecross.stub.bcos.custom.CommandHandler;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import java.io.File;
 import java.nio.file.Files;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -22,20 +20,20 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 public class ProxyContract {
-    private String proxyContractDir;
+    private String proxyContractFile;
     private String chainPath;
-    private String accountName;
 
     private Account account;
     private BCOSConnection connection;
     private Driver driver;
     private BlockHeaderManager blockHeaderManager;
 
-    public ProxyContract(String proxyContractDir, String chainPath, String accountName)
+    private static String Version = "1";
+
+    public ProxyContract(String proxyContractFile, String chainPath, String accountName)
             throws Exception {
-        this.proxyContractDir = proxyContractDir;
+        this.proxyContractFile = proxyContractFile;
         this.chainPath = chainPath;
-        this.accountName = accountName;
 
         BCOSStubFactory bcosStubFactory = new BCOSStubFactory();
         account =
@@ -68,10 +66,12 @@ public class ProxyContract {
 
             PathMatchingResourcePatternResolver resolver =
                     new PathMatchingResourcePatternResolver();
-            String path = resolver.getResource(proxyContractDir).getFile().getAbsolutePath();
-            String zipName = BCOSFileUtils.zipDir(path);
+            String path =
+                    resolver.getResource("classpath:" + proxyContractFile)
+                            .getFile()
+                            .getAbsolutePath();
 
-            File file = new File(zipName);
+            File file = new File(path);
             byte[] contractBytes;
             try {
                 contractBytes = Files.readAllBytes(file.toPath());
@@ -81,8 +81,7 @@ public class ProxyContract {
 
             Object[] args =
                     new Object[] {
-                        Base64.getEncoder().encodeToString(contractBytes),
-                        String.valueOf(System.currentTimeMillis())
+                        "WeCrossProxy", new String(contractBytes), "WeCrossProxy", Version,
                     };
 
             CompletableFuture<Map.Entry<Exception, Object>> future = new CompletableFuture<>();

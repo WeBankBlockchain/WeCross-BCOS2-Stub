@@ -10,7 +10,6 @@ import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.verify.MerkleValidation;
 import java.io.*;
 import java.math.BigInteger;
-import java.nio.file.Files;
 import java.util.*;
 import org.fisco.bcos.web3j.crypto.Credentials;
 import org.fisco.bcos.web3j.crypto.EncryptType;
@@ -39,25 +38,22 @@ public class DeployContractHandler implements CommandHandler {
             Map<String, String> abiMap,
             Driver.CustomCommandCallback callback) {
 
-        if (Objects.isNull(args) || args.length < 2) {
+        if (Objects.isNull(args) || args.length < 4) {
             callback.onResponse(new Exception("incomplete args"), null);
             return;
         }
 
-        byte[] contractBytes = Base64.getDecoder().decode((String) args[0]);
-        if (Objects.isNull(contractBytes)) {
-            callback.onResponse(new Exception("parsing contract fileBytes failed"), null);
-            return;
-        }
+        String cnsName = (String) args[0];
+        String sourceContent = (String) args[1];
+        String className = (String) args[2];
+        String version = (String) args[3];
 
-        String version = (String) args[1];
-        String name = path.toString().split("\\.")[2];
         BCOSAccount bcosAccount = (BCOSAccount) account;
         Credentials credentials = bcosAccount.getCredentials();
 
         // check version
         checkContractVersion(
-                name,
+                cnsName,
                 version,
                 account,
                 connection,
@@ -75,50 +71,32 @@ public class DeployContractHandler implements CommandHandler {
                     try {
                         boolean sm = EncryptType.encryptType != 0;
 
-                        // save contractBytes as file temporarily
-                        String tempPath = String.valueOf(System.currentTimeMillis());
-                        File tempFile = new File(tempPath + ".zip");
-                        Files.write(tempFile.toPath(), contractBytes);
-                        ArrayList<String> subDirs =
-                                BCOSFileUtils.unZip(tempPath + ".zip", tempPath + "/");
-
-                        // We assume that there is only 1 dir in the zip
-                        if (subDirs.size() != 1) {
-                            logger.warn("Illegal contract zip with not only 1 sub dir");
-                        }
-
-                        File desContract =
-                                new File(
-                                        tempPath
-                                                + File.separator
-                                                + subDirs.get(0)
-                                                + File.separator
-                                                + name
-                                                + ".sol");
+                        File sourceFile =
+                                File.createTempFile("BCOSContract-", "-" + cnsName + ".sol");
+                        OutputStream outputStream = new FileOutputStream(sourceFile);
+                        outputStream.write(sourceContent.getBytes());
+                        outputStream.close();
 
                         // compile contract
                         SolidityCompiler.Result res =
                                 SolidityCompiler.compile(
-                                        desContract,
+                                        sourceFile,
                                         sm,
                                         true,
                                         SolidityCompiler.Options.ABI,
                                         SolidityCompiler.Options.BIN,
                                         SolidityCompiler.Options.INTERFACE,
                                         SolidityCompiler.Options.METADATA);
-                        // delete temp file
-                        tempFile.delete();
-                        BCOSFileUtils.deleteDir(new File(tempPath));
 
                         if (res.isFailed()) {
                             callback.onResponse(
                                     new Exception("compiling contract failed, " + res.getErrors()),
-                                    null);
+                                    res.getErrors());
                             return;
                         }
 
                         CompilationResult result = CompilationResult.parse(res.getOutput());
-                        metadata = result.getContract(name);
+                        metadata = result.getContract(className);
                     } catch (IOException e) {
                         logger.error("compiling contract failed", e);
                         callback.onResponse(new Exception("compiling contract failed"), null);
@@ -130,14 +108,14 @@ public class DeployContractHandler implements CommandHandler {
                     int chainID = Integer.parseInt(properties.get(BCOSConstant.BCOS_CHAIN_ID));
 
                     if (logger.isDebugEnabled()) {
-                        logger.debug("deploy contract, name: {}, bin: {}", name, metadata.bin);
+                        logger.debug("deploy contract, name: {}, bin: {}", cnsName, metadata.bin);
                     }
 
                     // deploy contract
                     deployContract(
                             groupID,
                             chainID,
-                            name,
+                            cnsName,
                             metadata.bin,
                             credentials,
                             blockHeaderManager,
@@ -154,7 +132,7 @@ public class DeployContractHandler implements CommandHandler {
 
                                 // register cns
                                 asyncCnsService.insert(
-                                        name,
+                                        cnsName,
                                         address,
                                         version,
                                         metadata.abi,

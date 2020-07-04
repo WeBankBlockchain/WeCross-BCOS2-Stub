@@ -158,19 +158,27 @@ public class BCOSStubCallContractIntegTest {
     private void deployProxy() throws Exception {
         PathMatchingResourcePatternResolver resolver =
                 new PathMatchingResourcePatternResolver();
-        String path = resolver.getResource("classpath:solidity").getFile().getAbsolutePath();
-        BCOSFileUtils.zipDir(path);
-        File file = new File("solidity.zip");
-        byte[] contractBytes = Files.readAllBytes(file.toPath());
-        file.delete();
+        String path =
+                resolver.getResource("classpath:solidity/WeCrossProxy.sol")
+                        .getFile()
+                        .getAbsolutePath();
+        
+        File file = new File(path);
+        byte[] contractBytes;
+        contractBytes = Files.readAllBytes(file.toPath());
 
-        Object[] args = new Object[]{Base64.getEncoder().encodeToString(contractBytes), String.valueOf(System.currentTimeMillis())};
+        Object[] args =
+                new Object[] {
+                    "WeCrossProxy", new String(contractBytes), "WeCrossProxy", String.valueOf(System.currentTimeMillis()),
+                };
+        
         CommandHandler commandHandler = new DeployContractHandler();
         commandHandler.handle(Path.decode("a.b.WeCrossProxy"), args, account, blockHeaderManager, connection, new HashMap<>(), (error, response) -> {
             if(Objects.nonNull(error)) {
                 error.printStackTrace();
             }
         });
+        
         Thread.sleep(10000);
     }
 
@@ -450,13 +458,21 @@ public class BCOSStubCallContractIntegTest {
     public void deployContractTest() throws Exception {
         PathMatchingResourcePatternResolver resolver =
                 new PathMatchingResourcePatternResolver();
-        String path = resolver.getResource("classpath:solidity").getFile().getAbsolutePath();
-        BCOSFileUtils.zipDir(path);
-        File file = new File("solidity.zip");
-        byte[] contractBytes = Files.readAllBytes(file.toPath());
-        file.delete();
+        String path =
+                resolver.getResource("classpath:solidity/HelloWorld.sol")
+                        .getFile()
+                        .getAbsolutePath();
+        
+        File file = new File(path);
+        byte[] contractBytes;
+        contractBytes = Files.readAllBytes(file.toPath());
 
-        Object[] args = new Object[]{Base64.getEncoder().encodeToString(contractBytes), String.valueOf(System.currentTimeMillis())};
+        Object[] args =
+                new Object[] {
+                    "HelloWorld", new String(contractBytes), "HelloWorld", String.valueOf(System.currentTimeMillis()),
+                };
+        
+
         CommandHandler commandHandler = new DeployContractHandler();
         commandHandler.handle(Path.decode("a.b.HelloWorld"), args, account, blockHeaderManager, connection, new HashMap<>(), (error, response) -> {
             assertNull(error);
