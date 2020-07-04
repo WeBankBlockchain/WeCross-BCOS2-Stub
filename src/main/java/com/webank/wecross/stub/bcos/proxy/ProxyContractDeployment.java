@@ -92,9 +92,14 @@ public class ProxyContractDeployment {
 
     public static void deploy(String chainPath, String accountName) {
         try {
-            String proxyContractDir = chainPath + File.separator + "WeCrossProxy" + File.separator;
+            String proxyContractFile =
+                    chainPath
+                            + File.separator
+                            + "WeCrossProxy"
+                            + File.separator
+                            + "WeCrossProxy.sol";
             ProxyContract proxyContract =
-                    new ProxyContract(proxyContractDir, chainPath, accountName);
+                    new ProxyContract(proxyContractFile, chainPath, accountName);
             proxyContract.deploy();
         } catch (Exception e) {
             System.out.println(e);

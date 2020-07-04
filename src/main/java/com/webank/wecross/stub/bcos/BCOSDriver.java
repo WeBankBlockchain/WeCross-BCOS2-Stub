@@ -563,7 +563,7 @@ public class BCOSDriver implements Driver {
 
                                 if (logger.isDebugEnabled()) {
                                     logger.debug(
-                                            " contractAddress: {}, blockNumber: {}, method: {}, args: {}",
+                                            "asyncSendTransaction contractAddress: {}, blockNumber: {}, method: {}, args: {}",
                                             contractAddress,
                                             blockNumber,
                                             request.getData().getMethod(),
@@ -1245,7 +1245,8 @@ public class BCOSDriver implements Driver {
                     callback.onResponse(error, response);
 
                     if (Objects.isNull(error)
-                            && BCOSConstant.CUSTOM_COMMAND_DEPLOY.equals(command)) {
+                            && (BCOSConstant.CUSTOM_COMMAND_DEPLOY.equals(command)
+                                    || BCOSConstant.CUSTOM_COMMAND_REGISTER.equals(command))) {
                         // add path into proxy contract
                         TransactionRequest request =
                                 new TransactionRequest(
