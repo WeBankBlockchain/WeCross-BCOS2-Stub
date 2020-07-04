@@ -123,39 +123,40 @@ public class BCOSDriverTest {
         assertEquals(requestTransactionContext.getData().getArgs().length, params.length);
     }
 
-    @Test
-    public void decodeCallTransactionRequestExceptionTest() throws Exception {
-        assertTrue(Objects.isNull(driver.decodeTransactionRequest(null)));
+    /*
+        @Test
+        public void decodeCallTransactionRequestExceptionTest() throws Exception {
+            assertTrue(Objects.isNull(driver.decodeTransactionRequest(null)));
 
-        String func = "func";
-        String[] params = new String[] {"a", "b", "c"};
+            String func = "func";
+            String[] params = new String[] {"a", "b", "c"};
 
-        TransactionRequest request = new TransactionRequest(func, params);
-        Function function = FunctionUtility.newFunction(func, params);
+            TransactionRequest request = new TransactionRequest(func, params);
+            Function function = FunctionUtility.newFunction(func, params);
 
-        TransactionParams transaction0 =
-                new TransactionParams(null, FunctionEncoder.encode(function), "0x0", "0x1");
+            TransactionParams transaction0 =
+                    new TransactionParams(null, FunctionEncoder.encode(function), "0x0", "0x1");
 
-        byte[] data0 = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction0);
-        TransactionContext<TransactionRequest> requestTransactionContext0 =
-                driver.decodeTransactionRequest(data0);
-        assertTrue(requestTransactionContext0 == null);
+            byte[] data0 = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction0);
+            TransactionContext<TransactionRequest> requestTransactionContext0 =
+                    driver.decodeTransactionRequest(data0);
+            assertTrue(requestTransactionContext0 == null);
 
-        TransactionParams transaction1 = new TransactionParams(request, null, "0x0", "0x1");
+            TransactionParams transaction1 = new TransactionParams(request, null, "0x0", "0x1");
 
-        byte[] data1 = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction1);
-        TransactionContext<TransactionRequest> requestTransactionContext1 =
-                driver.decodeTransactionRequest(data1);
-        assertTrue(requestTransactionContext1 == null);
+            byte[] data1 = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction1);
+            TransactionContext<TransactionRequest> requestTransactionContext1 =
+                    driver.decodeTransactionRequest(data1);
+            assertTrue(requestTransactionContext1 == null);
 
-        TransactionParams transaction2 = new TransactionParams(request, "0x00", "0x0", "0x1");
+            TransactionParams transaction2 = new TransactionParams(request, "0x00", "0x0", "0x1");
 
-        byte[] data2 = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction2);
-        TransactionContext<TransactionRequest> requestTransactionContext2 =
-                driver.decodeTransactionRequest(data2);
-        assertTrue(requestTransactionContext2 == null);
-    }
-
+            byte[] data2 = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction2);
+            TransactionContext<TransactionRequest> requestTransactionContext2 =
+                    driver.decodeTransactionRequest(data2);
+            assertTrue(requestTransactionContext2 == null);
+        }
+    */
     @Test
     public void decodeSendTransactionTransactionRequestTest() throws Exception {
         String func = "func";
