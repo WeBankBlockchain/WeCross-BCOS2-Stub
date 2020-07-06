@@ -52,13 +52,10 @@ configurations {
     all*.exclude group: 'org.ethereum', module: 'solcJ-all'
     all*.exclude group: 'ch.qos.logback', module: 'logback-classic'
     all*.exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+    all*.exclude group: 'com.alibaba', module: 'fastjson'
 
     integTestImplementation.extendsFrom implementation
     integTestTestImplementation.extendsFrom testImplementation
-
-    all*.resolutionStrategy {
-        force 'com.alibaba:fastjson:1.2.67'
-    }
 }
 
 dependencies {
@@ -68,12 +65,15 @@ dependencies {
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'
     implementation 'com.google.guava:guava:28.1-jre'
-    implementation 'org.fisco-bcos:web3sdk:2.4.0'
+    implementation 'org.fisco-bcos:web3sdk:2.5.1'
     implementation 'org.fisco-bcos:solcJ:0.5.2-rc1'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.slf4j:slf4j-log4j12:1.7.25'
+
+    integTestImplementation 'junit:junit:4.12'
+    integTestImplementation 'org.slf4j:slf4j-log4j12:1.7.25'
     // testImplementation 'org.springframework.boot:spring-boot-starter-test:2.1.4.RELEASE'
 }
 
