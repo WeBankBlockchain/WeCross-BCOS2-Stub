@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.webank.wecross.stub.bcos.abi.ABIObject.ListType;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -46,7 +45,7 @@ public class ABICodecJsonWrapper {
                     if (!node.isValueNode()) {
                         errorReport(
                                 path,
-                                template.getValueType().toString(),
+                                abiObject.getType().toString(),
                                 node.getNodeType().toString());
                     }
 
@@ -106,7 +105,14 @@ public class ABICodecJsonWrapper {
                                             node.getNodeType().toString());
                                 }
 
-                                abiObject.setAddressValue(new Address(node.asText()));
+                                try {
+                                    abiObject.setAddressValue(new Address(node.asText()));
+                                } catch (Exception e) {
+                                    errorReport(
+                                            "Invalid address value",
+                                            template.getValueType().toString(),
+                                            node.asText());
+                                }
                                 break;
                             }
                         case BYTES:
@@ -153,16 +159,18 @@ public class ABICodecJsonWrapper {
             case LIST:
                 {
                     if (!node.isArray()) {
-                        errorReport(path, "ARRAY", node.getNodeType().toString());
+                        errorReport(
+                                path,
+                                abiObject.getType().toString(),
+                                node.getNodeType().toString());
                     }
 
-                    if (abiObject.getListType() == ListType.FIXED) {
-                        if (node.size() != abiObject.getListLength()) {
-                            errorReport(
-                                    " fixed list arguments size",
-                                    String.valueOf(abiObject.getListLength()),
-                                    String.valueOf(node.size()));
-                        }
+                    if ((abiObject.getListType() == ListType.FIXED)
+                            && (node.size() != abiObject.getListLength())) {
+                        errorReport(
+                                "fixed list arguments size",
+                                String.valueOf(abiObject.getListLength()),
+                                String.valueOf(node.size()));
                     }
 
                     int i = 0;
@@ -182,7 +190,10 @@ public class ABICodecJsonWrapper {
             case STRUCT:
                 {
                     if (!node.isArray() && !node.isObject()) {
-                        errorReport(path, "STRUCT", node.getNodeType().toString());
+                        errorReport(
+                                path,
+                                abiObject.getType().toString(),
+                                node.getNodeType().toString());
                     }
 
                     if (node.size() != abiObject.getStructFields().size()) {
@@ -211,7 +222,7 @@ public class ABICodecJsonWrapper {
 
                             if (structNode == null) {
                                 errorReport(
-                                        path,
+                                        path + "miss field value, field name: " + field.getName(),
                                         template.getValueType().toString(),
                                         node.getNodeType().toString());
                             }
@@ -254,58 +265,60 @@ public class ABICodecJsonWrapper {
             switch (argObject.getType()) {
                 case VALUE:
                     {
-                        switch (argObject.getValueType()) {
-                            case BOOL:
-                                {
-                                    argObject.setBoolValue(new Bool(Boolean.valueOf(value)));
-                                    break;
-                                }
-                            case UINT:
-                                {
-                                    argObject.setNumericValue(
-                                            new Uint256(
-                                                    new BigInteger(
-                                                            Numeric.cleanHexPrefix(value),
-                                                            value.startsWith("0x") ? 16 : 10)));
-                                    break;
-                                }
-                            case INT:
-                                {
-                                    argObject.setNumericValue(
-                                            new Int256(
-                                                    new BigInteger(
-                                                            Numeric.cleanHexPrefix(value),
-                                                            value.startsWith("0x") ? 16 : 10)));
-                                    break;
-                                }
-                            case ADDRESS:
-                                {
-                                    argObject.setAddressValue(new Address(value));
-                                    break;
-                                }
-                            case BYTES:
-                                {
-                                    argObject.setBytesValue(
-                                            new Bytes(value.getBytes().length, value.getBytes()));
-                                    break;
-                                }
-                            case DBYTES:
-                                {
-                                    argObject.setDynamicBytesValue(
-                                            new DynamicBytes(value.getBytes()));
-                                    break;
-                                }
-                            case STRING:
-                                {
-                                    argObject.setStringValue(new Utf8String(value));
-                                    break;
-                                }
-                            default:
-                                {
-                                    throw new UnsupportedOperationException(
-                                            "Unrecognized valueType: " + argObject.getValueType());
-                                }
+                        try {
+                            switch (argObject.getValueType()) {
+                                case BOOL:
+                                    {
+                                        argObject.setBoolValue(new Bool(Boolean.valueOf(value)));
+                                        break;
+                                    }
+                                case UINT:
+                                    {
+                                        argObject.setNumericValue(
+                                                new Uint256(Numeric.decodeQuantity(value)));
+                                        break;
+                                    }
+                                case INT:
+                                    {
+                                        argObject.setNumericValue(
+                                                new Int256(Numeric.decodeQuantity(value)));
+                                        break;
+                                    }
+                                case ADDRESS:
+                                    {
+                                        argObject.setAddressValue(new Address(value));
+                                        break;
+                                    }
+                                case BYTES:
+                                    {
+                                        argObject.setBytesValue(
+                                                new Bytes(
+                                                        value.getBytes().length, value.getBytes()));
+                                        break;
+                                    }
+                                case DBYTES:
+                                    {
+                                        argObject.setDynamicBytesValue(
+                                                new DynamicBytes(value.getBytes()));
+                                        break;
+                                    }
+                                case STRING:
+                                    {
+                                        argObject.setStringValue(new Utf8String(value));
+                                        break;
+                                    }
+                                default:
+                                    {
+                                        throw new UnsupportedOperationException(
+                                                "Unrecognized valueType: "
+                                                        + argObject.getValueType());
+                                    }
+                            }
+                        } catch (Exception e) {
+                            logger.error(" e: ", e);
+                            errorReport("ROOT", argObject.getValueType().toString(), value);
                         }
+
                         break;
                     }
                 case STRUCT:
@@ -439,6 +452,11 @@ public class ABICodecJsonWrapper {
                                             String.valueOf(argObject.getStringValue().getValue()));
                                     break;
                                 }
+                            default:
+                                {
+                                    throw new UnsupportedOperationException(
+                                            " Unsupported valueType: " + argObject.getValueType());
+                                }
                         }
                         break;
                     }
@@ -447,6 +465,11 @@ public class ABICodecJsonWrapper {
                     {
                         result.add(argNode.toPrettyString());
                         break;
+                    }
+                default:
+                    {
+                        throw new UnsupportedOperationException(
+                                " Unsupported objectType: " + argObject.getType());
                     }
             }
         }
