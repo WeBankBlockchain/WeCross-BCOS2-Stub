@@ -403,6 +403,11 @@ public class ABICodecJsonWrapper {
     }
 
     public List<String> decode(ABIObject template, String buffer) {
+
+        if (logger.isTraceEnabled()) {
+            logger.trace(" ABIObject: {}, abi: {}", template.toString(), buffer);
+        }
+
         ABIObject abiObject = template.decode(buffer);
 
         JsonNode jsonNode = decode(abiObject);

@@ -301,8 +301,8 @@ public class ABIObject {
             }
             offset = l;
         } else { // T[M]
-            int length = listValues.size();
-            int basicOffset = listValues.get(0).offset();
+            int length = listLength;
+            int basicOffset = listValueType.offset();
             offset = length * basicOffset;
         }
 
@@ -416,13 +416,17 @@ public class ABIObject {
                         listValueBuffer.append(abiObject.encode());
                         if (abiObject.isDynamic()) {
                             offsetBuffer.append(TypeEncoder.encode(new Uint256(dynamicOffset)));
-                            dynamicOffset += listValueEncode.length() >> 1;
+                            dynamicOffset += (listValueEncode.length() >> 1);
                         }
                     }
 
                     stringBuffer.append(lengthBuffer).append(offsetBuffer).append(listValueBuffer);
                     break;
                 }
+        }
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("ABI: {}", stringBuffer.toString());
         }
 
         return stringBuffer.toString();
