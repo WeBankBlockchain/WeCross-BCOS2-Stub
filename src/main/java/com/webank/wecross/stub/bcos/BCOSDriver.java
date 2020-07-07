@@ -1132,6 +1132,7 @@ public class BCOSDriver implements Driver {
 
     @Override
     public void asyncGetVerifiedTransaction(
+            Path path,
             String transactionHash,
             long blockNumber,
             BlockHeaderManager blockHeaderManager,
@@ -1190,6 +1191,7 @@ public class BCOSDriver implements Driver {
                                 new VerifiedTransaction(
                                         finalBlockNumber,
                                         transactionHash,
+                                        path,
                                         receipt.getTo(),
                                         transactionRequest,
                                         transactionResponse);
