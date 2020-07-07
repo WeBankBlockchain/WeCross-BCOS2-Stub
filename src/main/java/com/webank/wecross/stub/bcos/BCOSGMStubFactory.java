@@ -122,6 +122,13 @@ public class BCOSGMStubFactory implements StubFactory {
                 fileWriter.close();
             }
 
+            String name = new File(path).getName();
+            System.out.println(
+                    "SUCCESS: Account \""
+                            + name
+                            + "\" config framework has been generated to \""
+                            + path
+                            + "\"");
         } catch (Exception e) {
             logger.error("Exception: ", e);
         }
@@ -130,9 +137,11 @@ public class BCOSGMStubFactory implements StubFactory {
     @Override
     public void generateConnection(String path, String[] args) {
         try {
+            String chainName = new File(path).getName();
             String accountTemplate =
                     "[common]\n"
-                            + ""
+                            + "    name = '"
+                            + chainName
                             + "    type = 'GM_BCOS2.0' # BCOS\n"
                             + "\n"
                             + "[chain]\n"
@@ -146,13 +155,7 @@ public class BCOSGMStubFactory implements StubFactory {
                             + "    sslKey = 'sdk.key'\n"
                             + "    timeout = 300000  # ms, default 60000ms\n"
                             + "    connectionsStr = ['127.0.0.1:20200']\n"
-                            + "\n"
-                            + "# resources is a list\n"
-                            + "[[resources]]\n"
-                            + "    # name cannot be repeated\n"
-                            + "    name = 'HelloWeCross'\n"
-                            + "    type = 'BCOS_CONTRACT'\n"
-                            + "    contractAddress = '0x0'";
+                            + "\n";
             String confFilePath = path + "/stub.toml";
             File confFile = new File(confFilePath);
             if (!confFile.createNewFile()) {
@@ -169,6 +172,12 @@ public class BCOSGMStubFactory implements StubFactory {
 
             generateProxyContract(path);
 
+            System.out.println(
+                    "SUCCESS: Chain \""
+                            + chainName
+                            + "\" config framework has been generated to \""
+                            + path
+                            + "\"");
         } catch (Exception e) {
             logger.error("Exception: ", e);
         }

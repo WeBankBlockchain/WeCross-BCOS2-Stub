@@ -122,6 +122,13 @@ public class BCOSStubFactory implements StubFactory {
                 fileWriter.close();
             }
 
+            String name = new File(path).getName();
+            System.out.println(
+                    "SUCCESS: Account \""
+                            + name
+                            + "\" config framework has been generated to \""
+                            + path
+                            + "\"");
         } catch (Exception e) {
             logger.error("Exception: ", e);
         }
@@ -149,13 +156,7 @@ public class BCOSStubFactory implements StubFactory {
                             + "    sslKey = 'sdk.key'\n"
                             + "    timeout = 300000  # ms, default 60000ms\n"
                             + "    connectionsStr = ['127.0.0.1:20200']\n"
-                            + "\n"
-                            + "# resources is a list\n"
-                            + "[[resources]]\n"
-                            + "    # name cannot be repeated\n"
-                            + "    name = 'HelloWeCross'\n"
-                            + "    type = 'BCOS_CONTRACT'\n"
-                            + "    contractAddress = '0x0'";
+                            + "\n";
             String confFilePath = path + "/stub.toml";
             File confFile = new File(confFilePath);
             if (!confFile.createNewFile()) {
@@ -172,6 +173,12 @@ public class BCOSStubFactory implements StubFactory {
 
             generateProxyContract(path);
 
+            System.out.println(
+                    "SUCCESS: Chain \""
+                            + chainName
+                            + "\" config framework has been generated to \""
+                            + path
+                            + "\"");
         } catch (Exception e) {
             logger.error("Exception: ", e);
         }
