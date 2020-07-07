@@ -26,5 +26,6 @@ cp -r src/test/resources/accounts src/integTest/resources/
 cp -r src/test/resources/contract src/integTest/resources/
 mkdir -p src/integTest/resources/solidity
 cp src/main/resources/* src/integTest/resources/solidity
-bash gradlew integTest --info
+cp src/test/resources/contract/* src/integTest/resources/solidity
+bash gradlew integTest
 ./gradlew jacocoTestReport
