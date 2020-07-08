@@ -10,6 +10,7 @@ import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.BlockHeaderManager;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
+import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.TransactionContext;
@@ -410,11 +411,12 @@ public class BCOSDriverTest {
     //    }
 
     @Test
-    public void getVerifyTransactionTest() throws IOException {
+    public void getVerifyTransactionTest() throws Exception {
         String transactionHash =
                 "0x8b3946912d1133f9fb0722a7b607db2456d468386c2e86b035e81ef91d94eb90";
         long blockNumber = 9;
         driver.asyncGetVerifiedTransaction(
+                Path.decode("a.b.c"),
                 transactionHash,
                 blockNumber,
                 txVerifyBlockHeaderManager,
@@ -426,11 +428,12 @@ public class BCOSDriverTest {
     }
 
     @Test
-    public void getVerifyTransactionExceptionTest() throws IOException {
+    public void getVerifyTransactionExceptionTest() throws Exception {
         String transactionHash =
                 "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         long blockNumber = 11111;
         driver.asyncGetVerifiedTransaction(
+                Path.decode("a.b.c"),
                 transactionHash,
                 blockNumber,
                 blockHeaderManager,
@@ -439,11 +442,12 @@ public class BCOSDriverTest {
     }
 
     @Test
-    public void getVerifyTransactionNotExistTest() throws IOException {
+    public void getVerifyTransactionNotExistTest() throws Exception {
         String transactionHash =
                 "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         long blockNumber = 11111;
         driver.asyncGetVerifiedTransaction(
+                Path.decode("a.b.c"),
                 transactionHash,
                 blockNumber,
                 blockHeaderManager,

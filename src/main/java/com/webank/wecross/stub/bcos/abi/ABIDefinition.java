@@ -12,8 +12,8 @@ import org.fisco.bcos.web3j.abi.FunctionEncoder;
  * ABIDefinition wrapper
  *
  * <p>Link https://solidity.readthedocs.io/en/develop/abi-spec.html#json <br>
- * type: "function", "constructor", "receive" (the “receive Ether” function) or "fallback" (the
- * “default” function); <br>
+ * type: "function", "constructor", "receive" (the "receive Ether" function) or "fallback" (the
+ * "default" function); <br>
  * name: the name of the function; <br>
  * inputs: an array of objects, each of which contains: <br>
  * name: the name of the parameter. <br>
