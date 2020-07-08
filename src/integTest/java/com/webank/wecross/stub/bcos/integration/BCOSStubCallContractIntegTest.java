@@ -367,9 +367,14 @@ public class BCOSStubCallContractIntegTest {
         byte[] contractBytes;
         contractBytes = Files.readAllBytes(file.toPath());
 
+        String constructorParams = "constructor params";
         Object[] args =
                 new Object[]{
-                        "HelloWorld", new String(contractBytes), "HelloWorld", String.valueOf(System.currentTimeMillis()),
+                        "HelloWorld",
+                        new String(contractBytes),
+                        "HelloWorld",
+                        String.valueOf(System.currentTimeMillis()),
+                        constructorParams
                 };
 
 
