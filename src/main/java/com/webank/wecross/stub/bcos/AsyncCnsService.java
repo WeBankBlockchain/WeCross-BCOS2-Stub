@@ -33,11 +33,9 @@ public class AsyncCnsService {
         void onResponse(Exception e, String info);
     }
 
-    public void queryAddress(
-            String name, Account account, Connection connection, QueryCallback callback) {
+    public void queryAddress(String name, Connection connection, QueryCallback callback) {
         selectByName(
                 name,
-                account,
                 connection,
                 (exception, infoList) -> {
                     if (Objects.nonNull(exception)) {
@@ -54,11 +52,9 @@ public class AsyncCnsService {
                 });
     }
 
-    public void queryABI(
-            String name, Account account, Connection connection, QueryCallback callback) {
+    public void queryABI(String name, Connection connection, QueryCallback callback) {
         selectByName(
                 name,
-                account,
                 connection,
                 (exception, infoList) -> {
                     if (Objects.nonNull(exception)) {
@@ -80,30 +76,18 @@ public class AsyncCnsService {
     }
 
     public void selectByNameAndVersion(
-            String name,
-            String version,
-            Account account,
-            Connection connection,
-            SelectCallback callback) {
-        select(
-                BCOSConstant.CNS_METHOD_SELECTBYNAMEANDVERSION,
-                name,
-                version,
-                account,
-                connection,
-                callback);
+            String name, String version, Connection connection, SelectCallback callback) {
+        select(BCOSConstant.CNS_METHOD_SELECTBYNAMEANDVERSION, name, version, connection, callback);
     }
 
-    public void selectByName(
-            String name, Account account, Connection connection, SelectCallback callback) {
-        select(BCOSConstant.CNS_METHOD_SELECTBYNAME, name, null, account, connection, callback);
+    public void selectByName(String name, Connection connection, SelectCallback callback) {
+        select(BCOSConstant.CNS_METHOD_SELECTBYNAME, name, null, connection, callback);
     }
 
     private void select(
             String method,
             String name,
             String version,
-            Account account,
             Connection connection,
             SelectCallback callback) {
         Function function;
@@ -124,22 +108,12 @@ public class AsyncCnsService {
             transactionRequest.setArgs(new String[] {name});
         }
 
-        if (!(account instanceof BCOSAccount)) {
-            callback.onResponse(
-                    new Exception(
-                            "incorrect account type, expected: BCOS, actual: " + account.getType()),
-                    null);
-        }
-
-        BCOSAccount bcosAccount = (BCOSAccount) account;
-        Credentials credentials = bcosAccount.getCredentials();
-
         transactionRequest.setMethod(method);
         TransactionParams transaction =
                 new TransactionParams(
                         transactionRequest,
                         FunctionEncoder.encode(function),
-                        credentials.getAddress(),
+                        BCOSConstant.DEFAULT_ADDRESS,
                         BCOSConstant.CNS_PRECOMPILED_ADDRESS);
 
         Request request = null;

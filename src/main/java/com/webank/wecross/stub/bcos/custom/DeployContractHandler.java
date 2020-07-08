@@ -55,7 +55,6 @@ public class DeployContractHandler implements CommandHandler {
         checkContractVersion(
                 cnsName,
                 version,
-                account,
                 connection,
                 checkVersionException -> {
                     if (Objects.nonNull(checkVersionException)) {
@@ -163,14 +162,12 @@ public class DeployContractHandler implements CommandHandler {
     private void checkContractVersion(
             String name,
             String version,
-            Account account,
             Connection connection,
             CheckContractVersionCallback callback) {
 
         asyncCnsService.selectByNameAndVersion(
                 name,
                 version,
-                account,
                 connection,
                 (exception, infoList) -> {
                     if (Objects.nonNull(exception)) {

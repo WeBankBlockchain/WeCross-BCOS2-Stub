@@ -408,6 +408,8 @@ public class ABICodecJsonWrapper {
             logger.trace(" ABIObject: {}, abi: {}", template.toString(), buffer);
         }
 
+        buffer = Numeric.cleanHexPrefix(buffer);
+
         ABIObject abiObject = template.decode(buffer);
 
         JsonNode jsonNode = decode(abiObject);
