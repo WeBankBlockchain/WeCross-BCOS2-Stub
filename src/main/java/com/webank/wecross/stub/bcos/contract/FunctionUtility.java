@@ -1,5 +1,6 @@
 package com.webank.wecross.stub.bcos.contract;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -9,10 +10,13 @@ import org.fisco.bcos.web3j.abi.FunctionReturnDecoder;
 import org.fisco.bcos.web3j.abi.TypeReference;
 import org.fisco.bcos.web3j.abi.Utils;
 import org.fisco.bcos.web3j.abi.datatypes.DynamicArray;
+import org.fisco.bcos.web3j.abi.datatypes.DynamicBytes;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
 import org.fisco.bcos.web3j.abi.datatypes.Type;
 import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
+import org.fisco.bcos.web3j.abi.datatypes.generated.Uint256;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.fisco.bcos.web3j.tuples.generated.Tuple5;
 
 /**
  * Function object used across blockchain chain. Wecross requires that a cross-chain contract
@@ -57,6 +61,35 @@ public class FunctionUtility {
                                         org.fisco.bcos.web3j.abi.Utils.typeMap(
                                                 Arrays.asList(params), Utf8String.class))),
                 abiTypeReferenceOutputs);
+    }
+
+    /**
+     * decode WeCrossProxy sendTransaction output
+     *
+     * @param transactionReceipt
+     * @return
+     */
+    public static Tuple5<String, BigInteger, String, String, byte[]> getProxyFunctionInput(
+            TransactionReceipt transactionReceipt) {
+        String data = transactionReceipt.getInput().substring(10);
+        final Function function =
+                new Function(
+                        "sendTransaction",
+                        Arrays.<Type>asList(),
+                        Arrays.<TypeReference<?>>asList(
+                                new TypeReference<Utf8String>() {},
+                                new TypeReference<Uint256>() {},
+                                new TypeReference<Utf8String>() {},
+                                new TypeReference<Utf8String>() {},
+                                new TypeReference<DynamicBytes>() {}));
+        List<Type> results = FunctionReturnDecoder.decode(data, function.getOutputParameters());
+        ;
+        return new Tuple5<String, BigInteger, String, String, byte[]>(
+                (String) results.get(0).getValue(),
+                (BigInteger) results.get(1).getValue(),
+                (String) results.get(2).getValue(),
+                (String) results.get(3).getValue(),
+                (byte[]) results.get(4).getValue());
     }
 
     public static List<String> convertToStringList(List<Type> typeList) {
