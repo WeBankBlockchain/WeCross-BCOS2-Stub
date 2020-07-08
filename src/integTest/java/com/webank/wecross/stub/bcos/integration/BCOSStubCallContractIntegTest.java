@@ -159,25 +159,25 @@ public class BCOSStubCallContractIntegTest {
                 resolver.getResource("classpath:solidity/WeCrossProxy.sol")
                         .getFile()
                         .getAbsolutePath();
-        
+
         File file = new File(path);
         byte[] contractBytes;
         contractBytes = Files.readAllBytes(file.toPath());
 
         Object[] args =
-                new Object[] {
-                    "WeCrossProxy", new String(contractBytes), "WeCrossProxy", String.valueOf(System.currentTimeMillis()),
+                new Object[]{
+                        "WeCrossProxy", new String(contractBytes), "WeCrossProxy", String.valueOf(System.currentTimeMillis()),
                 };
 
         AsyncToSync asyncToSync = new AsyncToSync();
         CommandHandler commandHandler = new DeployContractHandler();
         commandHandler.handle(Path.decode("a.b.WeCrossProxy"), args, account, blockHeaderManager, connection, new HashMap<>(), (error, response) -> {
-            if(Objects.nonNull(error)) {
+            if (Objects.nonNull(error)) {
                 error.printStackTrace();
             }
             asyncToSync.getSemaphore().release();
         });
-        
+
         asyncToSync.getSemaphore().acquire();
     }
 
@@ -223,7 +223,7 @@ public class BCOSStubCallContractIntegTest {
         String[] params = new String[]{};
         Path path = Path.decode("a.b.HelloWorld");
         TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path,"getVersion", params);
+                createTransactionRequestContext(path, "getVersion", params);
         TransactionResponse transactionResponse =
                 null;
         try {
@@ -242,7 +242,7 @@ public class BCOSStubCallContractIntegTest {
         Path path = Path.decode("a.b.HelloWorld");
         String[] params = new String[]{"a.b.1", "a.b.2"};
         TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path,"addPaths", params);
+                createTransactionRequestContext(path, "addPaths", params);
         TransactionResponse transactionResponse =
                 null;
         try {
@@ -259,7 +259,7 @@ public class BCOSStubCallContractIntegTest {
         Path path = Path.decode("a.b.HelloWorld");
         String[] params = new String[]{"a.b.c"};
         TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path,"addPath", params);
+                createTransactionRequestContext(path, "addPath", params);
         TransactionResponse transactionResponse =
                 null;
         try {
@@ -276,7 +276,7 @@ public class BCOSStubCallContractIntegTest {
 //        }
 
         TransactionContext<TransactionRequest> requestTransactionContext0 =
-                createTransactionRequestContext(path,"getPaths", new String[]{});
+                createTransactionRequestContext(path, "getPaths", new String[]{});
         TransactionResponse transactionResponse0 =
                 null;
         try {
@@ -289,7 +289,7 @@ public class BCOSStubCallContractIntegTest {
         assertTrue(transactionResponse0.getResult().length == params.length);
 
         TransactionContext<TransactionRequest> getRequestTransactionContext =
-                createTransactionRequestContext(path,"getPaths", new String[]{});
+                createTransactionRequestContext(path, "getPaths", new String[]{});
         TransactionResponse getTransactionResponse =
                 null;
         try {
@@ -301,7 +301,7 @@ public class BCOSStubCallContractIntegTest {
         assertTrue(Objects.nonNull(getTransactionResponse));
         assertTrue(getTransactionResponse.getErrorCode() == BCOSStatusCode.Success);
         assertTrue(getTransactionResponse.getResult().length == params.length);
-        for (int i=0;i<getTransactionResponse.getResult().length;++i) {
+        for (int i = 0; i < getTransactionResponse.getResult().length; ++i) {
             assertEquals(getTransactionResponse.getResult()[i], params[i]);
         }
     }
@@ -309,9 +309,9 @@ public class BCOSStubCallContractIntegTest {
     @Test
     public void sendTransactionNotExistIntegTest() throws Exception {
         Path path = Path.decode("a.b.HelloWorld");
-        String[] params = new String[] {"aa", "bb", "cc", "dd"};
+        String[] params = new String[]{"aa", "bb", "cc", "dd"};
         TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path,"setNotExist", params);
+                createTransactionRequestContext(path, "setNotExist", params);
         TransactionResponse transactionResponse =
                 null;
         try {
@@ -344,10 +344,10 @@ public class BCOSStubCallContractIntegTest {
 
     @Test
     public void getVerifiedTransactionTest() throws Exception {
-        String[] params = new String[] {"a.b.c"};
+        String[] params = new String[]{"a.b.c"};
         Path path = Path.decode("a.b.HelloWorld");
         TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path,"addPath", params);
+                createTransactionRequestContext(path, "addPath", params);
 
         TransactionResponse transactionResponse =
                 driver.sendTransaction(requestTransactionContext, connection);
@@ -361,7 +361,7 @@ public class BCOSStubCallContractIntegTest {
         assertEquals(transaction.getBlockNumber().longValue(), transactionReceipt.getBlockNumber().longValue());
 
         AsyncToSync asyncToSync = new AsyncToSync();
-        driver.asyncGetVerifiedTransaction(transactionResponse.getHash(), transactionResponse.getBlockNumber(), blockHeaderManager, connection, (e, verifiedTransaction) -> {
+        driver.asyncGetVerifiedTransaction(path, transactionResponse.getHash(), transactionResponse.getBlockNumber(), blockHeaderManager, connection, (e, verifiedTransaction) -> {
             assertEquals(verifiedTransaction.getBlockNumber(), transactionResponse.getBlockNumber());
             assertEquals(verifiedTransaction.getTransactionHash(), transactionResponse.getHash());
             assertEquals(verifiedTransaction.getRealAddress(), connection.getProperties().get(BCOSConstant.BCOS_PROXY_NAME));
@@ -379,10 +379,14 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
-    public void getVerifiedTransactionNotExistTest() throws InterruptedException {
+    public void getVerifiedTransactionNotExistTest() throws Exception {
+        Path path = Path.decode("a.b.HelloWorld");
         AsyncToSync asyncToSync = new AsyncToSync();
         String transactionHash = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
-        driver.asyncGetVerifiedTransaction(transactionHash, 1, blockHeaderManager, connection, (e, verifiedTransaction) -> {assertTrue(Objects.isNull(verifiedTransaction)); asyncToSync.getSemaphore().release();});
+        driver.asyncGetVerifiedTransaction(path, transactionHash, 1, blockHeaderManager, connection, (e, verifiedTransaction) -> {
+            assertTrue(Objects.isNull(verifiedTransaction));
+            asyncToSync.getSemaphore().release();
+        });
         asyncToSync.getSemaphore().acquire();
     }
 
@@ -399,7 +403,7 @@ public class BCOSStubCallContractIntegTest {
         contractBytes = Files.readAllBytes(file.toPath());
 
         Object[] args =
-                new Object[] {
+                new Object[]{
                         "HelloWorld", new String(contractBytes), "HelloWorld", String.valueOf(System.currentTimeMillis()),
                 };
 
@@ -428,7 +432,7 @@ public class BCOSStubCallContractIntegTest {
         contractBytes = Files.readAllBytes(file.toPath());
 
         Object[] args =
-                new Object[] {
+                new Object[]{
                         "TupleTest", new String(contractBytes), "TupleTest", String.valueOf(System.currentTimeMillis()),
                 };
 
@@ -463,7 +467,7 @@ public class BCOSStubCallContractIntegTest {
         String[] params = new String[]{"hello", "world"};
         Path path = Path.decode("a.b.HelloWorld");
         TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path,"get2", params);
+                createTransactionRequestContext(path, "get2", params);
 
         AsyncToSync asyncToSync = new AsyncToSync();
         driver.asyncCallByProxy(requestTransactionContext, connection, (exception, res) -> {
@@ -482,7 +486,7 @@ public class BCOSStubCallContractIntegTest {
         String[] params = new String[]{"hello world"};
         Path path = Path.decode("a.b.HelloWorld");
         TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path,"get1", params);
+                createTransactionRequestContext(path, "get1", params);
 
         AsyncToSync asyncToSync = new AsyncToSync();
         driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
@@ -502,7 +506,7 @@ public class BCOSStubCallContractIntegTest {
         String[] params = new String[]{"hello", "world"};
         Path path = Path.decode("a.b.HelloWorld");
         TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path,"get2", params);
+                createTransactionRequestContext(path, "get2", params);
 
         AsyncToSync asyncToSync = new AsyncToSync();
         driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
@@ -521,7 +525,7 @@ public class BCOSStubCallContractIntegTest {
         String[] params = new String[]{"hello"};
         Path path = Path.decode("a.b.HelloWorld");
         TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path,"set", params);
+                createTransactionRequestContext(path, "set", params);
 
         AsyncToSync asyncToSync = new AsyncToSync();
         driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
