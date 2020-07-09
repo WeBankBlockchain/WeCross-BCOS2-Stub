@@ -63,19 +63,25 @@ public class BCOSConnection implements Connection {
         this.scheduledExecutorService.scheduleAtFixedRate(
                 () -> {
                     if (Objects.nonNull(eventHandler)) {
-                        List<ResourceInfo> resources = getResources();
-                        if (!resources.equals(resourcesCache) && !resources.isEmpty()) {
-                            eventHandler.onResourcesChange(resources);
-                            resourcesCache = resources;
-                            if (logger.isDebugEnabled()) {
-                                logger.debug(" resources notify, resources: {}", resources);
-                            }
-                        }
+                        noteOnResourcesChange();
                     }
                 },
                 10000,
                 30000,
                 TimeUnit.MILLISECONDS);
+    }
+
+    private void noteOnResourcesChange() {
+        synchronized (this) {
+            List<ResourceInfo> resources = getResources();
+            if (!resources.equals(resourcesCache) && !resources.isEmpty()) {
+                eventHandler.onResourcesChange(resources);
+                resourcesCache = resources;
+                if (logger.isDebugEnabled()) {
+                    logger.debug(" resources notify, resources: {}", resources);
+                }
+            }
+        }
     }
 
     public List<ResourceInfo> getResourceInfoList() {
@@ -310,6 +316,15 @@ public class BCOSConnection implements Connection {
                             }
 
                             callback.onResponse(response);
+
+                            // trigger resources sync after cns updated
+                            if (transaction.getTransactionRequest() != null
+                                    && transaction
+                                            .getTransactionRequest()
+                                            .getMethod()
+                                            .equals(BCOSConstant.CNS_METHOD_INSERT)) {
+                                noteOnResourcesChange();
+                            }
                         }
                     });
         } catch (Exception e) {

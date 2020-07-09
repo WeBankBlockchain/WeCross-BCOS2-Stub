@@ -230,7 +230,7 @@ public class AsyncCnsService {
                     transactionRequest.setMethod(BCOSConstant.CNS_METHOD_INSERT);
                     transactionRequest.setArgs(new String[] {name, version, address, abi});
                     TransactionParams transaction =
-                            new TransactionParams(new TransactionRequest(), signTx);
+                            new TransactionParams(transactionRequest, signTx);
                     Request request;
                     try {
                         request =
