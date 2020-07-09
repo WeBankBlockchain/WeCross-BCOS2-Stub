@@ -381,7 +381,12 @@ public class BCOSStubCallContractIntegTest {
         AsyncToSync asyncToSync = new AsyncToSync();
 
         CommandHandler commandHandler = new DeployContractHandler();
-        commandHandler.handle(Path.decode("a.b.HelloWorld"), args, account, blockHeaderManager, connection, new HashMap<>(), (error, response) -> {
+        commandHandler.handle(Path.decode("a.b.HelloWorld"),
+                args,
+                account,
+                blockHeaderManager,
+                connection,
+                new HashMap<>(), (error, response) -> {
             assertNull(error);
             assertNotNull(response);
             asyncToSync.getSemaphore().release();
@@ -401,9 +406,12 @@ public class BCOSStubCallContractIntegTest {
         byte[] contractBytes;
         contractBytes = Files.readAllBytes(file.toPath());
 
+        String params1 = "1";
+        String params2 = "[1,2,3]";
+        String params3 = "HelloWorld";
         Object[] args =
                 new Object[]{
-                        "TupleTest", new String(contractBytes), "TupleTest", String.valueOf(System.currentTimeMillis()),
+                        "TupleTest", new String(contractBytes), "TupleTest", String.valueOf(System.currentTimeMillis()), params1, params2, params3
                 };
 
 
