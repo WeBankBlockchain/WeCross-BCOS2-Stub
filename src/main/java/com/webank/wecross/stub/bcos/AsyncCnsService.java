@@ -10,6 +10,10 @@ import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.verify.MerkleValidation;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.TypeReference;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
@@ -28,6 +32,25 @@ public class AsyncCnsService {
     private static final Logger logger = LoggerFactory.getLogger(AsyncCnsService.class);
 
     private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
+
+    private LRUCache<String, String> abiCache = new LRUCache<>(32);
+    private ScheduledExecutorService scheduledExecutorService =
+            new ScheduledThreadPoolExecutor(1024);
+    private static final long CLEAR_EXPIRES = 30 * 60; // 30 min
+    private Semaphore queryABISemaphore = new Semaphore(1, true);
+
+    public AsyncCnsService() {
+        this.scheduledExecutorService.scheduleAtFixedRate(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        abiCache.clear();
+                    }
+                },
+                CLEAR_EXPIRES,
+                CLEAR_EXPIRES,
+                TimeUnit.SECONDS);
+    }
 
     public interface QueryCallback {
         void onResponse(Exception e, String info);
@@ -53,22 +76,65 @@ public class AsyncCnsService {
     }
 
     public void queryABI(String name, Connection connection, QueryCallback callback) {
-        selectByName(
-                name,
-                connection,
-                (exception, infoList) -> {
-                    if (Objects.nonNull(exception)) {
-                        callback.onResponse(exception, null);
-                        return;
-                    }
+        try {
+            final String abi = abiCache.get(name);
+            if (abi != null) {
+                // Just use thread pool to return by callback
+                this.scheduledExecutorService.schedule(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                callback.onResponse(null, abi);
+                            }
+                        },
+                        0,
+                        TimeUnit.MILLISECONDS);
+                return;
+            }
 
-                    if (Objects.isNull(infoList) || infoList.isEmpty()) {
-                        callback.onResponse(null, null);
-                    } else {
-                        int size = infoList.size();
-                        callback.onResponse(null, infoList.get(size - 1).getAbi());
-                    }
-                });
+            queryABISemaphore.acquire(1); // Only 1 thread can query abi remote
+            final String abiAgain = abiCache.get(name);
+            if (abiAgain != null) {
+                queryABISemaphore.release();
+                // Just use thread pool to return by callback
+                this.scheduledExecutorService.schedule(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                callback.onResponse(null, abiAgain);
+                            }
+                        },
+                        0,
+                        TimeUnit.MILLISECONDS);
+                return;
+            }
+
+            selectByName(
+                    name,
+                    connection,
+                    (exception, infoList) -> {
+                        if (Objects.nonNull(exception)) {
+                            queryABISemaphore.release();
+                            callback.onResponse(exception, null);
+                            return;
+                        }
+
+                        if (Objects.isNull(infoList) || infoList.isEmpty()) {
+                            queryABISemaphore.release();
+                            callback.onResponse(null, null);
+                        } else {
+                            int size = infoList.size();
+                            String currentAbi = infoList.get(size - 1).getAbi();
+                            abiCache.put(name, currentAbi);
+                            queryABISemaphore.release();
+                            logger.debug("queryABI name:{}, abi:{}", name, currentAbi);
+                            callback.onResponse(null, currentAbi);
+                        }
+                    });
+        } catch (Exception e) {
+            queryABISemaphore.release();
+            callback.onResponse(e, null);
+        }
     }
 
     public interface SelectCallback {
