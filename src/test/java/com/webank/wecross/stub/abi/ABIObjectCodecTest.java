@@ -7,6 +7,7 @@ import com.webank.wecross.stub.bcos.abi.ABIObject;
 import com.webank.wecross.stub.bcos.abi.ABIObjectFactory;
 import com.webank.wecross.stub.bcos.abi.ContractABIDefinition;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
@@ -561,14 +562,18 @@ public class ABIObjectCodecTest {
         args.add("arg112345678901234567890123456789012345678901234567890");
         args.add("arg212345678901234567890123456789012345678901234567890");
         args.add("arg312345678901234567890123456789012345678901234567890");
-        args.add("0x123456789874321");
+
+        String bytesValue = "0x123456789874321";
+        byte[] encode = Base64.getEncoder().encode(bytesValue.getBytes());
+
+        args.add(new String(encode));
 
         ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
         ABIObject encodedObj = abiCodecJsonWrapper.encode(inputABIObject, args);
         String buffer = encodedObj.encode();
 
         List<String> decodeArgs = abiCodecJsonWrapper.decode(inputABIObject, buffer);
-        // Assert.assertArrayEquals(args.toArray(), decodeArgs.toArray());
+        Assert.assertArrayEquals(args.toArray(), decodeArgs.toArray());
 
         List<ABIDefinition> functions0 =
                 contractABIDefinition.getFunctions().get("commitTransaction");
@@ -583,6 +588,14 @@ public class ABIObjectCodecTest {
 
         List<String> decodeArgs0 = abiCodecJsonWrapper.decode(inputABIObject0, buffer0);
 
-        System.out.println(decodeArgs0);
+        // Assert.assertArrayEquals(decodeArgs.toArray(new String[0]), args0.get(0));
+
+        for (int i = 0; i < args.size() - 1; i++) {
+            Assert.assertEquals(args.get(i), decodeArgs.get(i));
+        }
+
+        byte[] decode = Base64.getDecoder().decode(decodeArgs.get(args.size() - 1));
+
+        Assert.assertEquals(new String(decode), bytesValue);
     }
 }

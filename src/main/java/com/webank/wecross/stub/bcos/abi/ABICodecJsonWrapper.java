@@ -8,6 +8,7 @@ import com.webank.wecross.stub.bcos.abi.ABIObject.ListType;
 import java.io.IOException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Iterator;
 import java.util.List;
 import org.fisco.bcos.web3j.abi.datatypes.Address;
@@ -124,8 +125,9 @@ public class ABICodecJsonWrapper {
                                             node.getNodeType().toString());
                                 }
 
-                                byte[] bytes = node.asText().getBytes();
-                                abiObject.setBytesValue(new Bytes(bytes.length, bytes));
+                                // Binary data requires base64 encoding
+                                byte[] bytesValue = Base64.getDecoder().decode(node.asText());
+                                abiObject.setBytesValue(new Bytes(bytesValue.length, bytesValue));
                                 break;
                             }
                         case DBYTES:
@@ -137,8 +139,8 @@ public class ABICodecJsonWrapper {
                                             node.getNodeType().toString());
                                 }
 
-                                byte[] bytes = node.asText().getBytes();
-                                abiObject.setDynamicBytesValue(new DynamicBytes(bytes));
+                                byte[] bytesValue = Base64.getDecoder().decode(node.asText());
+                                abiObject.setDynamicBytesValue(new DynamicBytes(bytesValue));
                                 break;
                             }
                         case STRING:
@@ -291,15 +293,18 @@ public class ABICodecJsonWrapper {
                                     }
                                 case BYTES:
                                     {
+                                        // Binary data requires base64 encoding
+                                        byte[] bytesValue = Base64.getDecoder().decode(value);
                                         argObject.setBytesValue(
-                                                new Bytes(
-                                                        value.getBytes().length, value.getBytes()));
+                                                new Bytes(bytesValue.length, bytesValue));
                                         break;
                                     }
                                 case DBYTES:
                                     {
+                                        // Binary data requires base64 encoding
+                                        byte[] bytesValue = Base64.getDecoder().decode(value);
                                         argObject.setDynamicBytesValue(
-                                                new DynamicBytes(value.getBytes()));
+                                                new DynamicBytes(bytesValue));
                                         break;
                                     }
                                 case STRING:
@@ -442,15 +447,21 @@ public class ABICodecJsonWrapper {
                                 }
                             case BYTES:
                                 {
-                                    result.add(
-                                            String.valueOf(argObject.getBytesValue().getValue()));
+                                    byte[] base64Bytes =
+                                            Base64.getEncoder()
+                                                    .encode(argObject.getBytesValue().getValue());
+                                    result.add(new String(base64Bytes));
                                     break;
                                 }
                             case DBYTES:
                                 {
-                                    result.add(
-                                            String.valueOf(
-                                                    argObject.getDynamicBytesValue().getValue()));
+                                    byte[] base64Bytes =
+                                            Base64.getEncoder()
+                                                    .encode(
+                                                            argObject
+                                                                    .getDynamicBytesValue()
+                                                                    .getValue());
+                                    result.add(new String(base64Bytes));
                                     break;
                                 }
                             case STRING:

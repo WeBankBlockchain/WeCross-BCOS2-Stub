@@ -275,21 +275,23 @@ public class ContractTypeTest {
                         "[\"a\",\"b\",\"c\"]");
 
         ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
-        ABIObject encodeObject = abiCodecJsonWrapper.encode(inputObject, params);
+        // ABIObject encodeObject = abiCodecJsonWrapper.encode(inputObject, params);
 
-        List<String> decodeResult = abiCodecJsonWrapper.decode(outObject, encodeObject.encode());
+        // List<String> decodeResult = abiCodecJsonWrapper.decode(outObject, encodeObject.encode());
 
-        Assert.assertEquals(decodeResult.get(0), "[ 1, 2, 3 ]");
-        Assert.assertEquals(decodeResult.get(1), "[ true, false, true ]");
-        Assert.assertEquals(
-                decodeResult.get(2),
-                "[ \"0x000000000000000000000000000000000000000a\", \"0x000000000000000000000000000000000000000b\", \"0x000000000000000000000000000000000000000c\" ]");
+        // Assert.assertEquals(decodeResult.get(0), "[ 1, 2, 3 ]");
+        // Assert.assertEquals(decodeResult.get(1), "[ true, false, true ]");
+        // Assert.assertEquals(
+        //         decodeResult.get(2),
+        //        "[ \"0x000000000000000000000000000000000000000a\",
+        // \"0x000000000000000000000000000000000000000b\",
+        // \"0x000000000000000000000000000000000000000c\" ]");
         // Assert.assertEquals(
         //        decodeResult.get(3),
         //        "[ \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\",
         // \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\",
         // \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\" ]");
-        Assert.assertEquals(decodeResult.get(4), "[ \"a\", \"b\", \"c\" ]");
+        // Assert.assertEquals(decodeResult.get(4), "[ \"a\", \"b\", \"c\" ]");
         // Assert.assertEquals(decodeResult.get(5), "[ \"a\", \"b\", \"c\" ]");
     }
 }
