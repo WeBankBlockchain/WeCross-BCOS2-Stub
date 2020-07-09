@@ -52,7 +52,7 @@ public class BCOSConnection implements Connection {
 
     private final Web3jWrapper web3jWrapper;
 
-    private ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
+    private ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(32);
 
     private Map<String, String> properties = new HashMap<>();
 
@@ -322,8 +322,17 @@ public class BCOSConnection implements Connection {
                                     && transaction
                                             .getTransactionRequest()
                                             .getMethod()
-                                            .equals(BCOSConstant.CNS_METHOD_INSERT)) {
-                                noteOnResourcesChange();
+                                            .equals(BCOSConstant.PROXY_METHOD_ADDPATH)) {
+
+                                scheduledExecutorService.schedule(
+                                        new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                noteOnResourcesChange();
+                                            }
+                                        },
+                                        1,
+                                        TimeUnit.MILLISECONDS);
                             }
                         }
                     });
