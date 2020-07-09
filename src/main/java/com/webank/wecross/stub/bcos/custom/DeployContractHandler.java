@@ -3,6 +3,12 @@ package com.webank.wecross.stub.bcos.custom;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.stub.*;
 import com.webank.wecross.stub.bcos.AsyncCnsService;
+import com.webank.wecross.stub.bcos.abi.ABICodecJsonWrapper;
+import com.webank.wecross.stub.bcos.abi.ABIDefinition;
+import com.webank.wecross.stub.bcos.abi.ABIDefinitionFactory;
+import com.webank.wecross.stub.bcos.abi.ABIObject;
+import com.webank.wecross.stub.bcos.abi.ABIObjectFactory;
+import com.webank.wecross.stub.bcos.abi.ContractABIDefinition;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.common.*;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
@@ -26,6 +32,7 @@ public class DeployContractHandler implements CommandHandler {
     private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
 
     private AsyncCnsService asyncCnsService = new AsyncCnsService();
+    private ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
 
     /** @param args contractBytes || version */
     @Override
@@ -48,9 +55,19 @@ public class DeployContractHandler implements CommandHandler {
         String className = (String) args[2];
         String version = (String) args[3];
 
+        /** constructor params */
+        List<String> params = null;
+        if (args.length > 4) {
+            params = new ArrayList<>();
+            for (int i = 4; i < args.length; ++i) {
+                params.add((String) args[i]);
+            }
+        }
+
         BCOSAccount bcosAccount = (BCOSAccount) account;
         Credentials credentials = bcosAccount.getCredentials();
 
+        final List<String> finalParams = params;
         // check version
         checkContractVersion(
                 cnsName,
@@ -106,8 +123,59 @@ public class DeployContractHandler implements CommandHandler {
                     int groupID = Integer.parseInt(properties.get(BCOSConstant.BCOS_GROUP_ID));
                     int chainID = Integer.parseInt(properties.get(BCOSConstant.BCOS_CHAIN_ID));
 
+                    ContractABIDefinition contractABIDefinition =
+                            ABIDefinitionFactory.loadABI(metadata.abi);
+                    ABIDefinition constructor = contractABIDefinition.getConstructor();
+
+                    /** check if solidity constructor needs arguments */
+                    String paramsABI = "";
+                    if (!Objects.isNull(constructor)
+                            && !Objects.isNull(constructor.getInputs())
+                            && !constructor.getInputs().isEmpty()) {
+
+                        if (Objects.isNull(finalParams)) {
+                            logger.error(" {} constructor needs arguments", className);
+                            callback.onResponse(
+                                    new Exception(className + " constructor needs arguments"),
+                                    null);
+                            return;
+                        }
+
+                        ABIObject constructorABIObject =
+                                ABIObjectFactory.createInputObject(constructor);
+                        try {
+                            ABIObject abiObject =
+                                    abiCodecJsonWrapper.encode(constructorABIObject, finalParams);
+                            paramsABI = abiObject.encode();
+                            if (logger.isDebugEnabled()) {
+                                logger.debug(
+                                        " className: {}, params: {}, abi: {}",
+                                        className,
+                                        finalParams.toArray(new String[0]),
+                                        paramsABI);
+                            }
+                        } catch (Exception e) {
+                            logger.error(
+                                    "{} constructor arguments encode failed, params: {}, e: ",
+                                    className,
+                                    finalParams.toArray(new String[0]),
+                                    e);
+                            callback.onResponse(
+                                    new Exception(
+                                            className
+                                                    + " constructor arguments encode failed, e: "
+                                                    + e.getMessage()),
+                                    null);
+                            return;
+                        }
+                    }
+
                     if (logger.isDebugEnabled()) {
-                        logger.debug("deploy contract, name: {}, bin: {}", cnsName, metadata.bin);
+                        logger.debug(
+                                "deploy contract, name: {}, bin: {}, abi:{}",
+                                cnsName,
+                                metadata.bin,
+                                metadata.abi);
                     }
 
                     // deploy contract
@@ -115,7 +183,7 @@ public class DeployContractHandler implements CommandHandler {
                             groupID,
                             chainID,
                             cnsName,
-                            metadata.bin,
+                            metadata.bin + paramsABI,
                             credentials,
                             blockHeaderManager,
                             connection,
