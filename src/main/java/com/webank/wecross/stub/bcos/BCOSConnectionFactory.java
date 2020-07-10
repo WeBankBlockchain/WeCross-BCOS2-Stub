@@ -22,6 +22,7 @@ import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.channel.StatusCode;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
+import org.fisco.bcos.web3j.protocol.core.methods.response.NodeVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,36 +114,26 @@ public class BCOSConnectionFactory {
     }
 
     public static void checkBCOSVersion(Web3jWrapper web3jWrapper) throws Exception {
-        String supportedVersionStr =
-                web3jWrapper
-                        .getWeb3j()
-                        .getNodeVersion()
-                        .send()
-                        .getNodeVersion()
-                        .getSupportedVersion();
-        String nodeVersionStr =
-                web3jWrapper.getWeb3j().getNodeVersion().send().getNodeVersion().getVersion();
+        NodeVersion.Version respondNodeVersion =
+                web3jWrapper.getWeb3j().getNodeVersion().send().getNodeVersion();
+        String supportedVersionStr = respondNodeVersion.getSupportedVersion();
+        String nodeVersionStr = respondNodeVersion.getVersion();
         EnumNodeVersion.Version supportedVersion =
                 EnumNodeVersion.getClassVersion(supportedVersionStr);
         EnumNodeVersion.Version nodeVersion = EnumNodeVersion.getClassVersion(nodeVersionStr);
 
-        EnumNodeVersion.Version version240 = EnumNodeVersion.getClassVersion("2.4.0");
-
         // must not below than 2.4.0
-        if (intVersion(supportedVersion) < intVersion(version240)) {
+        if (supportedVersion.getMajor() == 2 && supportedVersion.getMinor() >= 4) {
             throw new Exception(
                     "FISCO BCOS supported version is not supported, version must not below than 2.4.0, but current is "
                             + supportedVersionStr);
         }
 
-        if (intVersion(nodeVersion) < intVersion(version240)) {
+        // must not below than 2.4.0
+        if (nodeVersion.getMajor() == 2 && nodeVersion.getMinor() >= 4) {
             throw new Exception(
                     "FISCO BCOS version is not supported, version must not below than 2.4.0, but current is "
                             + nodeVersionStr);
         }
-    }
-
-    public static int intVersion(EnumNodeVersion.Version version) {
-        return 1000000 * version.getMajor() + version.getMinor() * 1000 + version.getPatch();
     }
 }
