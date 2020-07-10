@@ -11,6 +11,7 @@ import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import org.fisco.bcos.fisco.EnumNodeVersion;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.TypeReference;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
@@ -21,6 +22,7 @@ import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.channel.StatusCode;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
+import org.fisco.bcos.web3j.protocol.core.methods.response.NodeVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +43,8 @@ public class BCOSConnectionFactory {
             web3jWrapper = new Web3jWrapperImpl(web3j);
             logger.info(" web3j: {} ", web3j);
         }
+
+        checkBCOSVersion(web3jWrapper);
 
         BCOSConnection bcosConnection = new BCOSConnection(web3jWrapper);
         bcosConnection.setResourceInfoList(bcosStubConfig.convertToResourceInfos());
@@ -106,6 +110,30 @@ public class BCOSConnectionFactory {
         } catch (Exception e) {
             logger.warn("getting address of proxy contract failed,", e);
             return null;
+        }
+    }
+
+    public static void checkBCOSVersion(Web3jWrapper web3jWrapper) throws Exception {
+        NodeVersion.Version respondNodeVersion =
+                web3jWrapper.getWeb3j().getNodeVersion().send().getNodeVersion();
+        String supportedVersionStr = respondNodeVersion.getSupportedVersion();
+        String nodeVersionStr = respondNodeVersion.getVersion();
+        EnumNodeVersion.Version supportedVersion =
+                EnumNodeVersion.getClassVersion(supportedVersionStr);
+        EnumNodeVersion.Version nodeVersion = EnumNodeVersion.getClassVersion(nodeVersionStr);
+
+        // must not below than 2.4.0
+        if (!(supportedVersion.getMajor() == 2 && supportedVersion.getMinor() >= 4)) {
+            throw new Exception(
+                    "FISCO BCOS supported version is not supported, version must not below than 2.4.0, but current is "
+                            + supportedVersionStr);
+        }
+
+        // must not below than 2.4.0
+        if (!(nodeVersion.getMajor() == 2 && nodeVersion.getMinor() >= 4)) {
+            throw new Exception(
+                    "FISCO BCOS version is not supported, version must not below than 2.4.0, but current is "
+                            + nodeVersionStr);
         }
     }
 }
