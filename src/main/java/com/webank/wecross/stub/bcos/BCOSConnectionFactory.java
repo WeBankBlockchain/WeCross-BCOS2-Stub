@@ -113,21 +113,32 @@ public class BCOSConnectionFactory {
     }
 
     public static void checkBCOSVersion(Web3jWrapper web3jWrapper) throws Exception {
-        String supportedVersion =
+        String supportedVersionStr =
                 web3jWrapper
                         .getWeb3j()
                         .getNodeVersion()
                         .send()
                         .getNodeVersion()
                         .getSupportedVersion();
-        EnumNodeVersion.Version version = EnumNodeVersion.getClassVersion(supportedVersion);
+        String nodeVersionStr =
+                web3jWrapper.getWeb3j().getNodeVersion().send().getNodeVersion().getVersion();
+        EnumNodeVersion.Version supportedVersion =
+                EnumNodeVersion.getClassVersion(supportedVersionStr);
+        EnumNodeVersion.Version nodeVersion = EnumNodeVersion.getClassVersion(nodeVersionStr);
+
         EnumNodeVersion.Version version240 = EnumNodeVersion.getClassVersion("2.4.0");
 
         // must not below than 2.4.0
-        if (intVersion(version) < intVersion(version240)) {
+        if (intVersion(supportedVersion) < intVersion(version240)) {
+            throw new Exception(
+                    "FISCO BCOS supported version is not supported, version must not below than 2.4.0, but current is "
+                            + supportedVersionStr);
+        }
+
+        if (intVersion(nodeVersion) < intVersion(version240)) {
             throw new Exception(
                     "FISCO BCOS version is not supported, version must not below than 2.4.0, but current is "
-                            + supportedVersion);
+                            + nodeVersionStr);
         }
     }
 
