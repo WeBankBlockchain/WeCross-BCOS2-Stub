@@ -11,6 +11,7 @@ import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import org.fisco.bcos.fisco.EnumNodeVersion;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.TypeReference;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
@@ -41,6 +42,8 @@ public class BCOSConnectionFactory {
             web3jWrapper = new Web3jWrapperImpl(web3j);
             logger.info(" web3j: {} ", web3j);
         }
+
+        checkBCOSVersion(web3jWrapper);
 
         BCOSConnection bcosConnection = new BCOSConnection(web3jWrapper);
         bcosConnection.setResourceInfoList(bcosStubConfig.convertToResourceInfos());
@@ -107,5 +110,28 @@ public class BCOSConnectionFactory {
             logger.warn("getting address of proxy contract failed,", e);
             return null;
         }
+    }
+
+    public static void checkBCOSVersion(Web3jWrapper web3jWrapper) throws Exception {
+        String supportedVersion =
+                web3jWrapper
+                        .getWeb3j()
+                        .getNodeVersion()
+                        .send()
+                        .getNodeVersion()
+                        .getSupportedVersion();
+        EnumNodeVersion.Version version = EnumNodeVersion.getClassVersion(supportedVersion);
+        EnumNodeVersion.Version version240 = EnumNodeVersion.getClassVersion("2.4.0");
+
+        // must not below than 2.4.0
+        if (intVersion(version) < intVersion(version240)) {
+            throw new Exception(
+                    "FISCO BCOS version is not supported, version must not below than 2.4.0, but current is "
+                            + supportedVersion);
+        }
+    }
+
+    public static int intVersion(EnumNodeVersion.Version version) {
+        return 1000000 * version.getMajor() + version.getMinor() * 1000 + version.getPatch();
     }
 }
