@@ -123,14 +123,14 @@ public class BCOSConnectionFactory {
         EnumNodeVersion.Version nodeVersion = EnumNodeVersion.getClassVersion(nodeVersionStr);
 
         // must not below than 2.4.0
-        if (supportedVersion.getMajor() == 2 && supportedVersion.getMinor() >= 4) {
+        if (!(supportedVersion.getMajor() == 2 && supportedVersion.getMinor() >= 4)) {
             throw new Exception(
                     "FISCO BCOS supported version is not supported, version must not below than 2.4.0, but current is "
                             + supportedVersionStr);
         }
 
         // must not below than 2.4.0
-        if (nodeVersion.getMajor() == 2 && nodeVersion.getMinor() >= 4) {
+        if (!(nodeVersion.getMajor() == 2 && nodeVersion.getMinor() >= 4)) {
             throw new Exception(
                     "FISCO BCOS version is not supported, version must not below than 2.4.0, but current is "
                             + nodeVersionStr);
