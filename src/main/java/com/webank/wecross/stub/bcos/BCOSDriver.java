@@ -21,15 +21,15 @@ import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.verify.MerkleValidation;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.InvalidParameterException;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import org.bouncycastle.util.encoders.Hex;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
-import org.fisco.bcos.web3j.abi.TypeReference;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
-import org.fisco.bcos.web3j.abi.datatypes.Type;
-import org.fisco.bcos.web3j.abi.datatypes.generated.Uint256;
 import org.fisco.bcos.web3j.crypto.Credentials;
+import org.fisco.bcos.web3j.crypto.ExtendedRawTransaction;
+import org.fisco.bcos.web3j.crypto.ExtendedTransactionDecoder;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.channel.StatusCode;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
@@ -70,42 +70,66 @@ public class BCOSDriver implements Driver {
             Objects.requireNonNull(
                     transactionParams.getTransactionRequest(), "TransactionRequest is null");
             Objects.requireNonNull(transactionParams.getData(), "Data is null");
+            TransactionRequest tr = transactionParams.getTransactionRequest();
 
-            TransactionRequest transactionRequest = transactionParams.getTransactionRequest();
-            /*
-                        TODO: verify two condition: to proxy or not to proxy
-                        // Validating abi
-                        String abi = transactionParams.getData();
-                        if (Objects.isNull(transactionParams.getTo())) {
-                            // SendTransaction Operation
-                            ExtendedRawTransaction extendedRawTransaction =
-                                    ExtendedTransactionDecoder.decode(transactionParams.getData());
-                            abi = "0x" + extendedRawTransaction.getData();
-                        }
+            String abi = "";
+            String encodeAbi = "";
+            if (Objects.nonNull(transactionParams.getAbi())) { // call or sendTransaction by Proxy
+                if (Objects.isNull(transactionParams.getTo())) { // sendTransactionByProxy
+                    ExtendedRawTransaction extendedRawTransaction =
+                            ExtendedTransactionDecoder.decode(transactionParams.getData());
+                    abi =
+                            Hex.toHexString(
+                                    FunctionUtility.getSendTransactionProxyFunctionInput(
+                                                    extendedRawTransaction.getData())
+                                            .getValue5());
+                } else { // callByProxy
+                    abi =
+                            Hex.toHexString(
+                                    FunctionUtility.getConstantCallProxyFunctionInput(
+                                                    transactionParams.getData())
+                                            .getValue4());
+                }
 
-                        Function function =
-                                FunctionUtility.newFunction(
-                                        transactionRequest.getMethod(), transactionRequest.getArgs());
+                List<ABIDefinition> abiDefinitions =
+                        ABIDefinitionFactory.loadABI(transactionParams.getAbi())
+                                .getFunctions()
+                                .get(tr.getMethod());
+                if (Objects.isNull(abiDefinitions) || abiDefinitions.isEmpty()) {
+                    throw new InvalidParameterException(
+                            " found no method in abi, method: " + tr.getMethod());
+                }
 
-                        String encodeAbi = FunctionEncoder.encode(function);
+                encodeAbi =
+                        abiCodecJsonWrapper
+                                .encode(
+                                        ABIObjectFactory.createInputObject(abiDefinitions.get(0)),
+                                        Arrays.asList(tr.getArgs()))
+                                .encode();
 
-                        if (!encodeAbi.equals(abi)) {
-                            logger.error(
-                                    " Validating abi failed, method: {}, args: {}, abi: {}, encodeAbi: {} ",
-                                    transactionRequest.getMethod(),
-                                    transactionRequest.getArgs(),
-                                    abi,
-                                    encodeAbi);
-                            throw new IllegalArgumentException(" Validating abi failed ");
-                        }
-            */
-            return new TransactionContext<TransactionRequest>(
-                    transactionRequest, null, null, null, null);
+            } else { // call or sendTransaction
+                if (Objects.isNull(transactionParams.getTo())) { // sendTransaction
+                    ExtendedRawTransaction extendedRawTransaction =
+                            ExtendedTransactionDecoder.decode(transactionParams.getData());
+                    abi = extendedRawTransaction.getData();
+                } else { // call
+                    abi = transactionParams.getData();
+                }
 
+                Function function =
+                        FunctionUtility.newDefaultFunction(tr.getMethod(), tr.getArgs());
+
+                encodeAbi = FunctionEncoder.encode(function);
+            }
+
+            if (Numeric.cleanHexPrefix(encodeAbi).equals(Numeric.cleanHexPrefix(abi))) {
+                return new TransactionContext<>(tr, null, null, null, null);
+            }
         } catch (Exception e) {
-            logger.error(" decodeTransactionRequest Exception: " + e);
-            return null;
+            logger.error(" decodeTransactionRequest e: ", e);
         }
+
+        return null;
     }
 
     @Override
@@ -119,7 +143,7 @@ public class BCOSDriver implements Driver {
         try {
             return objectMapper.readValue(data, BlockHeader.class);
         } catch (Exception e) {
-            logger.error(" decodeBlockHeader Exception: {}", e);
+            logger.error(" decodeBlockHeader Exception: ", e);
             return null;
         }
     }
@@ -130,7 +154,7 @@ public class BCOSDriver implements Driver {
             try {
                 this.semaphore.acquire();
             } catch (InterruptedException e) {
-                logger.error(" e: {}", e);
+                logger.error(" e: ", e);
                 Thread.currentThread().interrupt();
             }
         }
@@ -185,7 +209,7 @@ public class BCOSDriver implements Driver {
         try {
             callAndSendTxResponseCallback.getSemaphore().acquire();
         } catch (InterruptedException e) {
-            logger.error(" e: {}", e);
+            logger.error(" e: ", e);
             Thread.currentThread().interrupt();
         }
 
@@ -263,23 +287,11 @@ public class BCOSDriver implements Driver {
                                                     .get(BCOSConstant.TRANSACTION_ID);
                             String id = Objects.isNull(transactionID) ? "0" : transactionID;
                             Function function =
-                                    new Function(
-                                            "constantCall",
-                                            Arrays.<Type>asList(
-                                                    new org.fisco.bcos.web3j.abi.datatypes
-                                                            .Utf8String(id),
-                                                    new org.fisco.bcos.web3j.abi.datatypes
-                                                            .Utf8String(path.toString()),
-                                                    new org.fisco.bcos.web3j.abi.datatypes
-                                                            .Utf8String(
-                                                            functions
-                                                                    .get(0)
-                                                                    .getMethodSignatureAsString()),
-                                                    new org.fisco.bcos.web3j.abi.datatypes
-                                                            .DynamicBytes(
-                                                            Numeric.hexStringToByteArray(
-                                                                    encodedArgs))),
-                                            Collections.<TypeReference<?>>emptyList());
+                                    FunctionUtility.newConstantCallProxyFunction(
+                                            id,
+                                            path.toString(),
+                                            functions.get(0).getMethodSignatureAsString(),
+                                            encodedArgs);
 
                             // BCOSAccount to get credentials to sign the transaction
                             BCOSAccount bcosAccount = (BCOSAccount) request.getAccount();
@@ -300,6 +312,8 @@ public class BCOSDriver implements Driver {
                                             FunctionEncoder.encode(function),
                                             credentials.getAddress(),
                                             contractAddress);
+
+                            transaction.setAbi(abi);
 
                             Request req =
                                     RequestFactory.requestBuilder(
@@ -359,13 +373,13 @@ public class BCOSDriver implements Driver {
                                                     null, transactionResponse);
 
                                         } catch (BCOSStubException e) {
-                                            logger.warn(" e: {}", e);
+                                            logger.warn(" e: ", e);
                                             callback.onTransactionResponse(
                                                     new TransactionException(
                                                             e.getErrorCode(), e.getMessage()),
                                                     null);
                                         } catch (Exception e) {
-                                            logger.warn(" e: {}", e);
+                                            logger.warn(" e: ", e);
                                             callback.onTransactionResponse(
                                                     new TransactionException(
                                                             BCOSStatusCode.UnclassifiedError,
@@ -375,12 +389,12 @@ public class BCOSDriver implements Driver {
                                     });
 
                         } catch (BCOSStubException bse) {
-                            logger.warn(" e: {}", bse);
+                            logger.warn(" e: ", bse);
                             callback.onTransactionResponse(
                                     new TransactionException(bse.getErrorCode(), bse.getMessage()),
                                     null);
                         } catch (Exception e) {
-                            logger.warn(" e: {}", e);
+                            logger.warn(" e: ", e);
                             callback.onTransactionResponse(
                                     new TransactionException(
                                             BCOSStatusCode.UnclassifiedError, e.getMessage()),
@@ -389,7 +403,7 @@ public class BCOSDriver implements Driver {
                     });
 
         } catch (BCOSStubException e) {
-            logger.warn(" e: {}", e);
+            logger.warn(" e: ", e);
             callback.onTransactionResponse(
                     new TransactionException(e.getErrorCode(), e.getMessage()), null);
         }
@@ -413,7 +427,7 @@ public class BCOSDriver implements Driver {
 
             // Function object
             Function function =
-                    FunctionUtility.newFunction(
+                    FunctionUtility.newDefaultFunction(
                             request.getData().getMethod(), request.getData().getArgs());
 
             // BCOSAccount to get credentials to sign the transaction
@@ -476,12 +490,12 @@ public class BCOSDriver implements Driver {
                             callback.onTransactionResponse(null, transactionResponse);
 
                         } catch (BCOSStubException e) {
-                            logger.warn(" e: {}", e);
+                            logger.warn(" e: ", e);
                             callback.onTransactionResponse(
                                     new TransactionException(e.getErrorCode(), e.getMessage()),
                                     null);
                         } catch (Exception e) {
-                            logger.warn(" e: {}", e);
+                            logger.warn(" e: ", e);
                             callback.onTransactionResponse(
                                     new TransactionException(
                                             BCOSStatusCode.UnclassifiedError,
@@ -490,11 +504,11 @@ public class BCOSDriver implements Driver {
                         }
                     });
         } catch (BCOSStubException e) {
-            logger.warn(" e: {}", e);
+            logger.warn(" e: ", e);
             callback.onTransactionResponse(
                     new TransactionException(e.getErrorCode(), e.getMessage()), null);
         } catch (Exception e) {
-            logger.warn(" e: {}", e);
+            logger.warn(" e: ", e);
             callback.onTransactionResponse(
                     new TransactionException(
                             BCOSStatusCode.UnclassifiedError, " errorMessage: " + e.getMessage()),
@@ -514,7 +528,7 @@ public class BCOSDriver implements Driver {
         try {
             callAndSendTxResponseCallback.getSemaphore().acquire();
         } catch (InterruptedException e) {
-            logger.error(" e: {}", e);
+            logger.error(" e: ", e);
             Thread.currentThread().interrupt();
         }
 
@@ -564,7 +578,7 @@ public class BCOSDriver implements Driver {
 
                                 // Function object
                                 Function function =
-                                        FunctionUtility.newFunction(
+                                        FunctionUtility.newDefaultFunction(
                                                 request.getData().getMethod(),
                                                 request.getData().getArgs());
 
@@ -690,8 +704,7 @@ public class BCOSDriver implements Driver {
                                                                         } catch (
                                                                                 BCOSStubException
                                                                                         e) {
-                                                                            logger.warn(
-                                                                                    " e: {}", e);
+                                                                            logger.warn(" e: ", e);
                                                                             callback
                                                                                     .onTransactionResponse(
                                                                                             new TransactionException(
@@ -714,13 +727,13 @@ public class BCOSDriver implements Driver {
                                                             null, transactionResponse);
                                                 }
                                             } catch (BCOSStubException e) {
-                                                logger.warn(" e: {}", e);
+                                                logger.warn(" e: ", e);
                                                 callback.onTransactionResponse(
                                                         new TransactionException(
                                                                 e.getErrorCode(), e.getMessage()),
                                                         null);
                                             } catch (Exception e) {
-                                                logger.warn(" e: {}", e);
+                                                logger.warn(" e: ", e);
                                                 callback.onTransactionResponse(
                                                         new TransactionException(
                                                                 BCOSStatusCode.UnclassifiedError,
@@ -731,7 +744,7 @@ public class BCOSDriver implements Driver {
                             });
 
         } catch (BCOSStubException e) {
-            logger.warn(" e: {}", e);
+            logger.warn(" e: ", e);
             callback.onTransactionResponse(
                     new TransactionException(e.getErrorCode(), e.getMessage()), null);
         }
@@ -848,33 +861,15 @@ public class BCOSDriver implements Driver {
                                                                 : Integer.parseInt(transactionSeq);
 
                                                 Function function =
-                                                        new Function(
-                                                                "sendTransaction",
-                                                                Arrays.<Type>asList(
-                                                                        new org.fisco.bcos.web3j.abi
-                                                                                .datatypes
-                                                                                .Utf8String(id),
-                                                                        new Uint256(seq),
-                                                                        new org.fisco.bcos.web3j.abi
-                                                                                .datatypes
-                                                                                .Utf8String(
-                                                                                path.toString()),
-                                                                        new org.fisco.bcos.web3j.abi
-                                                                                .datatypes
-                                                                                .Utf8String(
-                                                                                functions
-                                                                                        .get(0)
-                                                                                        .getMethodSignatureAsString()),
-                                                                        new org.fisco.bcos.web3j.abi
-                                                                                .datatypes
-                                                                                .DynamicBytes(
-                                                                                Numeric
-                                                                                        .hexStringToByteArray(
-                                                                                                encodedArgs))),
-                                                                Collections
-                                                                        .<TypeReference<?>>
-                                                                                emptyList());
-
+                                                        FunctionUtility
+                                                                .newSendTransactionProxyFunction(
+                                                                        id,
+                                                                        seq,
+                                                                        path.toString(),
+                                                                        functions
+                                                                                .get(0)
+                                                                                .getMethodSignatureAsString(),
+                                                                        encodedArgs);
                                                 if (logger.isDebugEnabled()) {
                                                     logger.debug(
                                                             " contractAddress: {}, blockNumber: {}, method: {}, args: {}",
@@ -899,6 +894,7 @@ public class BCOSDriver implements Driver {
                                                 TransactionParams transaction =
                                                         new TransactionParams(
                                                                 request.getData(), signTx);
+                                                transaction.setAbi(abi);
                                                 Request req =
                                                         RequestFactory.requestBuilder(
                                                                 BCOSRequestType.SEND_TRANSACTION,
@@ -1016,7 +1012,7 @@ public class BCOSDriver implements Driver {
                                                                                                         e) {
                                                                                             logger
                                                                                                     .warn(
-                                                                                                            " e: {}",
+                                                                                                            " e: ",
                                                                                                             e);
                                                                                             callback
                                                                                                     .onTransactionResponse(
@@ -1045,14 +1041,14 @@ public class BCOSDriver implements Driver {
                                                                             transactionResponse);
                                                                 }
                                                             } catch (BCOSStubException e) {
-                                                                logger.warn(" e: {}", e);
+                                                                logger.warn(" e: ", e);
                                                                 callback.onTransactionResponse(
                                                                         new TransactionException(
                                                                                 e.getErrorCode(),
                                                                                 e.getMessage()),
                                                                         null);
                                                             } catch (Exception e) {
-                                                                logger.warn(" e: {}", e);
+                                                                logger.warn(" e: ", e);
                                                                 callback.onTransactionResponse(
                                                                         new TransactionException(
                                                                                 BCOSStatusCode
@@ -1063,13 +1059,13 @@ public class BCOSDriver implements Driver {
                                                         });
 
                                             } catch (BCOSStubException e) {
-                                                logger.warn(" e: {}", e);
+                                                logger.warn(" e: ", e);
                                                 callback.onTransactionResponse(
                                                         new TransactionException(
                                                                 e.getErrorCode(), e.getMessage()),
                                                         null);
                                             } catch (Exception e) {
-                                                logger.warn(" e: {}", e);
+                                                logger.warn(" e: ", e);
                                                 callback.onTransactionResponse(
                                                         new TransactionException(
                                                                 BCOSStatusCode.UnclassifiedError,
@@ -1080,7 +1076,7 @@ public class BCOSDriver implements Driver {
                             });
 
         } catch (BCOSStubException e) {
-            logger.warn(" e: {}", e);
+            logger.warn(" e: ", e);
             callback.onTransactionResponse(
                     new TransactionException(e.getErrorCode(), e.getMessage()), null);
         }
@@ -1166,10 +1162,11 @@ public class BCOSDriver implements Driver {
                         }
 
                         Tuple5<String, BigInteger, String, String, byte[]> proxyResult =
-                                FunctionUtility.getProxyFunctionInput(
+                                FunctionUtility.getSendTransactionProxyFunctionInput(
                                         transactionProof
                                                 .getReceiptAndProof()
-                                                .getTransactionReceipt());
+                                                .getTransactionReceipt()
+                                                .getInput());
 
                         String transactionID = proxyResult.getValue1();
                         BigInteger seq = proxyResult.getValue2();
@@ -1228,12 +1225,11 @@ public class BCOSDriver implements Driver {
                                                 null);
                                     }
 
-                                    int index = proxyResult.getValue4().indexOf("(");
+                                    int index = proxyResult.getValue4().indexOf('(');
                                     String funcName =
                                             (-1 == index)
                                                     ? proxyResult.getValue4().trim()
                                                     : proxyResult.getValue4().substring(0, index);
-                                    ;
 
                                     ContractABIDefinition contractABIDefinition =
                                             ABIDefinitionFactory.loadABI(abi);
@@ -1302,7 +1298,7 @@ public class BCOSDriver implements Driver {
                                 });
                     });
         } catch (Exception e) {
-            logger.warn("transactionHash: {} exception: {}", transactionHash, e);
+            logger.warn("transactionHash: {} exception: ", transactionHash, e);
             callback.onResponse(e, null);
         }
     }

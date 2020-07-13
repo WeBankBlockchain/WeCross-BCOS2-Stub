@@ -16,7 +16,9 @@ import org.fisco.bcos.web3j.abi.datatypes.Type;
 import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
 import org.fisco.bcos.web3j.abi.datatypes.generated.Uint256;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.fisco.bcos.web3j.tuples.generated.Tuple4;
 import org.fisco.bcos.web3j.tuples.generated.Tuple5;
+import org.fisco.bcos.web3j.utils.Numeric;
 
 /**
  * Function object used across blockchain chain. Wecross requires that a cross-chain contract
@@ -44,7 +46,7 @@ public class FunctionUtility {
      * @param params
      * @return Function
      */
-    public static Function newFunction(String funcName, String[] params) {
+    public static Function newDefaultFunction(String funcName, String[] params) {
 
         if (Objects.isNull(params)) {
             // public func() returns(string[])
@@ -64,14 +66,92 @@ public class FunctionUtility {
     }
 
     /**
-     * decode WeCrossProxy sendTransaction output
+     * WeCrossProxy constantCall function
      *
-     * @param transactionReceipt
+     * @param id
+     * @param path
+     * @param methodSignature
+     * @param abi
      * @return
      */
-    public static Tuple5<String, BigInteger, String, String, byte[]> getProxyFunctionInput(
-            TransactionReceipt transactionReceipt) {
-        String data = transactionReceipt.getInput().substring(10);
+    public static Function newConstantCallProxyFunction(
+            String id, String path, String methodSignature, String abi) {
+        Function function =
+                new Function(
+                        "constantCall",
+                        Arrays.<Type>asList(
+                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(id),
+                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(path),
+                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(methodSignature),
+                                new org.fisco.bcos.web3j.abi.datatypes.DynamicBytes(
+                                        Numeric.hexStringToByteArray(abi))),
+                        Collections.<TypeReference<?>>emptyList());
+        return function;
+    }
+
+    /**
+     * WeCrossProxy sendTransaction function
+     *
+     * @param id
+     * @param seq
+     * @param path
+     * @param methodSignature
+     * @param abi
+     * @return
+     */
+    public static Function newSendTransactionProxyFunction(
+            String id, int seq, String path, String methodSignature, String abi) {
+        Function function =
+                new Function(
+                        "sendTransaction",
+                        Arrays.<Type>asList(
+                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(id),
+                                new Uint256(seq),
+                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(path.toString()),
+                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(methodSignature),
+                                new org.fisco.bcos.web3j.abi.datatypes.DynamicBytes(
+                                        Numeric.hexStringToByteArray(abi))),
+                        Collections.<TypeReference<?>>emptyList());
+        return function;
+    }
+
+    /**
+     * decode WeCrossProxy constantCall input
+     *
+     * @param input
+     * @return
+     */
+    public static Tuple4<String, String, String, byte[]> getConstantCallProxyFunctionInput(
+            String input) {
+        String data = input.substring(Numeric.containsHexPrefix(input) ? 10 : 8);
+        final Function function =
+                new Function(
+                        "constantCall",
+                        Arrays.<Type>asList(),
+                        Arrays.<TypeReference<?>>asList(
+                                new TypeReference<Utf8String>() {},
+                                new TypeReference<Utf8String>() {},
+                                new TypeReference<Utf8String>() {},
+                                new TypeReference<DynamicBytes>() {}));
+        List<Type> results = FunctionReturnDecoder.decode(data, function.getOutputParameters());
+        ;
+        return new Tuple4<String, String, String, byte[]>(
+                (String) results.get(0).getValue(),
+                (String) results.get(1).getValue(),
+                (String) results.get(2).getValue(),
+                (byte[]) results.get(3).getValue());
+    }
+
+    /**
+     * decode WeCrossProxy sendTransaction input
+     *
+     * @param input
+     * @return
+     */
+    public static Tuple5<String, BigInteger, String, String, byte[]>
+            getSendTransactionProxyFunctionInput(String input) {
+        String data = input.substring(Numeric.containsHexPrefix(input) ? 10 : 8);
+
         final Function function =
                 new Function(
                         "sendTransaction",

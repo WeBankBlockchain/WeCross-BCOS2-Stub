@@ -531,4 +531,67 @@ public class BCOSStubCallContractIntegTest {
         asyncToSync.semaphore.acquire(1);
     }
 
+    @Test
+    public void callByProxyOnTupleTest() throws Exception {
+        String[] params = new String[]{};
+        Path path = Path.decode("a.b.TupleTest");
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTransactionRequestContext(path, "get1", params);
+
+        AsyncToSync asyncToSync = new AsyncToSync();
+        driver.asyncCallByProxy(requestTransactionContext, connection, (exception, res) -> {
+            assertTrue(Objects.nonNull(res));
+            assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
+            assertTrue(res.getResult().length == 3);
+            assertTrue(res.getResult()[0].equals("1"));
+            assertTrue(res.getResult()[1].equals("[ 1, 2, 3 ]"));
+            assertTrue(res.getResult()[2].equals("HelloWorld"));
+            asyncToSync.getSemaphore().release();
+        });
+
+        asyncToSync.getSemaphore().acquire();
+    }
+
+    @Test
+    public void callByProxyOnTupleTestGetAndSet() throws Exception {
+        String[] params = new String[]{"1111", "[ 22222, 33333, 44444 ]", "55555"};
+        Path path = Path.decode("a.b.TupleTest");
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTransactionRequestContext(path, "getAndSet1", params);
+
+        AsyncToSync asyncToSync = new AsyncToSync();
+        driver.asyncCallByProxy(requestTransactionContext, connection, (exception, res) -> {
+            assertTrue(Objects.nonNull(res));
+            assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
+            assertTrue(res.getResult().length == 3);
+            assertTrue(res.getResult()[0].equals("1111"));
+            assertTrue(res.getResult()[1].equals("[ 22222, 33333, 44444 ]"));
+            assertTrue(res.getResult()[2].equals("55555"));
+            asyncToSync.getSemaphore().release();
+        });
+
+        asyncToSync.getSemaphore().acquire();
+    }
+
+    @Test
+    public void callByProxyOnTupleTestGetSampleTupleValue() throws Exception {
+        String[] params = new String[]{};
+        Path path = Path.decode("a.b.TupleTest");
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTransactionRequestContext(path, "getSampleTupleValue", params);
+
+        AsyncToSync asyncToSync = new AsyncToSync();
+        driver.asyncCallByProxy(requestTransactionContext, connection, (exception, res) -> {
+            assertTrue(Objects.nonNull(res));
+            assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
+            assertTrue(res.getResult().length == 3);
+            assertTrue(res.getResult()[0].equals("100"));
+            assertTrue(res.getResult()[1].equals("[ [ [ \"Hello world! + 1 \", 100, [ [ 1, 2, 3 ] ] ] ], [ [ \"Hello world! + 2 \", 101, [ [ 4, 5, 6 ] ] ] ] ]"));
+            assertTrue(res.getResult()[2].equals("Hello world! + 3 "));
+            asyncToSync.getSemaphore().release();
+        });
+
+        asyncToSync.getSemaphore().acquire();
+    }
+
 }

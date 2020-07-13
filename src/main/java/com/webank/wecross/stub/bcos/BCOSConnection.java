@@ -152,7 +152,8 @@ public class BCOSConnection implements Connection {
     /** list paths stored in proxy contract */
     public String[] listPaths() {
         Function function =
-                FunctionUtility.newFunction(BCOSConstant.PROXY_METHOD_GETPATHS, new String[] {});
+                FunctionUtility.newDefaultFunction(
+                        BCOSConstant.PROXY_METHOD_GETPATHS, new String[] {});
         String address = properties.get(BCOSConstant.BCOS_PROXY_NAME);
         try {
             Call.CallOutput callOutput =
