@@ -26,10 +26,11 @@ public class FunctionUtilityTest {
     private static String funcEmptyParamsMethodId = FunctionEncoder.buildMethodId(funcSignature);
     private static String funcNoneParamsMethodId =
             FunctionEncoder.buildMethodId(funcNoneParamsSignature);
-    private static Function function = FunctionUtility.newFunction(funcName, params);
+    private static Function function = FunctionUtility.newDefaultFunction(funcName, params);
     private static Function emptyParamsFunction =
-            FunctionUtility.newFunction(funcName, emptyParams);
-    private static Function noneParamsFunction = FunctionUtility.newFunction(funcName, nonParams);
+            FunctionUtility.newDefaultFunction(funcName, emptyParams);
+    private static Function noneParamsFunction =
+            FunctionUtility.newDefaultFunction(funcName, nonParams);
 
     @Test
     public void newFunctionTest() throws IOException {
@@ -78,7 +79,7 @@ public class FunctionUtilityTest {
 
     @Test
     public void emptyParamsConvertToStringListTest() throws IOException {
-        Function function = FunctionUtility.newFunction(funcName, emptyParams);
+        Function function = FunctionUtility.newDefaultFunction(funcName, emptyParams);
         String abi = FunctionEncoder.encode(function);
         assertTrue(abi.startsWith(funcEmptyParamsMethodId));
 
@@ -94,7 +95,7 @@ public class FunctionUtilityTest {
 
     @Test
     public void noneParamsConvertToStringListTest() throws IOException {
-        Function function = FunctionUtility.newFunction(funcName, nonParams);
+        Function function = FunctionUtility.newDefaultFunction(funcName, nonParams);
         String abi = FunctionEncoder.encode(function);
         assertTrue(abi.startsWith(funcNoneParamsMethodId));
         assertTrue(funcName.equals(function.getName()));
@@ -203,7 +204,7 @@ public class FunctionUtilityTest {
         String funcName = "funcName";
         String[] params = new String[] {"aa", "bb", "cc"};
 
-        Function function = FunctionUtility.newFunction(funcName, params);
+        Function function = FunctionUtility.newDefaultFunction(funcName, params);
         String abi = FunctionEncoder.encode(function);
         receipt.setInput(abi);
         receipt.setOutput("0x" + abi.substring(10));

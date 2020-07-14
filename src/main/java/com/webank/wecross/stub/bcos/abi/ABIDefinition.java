@@ -231,7 +231,7 @@ public class ABIDefinition {
         public List<Integer> dimensions = new ArrayList<Integer>();
 
         public Type(String name) {
-            int index = name.indexOf("[");
+            int index = name.indexOf('[');
             this.rawType = (-1 == index) ? name.trim() : name.substring(0, index);
             this.type = name;
             this.initialize();
@@ -242,7 +242,7 @@ public class ABIDefinition {
             Matcher m = p.matcher(type);
             while (m.find()) {
                 String s = m.group();
-                String dig = s.substring(s.indexOf("[") + 1, s.indexOf("]")).trim();
+                String dig = s.substring(s.indexOf('[') + 1, s.indexOf(']')).trim();
                 if (dig.isEmpty()) {
                     dimensions.add(0);
                 } else {

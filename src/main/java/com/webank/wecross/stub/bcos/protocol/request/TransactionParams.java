@@ -22,6 +22,7 @@ public class TransactionParams {
     private String data;
     private String from;
     private String to;
+    private String abi;
 
     public TransactionRequest getTransactionRequest() {
         return transactionRequest;
@@ -55,20 +56,11 @@ public class TransactionParams {
         this.to = to;
     }
 
-    @Override
-    public String toString() {
-        return "TransactionParams{"
-                + "transactionRequest="
-                + transactionRequest
-                + ", data='"
-                + data
-                + '\''
-                + ", from='"
-                + from
-                + '\''
-                + ", to='"
-                + to
-                + '\''
-                + '}';
+    public String getAbi() {
+        return abi;
+    }
+
+    public void setAbi(String abi) {
+        this.abi = abi;
     }
 }

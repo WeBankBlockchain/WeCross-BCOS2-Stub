@@ -184,7 +184,7 @@ public class BCOSConnectionTest {
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
         String[] params = new String[] {"abc", "def", "hig"};
-        Function function = FunctionUtility.newFunction(funName, params);
+        Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         String abi = FunctionEncoder.encode(function);
 
@@ -223,7 +223,7 @@ public class BCOSConnectionTest {
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
         String[] params = new String[] {"abc", "def", "hig"};
-        Function function = FunctionUtility.newFunction(funName, params);
+        Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         String abi = FunctionEncoder.encode(function);
 
@@ -248,7 +248,7 @@ public class BCOSConnectionTest {
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
         String[] params = new String[] {"abc", "def", "hig"};
-        Function function = FunctionUtility.newFunction(funName, params);
+        Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         String abi = FunctionEncoder.encode(function);
 
@@ -276,7 +276,7 @@ public class BCOSConnectionTest {
         String funName = "funcName";
         String[] params = new String[] {"abc", "def", "hig"};
 
-        Function function = FunctionUtility.newFunction(funName, params);
+        Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         String abi = FunctionEncoder.encode(function);
 
@@ -323,7 +323,7 @@ public class BCOSConnectionTest {
         String funName = "funcName";
         String[] params = new String[] {"abc", "def", "hig"};
 
-        Function function = FunctionUtility.newFunction(funName, params);
+        Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         String abi = FunctionEncoder.encode(function);
 
@@ -360,7 +360,7 @@ public class BCOSConnectionTest {
         String funName = "funcName";
         String[] params = new String[] {"abc", "def", "hig"};
 
-        Function function = FunctionUtility.newFunction(funName, params);
+        Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         String abi = FunctionEncoder.encode(function);
 

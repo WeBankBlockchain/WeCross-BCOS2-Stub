@@ -7,6 +7,7 @@ import com.webank.wecross.stub.bcos.abi.ABIObjectFactory;
 import com.webank.wecross.stub.bcos.abi.ContractABIDefinition;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
@@ -233,30 +234,7 @@ public class ContractTypeTest {
     private ContractABIDefinition contractABIDefinition = ABIDefinitionFactory.loadABI(abiDesc);
 
     @Test
-    public void ContractFixedTypeDecodeTest() {
-        ABIObject outputObject =
-                ABIObjectFactory.createOutputObject(
-                        contractABIDefinition.getFunctions().get("getFixedValue").get(0));
-
-        String encoded =
-                "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001c000000000000000000000000000000000000000000000000000000000000002800000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
-        ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
-        List<String> decodeResult = abiCodecJsonWrapper.decode(outputObject, encoded);
-
-        Assert.assertEquals(decodeResult.get(0), "[ 0, 0, 0 ]");
-        Assert.assertEquals(decodeResult.get(1), "[ false, false, false ]");
-        Assert.assertEquals(
-                decodeResult.get(2),
-                "[ \"0x0000000000000000000000000000000000000000\", \"0x0000000000000000000000000000000000000000\", \"0x0000000000000000000000000000000000000000\" ]");
-        Assert.assertEquals(
-                decodeResult.get(3),
-                "[ \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\", \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\", \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\" ]");
-        Assert.assertEquals(decodeResult.get(4), "[ \"\", \"\", \"\" ]");
-        Assert.assertEquals(decodeResult.get(5), "[ \"\", \"\", \"\" ]");
-    }
-
-    @Test
-    public void ContractFixedTypeEncodeTest() throws IOException {
+    public void ContractFixedTypeCodecTest() throws IOException {
         ABIObject inputObject =
                 ABIObjectFactory.createInputObject(
                         contractABIDefinition.getFunctions().get("setFixedValue").get(0));
@@ -265,14 +243,18 @@ public class ContractTypeTest {
                 ABIObjectFactory.createOutputObject(
                         contractABIDefinition.getFunctions().get("getFixedValue").get(0));
 
+        String bytes1 = Base64.getEncoder().encodeToString("HelloWorld 11111".getBytes());
+        String bytes2 = Base64.getEncoder().encodeToString("HelloWorld 22222".getBytes());
+        String bytes3 = Base64.getEncoder().encodeToString("HelloWorld 33333".getBytes());
+
         List<String> params =
                 Arrays.asList(
                         "[1,2,3]",
                         "[true,false,true]",
                         "[\"0xa\",\"0xb\",\"0xc\"]",
+                        "[\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\",\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\",\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\"]",
                         "[\"a\",\"b\",\"c\"]",
-                        "[\"a\",\"b\",\"c\"]",
-                        "[\"a\",\"b\",\"c\"]");
+                        "[\"" + bytes1 + "\",\"" + bytes2 + "\",\"" + bytes3 + "\"]");
 
         ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
         ABIObject encodeObject = abiCodecJsonWrapper.encode(inputObject, params);
@@ -284,12 +266,82 @@ public class ContractTypeTest {
         Assert.assertEquals(
                 decodeResult.get(2),
                 "[ \"0x000000000000000000000000000000000000000a\", \"0x000000000000000000000000000000000000000b\", \"0x000000000000000000000000000000000000000c\" ]");
-        // Assert.assertEquals(
-        //        decodeResult.get(3),
-        //        "[ \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\",
-        // \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\",
-        // \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\" ]");
+        Assert.assertEquals(
+                decodeResult.get(3),
+                "[ \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\", \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\", \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\" ]");
+
         Assert.assertEquals(decodeResult.get(4), "[ \"a\", \"b\", \"c\" ]");
-        // Assert.assertEquals(decodeResult.get(5), "[ \"a\", \"b\", \"c\" ]");
+        Assert.assertEquals(
+                decodeResult.get(5),
+                "[ \"" + bytes1 + "\", \"" + bytes2 + "\", \"" + bytes3 + "\" ]");
+    }
+
+    @Test
+    public void ContractDynamicTypeCodecTest() throws IOException {
+        ABIObject inputObject =
+                ABIObjectFactory.createInputObject(
+                        contractABIDefinition.getFunctions().get("setDynamicValue").get(0));
+
+        ABIObject outObject =
+                ABIObjectFactory.createOutputObject(
+                        contractABIDefinition.getFunctions().get("getDynamicValue").get(0));
+
+        String bytes1 = Base64.getEncoder().encodeToString("HelloWorld 11111".getBytes());
+        String bytes2 = Base64.getEncoder().encodeToString("HelloWorld 22222".getBytes());
+        String bytes3 = Base64.getEncoder().encodeToString("HelloWorld 33333".getBytes());
+
+        List<String> params =
+                Arrays.asList(
+                        "[1,2,3]",
+                        "[true,false,true]",
+                        "[\"0xa\",\"0xb\",\"0xc\"]",
+                        "[\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\",\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\",\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\"]",
+                        "[\"a\",\"b\",\"c\"]",
+                        "[\"" + bytes1 + "\",\"" + bytes2 + "\",\"" + bytes3 + "\"]");
+
+        ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
+        ABIObject encodeObject = abiCodecJsonWrapper.encode(inputObject, params);
+
+        List<String> decodeResult = abiCodecJsonWrapper.decode(outObject, encodeObject.encode());
+
+        Assert.assertEquals(decodeResult.get(0), "[ 1, 2, 3 ]");
+        Assert.assertEquals(decodeResult.get(1), "[ true, false, true ]");
+        Assert.assertEquals(
+                decodeResult.get(2),
+                "[ \"0x000000000000000000000000000000000000000a\", \"0x000000000000000000000000000000000000000b\", \"0x000000000000000000000000000000000000000c\" ]");
+        Assert.assertEquals(
+                decodeResult.get(3),
+                "[ \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\", \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\", \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\" ]");
+
+        Assert.assertEquals(decodeResult.get(4), "[ \"a\", \"b\", \"c\" ]");
+        Assert.assertEquals(
+                decodeResult.get(5),
+                "[ \"" + bytes1 + "\", \"" + bytes2 + "\", \"" + bytes3 + "\" ]");
+    }
+
+    @Test
+    public void ContractDynamicTypeEmptyParamsCodecTest() throws IOException {
+        ABIObject inputObject =
+                ABIObjectFactory.createInputObject(
+                        contractABIDefinition.getFunctions().get("setDynamicValue").get(0));
+
+        ABIObject outObject =
+                ABIObjectFactory.createOutputObject(
+                        contractABIDefinition.getFunctions().get("getDynamicValue").get(0));
+
+        List<String> params = Arrays.asList("[]", "[]", "[]", "[]", "[]", "[]");
+
+        ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
+        ABIObject encodeObject = abiCodecJsonWrapper.encode(inputObject, params);
+
+        List<String> decodeResult = abiCodecJsonWrapper.decode(outObject, encodeObject.encode());
+
+        Assert.assertEquals(decodeResult.get(0), "[ ]");
+        Assert.assertEquals(decodeResult.get(1), "[ ]");
+        Assert.assertEquals(decodeResult.get(2), "[ ]");
+        Assert.assertEquals(decodeResult.get(3), "[ ]");
+
+        Assert.assertEquals(decodeResult.get(4), "[ ]");
+        Assert.assertEquals(decodeResult.get(5), "[ ]");
     }
 }
