@@ -5,7 +5,18 @@ import static junit.framework.Assert.assertNull;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
-import com.webank.wecross.stub.*;
+import com.webank.wecross.stub.Account;
+import com.webank.wecross.stub.BlockHeader;
+import com.webank.wecross.stub.BlockHeaderManager;
+import com.webank.wecross.stub.Connection;
+import com.webank.wecross.stub.Driver;
+import com.webank.wecross.stub.Path;
+import com.webank.wecross.stub.ResourceInfo;
+import com.webank.wecross.stub.TransactionContext;
+import com.webank.wecross.stub.TransactionException;
+import com.webank.wecross.stub.TransactionRequest;
+import com.webank.wecross.stub.TransactionResponse;
+import com.webank.wecross.stub.VerifiedTransaction;
 import com.webank.wecross.stub.bcos.AsyncCnsService;
 import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.BCOSConnectionFactory;
@@ -18,18 +29,21 @@ import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.custom.CommandHandler;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
+import com.webank.wecross.stub.bcos.proxy.ProxyContract;
+import com.webank.wecross.stub.bcos.proxy.ProxyContractDeployment;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.fisco.bcos.web3j.protocol.core.methods.response.Transaction;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.fisco.bcos.web3j.tx.gas.StaticGasProvider;
+import org.fisco.bcos.web3j.utils.Numeric;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -124,6 +138,9 @@ public class BCOSStubCallContractIntegTest {
         connection = BCOSConnectionFactory.build("./chains/bcos/", "stub.toml", null);
         connection.setConnectionEventHandler(connectionEventHandlerImplMock);
 
+        String proxyABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"_args\",\"type\":\"string[]\"}],\"name\":\"commitTransaction\",\"outputs\":[{\"name\":\"\",\"type\":\"string[]\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"version\",\"type\":\"string\"},{\"name\":\"bin\",\"type\":\"bytes\"},{\"name\":\"abi\",\"type\":\"string\"}],\"name\":\"deployContractWithRegisterCNS\",\"outputs\":[{\"name\":\"addr\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_args\",\"type\":\"string[]\"}],\"name\":\"setMaxStep\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_args\",\"type\":\"string[]\"}],\"name\":\"getPaths\",\"outputs\":[{\"name\":\"\",\"type\":\"string[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_args\",\"type\":\"string[]\"}],\"name\":\"rollbackTransaction\",\"outputs\":[{\"name\":\"\",\"type\":\"string[]\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getLatestTransaction\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"version\",\"type\":\"string\"},{\"name\":\"addr\",\"type\":\"string\"},{\"name\":\"abi\",\"type\":\"string\"}],\"name\":\"registerCNS\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_transactionID\",\"type\":\"string\"},{\"name\":\"_seq\",\"type\":\"uint256\"},{\"name\":\"_path\",\"type\":\"string\"},{\"name\":\"_func\",\"type\":\"string\"},{\"name\":\"_args\",\"type\":\"bytes\"}],\"name\":\"sendTransaction\",\"outputs\":[{\"name\":\"\",\"type\":\"bytes\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"bin\",\"type\":\"bytes\"}],\"name\":\"deployContract\",\"outputs\":[{\"name\":\"addr\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"name\",\"type\":\"string\"}],\"name\":\"selectByName\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"version\",\"type\":\"string\"}],\"name\":\"selectByNameAndVersion\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_args\",\"type\":\"string[]\"}],\"name\":\"getVersion\",\"outputs\":[{\"name\":\"\",\"type\":\"string[]\"}],\"payable\":false,\"stateMutability\":\"pure\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_args\",\"type\":\"string[]\"}],\"name\":\"rollbackAndDeleteTransaction\",\"outputs\":[{\"name\":\"\",\"type\":\"string[]\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getLatestTransactionInfo\",\"outputs\":[{\"name\":\"\",\"type\":\"string[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_str\",\"type\":\"string\"}],\"name\":\"stringToUint256\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"pure\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_transactionID\",\"type\":\"string\"},{\"name\":\"_path\",\"type\":\"string\"},{\"name\":\"_func\",\"type\":\"string\"},{\"name\":\"_args\",\"type\":\"bytes\"}],\"name\":\"constantCall\",\"outputs\":[{\"name\":\"\",\"type\":\"bytes\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_args\",\"type\":\"string[]\"}],\"name\":\"getMaxStep\",\"outputs\":[{\"name\":\"\",\"type\":\"string[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_args\",\"type\":\"string[]\"}],\"name\":\"getTransactionInfo\",\"outputs\":[{\"name\":\"\",\"type\":\"string[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_args\",\"type\":\"string[]\"}],\"name\":\"addPath\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_args\",\"type\":\"string[]\"}],\"name\":\"startTransaction\",\"outputs\":[{\"name\":\"\",\"type\":\"string[]\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_args\",\"type\":\"string[]\"}],\"name\":\"deletePathList\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}]";
+        connection.getProperties().put(BCOSConstant.BCOS_PROXY_ABI, proxyABI);
+
         Web3jWrapper web3jWrapper = ((BCOSConnection) connection).getWeb3jWrapper();
         Web3jWrapperImpl web3jWrapperImpl = (Web3jWrapperImpl) web3jWrapper;
 
@@ -156,30 +173,40 @@ public class BCOSStubCallContractIntegTest {
     private void deployProxy() throws Exception {
         PathMatchingResourcePatternResolver resolver =
                 new PathMatchingResourcePatternResolver();
-        String path =
+        File file =
                 resolver.getResource("classpath:solidity/WeCrossProxy.sol")
-                        .getFile()
-                        .getAbsolutePath();
+                        .getFile();
 
-        File file = new File(path);
-        byte[] contractBytes;
-        contractBytes = Files.readAllBytes(file.toPath());
+        ProxyContract proxyContract = new ProxyContract();
+        proxyContract.setAccount((BCOSAccount) account);
+        proxyContract.setConnection((BCOSConnection)connection);
+        String proxyContractAddress = proxyContract.deployContractAndRegisterCNS(file, "WeCrossProxy", "WeCrossProxy", String.valueOf(System.currentTimeMillis()));
+        connection.getProperties().put(BCOSConstant.BCOS_PROXY_NAME, proxyContractAddress);
+    }
 
-        Object[] args =
-                new Object[]{
-                        "WeCrossProxy", new String(contractBytes), "WeCrossProxy", String.valueOf(System.currentTimeMillis()),
-                };
+    @Test
+    public void deployContractByProxyTest() throws Exception {
+        String[] params = new String[4] ;
+
+        params[0] = "HelloWeCross";
+        params[1] = "1.1" + System.currentTimeMillis();
+        params[2] = Base64.getEncoder().encodeToString(Numeric.hexStringToByteArray(HelloWeCross.BINARY));
+        params[3] = HelloWeCross.ABI;
+
+        Path path = Path.decode("a.b.WeCrossProxy");
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTransactionRequestContext(path, "deployContractWithRegisterCNS", params);
 
         AsyncToSync asyncToSync = new AsyncToSync();
-        CommandHandler commandHandler = new DeployContractHandler();
-        commandHandler.handle(Path.decode("a.b.WeCrossProxy"), args, account, blockHeaderManager, connection, new HashMap<>(), (error, response) -> {
-            if (Objects.nonNull(error)) {
-                error.printStackTrace();
-            }
+        driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
+            assertTrue(Objects.nonNull(res));
+            assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
+            assertTrue(res.getResult().length == 1);
+            assertTrue(res.getResult()[0].length() == 42);
             asyncToSync.getSemaphore().release();
         });
 
-        asyncToSync.getSemaphore().acquire();
+        asyncToSync.semaphore.acquire(1);
     }
 
     @Test
@@ -430,7 +457,7 @@ public class BCOSStubCallContractIntegTest {
     public void CnsServiceTest() throws InterruptedException {
         AsyncCnsService asyncCnsService = new AsyncCnsService();
         AsyncToSync asyncToSync = new AsyncToSync();
-        asyncCnsService.selectByName(BCOSConstant.BCOS_PROXY_NAME, connection, (exception, infoList) -> {
+        asyncCnsService.selectByName(BCOSConstant.BCOS_PROXY_NAME, connection, driver, (exception, infoList) -> {
             asyncToSync.getSemaphore().release();
             Assert.assertTrue(Objects.isNull(exception));
             Assert.assertTrue(!Objects.isNull(infoList));

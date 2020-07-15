@@ -13,6 +13,7 @@ public interface BCOSConstant {
     String BCOS_CHAIN_ID = "BCOS_PROPERTY_CHAIN_ID";
     String BCOS_STUB_TYPE = "BCOS_PROPERTY_STUB_TYPE";
     String BCOS_PROXY_NAME = "WeCrossProxy";
+    String BCOS_PROXY_ABI = "WeCrossProxyABI";
     String TRANSACTION_ID = "transaction_id";
     String TRANSACTION_SEQ = "transaction_seq";
 

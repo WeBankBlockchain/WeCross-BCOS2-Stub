@@ -22,13 +22,11 @@ public class CommandHandlerDispatcher {
     }
 
     public void initializeCommandMapper() {
-        DeployContractHandler deployContractHandler = new DeployContractHandler();
-        registerCommandHandler(BCOSConstant.CUSTOM_COMMAND_DEPLOY, deployContractHandler);
 
-        RegisterCnsHandler registerCnsHandler = new RegisterCnsHandler();
-        registerCommandHandler(BCOSConstant.CUSTOM_COMMAND_REGISTER, registerCnsHandler);
-        logger.info("initialize size: {}", commandMapper.size());
-        logger.info("commands: {} ", commandMapper.keySet());
+        registerCommandHandler(BCOSConstant.CUSTOM_COMMAND_DEPLOY, new DeployContractHandler());
+        registerCommandHandler(BCOSConstant.CUSTOM_COMMAND_REGISTER, new RegisterCnsHandler());
+
+        logger.info("list custom commands: {} ", commandMapper.keySet());
     }
 
     /**
