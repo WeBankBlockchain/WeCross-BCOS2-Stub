@@ -122,7 +122,8 @@ public class BCOSDriverTest {
         Function function = FunctionUtility.newDefaultFunction(func, params);
 
         TransactionParams transaction =
-                new TransactionParams(request, FunctionEncoder.encode(function), "0x0", "0x1");
+                new TransactionParams(
+                        request, FunctionEncoder.encode(function), TransactionParams.TP_YPE.CALL);
 
         byte[] data = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction);
         TransactionContext<TransactionRequest> requestTransactionContext =
@@ -147,7 +148,8 @@ public class BCOSDriverTest {
                         BigInteger.valueOf(1111),
                         FunctionEncoder.encode(function));
 
-        TransactionParams transaction = new TransactionParams(request, signTx, null, null);
+        TransactionParams transaction =
+                new TransactionParams(request, signTx, TransactionParams.TP_YPE.SEND_TX);
 
         byte[] data = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction);
         TransactionContext<TransactionRequest> requestTransactionContext =
@@ -183,7 +185,8 @@ public class BCOSDriverTest {
                         BigInteger.valueOf(1111),
                         FunctionEncoder.encode(function));
 
-        TransactionParams transaction = new TransactionParams(request, signTx, null, null);
+        TransactionParams transaction =
+                new TransactionParams(request, signTx, TransactionParams.TP_YPE.SEND_TX_BY_PROXY);
         transaction.setAbi(abi);
 
         byte[] data = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction);
@@ -215,7 +218,10 @@ public class BCOSDriverTest {
         TransactionRequest request = new TransactionRequest(func, params);
 
         TransactionParams transaction =
-                new TransactionParams(request, FunctionEncoder.encode(function), null, "0x0");
+                new TransactionParams(
+                        request,
+                        FunctionEncoder.encode(function),
+                        TransactionParams.TP_YPE.CALL_BY_PROXY);
         transaction.setAbi(abi);
 
         byte[] data = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction);
