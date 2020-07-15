@@ -162,11 +162,11 @@ public class AsyncCnsService {
         if (Objects.nonNull(version)) {
             function = FunctionUtility.newCNSSelectByNameAndVersionFunction(method, name, version);
             transactionRequest.setArgs(new String[] {name, version});
-            tp_ype = TransactionParams.TP_YPE.CNS_SELECT_BY_NAME;
+            tp_ype = TransactionParams.TP_YPE.CNS_SELECT_BY_NAME_AND_VERSION;
         } else {
             function = FunctionUtility.newCNSSelectByNameFunction(method, name);
             transactionRequest.setArgs(new String[] {name});
-            tp_ype = TransactionParams.TP_YPE.CNS_SELECT_BY_NAME_AND_VERSION;
+            tp_ype = TransactionParams.TP_YPE.CNS_SELECT_BY_NAME;
         }
 
         transactionRequest.setMethod(method);
