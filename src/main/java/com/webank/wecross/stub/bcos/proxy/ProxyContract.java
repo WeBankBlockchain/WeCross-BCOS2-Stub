@@ -72,12 +72,7 @@ public class ProxyContract {
                             .getAbsolutePath();
 
             File file = new File(path);
-            byte[] contractBytes;
-            try {
-                contractBytes = Files.readAllBytes(file.toPath());
-            } finally {
-                file.delete();
-            }
+            byte[] contractBytes = Files.readAllBytes(file.toPath());
 
             Object[] args =
                     new Object[] {
