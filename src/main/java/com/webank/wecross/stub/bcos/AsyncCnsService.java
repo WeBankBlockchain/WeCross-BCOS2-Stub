@@ -15,10 +15,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
-import org.fisco.bcos.web3j.abi.TypeReference;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
-import org.fisco.bcos.web3j.abi.datatypes.Type;
-import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
 import org.fisco.bcos.web3j.crypto.Credentials;
 import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
@@ -127,7 +124,10 @@ public class AsyncCnsService {
                             String currentAbi = infoList.get(size - 1).getAbi();
                             abiCache.put(name, currentAbi);
                             queryABISemaphore.release();
-                            logger.debug("queryABI name:{}, abi:{}", name, currentAbi);
+
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("queryABI name:{}, abi:{}", name, currentAbi);
+                            }
                             callback.onResponse(null, currentAbi);
                         }
                     });
@@ -158,29 +158,23 @@ public class AsyncCnsService {
             SelectCallback callback) {
         Function function;
         TransactionRequest transactionRequest = new TransactionRequest();
+        TransactionParams.TP_YPE tp_ype = null;
         if (Objects.nonNull(version)) {
-            function =
-                    new Function(
-                            method,
-                            Arrays.<Type>asList(new Utf8String(name), new Utf8String(version)),
-                            Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}));
+            function = FunctionUtility.newCNSSelectByNameAndVersionFunction(method, name, version);
             transactionRequest.setArgs(new String[] {name, version});
+            tp_ype = TransactionParams.TP_YPE.CNS_SELECT_BY_NAME;
         } else {
-            function =
-                    new Function(
-                            method,
-                            Arrays.<Type>asList(new Utf8String(name)),
-                            Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}));
+            function = FunctionUtility.newCNSSelectByNameFunction(method, name);
             transactionRequest.setArgs(new String[] {name});
+            tp_ype = TransactionParams.TP_YPE.CNS_SELECT_BY_NAME_AND_VERSION;
         }
 
         transactionRequest.setMethod(method);
         TransactionParams transaction =
-                new TransactionParams(
-                        transactionRequest,
-                        FunctionEncoder.encode(function),
-                        BCOSConstant.DEFAULT_ADDRESS,
-                        BCOSConstant.CNS_PRECOMPILED_ADDRESS);
+                new TransactionParams(transactionRequest, FunctionEncoder.encode(function), tp_ype);
+
+        transaction.setTo(BCOSConstant.CNS_PRECOMPILED_ADDRESS);
+        transaction.setFrom(BCOSConstant.DEFAULT_ADDRESS);
 
         Request request = null;
         try {
@@ -263,15 +257,8 @@ public class AsyncCnsService {
                     Credentials credentials = bcosAccount.getCredentials();
 
                     Function function =
-                            new Function(
-                                    BCOSConstant.CNS_METHOD_INSERT,
-                                    Arrays.<Type>asList(
-                                            new Utf8String(name),
-                                            new Utf8String(version),
-                                            new Utf8String(address),
-                                            new Utf8String(abi)),
-                                    Collections.<TypeReference<?>>emptyList());
-
+                            FunctionUtility.newCNSInsertFunction(
+                                    BCOSConstant.CNS_METHOD_INSERT, name, version, address, abi);
                     // get signed transaction hex string
                     String signTx =
                             SignTransaction.sign(
@@ -296,7 +283,10 @@ public class AsyncCnsService {
                     transactionRequest.setMethod(BCOSConstant.CNS_METHOD_INSERT);
                     transactionRequest.setArgs(new String[] {name, version, address, abi});
                     TransactionParams transaction =
-                            new TransactionParams(transactionRequest, signTx);
+                            new TransactionParams(
+                                    transactionRequest,
+                                    signTx,
+                                    TransactionParams.TP_YPE.CNS_INSERT);
                     Request request;
                     try {
                         request =

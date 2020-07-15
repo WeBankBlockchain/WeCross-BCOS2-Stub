@@ -77,8 +77,8 @@ public class BCOSConnectionFactory {
                             BCOSConstant.CNS_PRECOMPILED_ADDRESS,
                             FunctionEncoder.encode(function));
 
-            if (logger.isDebugEnabled()) {
-                logger.debug(
+            if (logger.isTraceEnabled()) {
+                logger.trace(
                         "call result, status: {}, blockNumber: {}",
                         callOutput.getStatus(),
                         callOutput.getCurrentBlockNumber());
@@ -97,6 +97,9 @@ public class BCOSConnectionFactory {
                                 objectMapper
                                         .getTypeFactory()
                                         .constructCollectionType(List.class, CnsInfo.class));
+
+                logger.info(" cns proxy: {}", infoList);
+
                 if (Objects.isNull(infoList) || infoList.isEmpty()) {
                     return null;
                 } else {
@@ -104,11 +107,14 @@ public class BCOSConnectionFactory {
                     return infoList.get(size - 1).getAddress();
                 }
             } else {
-                logger.warn("getting address of proxy contract failed, {}", callOutput.getStatus());
+                logger.warn(
+                        "getting address of proxy contract failed, status: {}, message: {}",
+                        callOutput.getStatus(),
+                        StatusCode.getStatusMessage(callOutput.getStatus()));
                 return null;
             }
         } catch (Exception e) {
-            logger.warn("getting address of proxy contract failed,", e);
+            logger.warn("getting address of proxy contract failed, e: ", e);
             return null;
         }
     }

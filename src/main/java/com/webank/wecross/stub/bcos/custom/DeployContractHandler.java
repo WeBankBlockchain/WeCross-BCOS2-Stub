@@ -170,8 +170,8 @@ public class DeployContractHandler implements CommandHandler {
                         }
                     }
 
-                    if (logger.isDebugEnabled()) {
-                        logger.debug(
+                    if (logger.isTraceEnabled()) {
+                        logger.trace(
                                 "deploy contract, name: {}, bin: {}, abi:{}",
                                 cnsName,
                                 metadata.bin,
@@ -288,7 +288,8 @@ public class DeployContractHandler implements CommandHandler {
                     TransactionRequest transactionRequest = new TransactionRequest();
                     transactionRequest.setMethod(BCOSConstant.METHOD_DEPLOY);
                     TransactionParams transaction =
-                            new TransactionParams(transactionRequest, signTx);
+                            new TransactionParams(
+                                    transactionRequest, signTx, TransactionParams.TP_YPE.DEPLOY);
                     Request request;
                     try {
                         request =

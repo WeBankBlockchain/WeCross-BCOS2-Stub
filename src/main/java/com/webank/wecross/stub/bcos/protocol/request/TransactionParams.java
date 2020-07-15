@@ -6,16 +6,22 @@ public class TransactionParams {
 
     public TransactionParams() {}
 
-    public TransactionParams(
-            TransactionRequest transactionRequest, String data, String from, String to) {
+    /** */
+    public enum TP_YPE {
+        SEND_TX_BY_PROXY,
+        CALL_BY_PROXY,
+        SEND_TX,
+        DEPLOY,
+        CALL,
+        CNS_INSERT,
+        CNS_SELECT_BY_NAME,
+        CNS_SELECT_BY_NAME_AND_VERSION
+    };
+
+    public TransactionParams(TransactionRequest transactionRequest, String data, TP_YPE tp_ype) {
         this.transactionRequest = transactionRequest;
         this.data = data;
-        this.from = from;
-        this.to = to;
-    }
-
-    public TransactionParams(TransactionRequest transactionRequest, String data) {
-        this(transactionRequest, data, null, null);
+        this.tp_ype = tp_ype;
     }
 
     private TransactionRequest transactionRequest;
@@ -23,6 +29,7 @@ public class TransactionParams {
     private String from;
     private String to;
     private String abi;
+    private TP_YPE tp_ype;
 
     public TransactionRequest getTransactionRequest() {
         return transactionRequest;
@@ -62,5 +69,35 @@ public class TransactionParams {
 
     public void setAbi(String abi) {
         this.abi = abi;
+    }
+
+    public TP_YPE getTp_ype() {
+        return tp_ype;
+    }
+
+    public void setTp_ype(TP_YPE tp_ype) {
+        this.tp_ype = tp_ype;
+    }
+
+    @Override
+    public String toString() {
+        return "TransactionParams{"
+                + "transactionRequest="
+                + transactionRequest
+                + ", data='"
+                + data
+                + '\''
+                + ", from='"
+                + from
+                + '\''
+                + ", to='"
+                + to
+                + '\''
+                + ", abi='"
+                + abi
+                + '\''
+                + ", tp_ype="
+                + tp_ype
+                + '}';
     }
 }

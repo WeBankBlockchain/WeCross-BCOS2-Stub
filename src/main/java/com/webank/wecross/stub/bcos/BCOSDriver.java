@@ -34,6 +34,7 @@ import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.channel.StatusCode;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.fisco.bcos.web3j.tuples.generated.Tuple4;
 import org.fisco.bcos.web3j.tuples.generated.Tuple5;
 import org.fisco.bcos.web3j.utils.Numeric;
 import org.slf4j.Logger;
@@ -63,68 +64,118 @@ public class BCOSDriver implements Driver {
             TransactionParams transactionParams =
                     objectMapper.readValue(data, TransactionParams.class);
 
-            if (logger.isDebugEnabled()) {
-                logger.debug(" TransactionParams: {}", transactionParams);
+            if (logger.isTraceEnabled()) {
+                logger.trace(" TransactionParams: {}", transactionParams);
             }
 
             Objects.requireNonNull(
                     transactionParams.getTransactionRequest(), "TransactionRequest is null");
             Objects.requireNonNull(transactionParams.getData(), "Data is null");
-            TransactionRequest tr = transactionParams.getTransactionRequest();
+            Objects.requireNonNull(transactionParams.getTp_ype(), "type is null");
 
+            TransactionRequest tr = transactionParams.getTransactionRequest();
+            TransactionParams.TP_YPE tp_ype = transactionParams.getTp_ype();
             String abi = "";
             String encodeAbi = "";
-            if (Objects.nonNull(transactionParams.getAbi())) { // call or sendTransaction by Proxy
-                if (Objects.isNull(transactionParams.getTo())) { // sendTransactionByProxy
-                    ExtendedRawTransaction extendedRawTransaction =
-                            ExtendedTransactionDecoder.decode(transactionParams.getData());
-                    abi =
-                            Hex.toHexString(
-                                    FunctionUtility.getSendTransactionProxyFunctionInput(
-                                                    extendedRawTransaction.getData())
-                                            .getValue5());
-                } else { // callByProxy
-                    abi =
-                            Hex.toHexString(
+            switch (tp_ype) {
+                case SEND_TX_BY_PROXY:
+                case CALL_BY_PROXY:
+                    {
+                        if (tp_ype == TransactionParams.TP_YPE.SEND_TX_BY_PROXY) {
+                            ExtendedRawTransaction extendedRawTransaction =
+                                    ExtendedTransactionDecoder.decode(transactionParams.getData());
+                            Tuple5<String, BigInteger, String, String, byte[]>
+                                    sendTransactionProxyFunctionInput =
+                                            FunctionUtility.getSendTransactionProxyFunctionInput(
+                                                    extendedRawTransaction.getData());
+                            abi = Hex.toHexString(sendTransactionProxyFunctionInput.getValue5());
+                        } else {
+                            Tuple4<String, String, String, byte[]> constantCallProxyFunctionInput =
                                     FunctionUtility.getConstantCallProxyFunctionInput(
-                                                    transactionParams.getData())
-                                            .getValue4());
-                }
+                                            transactionParams.getData());
+                            abi = Hex.toHexString(constantCallProxyFunctionInput.getValue4());
+                        }
 
-                List<ABIDefinition> abiDefinitions =
-                        ABIDefinitionFactory.loadABI(transactionParams.getAbi())
-                                .getFunctions()
-                                .get(tr.getMethod());
-                if (Objects.isNull(abiDefinitions) || abiDefinitions.isEmpty()) {
-                    throw new InvalidParameterException(
-                            " found no method in abi, method: " + tr.getMethod());
-                }
+                        List<ABIDefinition> abiDefinitions =
+                                ABIDefinitionFactory.loadABI(transactionParams.getAbi())
+                                        .getFunctions()
+                                        .get(tr.getMethod());
+                        if (Objects.isNull(abiDefinitions) || abiDefinitions.isEmpty()) {
+                            throw new InvalidParameterException(
+                                    " found no method in abi, method: " + tr.getMethod());
+                        }
 
-                encodeAbi =
-                        abiCodecJsonWrapper
-                                .encode(
-                                        ABIObjectFactory.createInputObject(abiDefinitions.get(0)),
-                                        Arrays.asList(tr.getArgs()))
-                                .encode();
+                        encodeAbi =
+                                abiCodecJsonWrapper
+                                        .encode(
+                                                ABIObjectFactory.createInputObject(
+                                                        abiDefinitions.get(0)),
+                                                Arrays.asList(tr.getArgs()))
+                                        .encode();
 
-            } else { // call or sendTransaction
-                if (Objects.isNull(transactionParams.getTo())) { // sendTransaction
-                    ExtendedRawTransaction extendedRawTransaction =
-                            ExtendedTransactionDecoder.decode(transactionParams.getData());
-                    abi = extendedRawTransaction.getData();
-                } else { // call
-                    abi = transactionParams.getData();
-                }
+                        break;
+                    }
+                case SEND_TX:
+                case CALL:
+                    {
+                        if (tp_ype == TransactionParams.TP_YPE.SEND_TX) {
+                            ExtendedRawTransaction extendedRawTransaction =
+                                    ExtendedTransactionDecoder.decode(transactionParams.getData());
+                            abi = extendedRawTransaction.getData();
+                        } else {
+                            abi = transactionParams.getData();
+                        }
 
-                Function function =
-                        FunctionUtility.newDefaultFunction(tr.getMethod(), tr.getArgs());
+                        Function function =
+                                FunctionUtility.newDefaultFunction(tr.getMethod(), tr.getArgs());
 
-                encodeAbi = FunctionEncoder.encode(function);
+                        encodeAbi = FunctionEncoder.encode(function);
+                        break;
+                    }
+                case CNS_INSERT:
+                case CNS_SELECT_BY_NAME:
+                case CNS_SELECT_BY_NAME_AND_VERSION:
+                    {
+                        Function function = null;
+                        if (tp_ype == TransactionParams.TP_YPE.CNS_INSERT) {
+                            function =
+                                    FunctionUtility.newCNSInsertFunction(
+                                            tr.getMethod(),
+                                            tr.getArgs()[0],
+                                            tr.getArgs()[1],
+                                            tr.getArgs()[2],
+                                            tr.getArgs()[3]);
+                        } else if (tp_ype == TransactionParams.TP_YPE.CNS_SELECT_BY_NAME) {
+                            function =
+                                    FunctionUtility.newCNSSelectByNameFunction(
+                                            tr.getMethod(), tr.getArgs()[0]);
+                        } else {
+                            function =
+                                    FunctionUtility.newCNSSelectByNameAndVersionFunction(
+                                            tr.getMethod(), tr.getArgs()[0], tr.getArgs()[1]);
+                        }
+
+                        abi = transactionParams.getData();
+                        encodeAbi = FunctionEncoder.encode(function);
+
+                        break;
+                    }
+                case DEPLOY:
+                    {
+                        break;
+                    }
+                default:
+                    {
+                        throw new InvalidParameterException(" unknown tp type: " + tp_ype);
+                    }
             }
 
             if (Numeric.cleanHexPrefix(encodeAbi).equals(Numeric.cleanHexPrefix(abi))) {
                 return new TransactionContext<>(tr, null, null, null, null);
             }
+
+            logger.warn(" abi not meet expectations, abi:{}, encodeAbi:{}", abi, encodeAbi);
+
         } catch (Exception e) {
             logger.error(" decodeTransactionRequest e: ", e);
         }
@@ -310,9 +361,9 @@ public class BCOSDriver implements Driver {
                                     new TransactionParams(
                                             request.getData(),
                                             FunctionEncoder.encode(function),
-                                            credentials.getAddress(),
-                                            contractAddress);
-
+                                            TransactionParams.TP_YPE.CALL_BY_PROXY);
+                            transaction.setFrom(credentials.getAddress());
+                            transaction.setTo(contractAddress);
                             transaction.setAbi(abi);
 
                             Request req =
@@ -447,8 +498,10 @@ public class BCOSDriver implements Driver {
                     new TransactionParams(
                             request.getData(),
                             FunctionEncoder.encode(function),
-                            credentials.getAddress(),
-                            contractAddress);
+                            TransactionParams.TP_YPE.CALL);
+
+            transaction.setFrom(credentials.getAddress());
+            transaction.setTo(contractAddress);
             Request req =
                     RequestFactory.requestBuilder(
                             BCOSRequestType.CALL, objectMapper.writeValueAsBytes(transaction));
@@ -602,7 +655,10 @@ public class BCOSDriver implements Driver {
                                                 FunctionEncoder.encode(function));
 
                                 TransactionParams transaction =
-                                        new TransactionParams(request.getData(), signTx);
+                                        new TransactionParams(
+                                                request.getData(),
+                                                signTx,
+                                                TransactionParams.TP_YPE.SEND_TX);
                                 Request req;
                                 try {
                                     req =
@@ -893,7 +949,10 @@ public class BCOSDriver implements Driver {
 
                                                 TransactionParams transaction =
                                                         new TransactionParams(
-                                                                request.getData(), signTx);
+                                                                request.getData(),
+                                                                signTx,
+                                                                TransactionParams.TP_YPE
+                                                                        .SEND_TX_BY_PROXY);
                                                 transaction.setAbi(abi);
                                                 Request req =
                                                         RequestFactory.requestBuilder(

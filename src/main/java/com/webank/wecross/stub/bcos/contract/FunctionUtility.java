@@ -116,6 +116,57 @@ public class FunctionUtility {
     }
 
     /**
+     * @param name
+     * @param version
+     * @param address
+     * @param abi
+     * @return
+     */
+    public static Function newCNSInsertFunction(
+            String methodName, String name, String version, String address, String abi) {
+        Function function =
+                new Function(
+                        methodName,
+                        Arrays.<Type>asList(
+                                new Utf8String(name),
+                                new Utf8String(version),
+                                new Utf8String(address),
+                                new Utf8String(abi)),
+                        Collections.<TypeReference<?>>emptyList());
+        return function;
+    }
+
+    /**
+     * @param method
+     * @param name
+     * @param version
+     * @return
+     */
+    public static Function newCNSSelectByNameAndVersionFunction(
+            String method, String name, String version) {
+        Function function =
+                new Function(
+                        method,
+                        Arrays.<Type>asList(new Utf8String(name), new Utf8String(version)),
+                        Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}));
+        return function;
+    }
+
+    /**
+     * @param method
+     * @param name
+     * @return
+     */
+    public static Function newCNSSelectByNameFunction(String method, String name) {
+        Function function =
+                new Function(
+                        method,
+                        Arrays.<Type>asList(new Utf8String(name)),
+                        Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}));
+        return function;
+    }
+
+    /**
      * decode WeCrossProxy constantCall input
      *
      * @param input
@@ -227,14 +278,6 @@ public class FunctionUtility {
         }
 
         return decodeOutput(receipt.getOutput());
-    }
-
-    public static String[] decodeOutputForVerifiedTransaction(TransactionReceipt receipt) {
-        if (Objects.isNull(receipt) || !receipt.isStatusOK()) {
-            return null;
-        }
-
-        return new String[] {decodeOutputAsString(receipt.getOutput())};
     }
 
     /**
