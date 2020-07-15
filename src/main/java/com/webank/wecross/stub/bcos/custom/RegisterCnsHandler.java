@@ -1,8 +1,14 @@
 package com.webank.wecross.stub.bcos.custom;
 
-import com.webank.wecross.stub.*;
+import com.webank.wecross.stub.Account;
+import com.webank.wecross.stub.BlockHeaderManager;
+import com.webank.wecross.stub.Connection;
+import com.webank.wecross.stub.Driver;
+import com.webank.wecross.stub.Path;
+import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.bcos.AsyncCnsService;
-import com.webank.wecross.stub.bcos.common.*;
+import com.webank.wecross.stub.bcos.BCOSDriver;
+import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -34,8 +40,10 @@ public class RegisterCnsHandler implements CommandHandler {
         String address = (String) args[1];
         String abi = (String) args[2];
 
+        Driver driver = new BCOSDriver();
+
         AsyncCnsService asyncCnsService = new AsyncCnsService();
-        asyncCnsService.insert(
+        asyncCnsService.registerCNSByProxy(
                 name,
                 address,
                 version,
@@ -43,10 +51,11 @@ public class RegisterCnsHandler implements CommandHandler {
                 account,
                 blockHeaderManager,
                 connection,
-                exception -> {
-                    if (Objects.nonNull(exception)) {
-                        logger.warn("registering abi failed", exception);
-                        callback.onResponse(exception, null);
+                driver,
+                e -> {
+                    if (Objects.nonNull(e)) {
+                        logger.warn("registering abi failed", e);
+                        callback.onResponse(e, null);
                         return;
                     }
 

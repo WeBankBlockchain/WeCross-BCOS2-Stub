@@ -1,8 +1,13 @@
 package com.webank.wecross.stub.bcos.proxy;
 
 import java.io.File;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ProxyContractDeployment {
+
+    private static final Logger logger = LoggerFactory.getLogger(ProxyContractDeployment.class);
+
     public static String USAGE =
             "Usage:\n"
                     + "         java -cp conf/:lib/*:plugin/* "
@@ -102,6 +107,7 @@ public class ProxyContractDeployment {
                     new ProxyContract(proxyContractFile, chainPath, accountName);
             proxyContract.deploy();
         } catch (Exception e) {
+            logger.error("e: ", e);
             System.out.println(e);
         }
     }

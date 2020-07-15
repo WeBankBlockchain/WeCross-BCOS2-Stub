@@ -1,6 +1,11 @@
 package com.webank.wecross.stub.bcos;
 
-import com.webank.wecross.stub.*;
+import com.webank.wecross.stub.Account;
+import com.webank.wecross.stub.Connection;
+import com.webank.wecross.stub.Driver;
+import com.webank.wecross.stub.Stub;
+import com.webank.wecross.stub.StubFactory;
+import com.webank.wecross.stub.WeCrossContext;
 import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
 import com.webank.wecross.stub.bcos.custom.CommandHandlerDispatcher;
 import com.webank.wecross.stub.bcos.proxy.ProxyContractDeployment;
