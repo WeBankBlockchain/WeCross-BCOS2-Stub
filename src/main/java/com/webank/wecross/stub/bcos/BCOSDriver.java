@@ -110,7 +110,9 @@ public class BCOSDriver implements Driver {
                                         .encode(
                                                 ABIObjectFactory.createInputObject(
                                                         abiDefinitions.get(0)),
-                                                Arrays.asList(tr.getArgs()))
+                                                Objects.nonNull(tr.getArgs())
+                                                        ? Arrays.asList(tr.getArgs())
+                                                        : Arrays.asList())
                                         .encode();
 
                         break;
@@ -370,7 +372,6 @@ public class BCOSDriver implements Driver {
                                     RequestFactory.requestBuilder(
                                             BCOSRequestType.CALL,
                                             objectMapper.writeValueAsBytes(transaction));
-
                             connection.asyncSend(
                                     req,
                                     connectionResponse -> {
@@ -505,7 +506,6 @@ public class BCOSDriver implements Driver {
             Request req =
                     RequestFactory.requestBuilder(
                             BCOSRequestType.CALL, objectMapper.writeValueAsBytes(transaction));
-
             connection.asyncSend(
                     req,
                     connectionResponse -> {
@@ -659,6 +659,7 @@ public class BCOSDriver implements Driver {
                                                 request.getData(),
                                                 signTx,
                                                 TransactionParams.TP_YPE.SEND_TX);
+
                                 Request req;
                                 try {
                                     req =
@@ -959,7 +960,6 @@ public class BCOSDriver implements Driver {
                                                                 BCOSRequestType.SEND_TRANSACTION,
                                                                 objectMapper.writeValueAsBytes(
                                                                         transaction));
-
                                                 connection.asyncSend(
                                                         req,
                                                         response -> {
