@@ -176,6 +176,31 @@ public class ABIDefinition {
     }
 
     @Override
+    public String toString() {
+        return "ABIDefinition{"
+                + "name='"
+                + name
+                + '\''
+                + ", type='"
+                + type
+                + '\''
+                + ", constant="
+                + constant
+                + ", payable="
+                + payable
+                + ", anonymous="
+                + anonymous
+                + ", stateMutability='"
+                + stateMutability
+                + '\''
+                + ", inputs="
+                + inputs
+                + ", outputs="
+                + outputs
+                + '}';
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
