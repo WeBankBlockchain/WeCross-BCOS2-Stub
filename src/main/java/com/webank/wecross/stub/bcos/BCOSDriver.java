@@ -816,6 +816,7 @@ public class BCOSDriver implements Driver {
 
         try {
             Map<String, String> properties = connection.getProperties();
+            TransactionRequest data = request.getData();
 
             // input validation
             checkRequest(request);
@@ -917,16 +918,35 @@ public class BCOSDriver implements Driver {
                                                                 ? 0
                                                                 : Integer.parseInt(transactionSeq);
 
+                                                /**
+                                                 * Check if it is an entry point for parallel
+                                                 * transactions
+                                                 */
+                                                Object parallel =
+                                                        data.getOptions()
+                                                                .get(
+                                                                        BCOSConstant
+                                                                                .PROXY_TX_PARALLEL_TAG);
                                                 Function function =
-                                                        FunctionUtility
-                                                                .newSendTransactionProxyFunction(
-                                                                        id,
-                                                                        seq,
-                                                                        path.toString(),
-                                                                        functions
-                                                                                .get(0)
-                                                                                .getMethodSignatureAsString(),
-                                                                        encodedArgs);
+                                                        Objects.isNull(parallel)
+                                                                ? FunctionUtility
+                                                                        .newSendTransactionProxyFunction(
+                                                                                id,
+                                                                                seq,
+                                                                                path.toString(),
+                                                                                functions
+                                                                                        .get(0)
+                                                                                        .getMethodSignatureAsString(),
+                                                                                encodedArgs)
+                                                                : FunctionUtility
+                                                                        .newParallelSendTransactionProxyFunction(
+                                                                                (String) parallel,
+                                                                                path.toString(),
+                                                                                functions
+                                                                                        .get(0)
+                                                                                        .getMethodSignatureAsString(),
+                                                                                encodedArgs);
+                                                ;
                                                 if (logger.isDebugEnabled()) {
                                                     logger.debug(
                                                             " contractAddress: {}, blockNumber: {}, method: {}, args: {}",

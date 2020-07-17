@@ -5,9 +5,34 @@
 */
 
 pragma solidity >=0.5.0 <0.6.0;
+
 pragma experimental ABIEncoderV2;
 
-contract WeCrossProxy {
+contract ParallelConfigPrecompiled
+{
+    function registerParallelFunctionInternal(address, string memory, uint256) public returns (int);
+    function unregisterParallelFunctionInternal(address, string memory) public returns (int);
+}
+
+contract ParallelContract
+{
+    ParallelConfigPrecompiled precompiled = ParallelConfigPrecompiled(0x1006);
+
+    function registerParallelFunction(string memory functionName, uint256 criticalSize) public
+    {
+        precompiled.registerParallelFunctionInternal(address(this), functionName, criticalSize);
+    }
+
+    function unregisterParallelFunction(string memory functionName) public
+    {
+        precompiled.unregisterParallelFunctionInternal(address(this), functionName);
+    }
+
+    function enableParallel() public;
+    function disableParallel() public;
+}
+
+contract WeCrossProxy is ParallelContract {
 
     string constant version = "v1.0.0-rc4";
 
@@ -127,6 +152,39 @@ contract WeCrossProxy {
         }
 
         return callContract(addr, _func, _args);
+    }
+
+    function enableParallel() public {
+        registerParallelFunction("parallelSendTransaction(string,string,string,bytes)", 1);
+        registerParallelFunction("parallelSendTransaction(string,string,string,string,bytes)", 2);
+        registerParallelFunction("parallelSendTransaction(string,string,string,string,string,bytes)", 3);
+    }
+
+    function disableParallel() public {
+        unregisterParallelFunction("parallelSendTransaction(string,string,string,bytes)");
+        unregisterParallelFunction("parallelSendTransaction(string,string,string,string,bytes)");
+        unregisterParallelFunction("parallelSendTransaction(string,string,string,string,string,bytes)");
+    }
+
+    /**
+* Interface for parallel transactions
+*/
+    function parallelSendTransaction(string memory parallelTag0, string memory parallelTag1, string memory parallelTag2, string memory _path, string memory _func, bytes memory _args) public returns(bytes memory) {
+        return sendTransaction("0", 0, _path, _func, _args);
+    }
+
+    /**
+    * Interface for parallel transactions
+    */
+    function parallelSendTransaction(string memory parallelTag0, string memory parallelTag1, string memory _path, string memory _func, bytes memory _args) public returns(bytes memory) {
+        return sendTransaction("0", 0, _path, _func, _args);
+    }
+
+    /**
+    * Interface for parallel transactions
+    */
+    function parallelSendTransaction(string memory parallelTag, string memory _path, string memory _func, bytes memory _args) public returns(bytes memory) {
+        return sendTransaction("0", 0, _path, _func, _args);
     }
 
     // non-constant call

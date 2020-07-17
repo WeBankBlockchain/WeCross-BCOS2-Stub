@@ -104,7 +104,14 @@ public class BCOSConnectionFactory {
                     return null;
                 } else {
                     int size = infoList.size();
-                    return infoList.get(size - 1).getAddress();
+                    CnsInfo cnsInfo1 = infoList.get(size - 1);
+                    logger.info(
+                            " WeCrossProxy CNS, name: {}, version: {}, address: {}, abi: {}",
+                            cnsInfo1.getName(),
+                            cnsInfo1.getVersion(),
+                            cnsInfo1.getAddress(),
+                            cnsInfo1.getAbi());
+                    return cnsInfo1.getAddress();
                 }
             } else {
                 logger.warn(
