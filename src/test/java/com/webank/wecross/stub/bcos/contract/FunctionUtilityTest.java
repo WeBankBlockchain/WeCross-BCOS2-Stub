@@ -32,14 +32,64 @@ public class FunctionUtilityTest {
     private static Function noneParamsFunction =
             FunctionUtility.newDefaultFunction(funcName, nonParams);
 
+    private static String parallelFuncSignature_1 =
+            "parallelSendTransaction(string,string,string,bytes)";
+    private static String parallelFuncMethod_1 =
+            FunctionEncoder.buildMethodId(parallelFuncSignature_1);
+    private static Function parallelFuction_1 =
+            FunctionUtility.newParallelSendTransactionProxyFunction("", "", "", "");
+
+    private static String parallelFuncSignature_2 =
+            "parallelSendTransaction(string,string,string,string,bytes)";
+    private static String parallelFuncMethod_2 =
+            FunctionEncoder.buildMethodId(parallelFuncSignature_2);
+    private static Function parallelFuction_2 =
+            FunctionUtility.newParallelSendTransactionProxyFunction("1,2", "", "", "");
+
+    private static String parallelFuncSignature_3 =
+            "parallelSendTransaction(string,string,string,string,string,bytes)";
+    private static String parallelFuncMethod_3 =
+            FunctionEncoder.buildMethodId(parallelFuncSignature_3);
+    private static Function parallelFuction_3 =
+            FunctionUtility.newParallelSendTransactionProxyFunction("1,2,3", "", "", "");
+
     @Test
     public void newFunctionTest() throws IOException {
         String abi = FunctionEncoder.encode(function);
         assertTrue(abi.startsWith(funcMethodId));
-        assertTrue(funcName.equals(function.getName()));
-        assertTrue(abi.startsWith(funcMethodId));
+        // assertTrue(parallelFuncName.equals(function.getName()));
         assertTrue(function.getInputParameters().size() == 1);
         assertTrue(function.getOutputParameters().size() == 1);
+    }
+
+    @Test
+    public void newParallelFunctionTest() throws IOException {
+        String abi = FunctionEncoder.encode(parallelFuction_1);
+        assertTrue(abi.startsWith(parallelFuncMethod_1));
+        assertTrue(funcName.equals(function.getName()));
+        assertTrue(abi.startsWith(parallelFuncMethod_1));
+        assertTrue(parallelFuction_1.getInputParameters().size() == 4);
+        assertTrue(parallelFuction_1.getOutputParameters().size() == 0);
+    }
+
+    @Test
+    public void newParallelFunction1Test() throws IOException {
+        String abi = FunctionEncoder.encode(parallelFuction_2);
+        assertTrue(abi.startsWith(parallelFuncMethod_2));
+        assertTrue(funcName.equals(function.getName()));
+        assertTrue(abi.startsWith(parallelFuncMethod_2));
+        assertTrue(parallelFuction_2.getInputParameters().size() == 5);
+        assertTrue(parallelFuction_2.getOutputParameters().size() == 0);
+    }
+
+    @Test
+    public void newParallelFunction2Test() throws IOException {
+        String abi = FunctionEncoder.encode(parallelFuction_3);
+        assertTrue(abi.startsWith(parallelFuncMethod_3));
+        assertTrue(funcName.equals(function.getName()));
+        assertTrue(abi.startsWith(parallelFuncMethod_3));
+        assertTrue(parallelFuction_3.getInputParameters().size() == 6);
+        assertTrue(parallelFuction_3.getOutputParameters().size() == 0);
     }
 
     @Test

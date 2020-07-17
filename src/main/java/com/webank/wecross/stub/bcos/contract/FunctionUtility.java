@@ -1,6 +1,7 @@
 package com.webank.wecross.stub.bcos.contract;
 
 import java.math.BigInteger;
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -112,6 +113,72 @@ public class FunctionUtility {
                                 new org.fisco.bcos.web3j.abi.datatypes.DynamicBytes(
                                         Numeric.hexStringToByteArray(abi))),
                         Collections.<TypeReference<?>>emptyList());
+        return function;
+    }
+
+    /**
+     * WeCrossProxy parallerSendTransaction function
+     *
+     * @param parallel
+     * @param path
+     * @param methodSignature
+     * @param abi
+     * @return
+     */
+    public static Function newParallelSendTransactionProxyFunction(
+            String parallel, String path, String methodSignature, String abi) {
+
+        String[] parallels = parallel.split(",");
+
+        Function function = null;
+
+        if (parallels.length == 1) {
+            function =
+                    new Function(
+                            "parallelSendTransaction",
+                            Arrays.<Type>asList(
+                                    new org.fisco.bcos.web3j.abi.datatypes.Utf8String(parallels[0]),
+                                    new org.fisco.bcos.web3j.abi.datatypes.Utf8String(
+                                            path.toString()),
+                                    new org.fisco.bcos.web3j.abi.datatypes.Utf8String(
+                                            methodSignature),
+                                    new org.fisco.bcos.web3j.abi.datatypes.DynamicBytes(
+                                            Numeric.hexStringToByteArray(abi))),
+                            Collections.<TypeReference<?>>emptyList());
+        } else if (parallels.length == 2) {
+            function =
+                    new Function(
+                            "parallelSendTransaction",
+                            Arrays.<Type>asList(
+                                    new org.fisco.bcos.web3j.abi.datatypes.Utf8String(parallels[0]),
+                                    new org.fisco.bcos.web3j.abi.datatypes.Utf8String(parallels[1]),
+                                    new org.fisco.bcos.web3j.abi.datatypes.Utf8String(
+                                            path.toString()),
+                                    new org.fisco.bcos.web3j.abi.datatypes.Utf8String(
+                                            methodSignature),
+                                    new org.fisco.bcos.web3j.abi.datatypes.DynamicBytes(
+                                            Numeric.hexStringToByteArray(abi))),
+                            Collections.<TypeReference<?>>emptyList());
+        } else if (parallels.length == 3) {
+            function =
+                    new Function(
+                            "parallelSendTransaction",
+                            Arrays.<Type>asList(
+                                    new org.fisco.bcos.web3j.abi.datatypes.Utf8String(parallels[0]),
+                                    new org.fisco.bcos.web3j.abi.datatypes.Utf8String(parallels[1]),
+                                    new org.fisco.bcos.web3j.abi.datatypes.Utf8String(parallels[2]),
+                                    new org.fisco.bcos.web3j.abi.datatypes.Utf8String(
+                                            path.toString()),
+                                    new org.fisco.bcos.web3j.abi.datatypes.Utf8String(
+                                            methodSignature),
+                                    new org.fisco.bcos.web3j.abi.datatypes.DynamicBytes(
+                                            Numeric.hexStringToByteArray(abi))),
+                            Collections.<TypeReference<?>>emptyList());
+        } else {
+            throw new InvalidParameterException(
+                    "The parallel parameter supports up to three, parallel: " + parallel);
+        }
+
         return function;
     }
 

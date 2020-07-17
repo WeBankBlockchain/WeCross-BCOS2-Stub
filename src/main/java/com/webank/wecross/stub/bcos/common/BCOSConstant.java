@@ -27,4 +27,6 @@ public interface BCOSConstant {
     String CNS_METHOD_SELECTBYNAMEANDVERSION = "selectByNameAndVersion";
     String PROXY_METHOD_ADDPATH = "addPath";
     String PROXY_METHOD_GETPATHS = "getPaths";
+
+    String PROXY_TX_PARALLEL_TAG = "ProxyParallelParams";
 }

@@ -115,6 +115,11 @@ public class BCOSStubCallContractIntegTest {
 
     public TransactionContext<TransactionRequest> createTransactionRequestContext(
             Path path, String method, String[] args) {
+        return createTransactionRequestContext(path, method, args, null);
+    }
+
+    public TransactionContext<TransactionRequest> createTransactionRequestContext(
+            Path path, String method, String[] args, String parallelTag) {
         TransactionRequest transactionRequest =
                 new TransactionRequest(method, args);
         transactionRequest.setOptions(new HashMap<>());
@@ -126,6 +131,9 @@ public class BCOSStubCallContractIntegTest {
         requestTransactionContext.setBlockHeaderManager(blockHeaderManager);
         requestTransactionContext.setData(transactionRequest);
         requestTransactionContext.setResourceInfo(resourceInfo);
+        if (Objects.nonNull(parallelTag)) {
+            transactionRequest.getOptions().put(BCOSConstant.PROXY_TX_PARALLEL_TAG, parallelTag);
+        }
         return requestTransactionContext;
     }
 
@@ -557,6 +565,102 @@ public class BCOSStubCallContractIntegTest {
 
         asyncToSync.semaphore.acquire(1);
     }
+
+    @Test
+    public void parallelSendTransactionByProxyTest() throws Exception {
+        String[] params = new String[]{"hello", "world"};
+        Path path = Path.decode("a.b.HelloWorld");
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTransactionRequestContext(path, "get2", params, "parallel");
+
+        AsyncToSync asyncToSync = new AsyncToSync();
+        driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
+            assertTrue(Objects.nonNull(res));
+            assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
+            assertTrue(res.getResult().length == 1);
+            assertTrue(res.getResult()[0].equals(params[0] + params[1]));
+            asyncToSync.getSemaphore().release();
+        });
+
+        asyncToSync.semaphore.acquire(1);
+    }
+
+    @Test
+    public void parallelSendTransactionByProxy1Test() throws Exception {
+        String[] params = new String[]{"hello", "world"};
+        Path path = Path.decode("a.b.HelloWorld");
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTransactionRequestContext(path, "get2", params, "parallel0,parallel1");
+
+        AsyncToSync asyncToSync = new AsyncToSync();
+        driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
+            assertTrue(Objects.nonNull(res));
+            assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
+            assertTrue(res.getResult().length == 1);
+            assertTrue(res.getResult()[0].equals(params[0] + params[1]));
+            asyncToSync.getSemaphore().release();
+        });
+
+        asyncToSync.semaphore.acquire(1);
+    }
+
+    @Test
+    public void parallelSendTransactionByProxy2Test() throws Exception {
+        String[] params = new String[]{"hello", "world"};
+        Path path = Path.decode("a.b.HelloWorld");
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTransactionRequestContext(path, "get2", params, "parallel0,parallel1,parallel2");
+
+        AsyncToSync asyncToSync = new AsyncToSync();
+        driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
+            assertTrue(Objects.nonNull(res));
+            assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
+            assertTrue(res.getResult().length == 1);
+            assertTrue(res.getResult()[0].equals(params[0] + params[1]));
+            asyncToSync.getSemaphore().release();
+        });
+
+        asyncToSync.semaphore.acquire(1);
+    }
+
+    /*
+    @Test
+    public void parallelEnableTest() throws Exception {
+        String[] params = new String[]{};
+        Path path = Path.decode("a.b.WeCrossProxy");
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTransactionRequestContext(path, "enableParallel", params);
+
+        AsyncToSync asyncToSync = new AsyncToSync();
+        driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
+            assertTrue(Objects.nonNull(res));
+            assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
+            assertTrue(res.getResult().length == 1);
+            assertTrue(res.getResult()[0].equals(params[0] + params[1]));
+            asyncToSync.getSemaphore().release();
+        });
+
+        asyncToSync.semaphore.acquire(1);
+    }
+
+    @Test
+    public void parallelDisableTest() throws Exception {
+        String[] params = new String[]{};
+        Path path = Path.decode("a.b.WeCrossProxy");
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                createTransactionRequestContext(path, "disableParallel", params);
+
+        AsyncToSync asyncToSync = new AsyncToSync();
+        driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
+            assertTrue(Objects.nonNull(res));
+            assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
+            assertTrue(res.getResult().length == 1);
+            assertTrue(res.getResult()[0].equals(params[0] + params[1]));
+            asyncToSync.getSemaphore().release();
+        });
+
+        asyncToSync.semaphore.acquire(1);
+    }*/
 
     @Test
     public void callByProxyOnTupleTest() throws Exception {
