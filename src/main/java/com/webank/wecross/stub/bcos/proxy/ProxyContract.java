@@ -1,10 +1,14 @@
 package com.webank.wecross.stub.bcos.proxy;
 
+import com.webank.wecross.stub.StubFactory;
 import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.BCOSConnectionFactory;
+import com.webank.wecross.stub.bcos.BCOSGMStubFactory;
 import com.webank.wecross.stub.bcos.BCOSStubFactory;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
+import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
+import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import java.io.File;
@@ -41,7 +45,14 @@ public class ProxyContract {
         this.proxyContractFile = proxyContractFile;
         this.chainPath = chainPath;
 
-        BCOSStubFactory bcosStubFactory = new BCOSStubFactory();
+        BCOSStubConfigParser bcosStubConfigParser =
+                new BCOSStubConfigParser(chainPath, "stub.toml");
+        BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
+
+        StubFactory bcosStubFactory =
+                bcosStubConfig.getType().toLowerCase().contains("gm")
+                        ? new BCOSGMStubFactory()
+                        : new BCOSStubFactory();
         account =
                 (BCOSAccount)
                         bcosStubFactory.newAccount(
