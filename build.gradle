@@ -14,7 +14,7 @@ plugins {
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'com.webank.wecross'
-version '1.0.0-rc4-06301-SNAPSHOT'
+version '1.0.0-rc4-07220-SNAPSHOT'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
