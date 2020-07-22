@@ -1505,9 +1505,11 @@ public class BCOSDriver implements Driver {
             throw new BCOSStubException(BCOSStatusCode.InvalidParameter, "Account is null");
         }
 
+        /*
         if (Objects.isNull(request.getResourceInfo())) {
             throw new BCOSStubException(BCOSStatusCode.InvalidParameter, "ResourceInfo is null");
         }
+        */
 
         if (Objects.isNull(request.getData())) {
             throw new BCOSStubException(BCOSStatusCode.InvalidParameter, "Data is null");
