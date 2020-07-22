@@ -777,9 +777,16 @@ public class BCOSDriver implements Driver {
                                                     transactionResponse.setErrorCode(
                                                             BCOSStatusCode
                                                                     .SendTransactionNotSuccessStatus);
-                                                    transactionResponse.setErrorMessage(
-                                                            StatusCode.getStatusMessage(
-                                                                    receipt.getStatus()));
+                                                    if (StatusCode.RevertInstruction.equals(
+                                                            receipt.getStatus())) {
+                                                        // return revert message
+                                                        transactionResponse.setErrorMessage(
+                                                                receipt.getMessage());
+                                                    } else {
+                                                        transactionResponse.setErrorMessage(
+                                                                StatusCode.getStatusMessage(
+                                                                        receipt.getStatus()));
+                                                    }
                                                     callback.onTransactionResponse(
                                                             null, transactionResponse);
                                                 }
@@ -977,6 +984,11 @@ public class BCOSDriver implements Driver {
                                                                                 response.getData(),
                                                                                 TransactionReceipt
                                                                                         .class);
+                                                                if (logger.isDebugEnabled()) {
+                                                                    logger.debug(
+                                                                            "TransactionReceipt: {}",
+                                                                            receipt);
+                                                                }
 
                                                                 if (receipt.isStatusOK()) {
                                                                     request.getBlockHeaderManager()
@@ -1089,12 +1101,24 @@ public class BCOSDriver implements Driver {
                                                                             .setErrorCode(
                                                                                     BCOSStatusCode
                                                                                             .SendTransactionNotSuccessStatus);
-                                                                    transactionResponse
-                                                                            .setErrorMessage(
-                                                                                    StatusCode
-                                                                                            .getStatusMessage(
-                                                                                                    receipt
-                                                                                                            .getStatus()));
+                                                                    if (StatusCode.RevertInstruction
+                                                                            .equals(
+                                                                                    receipt
+                                                                                            .getStatus())) {
+                                                                        // return revert message
+                                                                        transactionResponse
+                                                                                .setErrorMessage(
+                                                                                        receipt
+                                                                                                .getMessage());
+                                                                    } else {
+                                                                        transactionResponse
+                                                                                .setErrorMessage(
+                                                                                        StatusCode
+                                                                                                .getStatusMessage(
+                                                                                                        receipt
+                                                                                                                .getStatus()));
+                                                                    }
+
                                                                     callback.onTransactionResponse(
                                                                             null,
                                                                             transactionResponse);
