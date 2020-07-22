@@ -12,10 +12,14 @@ import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.Security;
 import org.apache.commons.io.FileUtils;
+import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
+import org.fisco.bcos.web3j.crypto.Credentials;
+import org.fisco.bcos.web3j.crypto.ECKeyPair;
 import org.fisco.bcos.web3j.crypto.EncryptType;
+import org.fisco.bcos.web3j.crypto.gm.GenCredential;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,8 +91,10 @@ public class BCOSGMStubFactory implements StubFactory {
             KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
             PrivateKey ecPrivateKey = keyPair.getPrivate();
+            Credentials credentials = GenCredential.create(ECKeyPair.create(keyPair)); // GM or normal
+            String accountAddress = credentials.getAddress();
 
-            String keyFile = path + "/account.key";
+            String keyFile = path + "/" + accountAddress + ".key";
             File file = new File(keyFile);
 
             if (!file.createNewFile()) {
@@ -106,8 +112,8 @@ public class BCOSGMStubFactory implements StubFactory {
             String accountTemplate =
                     "[account]\n"
                             + "    type='GM_BCOS2.0'\n"
-                            + "    accountFile='account.key'\n"
-                            + "    password=''";
+                            + "    accountFile='" + file.getName() + "'\n"
+                            + "    password='' # if use *.p12 accountFile";
             String confFilePath = path + "/account.toml";
             File confFile = new File(confFilePath);
             if (!confFile.createNewFile()) {
@@ -142,12 +148,12 @@ public class BCOSGMStubFactory implements StubFactory {
                     "[common]\n"
                             + "    name = '"
                             + chainName
+                            + "\n"
                             + "    type = 'GM_BCOS2.0' # BCOS\n"
                             + "\n"
                             + "[chain]\n"
                             + "    groupId = 1 # default 1\n"
                             + "    chainId = 1 # default 1\n"
-                            + "    enableGM = false # default false\n"
                             + "\n"
                             + "[channelService]\n"
                             + "    caCert = 'ca.crt'\n"
