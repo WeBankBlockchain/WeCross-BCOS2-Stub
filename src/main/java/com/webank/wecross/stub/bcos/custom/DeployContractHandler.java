@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.fisco.bcos.web3j.crypto.EncryptType;
+import org.fisco.bcos.web3j.precompile.cns.CnsService;
 import org.fisco.bcos.web3j.utils.Numeric;
 import org.fisco.solc.compiler.CompilationResult;
 import org.fisco.solc.compiler.SolidityCompiler;
@@ -58,6 +59,14 @@ public class DeployContractHandler implements CommandHandler {
         String sourceContent = (String) args[1];
         String className = (String) args[2];
         String version = (String) args[3];
+
+        /* Parameter calibration */
+        if (version.length() > CnsService.MAX_VERSION_LENGTH) {
+            callback.onResponse(
+                    new Exception("The length of version field must be less than or equal to 40"),
+                    null);
+            return;
+        }
 
         Driver driver = new BCOSDriver();
         /** constructor params */

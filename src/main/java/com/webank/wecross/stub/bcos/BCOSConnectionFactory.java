@@ -128,11 +128,15 @@ public class BCOSConnectionFactory {
     public static void checkBCOSVersion(Web3jWrapper web3jWrapper) throws Exception {
         NodeVersion.Version respondNodeVersion =
                 web3jWrapper.getWeb3j().getNodeVersion().send().getNodeVersion();
+
         String supportedVersionStr = respondNodeVersion.getSupportedVersion();
         String nodeVersionStr = respondNodeVersion.getVersion();
         EnumNodeVersion.Version supportedVersion =
                 EnumNodeVersion.getClassVersion(supportedVersionStr);
-        EnumNodeVersion.Version nodeVersion = EnumNodeVersion.getClassVersion(nodeVersionStr);
+
+        /*2.4.0 gm or 2.4.0*/
+        String[] strings = nodeVersionStr.split(" ");
+        EnumNodeVersion.Version nodeVersion = EnumNodeVersion.getClassVersion(strings[0]);
 
         // must not below than 2.4.0
         if (!(supportedVersion.getMajor() == 2 && supportedVersion.getMinor() >= 4)) {

@@ -11,6 +11,7 @@ import com.webank.wecross.stub.bcos.BCOSDriver;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import java.util.Map;
 import java.util.Objects;
+import org.fisco.bcos.web3j.precompile.cns.CnsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +40,14 @@ public class RegisterCnsHandler implements CommandHandler {
         String version = (String) args[0];
         String address = (String) args[1];
         String abi = (String) args[2];
+
+        /* Parameter calibration */
+        if (version.length() > CnsService.MAX_VERSION_LENGTH) {
+            callback.onResponse(
+                    new Exception("The length of version field must be less than or equal to 40"),
+                    null);
+            return;
+        }
 
         Driver driver = new BCOSDriver();
 

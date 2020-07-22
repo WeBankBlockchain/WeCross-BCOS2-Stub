@@ -82,6 +82,8 @@ public class ProxyContract {
     public String deployContractAndRegisterCNS(
             File solFile, String contractName, String cnsName, String cnsVersion) throws Exception {
 
+        logger.info("cnsName: {}, cnsVersion: {}", cnsName, cnsVersion);
+
         /** First compile the contract source code */
         SolidityCompiler.Result res =
                 SolidityCompiler.compile(
@@ -170,7 +172,7 @@ public class ProxyContract {
             PathMatchingResourcePatternResolver resolver =
                     new PathMatchingResourcePatternResolver();
             File file = resolver.getResource("classpath:" + proxyContractFile).getFile();
-            deployContractAndRegisterCNS(file, "WeCrossProxy", "WeCrossProxy", null);
+            deployContractAndRegisterCNS(file, "WeCrossProxy", "WeCrossProxy", Version);
         }
 
         System.out.println("SUCCESS: proxy has been deployed! chain: " + chainPath);
