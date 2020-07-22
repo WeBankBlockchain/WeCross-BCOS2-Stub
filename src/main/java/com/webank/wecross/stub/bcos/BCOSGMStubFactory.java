@@ -12,7 +12,6 @@ import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.Security;
 import org.apache.commons.io.FileUtils;
-import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
@@ -91,7 +90,8 @@ public class BCOSGMStubFactory implements StubFactory {
             KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
             PrivateKey ecPrivateKey = keyPair.getPrivate();
-            Credentials credentials = GenCredential.create(ECKeyPair.create(keyPair)); // GM or normal
+            Credentials credentials =
+                    GenCredential.create(ECKeyPair.create(keyPair)); // GM or normal
             String accountAddress = credentials.getAddress();
 
             String keyFile = path + "/" + accountAddress + ".key";
@@ -112,7 +112,9 @@ public class BCOSGMStubFactory implements StubFactory {
             String accountTemplate =
                     "[account]\n"
                             + "    type='GM_BCOS2.0'\n"
-                            + "    accountFile='" + file.getName() + "'\n"
+                            + "    accountFile='"
+                            + file.getName()
+                            + "'\n"
                             + "    password='' # if use *.p12 accountFile";
             String confFilePath = path + "/account.toml";
             File confFile = new File(confFilePath);
