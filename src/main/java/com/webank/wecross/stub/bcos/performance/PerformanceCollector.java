@@ -151,8 +151,8 @@ public class PerformanceCollector {
 
         } catch (Exception e) {
             logger.error("error:", e);
-            System.exit(0);
         }
+        System.exit(0);
     }
 
     public Integer getTotal() {

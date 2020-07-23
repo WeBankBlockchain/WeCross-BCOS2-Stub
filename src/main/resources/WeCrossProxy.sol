@@ -203,33 +203,59 @@ contract WeCrossProxy is ParallelContract {
         registerParallelFunction("parallelSendTransaction(string,string,string,bytes)", 1);
         registerParallelFunction("parallelSendTransaction(string,string,string,string,bytes)", 2);
         registerParallelFunction("parallelSendTransaction(string,string,string,string,string,bytes)", 3);
+
+        registerParallelFunction("parallelSendTransactionByAddress(string,address,string,bytes)", 1);
+        registerParallelFunction("parallelSendTransactionByAddress(string,string,address,string,bytes)", 2);
     }
 
     function disableParallel() public {
         unregisterParallelFunction("parallelSendTransaction(string,string,string,bytes)");
         unregisterParallelFunction("parallelSendTransaction(string,string,string,string,bytes)");
         unregisterParallelFunction("parallelSendTransaction(string,string,string,string,string,bytes)");
+
+        unregisterParallelFunction("parallelSendTransactionByAddress(string,address,string,bytes)");
+        unregisterParallelFunction("parallelSendTransactionByAddress(string,string,address,string,bytes)");
     }
 
     /**
 * Interface for parallel transactions
 */
     function parallelSendTransaction(string memory parallelTag0, string memory parallelTag1, string memory parallelTag2, string memory _path, string memory _func, bytes memory _args) public returns(bytes memory) {
-        return sendTransaction("0", 0, _path, _func, _args);
+        address addr = getAddressByPath(_path);
+        return callContract(addr, _func, _args);
     }
 
     /**
     * Interface for parallel transactions
     */
     function parallelSendTransaction(string memory parallelTag0, string memory parallelTag1, string memory _path, string memory _func, bytes memory _args) public returns(bytes memory) {
-        return sendTransaction("0", 0, _path, _func, _args);
+        address addr = getAddressByPath(_path);
+        return callContract(addr, _func, _args);
     }
 
     /**
     * Interface for parallel transactions
     */
     function parallelSendTransaction(string memory parallelTag, string memory _path, string memory _func, bytes memory _args) public returns(bytes memory) {
-        return sendTransaction("0", 0, _path, _func, _args);
+        address addr = getAddressByPath(_path);
+        return callContract(addr, _func, _args);
+    }
+
+    function parallelSendTransactionByAddress(string memory parallelTag, address addr, string memory _func, bytes memory _args) public returns(bytes memory) {
+        return callContract(addr, _func, _args);
+    }
+
+    function parallelSendTransactionByAddress(string memory parallelTag0, string memory parallelTag1, address addr, string memory _func, bytes memory _args) public returns(bytes memory) {
+        return callContract(addr, _func, _args);
+    }
+
+    function sendTransactionByAddress(address addr, string memory _func, bytes memory _args) public returns(bytes memory) {
+        return callContract(addr, _func, _args);
+    }
+
+    function sendTransaction(string memory _path, string memory _func, bytes memory _args) public returns(bytes memory) {
+        address addr = getAddressByPath(_path);
+        return callContract(addr, _func, _args);
     }
 
     // non-constant call

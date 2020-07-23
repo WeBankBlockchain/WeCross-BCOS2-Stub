@@ -54,14 +54,14 @@ public class PerformanceManager {
             AtomicInteger sended = new AtomicInteger(0);
 
             for (Integer i = 0; i < count.intValue(); ++i) {
-                final int index = i;
+                Integer finalI = i;
                 threadPool.execute(
                         new Runnable() {
                             @Override
                             public void run() {
                                 limiter.acquire();
                                 PerformanceSuiteCallback callback = buildCallback(collector);
-                                suite.call(callback);
+                                suite.call(callback, finalI);
 
                                 int current = sended.incrementAndGet();
 
