@@ -478,6 +478,7 @@ public class BCOSDriverTest {
             assertTrue(e.getMessage().equals("BlockHeaderManager is null"));
         }
 
+        /*
         try {
             TransactionContext<TransactionRequest> requestTransactionContext =
                     createTransactionRequestContext(
@@ -486,7 +487,7 @@ public class BCOSDriverTest {
         } catch (BCOSStubException e) {
             assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
             assertTrue(e.getMessage().equals("ResourceInfo is null"));
-        }
+        }*/
 
         try {
             TransactionContext<TransactionRequest> requestTransactionContext =
