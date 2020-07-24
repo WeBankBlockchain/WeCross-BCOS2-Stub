@@ -174,6 +174,7 @@ public class BCOSConnection implements Connection {
                 String[] paths = FunctionUtility.decodeOutput(callOutput.getOutput());
                 if (Objects.nonNull(paths) && paths.length != 0) {
                     Set<String> set = new HashSet<>(Arrays.asList(paths));
+                    set.add(BCOSConstant.BCOS_PROXY_NAME);
                     return set.toArray(new String[0]);
                 } else {
                     logger.debug(" listPaths empty");

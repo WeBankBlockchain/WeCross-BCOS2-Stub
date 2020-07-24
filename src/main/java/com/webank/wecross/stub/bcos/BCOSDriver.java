@@ -1513,9 +1513,10 @@ public class BCOSDriver implements Driver {
                     BCOSStatusCode.InvalidParameter, "BlockHeaderManager is null");
         }
 
+        /*
         if (Objects.isNull(request.getResourceInfo())) {
             throw new BCOSStubException(BCOSStatusCode.InvalidParameter, "ResourceInfo is null");
-        }
+        }*/
 
         if (Objects.isNull(request.getData())) {
             throw new BCOSStubException(BCOSStatusCode.InvalidParameter, "Data is null");
