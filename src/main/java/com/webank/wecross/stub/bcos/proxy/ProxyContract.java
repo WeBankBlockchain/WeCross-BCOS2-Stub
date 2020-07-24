@@ -17,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.crypto.EncryptType;
+import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
 import org.fisco.bcos.web3j.precompile.cns.CnsService;
 import org.fisco.bcos.web3j.precompile.common.PrecompiledCommon;
 import org.fisco.bcos.web3j.precompile.common.PrecompiledResponse;
@@ -90,7 +91,7 @@ public class ProxyContract {
      * @param solFile, String contractName
      * @return
      */
-    public String deployContractAndRegisterCNS(
+    public CnsInfo deployContractAndRegisterCNS(
             File solFile, String contractName, String cnsName, String cnsVersion) throws Exception {
 
         logger.info("cnsName: {}, cnsVersion: {}", cnsName, cnsVersion);
@@ -173,7 +174,8 @@ public class ProxyContract {
             throw new RuntimeException(" registerCns failed, error message: " + result);
         }
 
-        return contractAddress;
+        CnsInfo cnsInfo = new CnsInfo(cnsName, cnsVersion, contractAddress, metadata.abi);
+        return cnsInfo;
     }
 
     public void deploy() throws Exception {

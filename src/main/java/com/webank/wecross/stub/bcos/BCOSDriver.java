@@ -296,7 +296,8 @@ public class BCOSDriver implements Driver {
 
                             if (abi == null) {
                                 throw new BCOSStubException(
-                                        BCOSStatusCode.QueryAbiFailed, "abi is null");
+                                        BCOSStatusCode.QueryAbiFailed,
+                                        "resource:" + name + " not exist");
                             }
 
                             // encode
@@ -863,7 +864,7 @@ public class BCOSDriver implements Driver {
                                                 if (abi == null) {
                                                     throw new BCOSStubException(
                                                             BCOSStatusCode.QueryAbiFailed,
-                                                            "abi is null");
+                                                            "resource:" + name + " not exist");
                                                 }
 
                                                 // encode
@@ -956,12 +957,16 @@ public class BCOSDriver implements Driver {
                                                                 signTx,
                                                                 TransactionParams.TP_YPE
                                                                         .SEND_TX_BY_PROXY);
+
                                                 transaction.setAbi(abi);
                                                 Request req =
                                                         RequestFactory.requestBuilder(
                                                                 BCOSRequestType.SEND_TRANSACTION,
                                                                 objectMapper.writeValueAsBytes(
                                                                         transaction));
+
+                                                // decodeTransactionRequest(req.getData());
+
                                                 connection.asyncSend(
                                                         req,
                                                         response -> {
