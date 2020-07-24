@@ -104,6 +104,51 @@ contract WeCrossProxy {
         pathList.length = 0;
     }
 
+    /*
+    * deploy contract by contract binary code
+    */
+    function deployContract(bytes memory bin) public returns(address addr) {
+        bool ok = false;
+        assembly {
+            addr := create(0,add(bin,0x20), mload(bin))
+            ok := gt(extcodesize(addr),0)
+        }
+        require(ok, "deploy contract failed");
+    }
+
+    /**
+    * deploy contract and register contract to cns
+    */
+    function deployContractWithRegisterCNS(string memory name, string memory version, bytes memory bin, string memory abi) public returns(address addr) {
+        // deploy contract first
+        addr = deployContract(bin);
+        // register to cns
+        registerCNS(name, version, addressToString(addr), abi);
+    }
+
+    /**
+    * register contract to cns
+    */
+    function registerCNS(string memory name, string memory version, string memory addr, string memory abi) public {
+        // check if version info exist ???
+        int ret = cns.insert(name, version, addr, abi);
+        require(1 == ret, "register cns failed");
+    }
+
+    /**
+    * select cns by name
+    */
+    function selectByName(string memory name) public view returns(string memory) {
+        return cns.selectByName(name);
+    }
+
+    /**
+    * select cns by name and version
+    */
+    function selectByNameAndVersion(string memory name, string memory version) public view returns(string memory) {
+        return cns.selectByNameAndVersion(name, version);
+    }
+
     // constant call
     function constantCall(string memory _transactionID, string memory _path, string memory _func, bytes memory _args) public
     returns(bytes memory)
@@ -801,9 +846,7 @@ contract WeCrossProxy {
 }
 
 contract CNSPrecompiled {
-
-    function insert(string memory name, string memory version, string memory addr, string memory abiStr) public;
-
+    function insert(string memory name, string memory version, string memory addr, string memory abiStr) public returns(int256);
     function selectByName(string memory name) public view returns (string memory);
 
     function selectByNameAndVersion(string memory name, string memory version) public view returns (string memory);

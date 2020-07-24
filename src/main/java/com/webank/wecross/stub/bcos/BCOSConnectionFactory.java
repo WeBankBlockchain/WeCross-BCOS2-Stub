@@ -56,15 +56,16 @@ public class BCOSConnectionFactory {
         bcosConnection.addProperty(
                 BCOSConstant.BCOS_STUB_TYPE, String.valueOf(bcosStubConfig.getType()));
 
-        String address = getProxyAddress(web3jWrapper);
-        if (Objects.nonNull(address)) {
-            bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_NAME, address);
+        CnsInfo cnsInfo = getWeCrossProxyCnsInfo(web3jWrapper);
+        if (Objects.nonNull(cnsInfo)) {
+            bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_NAME, cnsInfo.getAddress());
+            bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_ABI, cnsInfo.getAbi());
         }
         return bcosConnection;
     }
 
-    /** query cns to get address of proxy contract */
-    public static String getProxyAddress(Web3jWrapper web3jWrapper) {
+    /** query cns to get address,abi of proxy contract */
+    public static CnsInfo getWeCrossProxyCnsInfo(Web3jWrapper web3jWrapper) {
         Function function =
                 new Function(
                         BCOSConstant.CNS_METHOD_SELECTBYNAME,
@@ -98,23 +99,28 @@ public class BCOSConnectionFactory {
                                         .getTypeFactory()
                                         .constructCollectionType(List.class, CnsInfo.class));
 
-                logger.info(" cns proxy: {}", infoList);
-
                 if (Objects.isNull(infoList) || infoList.isEmpty()) {
                     return null;
                 } else {
                     int size = infoList.size();
-                    return infoList.get(size - 1).getAddress();
+                    CnsInfo proxyCnsInfo = infoList.get(size - 1);
+                    logger.info(
+                            " WeCrossProxy CNS, name: {}, version: {}, address: {}, abi: {}",
+                            proxyCnsInfo.getName(),
+                            proxyCnsInfo.getVersion(),
+                            proxyCnsInfo.getAddress(),
+                            proxyCnsInfo.getAbi());
+                    return proxyCnsInfo;
                 }
             } else {
                 logger.warn(
-                        "getting address of proxy contract failed, status: {}, message: {}",
+                        "getting cns of proxy contract failed, status: {}, message: {}",
                         callOutput.getStatus(),
                         StatusCode.getStatusMessage(callOutput.getStatus()));
                 return null;
             }
         } catch (Exception e) {
-            logger.warn("getting address of proxy contract failed, e: ", e);
+            logger.warn("getting cns of proxy contract failed, e: ", e);
             return null;
         }
     }
@@ -122,11 +128,15 @@ public class BCOSConnectionFactory {
     public static void checkBCOSVersion(Web3jWrapper web3jWrapper) throws Exception {
         NodeVersion.Version respondNodeVersion =
                 web3jWrapper.getWeb3j().getNodeVersion().send().getNodeVersion();
+
         String supportedVersionStr = respondNodeVersion.getSupportedVersion();
         String nodeVersionStr = respondNodeVersion.getVersion();
         EnumNodeVersion.Version supportedVersion =
                 EnumNodeVersion.getClassVersion(supportedVersionStr);
-        EnumNodeVersion.Version nodeVersion = EnumNodeVersion.getClassVersion(nodeVersionStr);
+
+        /*2.4.0 gm or 2.4.0*/
+        String[] strings = nodeVersionStr.split(" ");
+        EnumNodeVersion.Version nodeVersion = EnumNodeVersion.getClassVersion(strings[0]);
 
         // must not below than 2.4.0
         if (!(supportedVersion.getMajor() == 2 && supportedVersion.getMinor() >= 4)) {

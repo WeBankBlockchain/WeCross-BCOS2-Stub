@@ -11,11 +11,7 @@ public class TransactionParams {
         SEND_TX_BY_PROXY,
         CALL_BY_PROXY,
         SEND_TX,
-        DEPLOY,
-        CALL,
-        CNS_INSERT,
-        CNS_SELECT_BY_NAME,
-        CNS_SELECT_BY_NAME_AND_VERSION
+        CALL
     };
 
     public TransactionParams(TransactionRequest transactionRequest, String data, TP_YPE tp_ype) {

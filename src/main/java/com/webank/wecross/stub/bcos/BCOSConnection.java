@@ -1,5 +1,7 @@
 package com.webank.wecross.stub.bcos;
 
+import static java.util.Collections.addAll;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -19,7 +21,14 @@ import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
@@ -174,7 +183,7 @@ public class BCOSConnection implements Connection {
                 String[] paths = FunctionUtility.decodeOutput(callOutput.getOutput());
                 if (Objects.nonNull(paths) && paths.length != 0) {
                     Set<String> set = new HashSet<>(Arrays.asList(paths));
-                    set.add(BCOSConstant.BCOS_PROXY_NAME);
+                    set.add("a.b." + BCOSConstant.BCOS_PROXY_NAME);
                     return set.toArray(new String[0]);
                 } else {
                     logger.debug(" listPaths empty");

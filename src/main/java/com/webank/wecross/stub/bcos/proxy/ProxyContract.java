@@ -1,32 +1,43 @@
 package com.webank.wecross.stub.bcos.proxy;
 
-import com.webank.wecross.stub.Account;
-import com.webank.wecross.stub.BlockHeaderManager;
-import com.webank.wecross.stub.Connection;
-import com.webank.wecross.stub.Driver;
-import com.webank.wecross.stub.Path;
+import com.webank.wecross.stub.StubFactory;
 import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.BCOSConnectionFactory;
+import com.webank.wecross.stub.bcos.BCOSGMStubFactory;
 import com.webank.wecross.stub.bcos.BCOSStubFactory;
-import com.webank.wecross.stub.bcos.custom.CommandHandler;
-import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
+import com.webank.wecross.stub.bcos.account.BCOSAccount;
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
+import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
+import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
+import com.webank.wecross.stub.bcos.contract.SignTransaction;
+import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import java.io.File;
-import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.math.BigInteger;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import org.fisco.bcos.channel.client.TransactionSucCallback;
+import org.fisco.bcos.web3j.crypto.EncryptType;
+import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
+import org.fisco.bcos.web3j.precompile.cns.CnsService;
+import org.fisco.bcos.web3j.precompile.common.PrecompiledCommon;
+import org.fisco.bcos.web3j.precompile.common.PrecompiledResponse;
+import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
+import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.fisco.solc.compiler.CompilationResult;
+import org.fisco.solc.compiler.SolidityCompiler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 public class ProxyContract {
+
+    private static final Logger logger = LoggerFactory.getLogger(ProxyContract.class);
+
     private String proxyContractFile;
     private String chainPath;
 
-    private Account account;
+    private BCOSAccount account;
     private BCOSConnection connection;
-    private Driver driver;
-    private BlockHeaderManager blockHeaderManager;
 
     private static String Version = "1";
 
@@ -35,29 +46,136 @@ public class ProxyContract {
         this.proxyContractFile = proxyContractFile;
         this.chainPath = chainPath;
 
-        BCOSStubFactory bcosStubFactory = new BCOSStubFactory();
+        BCOSStubConfigParser bcosStubConfigParser =
+                new BCOSStubConfigParser(chainPath, "stub.toml");
+        BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
+
+        StubFactory bcosStubFactory =
+                bcosStubConfig.getType().toLowerCase().contains("gm")
+                        ? new BCOSGMStubFactory()
+                        : new BCOSStubFactory();
         account =
-                bcosStubFactory.newAccount(
-                        accountName, "classpath:accounts" + File.separator + accountName);
-        driver = bcosStubFactory.newDriver();
+                (BCOSAccount)
+                        bcosStubFactory.newAccount(
+                                accountName, "classpath:accounts" + File.separator + accountName);
         connection = BCOSConnectionFactory.build(chainPath, "stub.toml", null);
-        blockHeaderManager = new DirectBlockHeaderManager(driver, connection);
 
         if (account == null) {
             throw new Exception("Account " + accountName + " not found");
         }
 
-        if (driver == null) {
-            throw new Exception("Init driver exception, please check log");
-        }
-
         if (connection == null) {
             throw new Exception("Init connection exception, please check log");
         }
+    }
 
-        if (blockHeaderManager == null) {
-            throw new Exception("Init blockHeaderManager exception, please check log");
+    public ProxyContract() {}
+
+    public BCOSAccount getAccount() {
+        return account;
+    }
+
+    public void setAccount(BCOSAccount account) {
+        this.account = account;
+    }
+
+    public BCOSConnection getConnection() {
+        return connection;
+    }
+
+    public void setConnection(BCOSConnection connection) {
+        this.connection = connection;
+    }
+
+    /**
+     * @param solFile, String contractName
+     * @return
+     */
+    public CnsInfo deployContractAndRegisterCNS(
+            File solFile, String contractName, String cnsName, String cnsVersion) throws Exception {
+
+        logger.info("cnsName: {}, cnsVersion: {}", cnsName, cnsVersion);
+
+        /** First compile the contract source code */
+        SolidityCompiler.Result res =
+                SolidityCompiler.compile(
+                        solFile,
+                        EncryptType.encryptType == EncryptType.SM2_TYPE,
+                        true,
+                        SolidityCompiler.Options.ABI,
+                        SolidityCompiler.Options.BIN,
+                        SolidityCompiler.Options.INTERFACE,
+                        SolidityCompiler.Options.METADATA);
+
+        if (res.isFailed()) {
+            throw new RuntimeException(" compiling contract failed, " + res.getErrors());
         }
+
+        CompilationResult.ContractMetadata metadata =
+                CompilationResult.parse(res.getOutput()).getContract(contractName);
+
+        /** deploy the contract by sendTransaction */
+        // groupId
+        BigInteger groupID =
+                new BigInteger(connection.getProperties().get(BCOSConstant.BCOS_GROUP_ID));
+        // chainId
+        BigInteger chainID =
+                new BigInteger(connection.getProperties().get(BCOSConstant.BCOS_CHAIN_ID));
+
+        Web3jWrapper web3jWrapper = connection.getWeb3jWrapper();
+        BigInteger blockNumber = web3jWrapper.getBlockNumber();
+
+        logger.info(
+                " groupID: {}, chainID: {}, blockNumber: {}, accountAddress: {}, bin: {}, abi: {}",
+                chainID,
+                groupID,
+                blockNumber,
+                account.getCredentials().getAddress(),
+                metadata.bin,
+                metadata.abi);
+
+        String signTx =
+                SignTransaction.sign(
+                        account.getCredentials(),
+                        null,
+                        groupID,
+                        chainID,
+                        blockNumber,
+                        metadata.bin);
+
+        CompletableFuture<String> completableFuture = new CompletableFuture<>();
+        web3jWrapper.sendTransactionAndGetProof(
+                signTx,
+                new TransactionSucCallback() {
+                    @Override
+                    public void onResponse(TransactionReceipt receipt) {
+                        if (!receipt.isStatusOK()) {
+                            logger.error(
+                                    " deploy contract failed, error status: {}, error message: {} ",
+                                    receipt.getStatus(),
+                                    receipt.getMessage());
+                            completableFuture.complete(null);
+                        } else {
+                            logger.info(
+                                    " deploy contract success, contractAddress: {}",
+                                    receipt.getContractAddress());
+                            completableFuture.complete(receipt.getContractAddress());
+                        }
+                    }
+                });
+
+        String contractAddress = completableFuture.get(10, TimeUnit.SECONDS);
+        CnsService cnsService = new CnsService(web3jWrapper.getWeb3j(), account.getCredentials());
+        String result = cnsService.registerCns(cnsName, cnsVersion, contractAddress, metadata.abi);
+
+        PrecompiledResponse precompiledResponse =
+                ObjectMapperFactory.getObjectMapper().readValue(result, PrecompiledResponse.class);
+        if (precompiledResponse.getCode() != PrecompiledCommon.Success) {
+            throw new RuntimeException(" registerCns failed, error message: " + result);
+        }
+
+        CnsInfo cnsInfo = new CnsInfo(cnsName, cnsVersion, contractAddress, metadata.abi);
+        return cnsInfo;
     }
 
     public void deploy() throws Exception {
@@ -66,39 +184,8 @@ public class ProxyContract {
 
             PathMatchingResourcePatternResolver resolver =
                     new PathMatchingResourcePatternResolver();
-            String path =
-                    resolver.getResource("classpath:" + proxyContractFile)
-                            .getFile()
-                            .getAbsolutePath();
-
-            File file = new File(path);
-            byte[] contractBytes = Files.readAllBytes(file.toPath());
-
-            Object[] args =
-                    new Object[] {
-                        "WeCrossProxy", new String(contractBytes), "WeCrossProxy", Version,
-                    };
-
-            CompletableFuture<Map.Entry<Exception, Object>> future = new CompletableFuture<>();
-
-            CommandHandler commandHandler = new DeployContractHandler();
-            commandHandler.handle(
-                    Path.decode("a.b.WeCrossProxy"),
-                    args,
-                    account,
-                    blockHeaderManager,
-                    connection,
-                    new HashMap<>(),
-                    (error, response) -> {
-                        future.complete(
-                                new HashMap.SimpleEntry<Exception, Object>(error, response));
-                    });
-
-            Map.Entry<Exception, Object> deployReturn = future.get(10, TimeUnit.SECONDS);
-            Exception error = deployReturn.getKey();
-            if (Objects.nonNull(error)) {
-                throw error;
-            }
+            File file = resolver.getResource("classpath:" + proxyContractFile).getFile();
+            deployContractAndRegisterCNS(file, "WeCrossProxy", "WeCrossProxy", Version);
         }
 
         System.out.println("SUCCESS: proxy has been deployed! chain: " + chainPath);
@@ -115,47 +202,6 @@ public class ProxyContract {
             }
         } catch (Exception e) {
             System.out.println(e);
-        }
-    }
-
-    public static class DirectBlockHeaderManager implements BlockHeaderManager {
-        private Driver driver;
-        private Connection connection;
-
-        public DirectBlockHeaderManager(Driver driver, Connection connection) {
-            this.driver = driver;
-            this.connection = connection;
-        }
-
-        @Override
-        public void start() {}
-
-        @Override
-        public void stop() {}
-
-        @Override
-        public void asyncGetBlockNumber(GetBlockNumberCallback callback) {
-            driver.asyncGetBlockNumber(
-                    connection,
-                    new Driver.GetBlockNumberCallback() {
-                        @Override
-                        public void onResponse(Exception e, long blockNumber) {
-                            callback.onResponse(e, blockNumber);
-                        }
-                    });
-        }
-
-        @Override
-        public void asyncGetBlockHeader(long blockNumber, GetBlockHeaderCallback callback) {
-            driver.asyncGetBlockHeader(
-                    blockNumber,
-                    connection,
-                    new Driver.GetBlockHeaderCallback() {
-                        @Override
-                        public void onResponse(Exception e, byte[] blockHeader) {
-                            callback.onResponse(e, blockHeader);
-                        }
-                    });
         }
     }
 }

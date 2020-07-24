@@ -3,7 +3,20 @@ package com.webank.wecross.stub.bcos;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.webank.wecross.stub.*;
+import com.webank.wecross.stub.Account;
+import com.webank.wecross.stub.BlockHeader;
+import com.webank.wecross.stub.BlockHeaderManager;
+import com.webank.wecross.stub.Connection;
+import com.webank.wecross.stub.Driver;
+import com.webank.wecross.stub.Path;
+import com.webank.wecross.stub.Request;
+import com.webank.wecross.stub.ResourceInfo;
+import com.webank.wecross.stub.Response;
+import com.webank.wecross.stub.TransactionContext;
+import com.webank.wecross.stub.TransactionException;
+import com.webank.wecross.stub.TransactionRequest;
+import com.webank.wecross.stub.TransactionResponse;
+import com.webank.wecross.stub.VerifiedTransaction;
 import com.webank.wecross.stub.bcos.abi.ABICodecJsonWrapper;
 import com.webank.wecross.stub.bcos.abi.ABIDefinition;
 import com.webank.wecross.stub.bcos.abi.ABIDefinitionFactory;
@@ -11,7 +24,11 @@ import com.webank.wecross.stub.bcos.abi.ABIObject;
 import com.webank.wecross.stub.bcos.abi.ABIObjectFactory;
 import com.webank.wecross.stub.bcos.abi.ContractABIDefinition;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
-import com.webank.wecross.stub.bcos.common.*;
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
+import com.webank.wecross.stub.bcos.common.BCOSRequestType;
+import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
+import com.webank.wecross.stub.bcos.common.BCOSStubException;
+import com.webank.wecross.stub.bcos.common.RequestFactory;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.custom.CommandHandler;
@@ -22,7 +39,11 @@ import com.webank.wecross.stub.bcos.verify.MerkleValidation;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.InvalidParameterException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import org.bouncycastle.util.encoders.Hex;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
@@ -132,38 +153,6 @@ public class BCOSDriver implements Driver {
                                 FunctionUtility.newDefaultFunction(tr.getMethod(), tr.getArgs());
 
                         encodeAbi = FunctionEncoder.encode(function);
-                        break;
-                    }
-                case CNS_INSERT:
-                case CNS_SELECT_BY_NAME:
-                case CNS_SELECT_BY_NAME_AND_VERSION:
-                    {
-                        Function function = null;
-                        if (tp_ype == TransactionParams.TP_YPE.CNS_INSERT) {
-                            function =
-                                    FunctionUtility.newCNSInsertFunction(
-                                            tr.getMethod(),
-                                            tr.getArgs()[0],
-                                            tr.getArgs()[1],
-                                            tr.getArgs()[2],
-                                            tr.getArgs()[3]);
-                        } else if (tp_ype == TransactionParams.TP_YPE.CNS_SELECT_BY_NAME) {
-                            function =
-                                    FunctionUtility.newCNSSelectByNameFunction(
-                                            tr.getMethod(), tr.getArgs()[0]);
-                        } else {
-                            function =
-                                    FunctionUtility.newCNSSelectByNameAndVersionFunction(
-                                            tr.getMethod(), tr.getArgs()[0], tr.getArgs()[1]);
-                        }
-
-                        abi = transactionParams.getData();
-                        encodeAbi = FunctionEncoder.encode(function);
-
-                        break;
-                    }
-                case DEPLOY:
-                    {
                         break;
                     }
                 default:
@@ -285,7 +274,7 @@ public class BCOSDriver implements Driver {
             Map<String, String> properties = connection.getProperties();
 
             // input validation
-            checkRequest(request);
+            // checkRequest(request);
             checkProperties(properties);
 
             String contractAddress = properties.get(BCOSConstant.BCOS_PROXY_NAME);
@@ -295,6 +284,7 @@ public class BCOSDriver implements Driver {
             // query abi
             asyncCnsService.queryABI(
                     name,
+                    this,
                     connection,
                     (queryABIException, abi) -> {
                         try {
@@ -306,7 +296,8 @@ public class BCOSDriver implements Driver {
 
                             if (abi == null) {
                                 throw new BCOSStubException(
-                                        BCOSStatusCode.QueryAbiFailed, "abi is null");
+                                        BCOSStatusCode.QueryAbiFailed,
+                                        "resource:" + name + " not exist");
                             }
 
                             // encode
@@ -347,8 +338,12 @@ public class BCOSDriver implements Driver {
                                             encodedArgs);
 
                             // BCOSAccount to get credentials to sign the transaction
-                            BCOSAccount bcosAccount = (BCOSAccount) request.getAccount();
-                            Credentials credentials = bcosAccount.getCredentials();
+                            String from = BCOSConstant.DEFAULT_ADDRESS;
+                            if (Objects.nonNull(request.getAccount())) {
+                                BCOSAccount bcosAccount = (BCOSAccount) request.getAccount();
+                                Credentials credentials = bcosAccount.getCredentials();
+                                from = credentials.getAddress();
+                            }
 
                             if (logger.isDebugEnabled()) {
                                 logger.debug(
@@ -364,7 +359,7 @@ public class BCOSDriver implements Driver {
                                             request.getData(),
                                             FunctionEncoder.encode(function),
                                             TransactionParams.TP_YPE.CALL_BY_PROXY);
-                            transaction.setFrom(credentials.getAddress());
+                            transaction.setFrom(from);
                             transaction.setTo(contractAddress);
                             transaction.setAbi(abi);
 
@@ -856,6 +851,7 @@ public class BCOSDriver implements Driver {
                                 // query abi
                                 asyncCnsService.queryABI(
                                         name,
+                                        this,
                                         connection,
                                         (queryABIException, abi) -> {
                                             try {
@@ -868,7 +864,7 @@ public class BCOSDriver implements Driver {
                                                 if (abi == null) {
                                                     throw new BCOSStubException(
                                                             BCOSStatusCode.QueryAbiFailed,
-                                                            "abi is null");
+                                                            "resource:" + name + " not exist");
                                                 }
 
                                                 // encode
@@ -961,12 +957,16 @@ public class BCOSDriver implements Driver {
                                                                 signTx,
                                                                 TransactionParams.TP_YPE
                                                                         .SEND_TX_BY_PROXY);
+
                                                 transaction.setAbi(abi);
                                                 Request req =
                                                         RequestFactory.requestBuilder(
                                                                 BCOSRequestType.SEND_TRANSACTION,
                                                                 objectMapper.writeValueAsBytes(
                                                                         transaction));
+
+                                                // decodeTransactionRequest(req.getData());
+
                                                 connection.asyncSend(
                                                         req,
                                                         response -> {
@@ -1297,6 +1297,7 @@ public class BCOSDriver implements Driver {
                         // query ABI
                         asyncCnsService.queryABI(
                                 path.getResource(),
+                                this,
                                 connection,
                                 (queryABIException, abi) -> {
                                     if (Objects.nonNull(queryABIException)) {
@@ -1504,13 +1505,13 @@ public class BCOSDriver implements Driver {
                     BCOSStatusCode.InvalidParameter, "TransactionContext is null");
         }
 
-        if (Objects.isNull(request.getAccount())) {
-            throw new BCOSStubException(BCOSStatusCode.InvalidParameter, "Account is null");
-        }
-
         if (Objects.isNull(request.getBlockHeaderManager())) {
             throw new BCOSStubException(
                     BCOSStatusCode.InvalidParameter, "BlockHeaderManager is null");
+        }
+
+        if (Objects.isNull(request.getAccount())) {
+            throw new BCOSStubException(BCOSStatusCode.InvalidParameter, "Account is null");
         }
 
         /*
