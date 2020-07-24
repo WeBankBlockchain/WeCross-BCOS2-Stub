@@ -119,20 +119,33 @@ contract WeCrossProxy {
     /**
     * deploy contract and register contract to cns
     */
-    function deployContractWithRegisterCNS(string memory name, string memory version, bytes memory bin, string memory abi) public returns(address addr) {
+    function deployContractWithRegisterCNS(string memory _name, string memory _version, bytes memory _bin, string memory _abi) public returns(address) {
+
+        address addr = getAddressByName(_name, false);
+        if((addr != address(0x0))  && lockedContracts[addr].locked) {
+            revert(string(abi.encodePacked(_name, " is locked by unfinished transaction: ", lockedContracts[addr].transactionID)));
+        }
+
         // deploy contract first
-        addr = deployContract(bin);
+        address deploy_addr = deployContract(_bin);
         // register to cns
-        registerCNS(name, version, addressToString(addr), abi);
+        int ret = cns.insert(_name, _version, addressToString(deploy_addr), _abi);
+        require(1 == ret, string(abi.encodePacked(_name, ":", _version, " register to cns failed, error: ", ret)));
+        return deploy_addr;
     }
 
     /**
     * register contract to cns
     */
-    function registerCNS(string memory name, string memory version, string memory addr, string memory abi) public {
+    function registerCNS(string memory _name, string memory _version, string memory _addr, string memory _abi) public {
+        address addr = getAddressByName(_name, false);
+        if((addr != address(0x0))  && lockedContracts[addr].locked) {
+            revert(string(abi.encodePacked(_name, " is locked by unfinished transaction: ", lockedContracts[addr].transactionID)));
+        }
+
         // check if version info exist ???
-        int ret = cns.insert(name, version, addr, abi);
-        require(1 == ret, "register cns failed");
+        int ret = cns.insert(_name, _version, _addr, _abi);
+        require(1 == ret, string(abi.encodePacked(_name, ":", _version, " register to cns failed, error: ", ret)));
     }
 
     /**
@@ -523,16 +536,21 @@ contract WeCrossProxy {
     }
 
     // retrive address from CNS
-    function getAddressByPath(string memory _path) internal view
+    function getAddressByName(string memory _name, bool revertNotExist) internal view
     returns (address)
     {
-        string memory name = getNameByPath(_path);
-        string memory strJson = cns.selectByName(name);
+        string memory strJson = cns.selectByName(_name);
 
         bytes memory str = bytes(strJson);
         uint256 len = str.length;
 
         uint256 index = newKMP(str, bytes("\"sserdda\""));
+        if(index == 0) {
+            if(revertNotExist) {
+                revert("the name's address not exist.");
+            }
+            return address(0x0);
+        }
 
         bytes memory addr = new bytes(addressLen);
         uint256 start = 0;
@@ -548,6 +566,14 @@ contract WeCrossProxy {
         }
 
         return bytesToAddress(addr);
+    }
+
+    // retrive address from CNS
+    function getAddressByPath(string memory _path) internal view
+    returns (address)
+    {
+        string memory name = getNameByPath(_path);
+        return getAddressByName(name, true);
     }
 
     // input must be a valid path like "zone.chain.resource"
