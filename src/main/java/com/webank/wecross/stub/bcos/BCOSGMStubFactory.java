@@ -151,11 +151,12 @@ public class BCOSGMStubFactory implements StubFactory {
     public void generateConnection(String path, String[] args) {
         try {
             String chainName = new File(path).getName();
+
             String accountTemplate =
                     "[common]\n"
                             + "    name = '"
                             + chainName
-                            + "\n"
+                            + "'\n"
                             + "    type = 'GM_BCOS2.0' # BCOS\n"
                             + "\n"
                             + "[chain]\n"
