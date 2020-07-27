@@ -104,6 +104,23 @@ contract WeCrossProxy {
         pathList.length = 0;
     }
 
+    function getTransactionIDs() public view
+    returns (string[] memory)
+    {
+        string[] memory result = new string[](1);
+        uint256 len = tansactionQueue.length;
+        if(len == 0) {
+            result[0] = "";
+            return result;
+        }
+
+        result[0] = tansactionQueue[0];
+        for(uint256 i = 1; i < len; i++) {
+            result[0] = string(abi.encodePacked(result[0], " ", tansactionQueue[i]));
+        }
+        return result;
+    }
+
     /*
     * deploy contract by contract binary code
     */
@@ -271,7 +288,7 @@ contract WeCrossProxy {
             contracts[i] = addr;
 
             if(lockedContracts[addr].locked) {
-                revert(string(abi.encodePacked(_args[i+2], " is locked by other transaction")));
+                revert(string(abi.encodePacked(_args[i+2], " is locked by unfinished transaction: ", lockedContracts[addr].transactionID)));
             }
             lockedContracts[addr].locked = true;
             lockedContracts[addr].path = _args[i+2];
@@ -804,6 +821,7 @@ contract WeCrossProxy {
     function bytesToAddress(bytes memory _address) internal pure
     returns (address)
     {
+        require(_address.length == 42, string(abi.encodePacked("cannot covert ", _address, "to bcos address")));
         uint160 result = 0;
         uint160 b1;
         uint160 b2;
