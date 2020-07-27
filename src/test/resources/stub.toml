@@ -1,6 +1,6 @@
 [common]
     name = 'bcos' # stub must be same with directory name
-    type = 'BCOS' # BCOS
+    type = 'BCOS2.0' # BCOS or GM_BCOS2.0
 
 [chain]
     groupId = 1 # default 1

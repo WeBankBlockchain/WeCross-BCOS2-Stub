@@ -14,6 +14,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import org.fisco.bcos.web3j.crypto.Credentials;
+import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.junit.Test;
 
 public class BCSOAccountFactoryTest {
@@ -22,11 +23,13 @@ public class BCSOAccountFactoryTest {
             throws IOException, CertificateException, UnrecoverableKeyException,
                     NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException,
                     InvalidKeySpecException {
+        new EncryptType(EncryptType.SM2_TYPE);
         Credentials credentials =
                 BCOSAccountFactory.loadPemAccount(
-                        "accounts/bcos1/0xde4247b42754e220256dbf51009c79d6736da6be.pem");
-        assertEquals(credentials.getAddress(), "0xde4247b42754e220256dbf51009c79d6736da6be");
+                        "accounts/gm_bcos/0x1bad8533b8c81962e2a07ccd4485d7a337eec8b8.pem");
+        assertEquals(credentials.getAddress(), "0x1bad8533b8c81962e2a07ccd4485d7a337eec8b8");
         assertFalse(credentials.getEcKeyPair().getPrivateKey().toString().isEmpty());
+        new EncryptType(EncryptType.ECDSA_TYPE);
     }
 
     @Test
@@ -48,19 +51,12 @@ public class BCSOAccountFactoryTest {
                     InvalidKeySpecException {
 
         BCOSAccount bcosAccount0 = BCOSAccountFactory.build("bcos", "classpath:/accounts/bcos");
-        BCOSAccount bcosAccount1 = BCOSAccountFactory.build("bcos1", "classpath:/accounts/bcos1");
-
         assertEquals(
                 bcosAccount0.getCredentials().getAddress(),
                 "0x4c9e341a015ce8200060a028ce45dfea8bf33e15");
-        assertEquals(
-                bcosAccount1.getCredentials().getAddress(),
-                "0xde4247b42754e220256dbf51009c79d6736da6be");
 
         assertEquals(bcosAccount0.getName(), "bcos");
-        assertEquals(bcosAccount1.getName(), "bcos1");
 
         assertEquals(bcosAccount0.getType(), "BCOS2.0");
-        assertEquals(bcosAccount1.getType(), "BCOS2.0");
     }
 }

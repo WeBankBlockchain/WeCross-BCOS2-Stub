@@ -20,7 +20,7 @@ public class BCOSConnectionFactoryTest {
                     BCOSConnectionFactory.build(
                             "./", "stub-sample-ut.toml", new Web3jWrapperImplMock());
             List<ResourceInfo> resources = connection.getResources();
-            assertTrue(resources.size() == 2);
+            assertTrue(resources.size() == 3);
             ResourceInfo resourceInfo = resources.get(0);
             assertEquals(resourceInfo.getName(), "HelloWeCross");
             assertEquals(resourceInfo.getStubType(), "BCOS-UT");

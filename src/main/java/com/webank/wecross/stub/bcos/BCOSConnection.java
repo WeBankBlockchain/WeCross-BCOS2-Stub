@@ -186,8 +186,10 @@ public class BCOSConnection implements Connection {
                     set.add("a.b." + BCOSConstant.BCOS_PROXY_NAME);
                     return set.toArray(new String[0]);
                 } else {
-                    logger.debug(" listPaths empty");
-                    return null;
+                    Set<String> set = new HashSet<>();
+                    set.add("a.b." + BCOSConstant.BCOS_PROXY_NAME);
+                    logger.debug(" listPaths empty and add proxy ");
+                    return set.toArray(new String[0]);
                 }
             } else {
                 logger.warn(" listPaths failed, status {}", callOutput.getStatus());

@@ -12,6 +12,7 @@ import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.ResourceInfo;
+import com.webank.wecross.stub.StubFactory;
 import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.TransactionRequest;
@@ -21,16 +22,18 @@ import com.webank.wecross.stub.bcos.AsyncCnsService;
 import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.BCOSConnectionFactory;
 import com.webank.wecross.stub.bcos.BCOSDriver;
+import com.webank.wecross.stub.bcos.BCOSGMStubFactory;
 import com.webank.wecross.stub.bcos.BCOSStubFactory;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
+import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
+import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.custom.CommandHandler;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.proxy.ProxyContract;
-import com.webank.wecross.stub.bcos.proxy.ProxyContractDeployment;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 
@@ -133,9 +136,17 @@ public class BCOSStubCallContractIntegTest {
     @Before
     public void initializer() throws Exception {
 
-        BCOSStubFactory bcosStubFactory = new BCOSStubFactory();
-        driver = bcosStubFactory.newDriver();
-        account = bcosStubFactory.newAccount("IntegBCOSAccount", "classpath:/accounts/bcos");
+        /** load stub.toml config */
+        BCOSStubConfigParser bcosStubConfigParser =
+                new BCOSStubConfigParser("./chains/bcos/", "stub.toml");
+        BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
+        String type = bcosStubConfig.getType();
+        System.out.println(" === >> initial type: " + type);
+
+        StubFactory stubFactory = type.startsWith("GM")? new BCOSGMStubFactory() : new BCOSStubFactory();
+
+        driver = stubFactory.newDriver();
+        account = stubFactory.newAccount("IntegBCOSAccount", "classpath:/accounts/bcos");
         connection = BCOSConnectionFactory.build("./chains/bcos/", "stub.toml", null);
         connection.setConnectionEventHandler(connectionEventHandlerImplMock);
 
