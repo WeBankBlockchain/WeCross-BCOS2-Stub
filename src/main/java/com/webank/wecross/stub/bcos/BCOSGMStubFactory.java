@@ -43,7 +43,8 @@ public class BCOSGMStubFactory implements StubFactory {
     public Driver newDriver() {
         logger.info("New driver type:{}", EncryptType.encryptType);
         BCOSDriver driver = new BCOSDriver();
-        CommandHandlerDispatcher commandHandlerDispatcher = new CommandHandlerDispatcher();
+        CommandHandlerDispatcher commandHandlerDispatcher =
+                new CommandHandlerDispatcher(driver.getAsyncCnsService());
         commandHandlerDispatcher.initializeCommandMapper();
         driver.setCommandHandlerDispatcher(commandHandlerDispatcher);
         return driver;

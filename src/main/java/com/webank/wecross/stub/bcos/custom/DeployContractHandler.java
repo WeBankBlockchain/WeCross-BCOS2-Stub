@@ -8,6 +8,7 @@ import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionRequest;
+import com.webank.wecross.stub.bcos.AsyncCnsService;
 import com.webank.wecross.stub.bcos.BCOSDriver;
 import com.webank.wecross.stub.bcos.abi.ABICodecJsonWrapper;
 import com.webank.wecross.stub.bcos.abi.ABIDefinition;
@@ -24,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.fisco.bcos.web3j.precompile.cns.CnsService;
@@ -39,6 +39,20 @@ public class DeployContractHandler implements CommandHandler {
 
     private ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
 
+    public AsyncCnsService asyncCnsService;
+
+    public DeployContractHandler(AsyncCnsService asyncCnsService) {
+        this.asyncCnsService = asyncCnsService;
+    }
+
+    public AsyncCnsService getAsyncCnsService() {
+        return asyncCnsService;
+    }
+
+    public void setAsyncCnsService(AsyncCnsService asyncCnsService) {
+        this.asyncCnsService = asyncCnsService;
+    }
+
     /** @param args contractBytes || version */
     @Override
     public void handle(
@@ -47,7 +61,6 @@ public class DeployContractHandler implements CommandHandler {
             Account account,
             BlockHeaderManager blockHeaderManager,
             Connection connection,
-            Map<String, String> abiMap,
             Driver.CustomCommandCallback callback) {
 
         if (Objects.isNull(args) || args.length < 4) {
@@ -239,6 +252,8 @@ public class DeployContractHandler implements CommandHandler {
                             name,
                             version,
                             res);
+
+                    asyncCnsService.addAbiToCache(name, abi);
                     callback.onResponse(null, res.getResult()[0]);
                 });
     }

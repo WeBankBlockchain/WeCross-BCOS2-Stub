@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.InvalidParameterException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -73,10 +72,16 @@ public class BCOSDriver implements Driver {
     private AsyncCnsService asyncCnsService = new AsyncCnsService();
     private ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
 
-    private Map<String, String> abiMap = new HashMap<>();
-
     public BCOSDriver() {
         objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+    }
+
+    public AsyncCnsService getAsyncCnsService() {
+        return asyncCnsService;
+    }
+
+    public void setAsyncCnsService(AsyncCnsService asyncCnsService) {
+        this.asyncCnsService = asyncCnsService;
     }
 
     @Override
@@ -1434,7 +1439,6 @@ public class BCOSDriver implements Driver {
                 account,
                 blockHeaderManager,
                 connection,
-                abiMap,
                 (error, response) -> {
                     callback.onResponse(error, response);
 
@@ -1527,14 +1531,6 @@ public class BCOSDriver implements Driver {
                 || "".equals(request.getData().getMethod())) {
             throw new BCOSStubException(BCOSStatusCode.InvalidParameter, "Method is null");
         }
-    }
-
-    public Map<String, String> getAbiMap() {
-        return abiMap;
-    }
-
-    public void setAbiMap(Map<String, String> abiMap) {
-        this.abiMap = abiMap;
     }
 
     public CommandHandlerDispatcher getCommandHandlerDispatcher() {
