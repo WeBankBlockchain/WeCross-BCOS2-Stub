@@ -38,6 +38,7 @@ import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Base64;
 import java.util.HashMap;
@@ -68,6 +69,8 @@ public class BCOSStubCallContractIntegTest {
     private ResourceInfo resourceInfo = null;
     private BlockHeaderManager blockHeaderManager = null;
     private ConnectionEventHandlerImplMock connectionEventHandlerImplMock = new ConnectionEventHandlerImplMock();
+
+    private AsyncCnsService asyncCnsService = null;
 
     public HelloWeCross getHelloWeCross() {
         return helloWeCross;
@@ -155,6 +158,7 @@ public class BCOSStubCallContractIntegTest {
 
         BCOSAccount bcosAccount = (BCOSAccount) account;
         blockHeaderManager = new IntegTestBlockHeaderManagerImpl(web3jWrapper);
+        asyncCnsService = ((BCOSDriver) driver).getAsyncCnsService();
 
         helloWeCross =
                 HelloWeCross
@@ -429,19 +433,21 @@ public class BCOSStubCallContractIntegTest {
 
         AsyncToSync asyncToSync = new AsyncToSync();
 
-        CommandHandler commandHandler = new DeployContractHandler();
+        CommandHandler commandHandler = new DeployContractHandler(asyncCnsService);
         commandHandler.handle(Path.decode("a.b.HelloWorld"),
                 args,
                 account,
                 blockHeaderManager,
                 connection,
-                new HashMap<>(), (error, response) -> {
+                (error, response) -> {
             assertNull(error);
             assertNotNull(response);
             assertTrue(((String)response).length() == 42);
             asyncToSync.getSemaphore().release();
         });
         asyncToSync.getSemaphore().acquire();
+
+        assertTrue(Objects.nonNull(asyncCnsService.getAbiCache().get("HelloWorld")));
     }
 
     public void deployTupleTestContract() throws Exception {
@@ -467,19 +473,20 @@ public class BCOSStubCallContractIntegTest {
 
         AsyncToSync asyncToSync = new AsyncToSync();
 
-        CommandHandler commandHandler = new DeployContractHandler();
-        commandHandler.handle(Path.decode("a.b.TupleTest"), args, account, blockHeaderManager, connection, new HashMap<>(), (error, response) -> {
+        CommandHandler commandHandler = new DeployContractHandler(asyncCnsService);
+        commandHandler.handle(Path.decode("a.b.TupleTest"), args, account, blockHeaderManager, connection, (error, response) -> {
             assertNull(error);
             assertNotNull(response);
             assertTrue(((String)response).length() == 42);
             asyncToSync.getSemaphore().release();
         });
         asyncToSync.getSemaphore().acquire();
+
+        assertTrue(Objects.nonNull(asyncCnsService.getAbiCache().get("TupleTest")));
     }
 
     @Test
     public void CnsServiceTest() throws InterruptedException {
-        AsyncCnsService asyncCnsService = new AsyncCnsService();
         AsyncToSync asyncToSync = new AsyncToSync();
         asyncCnsService.selectByName(BCOSConstant.BCOS_PROXY_NAME, connection, driver, (exception, infoList) -> {
             Assert.assertTrue(Objects.isNull(exception));
@@ -488,6 +495,49 @@ public class BCOSStubCallContractIntegTest {
         });
 
         asyncToSync.getSemaphore().acquire();
+    }
+
+    @Test
+    public void CnsServiceLoopTest() throws Exception {
+        PathMatchingResourcePatternResolver resolver =
+                new PathMatchingResourcePatternResolver();
+        String path =
+                resolver.getResource("classpath:solidity/HelloWorld.sol")
+                        .getFile()
+                        .getAbsolutePath();
+
+        File file = new File(path);
+        byte[] contractBytes;
+        contractBytes = Files.readAllBytes(file.toPath());
+
+        CommandHandler commandHandler = new DeployContractHandler(asyncCnsService);
+        for (int i = 0; i < 30; i++) {
+            String constructorParams = "constructor params";
+            String baseName = "HelloWorld";
+            Object[] args =
+                    new Object[]{
+                            baseName + i,
+                            new String(contractBytes),
+                            "HelloWorld",
+                            String.valueOf(System.currentTimeMillis()),
+                            constructorParams
+                    };
+
+            AsyncToSync asyncToSync = new AsyncToSync();
+            commandHandler.handle(Path.decode("a.b." + baseName + i),
+                    args,
+                    account,
+                    blockHeaderManager,
+                    connection,
+                    (error, response) -> {
+                        assertNull(error);
+                        assertNotNull(response);
+                        assertTrue(((String)response).length() == 42);
+                        asyncToSync.getSemaphore().release();
+                    });
+            asyncToSync.getSemaphore().acquire();
+            assertTrue(Objects.nonNull(asyncCnsService.getAbiCache().get(baseName + i)));
+        }
     }
 
     @Test

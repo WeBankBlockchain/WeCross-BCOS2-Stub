@@ -84,20 +84,20 @@ public class AsyncCnsService {
                     connection,
                     driver,
                     (exception, infoList) -> {
+                        queryABISemaphore.release();
+
                         if (Objects.nonNull(exception)) {
-                            queryABISemaphore.release();
                             callback.onResponse(exception, null);
                             return;
                         }
 
                         if (Objects.isNull(infoList) || infoList.isEmpty()) {
-                            queryABISemaphore.release();
                             callback.onResponse(null, null);
                         } else {
                             int size = infoList.size();
                             String currentAbi = infoList.get(size - 1).getAbi();
-                            abiCache.put(name, currentAbi);
-                            queryABISemaphore.release();
+
+                            addAbiToCache(name, currentAbi);
 
                             if (logger.isDebugEnabled()) {
                                 logger.debug("queryABI name:{}, abi:{}", name, currentAbi);
@@ -231,6 +231,8 @@ public class AsyncCnsService {
                         return;
                     }
 
+                    addAbiToCache(name, abi);
+
                     logger.info(
                             " registerCNS successfully, name: {}, version: {}, address: {} ",
                             name,
@@ -239,5 +241,18 @@ public class AsyncCnsService {
 
                     callback.onResponse(null);
                 });
+    }
+
+    public LRUCache<String, String> getAbiCache() {
+        return abiCache;
+    }
+
+    public void setAbiCache(LRUCache<String, String> abiCache) {
+        this.abiCache = abiCache;
+    }
+
+    public void addAbiToCache(String name, String abi) {
+        // logger.info(" add abi cache, name: {}, abi: {}", name, abi);
+        this.abiCache.put(name, abi);
     }
 }

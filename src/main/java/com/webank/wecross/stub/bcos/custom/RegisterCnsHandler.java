@@ -12,7 +12,6 @@ import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.util.Map;
 import java.util.Objects;
 import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.fisco.bcos.web3j.precompile.cns.CnsService;
@@ -24,6 +23,20 @@ import org.slf4j.LoggerFactory;
 public class RegisterCnsHandler implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RegisterCnsHandler.class);
 
+    public AsyncCnsService asyncCnsService;
+
+    public RegisterCnsHandler(AsyncCnsService asyncCnsService) {
+        this.asyncCnsService = asyncCnsService;
+    }
+
+    public AsyncCnsService getAsyncCnsService() {
+        return asyncCnsService;
+    }
+
+    public void setAsyncCnsService(AsyncCnsService asyncCnsService) {
+        this.asyncCnsService = asyncCnsService;
+    }
+
     /** @param args version || address || abi */
     @Override
     public void handle(
@@ -32,7 +45,6 @@ public class RegisterCnsHandler implements CommandHandler {
             Account account,
             BlockHeaderManager blockHeaderManager,
             Connection connection,
-            Map<String, String> abiMap,
             Driver.CustomCommandCallback callback) {
         if (Objects.isNull(args) || args.length < 5) {
             callback.onResponse(
@@ -108,7 +120,6 @@ public class RegisterCnsHandler implements CommandHandler {
 
         Driver driver = new BCOSDriver();
 
-        AsyncCnsService asyncCnsService = new AsyncCnsService();
         String finalAbi = abi;
         asyncCnsService.registerCNSByProxy(
                 cnsName,
@@ -132,8 +143,6 @@ public class RegisterCnsHandler implements CommandHandler {
                             version,
                             address,
                             finalAbi);
-                    // store abi
-                    abiMap.put(path.toString(), finalAbi);
 
                     callback.onResponse(null, "success");
                 });
