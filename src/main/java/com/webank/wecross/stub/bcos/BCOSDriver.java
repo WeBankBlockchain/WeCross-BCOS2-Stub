@@ -334,13 +334,22 @@ public class BCOSDriver implements Driver {
                                             request.getData()
                                                     .getOptions()
                                                     .get(BCOSConstant.TRANSACTION_ID);
-                            String id = Objects.isNull(transactionID) ? "0" : transactionID;
-                            Function function =
-                                    FunctionUtility.newConstantCallProxyFunction(
-                                            id,
-                                            path.toString(),
-                                            functions.get(0).getMethodSignatureAsString(),
-                                            encodedArgs);
+
+                            Function function = null;
+                            if (Objects.isNull(transactionID) || transactionID.isEmpty()) {
+                                function =
+                                        FunctionUtility.newConstantCallProxyFunction(
+                                                path.getResource(),
+                                                functions.get(0).getMethodSignatureAsString(),
+                                                encodedArgs);
+                            } else {
+                                function =
+                                        FunctionUtility.newConstantCallProxyFunction(
+                                                transactionID,
+                                                path.toString(),
+                                                functions.get(0).getMethodSignatureAsString(),
+                                                encodedArgs);
+                            }
 
                             // BCOSAccount to get credentials to sign the transaction
                             String from = BCOSConstant.DEFAULT_ADDRESS;
@@ -908,10 +917,6 @@ public class BCOSDriver implements Driver {
                                                                         .get(
                                                                                 BCOSConstant
                                                                                         .TRANSACTION_ID);
-                                                String id =
-                                                        Objects.isNull(transactionID)
-                                                                ? "0"
-                                                                : transactionID;
 
                                                 String transactionSeq =
                                                         (String)
@@ -925,16 +930,30 @@ public class BCOSDriver implements Driver {
                                                                 ? 0
                                                                 : Integer.parseInt(transactionSeq);
 
-                                                Function function =
-                                                        FunctionUtility
-                                                                .newSendTransactionProxyFunction(
-                                                                        id,
-                                                                        seq,
-                                                                        path.toString(),
-                                                                        functions
-                                                                                .get(0)
-                                                                                .getMethodSignatureAsString(),
-                                                                        encodedArgs);
+                                                Function function = null;
+                                                if (Objects.isNull(transactionID)
+                                                        || transactionID.isEmpty()) {
+                                                    function =
+                                                            FunctionUtility
+                                                                    .newSendTransactionProxyFunction(
+                                                                            path.getResource(),
+                                                                            functions
+                                                                                    .get(0)
+                                                                                    .getMethodSignatureAsString(),
+                                                                            encodedArgs);
+                                                } else {
+                                                    function =
+                                                            FunctionUtility
+                                                                    .newSendTransactionProxyFunction(
+                                                                            transactionID,
+                                                                            seq,
+                                                                            path.toString(),
+                                                                            functions
+                                                                                    .get(0)
+                                                                                    .getMethodSignatureAsString(),
+                                                                            encodedArgs);
+                                                }
+
                                                 if (logger.isDebugEnabled()) {
                                                     logger.debug(
                                                             " contractAddress: {}, blockNumber: {}, method: {}, args: {}",
@@ -1294,7 +1313,11 @@ public class BCOSDriver implements Driver {
                         } catch (Exception e) {
                             logger.error(" e: ", e);
                             callback.onResponse(
-                                    new Exception(" invalid path format, e: " + e.getMessage()),
+                                    new Exception(
+                                            " invalid path format, path: "
+                                                    + strPath
+                                                    + " ,e: "
+                                                    + e.getMessage()),
                                     null);
                             return;
                         }

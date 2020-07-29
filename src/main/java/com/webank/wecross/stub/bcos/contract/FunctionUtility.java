@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.FunctionReturnDecoder;
 import org.fisco.bcos.web3j.abi.TypeReference;
 import org.fisco.bcos.web3j.abi.Utils;
@@ -66,7 +67,8 @@ public class FunctionUtility {
     }
 
     /**
-     * WeCrossProxy constantCall function
+     * WeCrossProxy constantCall function function sendTransaction(string memory _name, bytes memory
+     * _argsWithMethodId) public returns(bytes memory)
      *
      * @param id
      * @param path
@@ -90,7 +92,32 @@ public class FunctionUtility {
     }
 
     /**
-     * WeCrossProxy sendTransaction function
+     * WeCrossProxy constantCall function function sendTransaction(string memory _name, bytes memory
+     * _argsWithMethodId) public returns(bytes memory)
+     *
+     * @param name
+     * @param methodSignature
+     * @param abi
+     * @return
+     */
+    public static Function newConstantCallProxyFunction(
+            String name, String methodSignature, String abi) {
+        String methodId = FunctionEncoder.buildMethodId(methodSignature);
+        Function function =
+                new Function(
+                        "constantCall",
+                        Arrays.<Type>asList(
+                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(name),
+                                new org.fisco.bcos.web3j.abi.datatypes.DynamicBytes(
+                                        Numeric.hexStringToByteArray(methodId + abi))),
+                        Collections.<TypeReference<?>>emptyList());
+        return function;
+    }
+
+    /**
+     * WeCrossProxy sendTransaction function function sendTransaction(string memory _transactionID,
+     * uint256 _seq, string memory _path, string memory _func, bytes memory _args) public
+     * returns(bytes memory)
      *
      * @param id
      * @param seq
@@ -111,6 +138,29 @@ public class FunctionUtility {
                                 new org.fisco.bcos.web3j.abi.datatypes.Utf8String(methodSignature),
                                 new org.fisco.bcos.web3j.abi.datatypes.DynamicBytes(
                                         Numeric.hexStringToByteArray(abi))),
+                        Collections.<TypeReference<?>>emptyList());
+        return function;
+    }
+
+    /**
+     * WeCrossProxy sendTransaction function function sendTransaction(string memory _name, bytes
+     * memory _argsWithMethodId) public returns(bytes memory)
+     *
+     * @param name
+     * @param methodSignature
+     * @param abi
+     * @return
+     */
+    public static Function newSendTransactionProxyFunction(
+            String name, String methodSignature, String abi) {
+        String methodId = FunctionEncoder.buildMethodId(methodSignature);
+        Function function =
+                new Function(
+                        "sendTransaction",
+                        Arrays.<Type>asList(
+                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(name),
+                                new org.fisco.bcos.web3j.abi.datatypes.DynamicBytes(
+                                        Numeric.hexStringToByteArray(methodId + abi))),
                         Collections.<TypeReference<?>>emptyList());
         return function;
     }
