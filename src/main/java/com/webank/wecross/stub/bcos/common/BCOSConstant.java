@@ -19,12 +19,9 @@ public interface BCOSConstant {
 
     String CUSTOM_COMMAND_DEPLOY = "deploy";
     String CUSTOM_COMMAND_REGISTER = "register";
-    String METHOD_DEPLOY = "deploy";
     String CNS_PRECOMPILED_ADDRESS = "0x0000000000000000000000000000000000001004";
     String DEFAULT_ADDRESS = "0x1111111111111111111111111111111111111111";
-    String CNS_METHOD_INSERT = "insert";
     String CNS_METHOD_SELECTBYNAME = "selectByName";
-    String CNS_METHOD_SELECTBYNAMEANDVERSION = "selectByNameAndVersion";
     String PROXY_METHOD_ADDPATH = "addPath";
     String PROXY_METHOD_GETPATHS = "getPaths";
 }

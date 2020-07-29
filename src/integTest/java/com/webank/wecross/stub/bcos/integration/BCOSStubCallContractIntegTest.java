@@ -32,6 +32,7 @@ import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.custom.CommandHandler;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
+import com.webank.wecross.stub.bcos.performance.hellowecross.HelloWeCross;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.proxy.ProxyContract;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
@@ -645,7 +646,6 @@ public class BCOSStubCallContractIntegTest {
 
         asyncToSync.semaphore.acquire(1);
 
-        /*
         AsyncToSync asyncToSync0 = new AsyncToSync();
         driver.asyncGetVerifiedTransaction(path, hash.get(), 1, blockHeaderManager, connection, new Driver.GetVerifiedTransactionCallback() {
                     @Override
@@ -661,7 +661,6 @@ public class BCOSStubCallContractIntegTest {
         );
 
         asyncToSync0.semaphore.acquire(1);
-        */
     }
 
     @Test
@@ -682,7 +681,6 @@ public class BCOSStubCallContractIntegTest {
 
         asyncToSync.semaphore.acquire(1);
 
-        /*
         AsyncToSync asyncToSync0 = new AsyncToSync();
         driver.asyncGetVerifiedTransaction(path, hash.get(), 1, blockHeaderManager, connection, new Driver.GetVerifiedTransactionCallback() {
                     @Override
@@ -698,7 +696,6 @@ public class BCOSStubCallContractIntegTest {
         );
 
         asyncToSync0.semaphore.acquire(1);
-        */
     }
 
 

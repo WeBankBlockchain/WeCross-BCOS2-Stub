@@ -24,7 +24,7 @@ public class BCOSStubConfigParserTest {
         assertEquals(channelService.getSslCert(), "./" + File.separator + "sdk.crt");
         assertEquals(channelService.getSslKey(), "./" + File.separator + "sdk.key");
 
-        assertEquals(channelService.getConnectionsStr().size(), 4);
+        assertEquals(channelService.getConnectionsStr().size(), 1);
 
         assertEquals(channelService.getThreadNum(), 8);
         assertEquals(channelService.getQueueCapacity(), 5000);

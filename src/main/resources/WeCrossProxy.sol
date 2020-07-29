@@ -210,11 +210,16 @@ contract WeCrossProxy {
         return callContract(addr, _func, _args);
     }
 
+    function sendTransaction(address _addr, bytes memory _argsWithMethodId) public returns(bytes memory) {
+        return callContract(_addr, _argsWithMethodId);
+    }
+
     function sendTransaction(string memory _name, bytes memory _argsWithMethodId) public returns(bytes memory) {
         // find address from abi cache first
         address addr = nameAddress[_name];
         if(addr == address(0x0)) {
             addr = getAddressByName(_name, true);
+            nameAddress[_name] = addr;
         }
 
         if(lockedContracts[addr].locked) {
@@ -245,12 +250,12 @@ contract WeCrossProxy {
     {
         address addr = getAddressByPath(_path);
 
-        if(sameString(_transactionID, "0")) {
-            if(lockedContracts[addr].locked) {
-                revert(string(abi.encodePacked(_path, " is locked by unfinished transaction: ", lockedContracts[addr].transactionID)));
-            }
-            return callContract(addr, _func, _args);
-        }
+//        if(sameString(_transactionID, "0")) {
+//            if(lockedContracts[addr].locked) {
+//                revert(string(abi.encodePacked(_path, " is locked by unfinished transaction: ", lockedContracts[addr].transactionID)));
+//            }
+//            return callContract(addr, _func, _args);
+//        }
 
         if(!isExistedTransaction(_transactionID)) {
             revert("transaction not found");
