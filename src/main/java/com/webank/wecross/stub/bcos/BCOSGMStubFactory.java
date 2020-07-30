@@ -61,7 +61,8 @@ public class BCOSGMStubFactory implements StubFactory {
                 String errorMsg =
                         "WeCrossProxy error: WeCrossProxy contract has not been deployed!";
                 String help =
-                        "Please deploy WeCrossProxy contract by: " + ProxyContractDeployment.USAGE;
+                        "Please deploy WeCrossProxy contract by: "
+                                + ProxyContractDeployment.getUsage(path);
                 System.out.println(errorMsg + "\n" + help);
                 throw new Exception(errorMsg);
             }

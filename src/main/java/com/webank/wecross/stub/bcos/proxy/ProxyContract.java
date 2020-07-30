@@ -39,8 +39,6 @@ public class ProxyContract {
     private BCOSAccount account;
     private BCOSConnection connection;
 
-    private static String Version = "1";
-
     public ProxyContract(String proxyContractFile, String chainPath, String accountName)
             throws Exception {
         this.proxyContractFile = proxyContractFile;
@@ -185,10 +183,29 @@ public class ProxyContract {
             PathMatchingResourcePatternResolver resolver =
                     new PathMatchingResourcePatternResolver();
             File file = resolver.getResource("classpath:" + proxyContractFile).getFile();
-            deployContractAndRegisterCNS(file, "WeCrossProxy", "WeCrossProxy", Version);
-        }
+            String version = String.valueOf(System.currentTimeMillis() / 1000);
 
-        System.out.println("SUCCESS: proxy has been deployed! chain: " + chainPath);
+            deployContractAndRegisterCNS(file, "WeCrossProxy", "WeCrossProxy", version);
+            System.out.println(
+                    "SUCCESS: WeCrossProxy:" + version + " has been deployed! chain: " + chainPath);
+        } else {
+            System.out.println(
+                    "SUCCESS: WeCrossProxy has already been deployed! chain: " + chainPath);
+        }
+    }
+
+    public void upgrade() throws Exception {
+
+        System.out.println("Upgrade WeCrossProxy to chain " + chainPath + " ...");
+
+        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        File file = resolver.getResource("classpath:" + proxyContractFile).getFile();
+        String version = String.valueOf(System.currentTimeMillis() / 1000);
+
+        deployContractAndRegisterCNS(file, "WeCrossProxy", "WeCrossProxy", version);
+
+        System.out.println(
+                "SUCCESS: WeCrossProxy:" + version + " has been upgraded! chain: " + chainPath);
     }
 
     public static void check(String chainPath) {
