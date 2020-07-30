@@ -16,13 +16,19 @@ public class ProxyContractDeployment {
                     + "         java -cp conf/:lib/*:plugin/* "
                     + ProxyContractDeployment.class.getName()
                     + " deploy [chainName] [accountName]\n"
+                    + "         java -cp conf/:lib/*:plugin/* "
+                    + ProxyContractDeployment.class.getName()
+                    + " upgrade [chainName] [accountName]\n"
                     + "Example:\n"
                     + "         java -cp conf/:lib/*:plugin/* "
                     + ProxyContractDeployment.class.getName()
                     + " check chains/bcos\n"
                     + "         java -cp conf/:lib/*:plugin/* "
                     + ProxyContractDeployment.class.getName()
-                    + " deploy chains/bcos bcos_user1";
+                    + " deploy chains/bcos bcos_user1\n"
+                    + "         java -cp conf/:lib/*:plugin/* "
+                    + ProxyContractDeployment.class.getName()
+                    + " upgrade chains/bcos bcos_user1";
 
     public static void usage() {
         System.out.println(USAGE);
@@ -86,6 +92,9 @@ public class ProxyContractDeployment {
             case "deploy":
                 deploy(chainPath, accountName);
                 break;
+            case "upgrade":
+                upgrade(chainPath, accountName);
+                break;
             default:
                 usage();
         }
@@ -106,6 +115,23 @@ public class ProxyContractDeployment {
             ProxyContract proxyContract =
                     new ProxyContract(proxyContractFile, chainPath, accountName);
             proxyContract.deploy();
+        } catch (Exception e) {
+            logger.error("e: ", e);
+            System.out.println(e);
+        }
+    }
+
+    public static void upgrade(String chainPath, String accountName) {
+        try {
+            String proxyContractFile =
+                    chainPath
+                            + File.separator
+                            + "WeCrossProxy"
+                            + File.separator
+                            + "WeCrossProxy.sol";
+            ProxyContract proxyContract =
+                    new ProxyContract(proxyContractFile, chainPath, accountName);
+            proxyContract.upgrade();
         } catch (Exception e) {
             logger.error("e: ", e);
             System.out.println(e);

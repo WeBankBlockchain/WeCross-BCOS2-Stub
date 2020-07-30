@@ -11,10 +11,12 @@ import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
+
 import java.io.File;
 import java.math.BigInteger;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
 import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
@@ -38,8 +40,6 @@ public class ProxyContract {
 
     private BCOSAccount account;
     private BCOSConnection connection;
-
-    private static String Version = "1";
 
     public ProxyContract(String proxyContractFile, String chainPath, String accountName)
             throws Exception {
@@ -69,7 +69,8 @@ public class ProxyContract {
         }
     }
 
-    public ProxyContract() {}
+    public ProxyContract() {
+    }
 
     public BCOSAccount getAccount() {
         return account;
@@ -185,10 +186,28 @@ public class ProxyContract {
             PathMatchingResourcePatternResolver resolver =
                     new PathMatchingResourcePatternResolver();
             File file = resolver.getResource("classpath:" + proxyContractFile).getFile();
-            deployContractAndRegisterCNS(file, "WeCrossProxy", "WeCrossProxy", Version);
-        }
+            String version = String.valueOf(System.currentTimeMillis() / 1000);
 
-        System.out.println("SUCCESS: proxy has been deployed! chain: " + chainPath);
+            deployContractAndRegisterCNS(file, "WeCrossProxy", "WeCrossProxy", version);
+            System.out.println(
+                    "SUCCESS: WeCrossProxy:" + version + " has been deployed! chain: " + chainPath);
+        } else {
+            System.out.println("SUCCESS: WeCrossProxy has already been deployed! chain: " + chainPath);
+        }
+    }
+
+    public void upgrade() throws Exception {
+
+        System.out.println("Upgrade WeCrossProxy to chain " + chainPath + " ...");
+
+        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        File file = resolver.getResource("classpath:" + proxyContractFile).getFile();
+        String version = String.valueOf(System.currentTimeMillis() / 1000);
+
+        deployContractAndRegisterCNS(file, "WeCrossProxy", "WeCrossProxy", version);
+
+        System.out.println(
+                "SUCCESS: WeCrossProxy:" + version + " has been upgraded! chain: " + chainPath);
     }
 
     public static void check(String chainPath) {
