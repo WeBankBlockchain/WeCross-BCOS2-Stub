@@ -11,12 +11,10 @@ import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
-
 import java.io.File;
 import java.math.BigInteger;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-
 import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
@@ -69,8 +67,7 @@ public class ProxyContract {
         }
     }
 
-    public ProxyContract() {
-    }
+    public ProxyContract() {}
 
     public BCOSAccount getAccount() {
         return account;
@@ -192,7 +189,8 @@ public class ProxyContract {
             System.out.println(
                     "SUCCESS: WeCrossProxy:" + version + " has been deployed! chain: " + chainPath);
         } else {
-            System.out.println("SUCCESS: WeCrossProxy has already been deployed! chain: " + chainPath);
+            System.out.println(
+                    "SUCCESS: WeCrossProxy has already been deployed! chain: " + chainPath);
         }
     }
 
