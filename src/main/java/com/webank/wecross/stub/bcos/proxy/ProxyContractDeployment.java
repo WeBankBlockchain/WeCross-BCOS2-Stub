@@ -8,34 +8,13 @@ public class ProxyContractDeployment {
 
     private static final Logger logger = LoggerFactory.getLogger(ProxyContractDeployment.class);
 
-    public static String USAGE =
-            "Usage:\n"
-                    + "         java -cp conf/:lib/*:plugin/* "
-                    + ProxyContractDeployment.class.getName()
-                    + " check [chainName]\n"
-                    + "         java -cp conf/:lib/*:plugin/* "
-                    + ProxyContractDeployment.class.getName()
-                    + " deploy [chainName] [accountName]\n"
-                    + "         java -cp conf/:lib/*:plugin/* "
-                    + ProxyContractDeployment.class.getName()
-                    + " upgrade [chainName] [accountName]\n"
-                    + "Example:\n"
-                    + "         java -cp conf/:lib/*:plugin/* "
-                    + ProxyContractDeployment.class.getName()
-                    + " check chains/bcos\n"
-                    + "         java -cp conf/:lib/*:plugin/* "
-                    + ProxyContractDeployment.class.getName()
-                    + " deploy chains/bcos bcos_user1\n"
-                    + "         java -cp conf/:lib/*:plugin/* "
-                    + ProxyContractDeployment.class.getName()
-                    + " upgrade chains/bcos bcos_user1";
-
     public static void usage() {
         System.out.println(getUsage("chains/bcos"));
         exit();
     }
 
     public static String getUsage(String chainPath) {
+        String pureChainPath = chainPath.replace("classpath:", "");
         return "Usage:\n"
                 + "         java -cp conf/:lib/*:plugin/* "
                 + ProxyContractDeployment.class.getName()
@@ -50,17 +29,17 @@ public class ProxyContractDeployment {
                 + "         java -cp conf/:lib/*:plugin/* "
                 + ProxyContractDeployment.class.getName()
                 + " check "
-                + chainPath
+                + pureChainPath
                 + "\n"
                 + "         java -cp conf/:lib/*:plugin/* "
                 + ProxyContractDeployment.class.getName()
                 + " deploy "
-                + chainPath
+                + pureChainPath
                 + " bcos_user1\n"
                 + "         java -cp conf/:lib/*:plugin/* "
                 + ProxyContractDeployment.class.getName()
                 + " upgrade "
-                + chainPath
+                + pureChainPath
                 + " bcos_user1";
     }
 
