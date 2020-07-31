@@ -16,27 +16,27 @@ public class ProxyContractDeployment {
     public static String getUsage(String chainPath) {
         String pureChainPath = chainPath.replace("classpath:", "");
         return "Usage:\n"
-                + "         java -cp conf/:lib/*:plugin/* "
+                + "         java -cp 'conf/:lib/*:plugin/*' "
                 + ProxyContractDeployment.class.getName()
                 + " check [chainName]\n"
-                + "         java -cp conf/:lib/*:plugin/* "
+                + "         java -cp 'conf/:lib/*:plugin/*' "
                 + ProxyContractDeployment.class.getName()
                 + " deploy [chainName] [accountName]\n"
-                + "         java -cp conf/:lib/*:plugin/* "
+                + "         java -cp 'conf/:lib/*:plugin/*' "
                 + ProxyContractDeployment.class.getName()
                 + " upgrade [chainName] [accountName]\n"
                 + "Example:\n"
-                + "         java -cp conf/:lib/*:plugin/* "
+                + "         java -cp 'conf/:lib/*:plugin/*' "
                 + ProxyContractDeployment.class.getName()
                 + " check "
                 + pureChainPath
                 + "\n"
-                + "         java -cp conf/:lib/*:plugin/* "
+                + "         java -cp 'conf/:lib/*:plugin/*' "
                 + ProxyContractDeployment.class.getName()
                 + " deploy "
                 + pureChainPath
                 + " bcos_user1\n"
-                + "         java -cp conf/:lib/*:plugin/* "
+                + "         java -cp 'conf/:lib/*:plugin/*' "
                 + ProxyContractDeployment.class.getName()
                 + " upgrade "
                 + pureChainPath
