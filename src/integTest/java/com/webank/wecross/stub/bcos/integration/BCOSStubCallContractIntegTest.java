@@ -32,13 +32,13 @@ import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.custom.CommandHandler;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
+import com.webank.wecross.stub.bcos.performance.hellowecross.HelloWeCross;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.proxy.ProxyContract;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Base64;
 import java.util.HashMap;
@@ -120,12 +120,12 @@ public class BCOSStubCallContractIntegTest {
         this.blockHeaderManager = blockHeaderManager;
     }
 
+    
     public TransactionContext<TransactionRequest> createTransactionRequestContext(
             Path path, String method, String[] args) {
         TransactionRequest transactionRequest =
                 new TransactionRequest(method, args);
         transactionRequest.setOptions(new HashMap<>());
-        // transactionRequest.setPath(path);
         TransactionContext<TransactionRequest> requestTransactionContext =
                 new TransactionContext<>(
                         transactionRequest, account, path, resourceInfo, blockHeaderManager);
@@ -134,6 +134,13 @@ public class BCOSStubCallContractIntegTest {
         requestTransactionContext.setData(transactionRequest);
         requestTransactionContext.setResourceInfo(resourceInfo);
         return requestTransactionContext;
+    }
+
+    public TransactionContext<TransactionRequest> createTransactionRequestContext(
+            Path path, String method, String[] args, String transactionId) {
+        TransactionContext<TransactionRequest> transactionRequestContext = createTransactionRequestContext(path, method, args);
+        transactionRequestContext.getData().getOptions().put(BCOSConstant.TRANSACTION_ID, transactionId);
+        return transactionRequestContext;
     }
 
     @Before
@@ -212,16 +219,35 @@ public class BCOSStubCallContractIntegTest {
         TransactionContext<TransactionRequest> requestTransactionContext =
                 createTransactionRequestContext(path, "deployContractWithRegisterCNS", params);
 
+        AtomicReference<String> addr = new AtomicReference<>("");
         AsyncToSync asyncToSync = new AsyncToSync();
         driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
             assertTrue(Objects.nonNull(res));
             assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
             assertTrue(res.getResult().length == 1);
             assertTrue(res.getResult()[0].length() == 42);
+            addr.set(res.getResult()[0]);
             asyncToSync.getSemaphore().release();
         });
 
         asyncToSync.semaphore.acquire(1);
+
+        String[] params0 = new String[1] ;
+        params0[0] = "HelloWeCross";
+        TransactionContext<TransactionRequest> requestTransactionContext0 =
+                createTransactionRequestContext(path, "getAddressByNameByCache", params0);
+
+        AsyncToSync asyncToSync0 = new AsyncToSync();
+        driver.asyncSendTransactionByProxy(requestTransactionContext0, connection, (exception, res) -> {
+            assertTrue(Objects.nonNull(res));
+            assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
+            assertTrue(res.getResult().length == 1);
+            assertTrue(res.getResult()[0].length() == 42);
+            assertTrue(res.getResult()[0].equals(addr.get()));
+            asyncToSync0.getSemaphore().release();
+        });
+
+        asyncToSync0.semaphore.acquire(1);
     }
 
     @Test
@@ -511,7 +537,7 @@ public class BCOSStubCallContractIntegTest {
         contractBytes = Files.readAllBytes(file.toPath());
 
         CommandHandler commandHandler = new DeployContractHandler(asyncCnsService);
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < 3; i++) {
             String constructorParams = "constructor params";
             String baseName = "HelloWorld";
             Object[] args =
@@ -593,7 +619,6 @@ public class BCOSStubCallContractIntegTest {
 
         asyncToSync0.semaphore.acquire(1);
     }
-
 
     @Test
     public void sendTransactionGet2ByProxyTest() throws Exception {
@@ -694,5 +719,4 @@ public class BCOSStubCallContractIntegTest {
 
         asyncToSync.getSemaphore().acquire();
     }
-
 }

@@ -13,8 +13,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.Objects;
+import org.fisco.bcos.web3j.abi.datatypes.Address;
 import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.fisco.bcos.web3j.precompile.cns.CnsService;
+import org.fisco.bcos.web3j.utils.Numeric;
 import org.fisco.solc.compiler.CompilationResult;
 import org.fisco.solc.compiler.SolidityCompiler;
 import org.slf4j.Logger;
@@ -79,6 +81,17 @@ public class RegisterCnsHandler implements CommandHandler {
             return;
         }
 
+        try {
+            address =
+                    Numeric.toHexStringWithPrefixZeroPadded(
+                            new Address(address).toUint160().getValue(), 40);
+        } catch (Exception e) {
+            logger.error("e: ", e);
+            callback.onResponse(
+                    new Exception("Illegal contract address format, address: " + address), null);
+            return;
+        }
+
         /** Compile the source to generate the ABI first */
         if (sourceType.equals("sol")) {
             try {
@@ -121,6 +134,7 @@ public class RegisterCnsHandler implements CommandHandler {
         Driver driver = new BCOSDriver();
 
         String finalAbi = abi;
+        String finalAddress = address;
         asyncCnsService.registerCNSByProxy(
                 cnsName,
                 address,
@@ -141,7 +155,7 @@ public class RegisterCnsHandler implements CommandHandler {
                             " register cns successfully, name: {}, version: {}, address: {}, abi: {}",
                             cnsName,
                             version,
-                            address,
+                            finalAddress,
                             finalAbi);
 
                     callback.onResponse(null, "success");

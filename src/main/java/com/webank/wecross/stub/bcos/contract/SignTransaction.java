@@ -57,7 +57,9 @@ public class SignTransaction {
 
         byte[] signedMessage = ExtendedTransactionEncoder.signMessage(rawTransaction, credentials);
 
-        logger.debug("encryptType: {}", EncryptType.encryptType);
+        if (logger.isTraceEnabled()) {
+            logger.trace(" encryptType: {}", EncryptType.encryptType);
+        }
 
         return Numeric.toHexString(signedMessage);
     }

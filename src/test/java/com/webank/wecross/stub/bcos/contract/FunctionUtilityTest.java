@@ -110,19 +110,19 @@ public class FunctionUtilityTest {
 
     @Test
     public void decodeOutputTest() throws IOException {
-        assertTrue(Objects.isNull(FunctionUtility.decodeOutput("0x")));
-        assertTrue(Objects.isNull(FunctionUtility.decodeOutput("")));
+        assertTrue(Objects.isNull(FunctionUtility.decodeDefaultOutput("0x")));
+        assertTrue(Objects.isNull(FunctionUtility.decodeDefaultOutput("")));
 
         String abi1 = FunctionEncoder.encode(emptyParamsFunction);
 
         String[] output1 =
-                FunctionUtility.decodeOutput(
+                FunctionUtility.decodeDefaultOutput(
                         "0x" + abi1.substring(FunctionUtility.MethodIDWithHexPrefixLength));
         assertTrue(output1.length == 0);
 
         String abi2 = FunctionEncoder.encode(function);
         String[] output2 =
-                FunctionUtility.decodeOutput(
+                FunctionUtility.decodeDefaultOutput(
                         abi2.substring(FunctionUtility.MethodIDWithHexPrefixLength));
         assertTrue(output2.length == params.length);
         for (int i = 0; i < output2.length; ++i) {
@@ -131,23 +131,23 @@ public class FunctionUtilityTest {
 
         String abi3 = FunctionEncoder.encode(noneParamsFunction);
         String[] output3 =
-                FunctionUtility.decodeOutput(
+                FunctionUtility.decodeDefaultOutput(
                         abi3.substring(FunctionUtility.MethodIDWithHexPrefixLength));
         assertTrue(Objects.isNull(output3));
     }
 
     @Test
     public void decodeInputTest() throws IOException {
-        assertTrue(Objects.isNull(FunctionUtility.decodeInput("0x")));
+        assertTrue(Objects.isNull(FunctionUtility.decodeDefaultInput("0x")));
 
-        assertTrue(Objects.isNull(FunctionUtility.decodeInput("")));
+        assertTrue(Objects.isNull(FunctionUtility.decodeDefaultInput("")));
 
         String abi1 = FunctionEncoder.encode(emptyParamsFunction);
-        String[] input1 = FunctionUtility.decodeInput(abi1);
+        String[] input1 = FunctionUtility.decodeDefaultInput(abi1);
         assertTrue(input1.length == 0);
 
         String abi2 = FunctionEncoder.encode(function);
-        String[] input2 = FunctionUtility.decodeInput(abi2);
+        String[] input2 = FunctionUtility.decodeDefaultInput(abi2);
         assertTrue(input2.length == params.length);
 
         for (int i = 0; i < input2.length; ++i) {
@@ -155,7 +155,7 @@ public class FunctionUtilityTest {
         }
 
         String abi3 = FunctionEncoder.encode(noneParamsFunction);
-        String[] input3 = FunctionUtility.decodeInput(abi1);
+        String[] input3 = FunctionUtility.decodeDefaultInput(abi1);
         assertTrue(input3.length == 0);
     }
 
@@ -166,9 +166,9 @@ public class FunctionUtilityTest {
         String abi = FunctionEncoder.encode(function);
         receipt.setInput(abi);
         receipt.setOutput("0x" + abi.substring(10));
-        String[] inputs = FunctionUtility.decodeInput(receipt);
+        String[] inputs = FunctionUtility.decodeDefaultInput(receipt);
         assertTrue(inputs.length == params.length);
-        String[] outputs = FunctionUtility.decodeOutput(receipt);
+        String[] outputs = FunctionUtility.decodeDefaultOutput(receipt);
         assertTrue(Objects.isNull(outputs));
     }
 
@@ -179,9 +179,9 @@ public class FunctionUtilityTest {
         String abi = FunctionEncoder.encode(emptyParamsFunction);
         receipt.setInput(abi);
         receipt.setOutput("0x" + abi.substring(10));
-        String[] inputs = FunctionUtility.decodeInput(receipt);
+        String[] inputs = FunctionUtility.decodeDefaultInput(receipt);
         assertTrue(inputs.length == emptyParams.length);
-        String[] outputs = FunctionUtility.decodeOutput(receipt);
+        String[] outputs = FunctionUtility.decodeDefaultOutput(receipt);
         assertTrue(outputs.length == 0);
     }
 
@@ -192,7 +192,7 @@ public class FunctionUtilityTest {
         String abi = FunctionEncoder.encode(noneParamsFunction);
         receipt.setInput(abi);
         receipt.setOutput("0x" + abi.substring(10));
-        String[] inputs = FunctionUtility.decodeInput(receipt);
+        String[] inputs = FunctionUtility.decodeDefaultInput(receipt);
         assertTrue(Objects.isNull(inputs));
     }
 
@@ -208,9 +208,9 @@ public class FunctionUtilityTest {
         String abi = FunctionEncoder.encode(function);
         receipt.setInput(abi);
         receipt.setOutput("0x" + abi.substring(10));
-        String[] inputs = FunctionUtility.decodeInput(receipt);
+        String[] inputs = FunctionUtility.decodeDefaultInput(receipt);
         assertTrue(inputs.length == params.length);
-        String[] outputs = FunctionUtility.decodeOutput(receipt);
+        String[] outputs = FunctionUtility.decodeDefaultOutput(receipt);
         assertTrue(Objects.isNull(outputs));
     }
 }
