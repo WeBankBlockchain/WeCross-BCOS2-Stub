@@ -1,7 +1,5 @@
 package com.webank.wecross.stub.bcos;
 
-import static java.util.Collections.addAll;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -180,7 +178,7 @@ public class BCOSConnection implements Connection {
             }
 
             if (StatusCode.Success.equals(callOutput.getStatus())) {
-                String[] paths = FunctionUtility.decodeOutput(callOutput.getOutput());
+                String[] paths = FunctionUtility.decodeDefaultOutput(callOutput.getOutput());
                 if (Objects.nonNull(paths) && paths.length != 0) {
                     Set<String> set = new HashSet<>(Arrays.asList(paths));
                     set.add("a.b." + BCOSConstant.BCOS_PROXY_NAME);

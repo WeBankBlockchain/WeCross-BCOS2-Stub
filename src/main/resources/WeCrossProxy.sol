@@ -45,6 +45,8 @@ contract WeCrossProxy {
 
     mapping(string => TransactionStep) transactionSteps;  // key: transactionID||seq
 
+    mapping(string => address) nameAddress; // key: path name
+
     /*
     * record all tansactionIDs
     * head: point to the current tansaction to be checked
@@ -121,6 +123,11 @@ contract WeCrossProxy {
         return result;
     }
 
+    // fetch the address by the name of the path
+    function getAddressByNameByCache(string memory _name) public view returns(address) {
+        return nameAddress[_name];
+    }
+
     /*
     * deploy contract by contract binary code
     */
@@ -147,7 +154,8 @@ contract WeCrossProxy {
         address deploy_addr = deployContract(_bin);
         // register to cns
         int ret = cns.insert(_name, _version, addressToString(deploy_addr), _abi);
-        require(1 == ret, string(abi.encodePacked(_name, ":", _version, " register to cns failed, error: ", ret)));
+        require(1 == ret, string(abi.encodePacked(_name, ":", _version, " unable register to cns, error: ", ret)));
+        nameAddress[_name] = deploy_addr;
         return deploy_addr;
     }
 
@@ -162,7 +170,9 @@ contract WeCrossProxy {
 
         // check if version info exist ???
         int ret = cns.insert(_name, _version, _addr, _abi);
-        require(1 == ret, string(abi.encodePacked(_name, ":", _version, " register to cns failed, error: ", ret)));
+        require(1 == ret, string(abi.encodePacked(_name, ":", _version, " unable register to cns, error: ", ret)));
+        // add address to map
+        nameAddress[_name] = bytesToAddress(bytes(_addr));
     }
 
     /**
@@ -200,18 +210,52 @@ contract WeCrossProxy {
         return callContract(addr, _func, _args);
     }
 
+    function sendTransaction(address _addr, bytes memory _argsWithMethodId) public returns(bytes memory) {
+        return callContract(_addr, _argsWithMethodId);
+    }
+
+    function sendTransaction(string memory _name, bytes memory _argsWithMethodId) public returns(bytes memory) {
+        // find address from abi cache first
+        address addr = nameAddress[_name];
+        if(addr == address(0x0)) {
+            addr = getAddressByName(_name, true);
+            nameAddress[_name] = addr;
+        }
+
+        if(lockedContracts[addr].locked) {
+            revert(string(abi.encodePacked(_name, " is locked by unfinished transaction: ", lockedContracts[addr].transactionID)));
+        }
+        return callContract(addr, _argsWithMethodId);
+    }
+
+    // constant call
+    function constantCall(string memory _name, bytes memory _argsWithMethodId) public
+    returns(bytes memory)
+    {
+        // find address from abi cache first
+        address addr = nameAddress[_name];
+        if(addr == address(0x0)) {
+            addr = getAddressByName(_name, true);
+        }
+
+        if(lockedContracts[addr].locked) {
+            revert(string(abi.encodePacked(_name, " is locked by unfinished transaction: ", lockedContracts[addr].transactionID)));
+        }
+        return callContract(addr, _argsWithMethodId);
+    }
+
     // non-constant call
     function sendTransaction(string memory _transactionID, uint256 _seq, string memory _path, string memory _func, bytes memory _args) public
     returns(bytes memory)
     {
         address addr = getAddressByPath(_path);
 
-        if(sameString(_transactionID, "0")) {
-            if(lockedContracts[addr].locked) {
-                revert(string(abi.encodePacked(_path, " is locked by unfinished transaction: ", lockedContracts[addr].transactionID)));
-            }
-            return callContract(addr, _func, _args);
-        }
+//        if(sameString(_transactionID, "0")) {
+//            if(lockedContracts[addr].locked) {
+//                revert(string(abi.encodePacked(_path, " is locked by unfinished transaction: ", lockedContracts[addr].transactionID)));
+//            }
+//            return callContract(addr, _func, _args);
+//        }
 
         if(!isExistedTransaction(_transactionID)) {
             revert("transaction not found");
@@ -551,6 +595,16 @@ contract WeCrossProxy {
         (success, result) = address(_contractAddress).call(abi.encodePacked(sig, _args));
         require(success, "call target contract failed!");
     }
+
+    // internal call
+    function callContract(address _contractAddress, bytes memory _argsWithMethodId) internal
+    returns(bytes memory result)
+    {
+        bool success;
+        (success, result) = address(_contractAddress).call(_argsWithMethodId);
+        require(success, "call target contract failed!");
+    }
+
 
     // retrive address from CNS
     function getAddressByName(string memory _name, bool revertNotExist) internal view

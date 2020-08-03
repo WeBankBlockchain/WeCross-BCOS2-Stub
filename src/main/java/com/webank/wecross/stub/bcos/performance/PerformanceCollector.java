@@ -148,7 +148,7 @@ public class PerformanceCollector {
                             + "  : "
                             + String.valueOf((double) timeout2000.get() / total * 100)
                             + "%");
-
+            System.exit(0);
         } catch (Exception e) {
             logger.error("error:", e);
             System.exit(0);
