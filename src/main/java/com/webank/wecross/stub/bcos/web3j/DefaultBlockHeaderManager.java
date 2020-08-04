@@ -1,22 +1,25 @@
-package com.webank.wecross.stub.bcos.integration;
+package com.webank.wecross.stub.bcos.web3j;
 
 import com.webank.wecross.stub.BlockHeaderManager;
 import com.webank.wecross.stub.bcos.BCOSConnection;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
-import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
-
 import java.io.IOException;
 import java.math.BigInteger;
+import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
+import org.fisco.bcos.web3j.protocol.Web3j;
+import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 
-public class IntegTestBlockHeaderManagerImpl implements BlockHeaderManager {
-
+public class DefaultBlockHeaderManager implements BlockHeaderManager {
     private Web3jWrapper web3jWrapper;
     private BCOSConnection connection;
 
-    public IntegTestBlockHeaderManagerImpl(Web3jWrapper web3jWrapper) {
-        this.web3jWrapper = web3jWrapper;
-        this.connection = new BCOSConnection(web3jWrapper);
+    public DefaultBlockHeaderManager(BCOSConnection connection) {
+        this.connection = connection;
+        this.web3jWrapper = connection.getWeb3jWrapper();
+    }
+
+    public DefaultBlockHeaderManager(Web3j web3j) {
+        this.web3jWrapper = new Web3jWrapperImpl(web3j);
+        this.connection = new BCOSConnection(this.web3jWrapper);
     }
 
     public long getBlockNumber() {
@@ -31,28 +34,25 @@ public class IntegTestBlockHeaderManagerImpl implements BlockHeaderManager {
     public byte[] getBlockHeader(long l) {
         try {
             BcosBlock.Block block = web3jWrapper.getBlockByNumber(l);
-            return ObjectMapperFactory.getObjectMapper().writeValueAsBytes(connection.convertToBlockHeader(block));
+            return ObjectMapperFactory.getObjectMapper()
+                    .writeValueAsBytes(connection.convertToBlockHeader(block));
         } catch (Exception e) {
             return null;
         }
     }
 
     @Override
-    public void start() {
-
-    }
+    public void start() {}
 
     @Override
-    public void stop() {
-
-    }
+    public void stop() {}
 
     @Override
     public void asyncGetBlockNumber(GetBlockNumberCallback callback) {
         try {
             BigInteger blockNumber = web3jWrapper.getBlockNumber();
             callback.onResponse(null, blockNumber.longValue());
-        } catch (IOException e) {
+        } catch (Exception e) {
             callback.onResponse(e, -1);
         }
     }

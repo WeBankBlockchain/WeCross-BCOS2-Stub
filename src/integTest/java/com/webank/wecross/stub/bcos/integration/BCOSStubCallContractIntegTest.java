@@ -35,6 +35,7 @@ import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import com.webank.wecross.stub.bcos.performance.hellowecross.HelloWeCross;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.proxy.ProxyContract;
+import com.webank.wecross.stub.bcos.web3j.DefaultBlockHeaderManager;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 
@@ -164,7 +165,7 @@ public class BCOSStubCallContractIntegTest {
         Web3jWrapperImpl web3jWrapperImpl = (Web3jWrapperImpl) web3jWrapper;
 
         BCOSAccount bcosAccount = (BCOSAccount) account;
-        blockHeaderManager = new IntegTestBlockHeaderManagerImpl(web3jWrapper);
+        blockHeaderManager = new DefaultBlockHeaderManager((BCOSConnection) connection);
         asyncCnsService = ((BCOSDriver) driver).getAsyncCnsService();
 
         helloWeCross =
