@@ -35,7 +35,6 @@ contract WeCrossProxy {
 
     struct ContractInfo {
         bool locked;     // isolation control, read-committed
-        string path;
         string transactionID;
     }
 
@@ -54,7 +53,8 @@ contract WeCrossProxy {
     */
     uint256 head = 0;
     uint256 tail = 0;
-    string[] tansactionQueue;
+    string[] transactionQueue; // all ids
+    string[] finishedQueue;    // finished only
 
     string constant revertFlag = "_revert";
     string constant nullFlag = "null";
@@ -106,19 +106,36 @@ contract WeCrossProxy {
         pathList.length = 0;
     }
 
-    function getTransactionIDs() public view
+    function getAllTransactionIDs() public view
     returns (string[] memory)
     {
         string[] memory result = new string[](1);
-        uint256 len = tansactionQueue.length;
+        uint256 len = transactionQueue.length;
         if(len == 0) {
             result[0] = "";
             return result;
         }
 
-        result[0] = tansactionQueue[0];
+        result[0] = transactionQueue[0];
         for(uint256 i = 1; i < len; i++) {
-            result[0] = string(abi.encodePacked(result[0], " ", tansactionQueue[i]));
+            result[0] = string(abi.encodePacked(result[0], " ", transactionQueue[i]));
+        }
+        return result;
+    }
+
+    function getFinishedTransactionIDs() public view
+    returns (string[] memory)
+    {
+        string[] memory result = new string[](1);
+        uint256 len = finishedQueue.length;
+        if(len == 0) {
+            result[0] = "";
+            return result;
+        }
+
+        result[0] = finishedQueue[0];
+        for(uint256 i = 1; i < len; i++) {
+            result[0] = string(abi.encodePacked(result[0], " ", finishedQueue[i]));
         }
         return result;
     }
@@ -137,7 +154,9 @@ contract WeCrossProxy {
             addr := create(0,add(bin,0x20), mload(bin))
             ok := gt(extcodesize(addr),0)
         }
-        require(ok, "deploy contract failed");
+        if(!ok) {
+            revert("deploy contract failed");
+        }
     }
 
     /**
@@ -154,7 +173,9 @@ contract WeCrossProxy {
         address deploy_addr = deployContract(_bin);
         // register to cns
         int ret = cns.insert(_name, _version, addressToString(deploy_addr), _abi);
-        require(1 == ret, string(abi.encodePacked(_name, ":", _version, " unable register to cns, error: ", ret)));
+        if(1 != ret) {
+            revert(string(abi.encodePacked(_name, ":", _version, " unable register to cns, error: ", ret)));
+        }
         nameAddress[_name] = deploy_addr;
         return deploy_addr;
     }
@@ -170,7 +191,9 @@ contract WeCrossProxy {
 
         // check if version info exist ???
         int ret = cns.insert(_name, _version, _addr, _abi);
-        require(1 == ret, string(abi.encodePacked(_name, ":", _version, " unable register to cns, error: ", ret)));
+        if(1 != ret) {
+            revert(string(abi.encodePacked(_name, ":", _version, " unable register to cns, error: ", ret)));
+        }
         // add address to map
         nameAddress[_name] = bytesToAddress(bytes(_addr));
     }
@@ -203,7 +226,7 @@ contract WeCrossProxy {
             revert("transaction not found");
         }
 
-        if(!sameString(lockedContracts[addr].transactionID, _transactionID) || !sameString(lockedContracts[addr].path, _path)) {
+        if(!sameString(lockedContracts[addr].transactionID, _transactionID)) {
             revert(string(abi.encodePacked(_path, "is unregistered in transaction ", _transactionID)));
         }
 
@@ -269,7 +292,7 @@ contract WeCrossProxy {
             revert("transaction has been rolledback");
         }
 
-        if(!sameString(lockedContracts[addr].transactionID, _transactionID) || !sameString(lockedContracts[addr].path, _path)) {
+        if(!sameString(lockedContracts[addr].transactionID, _transactionID)) {
             revert(string(abi.encodePacked(_path, "is unregistered in transaction ", _transactionID)));
         }
 
@@ -335,7 +358,6 @@ contract WeCrossProxy {
                 revert(string(abi.encodePacked(_args[i+2], " is locked by unfinished transaction: ", lockedContracts[addr].transactionID)));
             }
             lockedContracts[addr].locked = true;
-            lockedContracts[addr].path = _args[i+2];
             lockedContracts[addr].transactionID = transactionID;
         }
 
@@ -396,6 +418,7 @@ contract WeCrossProxy {
         transactions[transactionID].status = 1;
 
         deleteLockedContracts(transactionID);
+        finishedQueue.push(transactionID);
 
         return res;
     }
@@ -447,6 +470,7 @@ contract WeCrossProxy {
         transactions[transactionID].status = 2;
 
         deleteLockedContracts(transactionID);
+        finishedQueue.push(transactionID);
 
         return res;
     }
@@ -536,7 +560,7 @@ contract WeCrossProxy {
             res[0] = nullFlag;
             return res;
         } else {
-            transactionID = tansactionQueue[uint256(head)];
+            transactionID = transactionQueue[uint256(head)];
         }
 
         string[] memory args = new string[](1);
@@ -558,14 +582,14 @@ contract WeCrossProxy {
         if(head == tail) {
             return nullFlag;
         } else {
-            return tansactionQueue[uint256(head)];
+            return transactionQueue[uint256(head)];
         }
     }
 
     function addTransaction(string memory _transactionID) internal
     {
         tail++;
-        tansactionQueue.push(_transactionID);
+        transactionQueue.push(_transactionID);
     }
 
     function deleteTransaction(string memory _transactionID) internal
@@ -578,7 +602,7 @@ contract WeCrossProxy {
             revert("delete nonexistent transaction");
         }
 
-        if(!sameString(tansactionQueue[head], _transactionID)) {
+        if(!sameString(transactionQueue[head], _transactionID)) {
             revert("delete unmatched transaction");
         }
 
@@ -593,7 +617,10 @@ contract WeCrossProxy {
         bytes memory sig = abi.encodeWithSignature(_sig);
         bool success;
         (success, result) = address(_contractAddress).call(abi.encodePacked(sig, _args));
-        require(success, "call target contract failed!");
+        if(!success) {
+            //(string memory error) = abi.decode(result, (string));
+            revert(string(result));
+        }
     }
 
     // internal call
@@ -602,7 +629,10 @@ contract WeCrossProxy {
     {
         bool success;
         (success, result) = address(_contractAddress).call(_argsWithMethodId);
-        require(success, "call target contract failed!");
+        if(!success) {
+            //(string memory error) = abi.decode(result, (string));
+            revert(string(result));
+        }
     }
 
 
@@ -875,7 +905,10 @@ contract WeCrossProxy {
     function bytesToAddress(bytes memory _address) internal pure
     returns (address)
     {
-        require(_address.length == 42, string(abi.encodePacked("cannot covert ", _address, "to bcos address")));
+        if(_address.length != 42) {
+            revert(string(abi.encodePacked("cannot covert ", _address, "to bcos address")));
+        }
+
         uint160 result = 0;
         uint160 b1;
         uint160 b2;
@@ -946,6 +979,5 @@ contract WeCrossProxy {
 contract CNSPrecompiled {
     function insert(string memory name, string memory version, string memory addr, string memory abiStr) public returns(int256);
     function selectByName(string memory name) public view returns (string memory);
-
     function selectByNameAndVersion(string memory name, string memory version) public view returns (string memory);
 }
