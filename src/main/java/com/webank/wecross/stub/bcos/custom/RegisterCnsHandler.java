@@ -82,6 +82,10 @@ public class RegisterCnsHandler implements CommandHandler {
         }
 
         try {
+            if (!address.startsWith("0x") || address.length() < 6) {
+                throw new IllegalArgumentException(" Invalid address. ");
+            }
+
             address =
                     Numeric.toHexStringWithPrefixZeroPadded(
                             new Address(address).toUint160().getValue(), 40);
