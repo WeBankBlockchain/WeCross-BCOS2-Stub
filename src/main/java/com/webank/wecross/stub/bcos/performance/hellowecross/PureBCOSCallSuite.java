@@ -2,7 +2,7 @@ package com.webank.wecross.stub.bcos.performance.hellowecross;
 
 import com.webank.wecross.stub.bcos.performance.PerformanceSuiteCallback;
 import java.math.BigInteger;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.slf4j.Logger;
@@ -14,7 +14,7 @@ public class PureBCOSCallSuite extends PureBCOSSuite {
 
     private HelloWeCross helloWeCross;
 
-    private List<String> ss = new LinkedList<>();
+    private List<String> ss = new ArrayList<>();
 
     public PureBCOSCallSuite(String chainName, String accountName, boolean sm) throws Exception {
         super(chainName, accountName, sm);
@@ -26,9 +26,13 @@ public class PureBCOSCallSuite extends PureBCOSSuite {
                                 new BigInteger("30000000"))
                         .send();
 
-        logger.info(" HelloWeCross contractAddress: {}", helloWeCross.getContractAddress());
+        String s = "HelloWorld" + System.currentTimeMillis();
+        logger.info(
+                " HelloWeCross contractAddress: {}, Message: {}",
+                helloWeCross.getContractAddress(),
+                s);
 
-        ss.add("aabbccdd");
+        ss.add(s);
         TransactionReceipt receipt = helloWeCross.set(ss).send();
 
         if (!receipt.isStatusOK()) {
@@ -46,7 +50,7 @@ public class PureBCOSCallSuite extends PureBCOSSuite {
         try {
             List<String> stringList = helloWeCross.get().send();
 
-            if (stringList.equals(ss)) {
+            if ((ss.size() == stringList.size()) && (ss.get(0).equals(stringList.get(0)))) {
                 callback.onSuccess("Success");
             } else {
                 callback.onFailed("Result not equals: " + stringList.toString());

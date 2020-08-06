@@ -1,24 +1,28 @@
 package com.webank.wecross.stub.bcos.performance.hellowecross.proxy;
 
+import com.webank.wecross.stub.bcos.abi.ABIDefinition;
 import com.webank.wecross.stub.bcos.performance.PerformanceSuiteCallback;
+import org.bouncycastle.util.encoders.Hex;
+import org.fisco.bcos.web3j.utils.Numeric;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PureBCOSProxyCallSuite extends PureBCOSProxySuite {
+    private static final Logger logger = LoggerFactory.getLogger(PureBCOSProxyCallSuite.class);
 
     public PureBCOSProxyCallSuite(
             String resourceOrAddress, String chainName, String accountName, boolean sm)
             throws Exception {
         super(chainName, accountName, sm, resourceOrAddress);
+
+        logger.info(" ===>>> resourceOrAddress : {}", resourceOrAddress);
     }
 
-    private String resourceOrAddress;
-
-    public String getResourceOrAddress() {
-        return resourceOrAddress;
-    }
-
-    public void setResourceOrAddress(String resourceOrAddress) {
-        this.resourceOrAddress = resourceOrAddress;
-    }
+    private ABIDefinition abiDefinition =
+            getContractABIDefinition().getFunctions().get("get").get(0);
+    private String methodId = abiDefinition.getMethodId();
+    // private ABIObject inputObject = ABIObjectFactory.createInputObject(abiDefinition);
+    // private String abi = getAbiCodecJsonWrapper().encode(inputObject, Arrays.asList()).encode();
 
     @Override
     public String getName() {
@@ -27,45 +31,27 @@ public class PureBCOSProxyCallSuite extends PureBCOSProxySuite {
 
     @Override
     public void call(PerformanceSuiteCallback callback) {
-
-        /*String signTx = null;
         try {
-            ABIDefinition abiDefinition =
-                    getContractABIDefinition().getFunctions().get("get").get(0);
-            String methodId = abiDefinition.getMethodId();
-
-            if (resourceOrAddress.startsWith("0x")) {
-                signTx =
-                        getWeCrossProxy()
-                                .constantCall(
-                                        resourceOrAddress,
-                                        Numeric.hexStringToByteArray(methodId));
+            if (getResource().isEmpty()) {
+                callback.onFailed("Failed! status: Unsupported call by address");
             } else {
-                signTx =
+                byte[] sendBytes =
                         getWeCrossProxy()
-                                .sendTransactionSeq(
-                                        resourceOrAddress,
-                                        Numeric.hexStringToByteArray(methodId));
+                                .constantCall(getResource(), Numeric.hexStringToByteArray(methodId))
+                                .send();
+
+                if (logger.isTraceEnabled()) {
+                    logger.trace(" result: " + Hex.toHexString(sendBytes));
+                }
+
+                if (sendBytes.length == 0) {
+                    callback.onFailed("Failed! status: empty return");
+                } else {
+                    callback.onSuccess("Success");
+                }
             }
-
-            this.getWeb3j()
-                    .sendRawTransactionAndGetProof(
-                            signTx,
-                            new TransactionSucCallback() {
-                                @Override
-                                public void onResponse(TransactionReceipt response) {
-                                    if (response.isStatusOK()) {
-                                        callback.onSuccess("Success");
-
-                                    } else {
-                                        callback.onFailed(
-                                                "Failed! status: " + response.getStatus());
-                                    }
-                                }
-                            });
         } catch (Exception e) {
-            callback.onFailed("Call failed: " + e);
+            callback.onFailed("Failed! status: " + e.getMessage());
         }
-        */
     }
 }
