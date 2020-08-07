@@ -174,7 +174,7 @@ contract WeCrossProxy {
         // register to cns
         int ret = cns.insert(_name, _version, addressToString(deploy_addr), _abi);
         if(1 != ret) {
-            revert(string(abi.encodePacked(_name, ":", _version, " unable register to cns, error: ", ret)));
+            revert(string(abi.encodePacked(_name, ":", _version, " unable register to cns, error: ", uint256ToString(uint256(ret > 0? ret : -ret)))));
         }
         nameAddress[_name] = deploy_addr;
         return deploy_addr;
@@ -192,7 +192,7 @@ contract WeCrossProxy {
         // check if version info exist ???
         int ret = cns.insert(_name, _version, _addr, _abi);
         if(1 != ret) {
-            revert(string(abi.encodePacked(_name, ":", _version, " unable register to cns, error: ", ret)));
+            revert(string(abi.encodePacked(_name, ":", _version, " unable register to cns, error: ", uint256ToString(uint256(ret > 0 ? ret : - ret)))));
         }
         // add address to map
         nameAddress[_name] = bytesToAddress(bytes(_addr));
