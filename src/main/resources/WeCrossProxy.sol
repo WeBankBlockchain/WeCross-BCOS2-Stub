@@ -261,9 +261,6 @@ contract WeCrossProxy {
             addr = getAddressByName(_name, true);
         }
 
-        if(lockedContracts[addr].locked) {
-            revert(string(abi.encodePacked(_name, " is locked by unfinished transaction: ", lockedContracts[addr].transactionID)));
-        }
         return callContract(addr, _argsWithMethodId);
     }
 
