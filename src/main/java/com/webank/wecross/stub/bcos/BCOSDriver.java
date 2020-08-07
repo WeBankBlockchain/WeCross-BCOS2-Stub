@@ -30,6 +30,7 @@ import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.BCOSStubException;
 import com.webank.wecross.stub.bcos.common.RequestFactory;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
+import com.webank.wecross.stub.bcos.contract.RevertMessage;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.custom.CommandHandler;
 import com.webank.wecross.stub.bcos.custom.CommandHandlerDispatcher;
@@ -464,9 +465,19 @@ public class BCOSDriver implements Driver {
                                             } else {
                                                 transactionResponse.setErrorCode(
                                                         BCOSStatusCode.CallNotSuccessStatus);
-                                                transactionResponse.setErrorMessage(
-                                                        StatusCode.getStatusMessage(
-                                                                callOutput.getStatus()));
+
+                                                Tuple2<Boolean, String> booleanStringTuple2 =
+                                                        RevertMessage.tryParserRevertMessage(
+                                                                callOutput.getStatus(),
+                                                                callOutput.getOutput());
+                                                if (booleanStringTuple2.getValue1()) {
+                                                    transactionResponse.setErrorMessage(
+                                                            booleanStringTuple2.getValue2());
+                                                } else {
+                                                    transactionResponse.setErrorMessage(
+                                                            StatusCode.getStatusMessage(
+                                                                    callOutput.getStatus()));
+                                                }
                                             }
 
                                             callback.onTransactionResponse(
@@ -588,8 +599,17 @@ public class BCOSDriver implements Driver {
                             } else {
                                 transactionResponse.setErrorCode(
                                         BCOSStatusCode.CallNotSuccessStatus);
-                                transactionResponse.setErrorMessage(
-                                        StatusCode.getStatusMessage(callOutput.getStatus()));
+
+                                Tuple2<Boolean, String> booleanStringTuple2 =
+                                        RevertMessage.tryParserRevertMessage(
+                                                callOutput.getStatus(), callOutput.getOutput());
+                                if (booleanStringTuple2.getValue1()) {
+                                    transactionResponse.setErrorMessage(
+                                            booleanStringTuple2.getValue2());
+                                } else {
+                                    transactionResponse.setErrorMessage(
+                                            StatusCode.getStatusMessage(callOutput.getStatus()));
+                                }
                             }
 
                             callback.onTransactionResponse(null, transactionResponse);
@@ -833,9 +853,23 @@ public class BCOSDriver implements Driver {
                                                                     .SendTransactionNotSuccessStatus);
                                                     if (StatusCode.RevertInstruction.equals(
                                                             receipt.getStatus())) {
-                                                        // return revert message
-                                                        transactionResponse.setErrorMessage(
-                                                                receipt.getMessage());
+                                                        Tuple2<Boolean, String>
+                                                                booleanStringTuple2 =
+                                                                        RevertMessage
+                                                                                .tryParserRevertMessage(
+                                                                                        receipt
+                                                                                                .getStatus(),
+                                                                                        receipt
+                                                                                                .getOutput());
+                                                        if (booleanStringTuple2.getValue1()) {
+                                                            transactionResponse.setErrorMessage(
+                                                                    booleanStringTuple2
+                                                                            .getValue2());
+                                                        } else {
+                                                            // return revert message
+                                                            transactionResponse.setErrorMessage(
+                                                                    receipt.getMessage());
+                                                        }
                                                     } else {
                                                         transactionResponse.setErrorMessage(
                                                                 StatusCode.getStatusMessage(
@@ -1174,11 +1208,27 @@ public class BCOSDriver implements Driver {
                                                                             .equals(
                                                                                     receipt
                                                                                             .getStatus())) {
-                                                                        // return revert message
-                                                                        transactionResponse
-                                                                                .setErrorMessage(
-                                                                                        receipt
-                                                                                                .getMessage());
+                                                                        Tuple2<Boolean, String>
+                                                                                booleanStringTuple2 =
+                                                                                        RevertMessage
+                                                                                                .tryParserRevertMessage(
+                                                                                                        receipt
+                                                                                                                .getStatus(),
+                                                                                                        receipt
+                                                                                                                .getOutput());
+                                                                        if (booleanStringTuple2
+                                                                                .getValue1()) {
+                                                                            transactionResponse
+                                                                                    .setErrorMessage(
+                                                                                            booleanStringTuple2
+                                                                                                    .getValue2());
+                                                                        } else {
+                                                                            // return revert message
+                                                                            transactionResponse
+                                                                                    .setErrorMessage(
+                                                                                            receipt
+                                                                                                    .getMessage());
+                                                                        }
                                                                     } else {
                                                                         transactionResponse
                                                                                 .setErrorMessage(
