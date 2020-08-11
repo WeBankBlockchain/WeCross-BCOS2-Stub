@@ -217,9 +217,14 @@ public class BCOSGMStubFactory implements StubFactory {
         System.out.println("For deploy proxy contract:");
         System.out.println(
                 "    java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.guomi.proxy.ProxyContractDeployment");
+        System.out.println("For chain performance test, please run the command for more info:");
         System.out.println(
-                "For pure chain performance test, please run the command for more info:");
+                "    Pure:    java -cp conf/:lib/*:plugin/* "
+                        + com.webank.wecross.stub.bcos.performance.hellowecross.PerformanceTest
+                                .class.getName());
         System.out.println(
-                "    java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.guomi.performance.guomi.PerformanceTest");
+                "    Proxy:   java -cp conf/:lib/*:plugin/* "
+                        + com.webank.wecross.stub.bcos.performance.hellowecross.proxy
+                                .PerformanceTest.class.getName());
     }
 }
