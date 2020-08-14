@@ -19,12 +19,10 @@ public class Web3jUtility {
 
     private Web3jUtility() {}
 
-    public static ThreadPoolTaskExecutor buildThreadPool(
-            int threadNum, int queueCapacity, String name) {
+    public static ThreadPoolTaskExecutor build(int threadNum, int queueCapacity, String name) {
         logger.info(
-                " initializing Web3j ThreadPoolTaskExecutor, threadC: {}, queueCapacity: {}, threadName: {}",
+                " initializing Web3j ThreadPoolTaskExecutor, threadC: {}, threadName: {}",
                 threadNum,
-                queueCapacity,
                 name);
         // init default thread pool
 
@@ -69,7 +67,7 @@ public class Web3jUtility {
 
         Service service = new Service();
         service.setThreadPool(
-                buildThreadPool(
+                build(
                         channelServiceConfig.getThreadNum(),
                         channelServiceConfig.getQueueCapacity(),
                         "web3j_callback"));
