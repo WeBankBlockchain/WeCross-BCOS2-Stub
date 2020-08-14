@@ -16,7 +16,6 @@ import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -212,8 +211,6 @@ public class BCOSConnection implements Connection {
                 return handleCallRequest(request);
             case BCOSRequestType.SEND_TRANSACTION:
                 return handleTransactionRequest(request);
-            case BCOSRequestType.GET_TRANSACTION_PROOF:
-                return handleGetTransactionProof(request);
             default:
                 logger.warn(" unrecognized request type, type: {}", request.getType());
                 Response response = new Response();
@@ -240,6 +237,8 @@ public class BCOSConnection implements Connection {
             handleAsyncGetBlockHeaderRequest(request, callback);
         } else if (request.getType() == BCOSRequestType.GET_BLOCK_NUMBER) {
             handleAsyncGetBlockNumberRequest(callback);
+        } else if (request.getType() == BCOSRequestType.GET_TRANSACTION_PROOF) {
+            handleAsyncGetTransactionProof(request, callback);
         } else {
             // Does not support asynchronous operation, async to sync
             callback.onResponse(send(request));
@@ -414,65 +413,79 @@ public class BCOSConnection implements Connection {
         callback.onResponse(response);
     }
 
+    private interface GetTransactionProofCallback {
+        void onResponse(BCOSStubException e, TransactionProof proof);
+    }
+
     /**
      * get TransAndProof and ReceiptAndProof by transaction hash
      *
      * @param txHash
-     * @return
-     * @throws IOException
      */
-    public TransactionProof getTransactionProof(String txHash)
-            throws IOException, BCOSStubException {
-        // get transaction and transaction merkle proof
-        TransactionWithProof.TransAndProof transAndProof =
-                web3jWrapper.getTransactionByHashWithProof(txHash);
+    private void asyncGetTransactionProof(String txHash, GetTransactionProofCallback callback) {
+        try {
+            // get transaction and transaction merkle proof
+            TransactionWithProof.TransAndProof transAndProof =
+                    web3jWrapper.getTransactionByHashWithProof(txHash);
 
-        if (Objects.isNull(transAndProof)
-                || Objects.isNull(transAndProof.getTransaction())
-                || Objects.isNull(transAndProof.getTransaction().getHash())) {
-            throw new BCOSStubException(
-                    BCOSStatusCode.TransactionProofNotExist,
-                    " Not found transaction proof, tx hash: " + txHash);
+            if (Objects.isNull(transAndProof)
+                    || Objects.isNull(transAndProof.getTransaction())
+                    || Objects.isNull(transAndProof.getTransaction().getHash())) {
+                callback.onResponse(
+                        new BCOSStubException(
+                                BCOSStatusCode.TransactionProofNotExist,
+                                " Not found transaction proof, tx hash: " + txHash),
+                        null);
+                return;
+            }
+
+            TransactionReceiptWithProof.ReceiptAndProof receiptAndProof =
+                    web3jWrapper.getTransactionReceiptByHashWithProof(txHash);
+            if (Objects.isNull(receiptAndProof)
+                    || Objects.isNull(receiptAndProof.getTransactionReceipt())
+                    || Objects.isNull(
+                            receiptAndProof.getTransactionReceipt().getTransactionHash())) {
+                callback.onResponse(
+                        new BCOSStubException(
+                                BCOSStatusCode.TransactionReceiptProofNotExist,
+                                " Not found transaction receipt proof, tx hash: " + txHash),
+                        null);
+                return;
+            }
+
+            callback.onResponse(null, new TransactionProof(transAndProof, receiptAndProof));
+        } catch (Exception e) {
+            callback.onResponse(
+                    new BCOSStubException(
+                            BCOSStatusCode.UnclassifiedError,
+                            " Not found proof, tx hash: " + txHash),
+                    null);
         }
-
-        TransactionReceiptWithProof.ReceiptAndProof receiptAndProof =
-                web3jWrapper.getTransactionReceiptByHashWithProof(txHash);
-        if (Objects.isNull(receiptAndProof)
-                || Objects.isNull(receiptAndProof.getTransactionReceipt())
-                || Objects.isNull(receiptAndProof.getTransactionReceipt().getTransactionHash())) {
-            throw new BCOSStubException(
-                    BCOSStatusCode.TransactionReceiptProofNotExist,
-                    " Not found transaction receipt proof, tx hash: " + txHash);
-        }
-
-        return new TransactionProof(transAndProof, receiptAndProof);
     }
 
-    public Response handleGetTransactionProof(Request request) {
-        Response response = new Response();
-        try {
-            String txHash = new String(request.getData(), StandardCharsets.UTF_8);
-            TransactionProof transactionProof = getTransactionProof(txHash);
-
-            response.setErrorCode(BCOSStatusCode.Success);
-            response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
-
-            response.setData(objectMapper.writeValueAsBytes(transactionProof));
-            logger.debug(
-                    " getTransactionProof, tx hash: {}, transAndProof: {}, receiptAndProof: {}",
-                    txHash,
-                    transactionProof.getTransAndProof(),
-                    transactionProof.getReceiptAndProof());
-        } catch (BCOSStubException e) {
-            response.setErrorCode(e.getErrorCode());
-            response.setErrorMessage(e.getMessage());
-        } catch (Exception e) {
-            logger.warn(" handleGetTransactionProof Exception, e: {}", e);
-            response.setErrorCode(BCOSStatusCode.HandleGetTransactionProofFailed);
-            response.setErrorMessage(" errorMessage: " + e.getMessage());
-        }
-
-        return response;
+    private void handleAsyncGetTransactionProof(Request request, Callback callback) {
+        String txHash = new String(request.getData(), StandardCharsets.UTF_8);
+        asyncGetTransactionProof(
+                txHash,
+                (exception, transactionProof) -> {
+                    Response response = new Response();
+                    try {
+                        response.setErrorCode(BCOSStatusCode.Success);
+                        response.setErrorMessage(
+                                BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
+                        response.setData(objectMapper.writeValueAsBytes(transactionProof));
+                        logger.debug(
+                                " getTransactionProof, tx hash: {}, transAndProof: {}, receiptAndProof: {}",
+                                txHash,
+                                transactionProof.getTransAndProof(),
+                                transactionProof.getReceiptAndProof());
+                    } catch (Exception e) {
+                        logger.warn(" handleGetTransactionProof Exception,", e);
+                        response.setErrorCode(BCOSStatusCode.HandleGetTransactionProofFailed);
+                        response.setErrorMessage(" errorMessage: " + e.getMessage());
+                    }
+                    callback.onResponse(response);
+                });
     }
 
     /**

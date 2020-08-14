@@ -405,23 +405,23 @@ public class BCOSStubCallContractIntegTest {
         assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.SendTransactionNotSuccessStatus);
     }
 
-    @Test
-    public void getTransactionReceiptTest() throws Exception {
-        Path path = Path.decode("a.b.HelloWorld");
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path, "addPath", new String[]{"a.b.c"});
-        TransactionResponse transactionResponse =
-                driver.sendTransaction(requestTransactionContext, connection);
-        assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.Success);
-        assertTrue(Objects.nonNull(transactionResponse.getHash()));
-
-        TransactionProof transactionProof = ((BCOSDriver) driver).requestTransactionProof(transactionResponse.getHash(), connection);
-        TransactionReceipt transactionReceipt = transactionProof.getReceiptAndProof().getTransactionReceipt();
-
-        assertEquals(transactionReceipt.getTransactionHash(), transactionResponse.getHash());
-        assertEquals(transactionReceipt.getBlockNumber().longValue(), transactionResponse.getBlockNumber());
-
-    }
+//    @Test
+//    public void getTransactionReceiptTest() throws Exception {
+//        Path path = Path.decode("a.b.HelloWorld");
+//        TransactionContext<TransactionRequest> requestTransactionContext =
+//                createTransactionRequestContext(path, "addPath", new String[]{"a.b.c"});
+//        TransactionResponse transactionResponse =
+//                driver.sendTransaction(requestTransactionContext, connection);
+//        assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.Success);
+//        assertTrue(Objects.nonNull(transactionResponse.getHash()));
+//
+//        TransactionProof transactionProof = ((BCOSDriver) driver).requestTransactionProof(transactionResponse.getHash(), connection);
+//        TransactionReceipt transactionReceipt = transactionProof.getReceiptAndProof().getTransactionReceipt();
+//
+//        assertEquals(transactionReceipt.getTransactionHash(), transactionResponse.getHash());
+//        assertEquals(transactionReceipt.getBlockNumber().longValue(), transactionResponse.getBlockNumber());
+//
+//    }
 
     @Test
     public void getVerifiedTransactionNotExistTest() throws Exception {

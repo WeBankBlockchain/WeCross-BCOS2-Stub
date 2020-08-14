@@ -6,11 +6,7 @@ import static junit.framework.TestCase.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.webank.wecross.stub.BlockHeader;
-import com.webank.wecross.stub.Request;
-import com.webank.wecross.stub.ResourceInfo;
-import com.webank.wecross.stub.Response;
-import com.webank.wecross.stub.TransactionRequest;
+import com.webank.wecross.stub.*;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
@@ -19,7 +15,6 @@ import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
-import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperCallNotSucStatus;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImplMock;
@@ -37,7 +32,6 @@ import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.channel.StatusCode;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Transaction;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.junit.Test;
 
@@ -395,32 +389,6 @@ public class BCOSConnectionTest {
     }
 
     @Test
-    public void handleGetTransactionProofTest() throws IOException {
-        String hash = "0x633a3386a189455354c058af6606d705697f3b216ad555958dc680f68cc4e99d";
-        Request request = new Request();
-        request.setType(BCOSRequestType.GET_TRANSACTION_PROOF);
-        request.setData(hash.getBytes(StandardCharsets.UTF_8));
-
-        Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
-        BCOSConnection connection = new BCOSConnection(web3jWrapper);
-        Response response = connection.send(request);
-
-        assertEquals(response.getErrorCode(), BCOSStatusCode.Success);
-        TransactionProof transactionProof =
-                ObjectMapperFactory.getObjectMapper()
-                        .readValue(response.getData(), TransactionProof.class);
-        TransactionReceipt transactionReceipt =
-                transactionProof.getReceiptAndProof().getTransactionReceipt();
-        Transaction transaction = transactionProof.getTransAndProof().getTransaction();
-
-        assertEquals(transactionReceipt.getBlockNumber().longValue(), 35);
-        assertEquals(transaction.getBlockNumber().longValue(), 35);
-        assertEquals(
-                transactionReceipt.getTransactionHash(),
-                "0x633a3386a189455354c058af6606d705697f3b216ad555958dc680f68cc4e99d");
-    }
-
-    @Test
     public void handleFailedGetTransactionProofTest() throws IOException {
         String hash = "0x633a3386a189455354c058af6606d705697f3b216ad555958dc680f68cc4e99d";
         Request request = new Request();
@@ -431,20 +399,6 @@ public class BCOSConnectionTest {
         BCOSConnection connection = new BCOSConnection(web3jWrapper);
         Response response = connection.send(request);
 
-        assertEquals(response.getErrorCode(), BCOSStatusCode.HandleGetTransactionProofFailed);
-    }
-
-    @Test
-    public void handleFailedGetTransactionProofTest0() throws IOException {
-        String hash = "0x633a3386a189455354c058af6606d705697f3b216ad555958dc680f68cc4e99d";
-        Request request = new Request();
-        request.setType(BCOSRequestType.GET_TRANSACTION_PROOF);
-        request.setData(hash.getBytes(StandardCharsets.UTF_8));
-
-        Web3jWrapper web3jWrapper = new Web3jWrapperWithNullMock();
-        BCOSConnection connection = new BCOSConnection(web3jWrapper);
-        Response response = connection.send(request);
-
-        assertEquals(response.getErrorCode(), BCOSStatusCode.TransactionProofNotExist);
+        assertEquals(response.getErrorCode(), BCOSStatusCode.UnrecognizedRequestType);
     }
 }
