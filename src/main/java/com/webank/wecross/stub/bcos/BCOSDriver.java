@@ -11,7 +11,6 @@ import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.ResourceInfo;
-import com.webank.wecross.stub.Response;
 import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.TransactionRequest;
@@ -37,7 +36,6 @@ import com.webank.wecross.stub.bcos.custom.CommandHandlerDispatcher;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.verify.MerkleValidation;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.security.InvalidParameterException;
 import java.util.Arrays;
@@ -1336,238 +1334,295 @@ public class BCOSDriver implements Driver {
             BlockHeaderManager blockHeaderManager,
             Connection connection,
             GetVerifiedTransactionCallback callback) {
-        try {
-            // get transaction proof
-            TransactionProof transactionProof =
-                    requestTransactionProof(transactionHash, connection);
-            TransactionReceipt receipt =
-                    transactionProof.getReceiptAndProof().getTransactionReceipt();
-            if (blockNumber != receipt.getBlockNumber().longValue()) {
-                logger.warn(
-                        " invalid blockNumber, blockNumber: {}, receipt blockNumber: {}",
-                        blockNumber,
-                        receipt.getBlockNumber());
-                blockNumber = receipt.getBlockNumber().longValue();
-            }
 
-            long finalBlockNumber = blockNumber;
-            MerkleValidation merkleValidation = new MerkleValidation();
-            merkleValidation.verifyTransactionProof(
-                    blockNumber,
-                    transactionHash,
-                    blockHeaderManager,
-                    transactionProof,
-                    verifyException -> {
-                        if (Objects.nonNull(verifyException)) {
-                            callback.onResponse(verifyException, null);
-                            return;
+        final Long[] finalBlockNumber = {blockNumber};
+        // get transaction proof
+        asyncRequestTransactionProof(
+                transactionHash,
+                connection,
+                (exception, proof) -> {
+                    if (Objects.nonNull(exception)) {
+                        logger.warn("transactionHash: {} exception: ", transactionHash, exception);
+                        callback.onResponse(exception, null);
+                        return;
+                    }
+
+                    try {
+                        TransactionReceipt receipt =
+                                proof.getReceiptAndProof().getTransactionReceipt();
+                        if (finalBlockNumber[0] != receipt.getBlockNumber().longValue()) {
+                            logger.warn(
+                                    " invalid blockNumber, blockNumber: {}, receipt blockNumber: {}",
+                                    finalBlockNumber[0],
+                                    receipt.getBlockNumber());
+                            finalBlockNumber[0] = receipt.getBlockNumber().longValue();
                         }
 
-                        String proxyInput =
-                                transactionProof
-                                        .getReceiptAndProof()
-                                        .getTransactionReceipt()
-                                        .getInput();
-
-                        String proxyOutput =
-                                transactionProof
-                                        .getReceiptAndProof()
-                                        .getTransactionReceipt()
-                                        .getOutput();
-
-                        String methodId = "";
-                        String input = "";
-
-                        if (proxyInput.startsWith(FunctionUtility.ProxySendTXMethodId)) {
-                            Tuple2<String, byte[]> proxyResult =
-                                    FunctionUtility.getSendTransactionProxyWithoutTxIdFunctionInput(
-                                            proxyInput);
-                            String resource = proxyResult.getValue1();
-                            input = Numeric.toHexString(proxyResult.getValue2());
-                            methodId =
-                                    input.substring(0, FunctionUtility.MethodIDWithHexPrefixLength);
-                            input = input.substring(FunctionUtility.MethodIDWithHexPrefixLength);
-
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("  resource: {}, methodId: {}", resource, methodId);
-                            }
-
-                            if (!path.getResource().equals(resource)) {
-                                callback.onResponse(
-                                        new Exception(
-                                                " Resource does not matches, expected: "
-                                                        + path.getResource()
-                                                        + " ,actual: "
-                                                        + resource),
-                                        null);
-                                return;
-                            }
-
-                        } else {
-                            Tuple5<String, BigInteger, String, String, byte[]> proxyInputResult =
-                                    FunctionUtility.getSendTransactionProxyFunctionInput(
-                                            proxyInput);
-
-                            String transactionID = proxyInputResult.getValue1();
-                            BigInteger seq = proxyInputResult.getValue2();
-                            String strPath = proxyInputResult.getValue3();
-                            String methodSignature = proxyInputResult.getValue4();
-
-                            input = Numeric.toHexString(proxyInputResult.getValue5());
-                            methodId = FunctionEncoder.buildMethodId(methodSignature);
-
-                            if (logger.isDebugEnabled()) {
-                                logger.debug(
-                                        "transactionID: {}, seq: {}, path: {}, method: {}, methodId: {}",
-                                        transactionID,
-                                        seq,
-                                        strPath,
-                                        methodSignature,
-                                        methodId);
-                            }
-
-                            Path proxyPath = null;
-                            try {
-                                proxyPath = Path.decode(strPath);
-                                if (!path.equals(proxyPath)) {
-                                    callback.onResponse(
-                                            new Exception(
-                                                    " Path does not matches, expected: "
-                                                            + path.toString()
-                                                            + " ,actual: "
-                                                            + strPath),
-                                            null);
-                                    return;
-                                }
-                            } catch (Exception e) {
-                                logger.error(" e: ", e);
-                                callback.onResponse(
-                                        new Exception(
-                                                " invalid path format, path: "
-                                                        + strPath
-                                                        + " ,e: "
-                                                        + e.getMessage()),
-                                        null);
-                                return;
-                            }
-                        }
-
-                        // query ABI
-                        String finalMethodId = methodId;
-                        String finalInput = input;
-                        asyncCnsService.queryABI(
-                                path.getResource(),
-                                this,
-                                connection,
-                                (queryABIException, abi) -> {
-                                    if (Objects.nonNull(queryABIException)) {
-                                        logger.error(" e: ", queryABIException);
-                                        callback.onResponse(
-                                                new TransactionException(
-                                                        BCOSStatusCode.QueryAbiFailed,
-                                                        queryABIException.getMessage()),
-                                                null);
+                        MerkleValidation merkleValidation = new MerkleValidation();
+                        merkleValidation.verifyTransactionProof(
+                                finalBlockNumber[0],
+                                transactionHash,
+                                blockHeaderManager,
+                                proof,
+                                verifyException -> {
+                                    if (Objects.nonNull(verifyException)) {
+                                        callback.onResponse(verifyException, null);
                                         return;
                                     }
 
-                                    ABIDefinition function =
-                                            ABIDefinitionFactory.loadABI(abi)
-                                                    .getMethodIDToFunctions()
-                                                    .get(finalMethodId);
+                                    String proxyInput =
+                                            proof.getReceiptAndProof()
+                                                    .getTransactionReceipt()
+                                                    .getInput();
 
-                                    if (Objects.isNull(function)) {
-                                        // logger.error(" e: ", queryABIException);
-                                        callback.onResponse(
-                                                new TransactionException(
-                                                        BCOSStatusCode.MethodNotExist,
-                                                        "methodId not found in abi, methodId: "
-                                                                + finalMethodId),
-                                                null);
-                                        return;
+                                    String proxyOutput =
+                                            proof.getReceiptAndProof()
+                                                    .getTransactionReceipt()
+                                                    .getOutput();
+
+                                    String methodId;
+                                    String input;
+
+                                    if (proxyInput.startsWith(
+                                            FunctionUtility.ProxySendTXMethodId)) {
+                                        Tuple2<String, byte[]> proxyResult =
+                                                FunctionUtility
+                                                        .getSendTransactionProxyWithoutTxIdFunctionInput(
+                                                                proxyInput);
+                                        String resource = proxyResult.getValue1();
+                                        input = Numeric.toHexString(proxyResult.getValue2());
+                                        methodId =
+                                                input.substring(
+                                                        0,
+                                                        FunctionUtility
+                                                                .MethodIDWithHexPrefixLength);
+                                        input =
+                                                input.substring(
+                                                        FunctionUtility
+                                                                .MethodIDWithHexPrefixLength);
+
+                                        if (logger.isDebugEnabled()) {
+                                            logger.debug(
+                                                    "  resource: {}, methodId: {}",
+                                                    resource,
+                                                    methodId);
+                                        }
+
+                                        if (!path.getResource().equals(resource)) {
+                                            callback.onResponse(
+                                                    new Exception(
+                                                            " Resource does not matches, expected: "
+                                                                    + path.getResource()
+                                                                    + " ,actual: "
+                                                                    + resource),
+                                                    null);
+                                            return;
+                                        }
+
+                                    } else {
+                                        Tuple5<String, BigInteger, String, String, byte[]>
+                                                proxyInputResult =
+                                                        FunctionUtility
+                                                                .getSendTransactionProxyFunctionInput(
+                                                                        proxyInput);
+
+                                        String transactionID = proxyInputResult.getValue1();
+                                        BigInteger seq = proxyInputResult.getValue2();
+                                        String strPath = proxyInputResult.getValue3();
+                                        String methodSignature = proxyInputResult.getValue4();
+
+                                        input = Numeric.toHexString(proxyInputResult.getValue5());
+                                        methodId = FunctionEncoder.buildMethodId(methodSignature);
+
+                                        if (logger.isDebugEnabled()) {
+                                            logger.debug(
+                                                    "transactionID: {}, seq: {}, path: {}, method: {}, methodId: {}",
+                                                    transactionID,
+                                                    seq,
+                                                    strPath,
+                                                    methodSignature,
+                                                    methodId);
+                                        }
+
+                                        Path proxyPath;
+                                        try {
+                                            proxyPath = Path.decode(strPath);
+                                            if (!path.equals(proxyPath)) {
+                                                callback.onResponse(
+                                                        new Exception(
+                                                                " Path does not matches, expected: "
+                                                                        + path.toString()
+                                                                        + " ,actual: "
+                                                                        + strPath),
+                                                        null);
+                                                return;
+                                            }
+                                        } catch (Exception e) {
+                                            logger.error(" e: ", e);
+                                            callback.onResponse(
+                                                    new Exception(
+                                                            " invalid path format, path: "
+                                                                    + strPath
+                                                                    + " ,e: "
+                                                                    + e.getMessage()),
+                                                    null);
+                                            return;
+                                        }
                                     }
 
-                                    ABIObject inputObject =
-                                            ABIObjectFactory.createInputObject(function);
+                                    // query ABI
+                                    String finalMethodId = methodId;
+                                    String finalInput = input;
+                                    asyncCnsService.queryABI(
+                                            path.getResource(),
+                                            this,
+                                            connection,
+                                            (queryABIException, abi) -> {
+                                                if (Objects.nonNull(queryABIException)) {
+                                                    logger.error(" e: ", queryABIException);
+                                                    callback.onResponse(
+                                                            new TransactionException(
+                                                                    BCOSStatusCode.QueryAbiFailed,
+                                                                    queryABIException.getMessage()),
+                                                            null);
+                                                    return;
+                                                }
 
-                                    List<String> inputParams =
-                                            abiCodecJsonWrapper.decode(inputObject, finalInput);
+                                                ABIDefinition function =
+                                                        ABIDefinitionFactory.loadABI(abi)
+                                                                .getMethodIDToFunctions()
+                                                                .get(finalMethodId);
 
-                                    TransactionRequest transactionRequest =
-                                            new TransactionRequest();
-                                    transactionRequest.setMethod(function.getName());
-                                    /** decode input args from input */
-                                    transactionRequest.setArgs(inputParams.toArray(new String[0]));
+                                                if (Objects.isNull(function)) {
+                                                    // logger.error(" e: ", queryABIException);
+                                                    callback.onResponse(
+                                                            new TransactionException(
+                                                                    BCOSStatusCode.MethodNotExist,
+                                                                    "methodId not found in abi, methodId: "
+                                                                            + finalMethodId),
+                                                            null);
+                                                    return;
+                                                }
 
-                                    TransactionResponse transactionResponse =
-                                            new TransactionResponse();
-                                    transactionResponse.setHash(transactionHash);
-                                    transactionResponse.setBlockNumber(
-                                            receipt.getBlockNumber().longValue());
+                                                ABIObject inputObject =
+                                                        ABIObjectFactory.createInputObject(
+                                                                function);
 
-                                    /** set error code and error message info */
-                                    transactionResponse.setErrorMessage(
-                                            StatusCode.getStatusMessage(receipt.getStatus()));
+                                                List<String> inputParams =
+                                                        abiCodecJsonWrapper.decode(
+                                                                inputObject, finalInput);
 
-                                    if (StatusCode.Success.equals(receipt.getStatus())) {
-                                        ABIObject outputObject =
-                                                ABIObjectFactory.createOutputObject(function);
-                                        List<String> outputParams =
-                                                abiCodecJsonWrapper.decode(
-                                                        outputObject, proxyOutput.substring(130));
-                                        /** decode output from output */
-                                        transactionResponse.setResult(
-                                                outputParams.toArray(new String[0]));
-                                    }
+                                                TransactionRequest transactionRequest =
+                                                        new TransactionRequest();
+                                                transactionRequest.setMethod(function.getName());
+                                                /** decode input args from input */
+                                                transactionRequest.setArgs(
+                                                        inputParams.toArray(new String[0]));
 
-                                    BigInteger statusCode =
-                                            new BigInteger(
-                                                    Numeric.cleanHexPrefix(receipt.getStatus()),
-                                                    16);
-                                    transactionResponse.setErrorCode(statusCode.intValue());
+                                                TransactionResponse transactionResponse =
+                                                        new TransactionResponse();
+                                                transactionResponse.setHash(transactionHash);
+                                                transactionResponse.setBlockNumber(
+                                                        receipt.getBlockNumber().longValue());
 
-                                    VerifiedTransaction verifiedTransaction =
-                                            new VerifiedTransaction(
-                                                    finalBlockNumber,
-                                                    transactionHash,
-                                                    path,
-                                                    receipt.getTo(),
-                                                    transactionRequest,
-                                                    transactionResponse);
+                                                /** set error code and error message info */
+                                                transactionResponse.setErrorMessage(
+                                                        StatusCode.getStatusMessage(
+                                                                receipt.getStatus()));
 
-                                    logger.trace(" VerifiedTransaction: {}", verifiedTransaction);
-                                    callback.onResponse(null, verifiedTransaction);
+                                                if (StatusCode.Success.equals(
+                                                        receipt.getStatus())) {
+                                                    ABIObject outputObject =
+                                                            ABIObjectFactory.createOutputObject(
+                                                                    function);
+                                                    List<String> outputParams =
+                                                            abiCodecJsonWrapper.decode(
+                                                                    outputObject,
+                                                                    proxyOutput.substring(130));
+                                                    /** decode output from output */
+                                                    transactionResponse.setResult(
+                                                            outputParams.toArray(new String[0]));
+                                                }
+
+                                                BigInteger statusCode =
+                                                        new BigInteger(
+                                                                Numeric.cleanHexPrefix(
+                                                                        receipt.getStatus()),
+                                                                16);
+                                                transactionResponse.setErrorCode(
+                                                        statusCode.intValue());
+
+                                                VerifiedTransaction verifiedTransaction =
+                                                        new VerifiedTransaction(
+                                                                finalBlockNumber[0],
+                                                                transactionHash,
+                                                                path,
+                                                                receipt.getTo(),
+                                                                transactionRequest,
+                                                                transactionResponse);
+
+                                                logger.trace(
+                                                        " VerifiedTransaction: {}",
+                                                        verifiedTransaction);
+                                                callback.onResponse(null, verifiedTransaction);
+                                            });
                                 });
-                    });
-        } catch (Exception e) {
-            logger.warn("transactionHash: {} exception: ", transactionHash, e);
-            callback.onResponse(e, null);
-        }
+                    } catch (Exception e) {
+                        logger.warn("transactionHash: {} exception: ", transactionHash, e);
+                        callback.onResponse(e, null);
+                    }
+                });
+    }
+
+    private interface RequestTransactionProofCallback {
+        void onResponse(BCOSStubException e, TransactionProof proof);
     }
 
     /**
      * @param transactionHash
      * @param connection
-     * @return
-     * @throws IOException
      */
-    public TransactionProof requestTransactionProof(String transactionHash, Connection connection)
-            throws IOException, BCOSStubException {
+    private void asyncRequestTransactionProof(
+            String transactionHash,
+            Connection connection,
+            RequestTransactionProofCallback callback) {
 
         Request request =
                 RequestFactory.requestBuilder(
                         BCOSRequestType.GET_TRANSACTION_PROOF, transactionHash);
-        Response resp = connection.send(request);
-        if (resp.getErrorCode() != BCOSStatusCode.Success) {
-            throw new BCOSStubException(resp.getErrorCode(), resp.getErrorMessage());
-        }
+        connection.asyncSend(
+                request,
+                response -> {
+                    try {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug(
+                                    "Request proof, request: {}, response: {}", request, response);
+                        }
 
-        TransactionProof transactionProof =
-                objectMapper.readValue(resp.getData(), TransactionProof.class);
+                        if (response.getErrorCode() != BCOSStatusCode.Success) {
+                            callback.onResponse(
+                                    new BCOSStubException(
+                                            response.getErrorCode(), response.getErrorMessage()),
+                                    null);
+                            return;
+                        }
 
-        logger.debug(
-                " transactionHash: {}, transactionProof: {}", transactionHash, transactionProof);
+                        TransactionProof transactionProof =
+                                objectMapper.readValue(response.getData(), TransactionProof.class);
+                        logger.debug(
+                                " transactionHash: {}, transactionProof: {}",
+                                transactionHash,
+                                transactionProof);
 
-        return transactionProof;
+                        callback.onResponse(null, transactionProof);
+                    } catch (Exception e) {
+                        callback.onResponse(
+                                new BCOSStubException(
+                                        BCOSStatusCode.UnclassifiedError,
+                                        "Request transaction proof failed"),
+                                null);
+                    }
+                });
     }
 
     @Override
