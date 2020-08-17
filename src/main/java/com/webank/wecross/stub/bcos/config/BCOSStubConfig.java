@@ -259,14 +259,10 @@ public class BCOSStubConfig {
             resourceInfo.getProperties().put(resource.getName(), resource.getValue());
             resourceInfo
                     .getProperties()
-                    .put(
-                            BCOSConstant.BCOS_RESOURCEINFO_GROUP_ID,
-                            resources.get(i).getChain().getGroupID());
+                    .put(BCOSConstant.BCOS_GROUP_ID, resources.get(i).getChain().getGroupID());
             resourceInfo
                     .getProperties()
-                    .put(
-                            BCOSConstant.BCOS_RESOURCEINFO_CHAIN_ID,
-                            resources.get(i).getChain().getChainID());
+                    .put(BCOSConstant.BCOS_CHAIN_ID, resources.get(i).getChain().getChainID());
 
             resourceInfos.add(resourceInfo);
         }
