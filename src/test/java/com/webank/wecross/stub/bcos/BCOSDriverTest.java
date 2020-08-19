@@ -10,12 +10,19 @@ import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.BlockHeaderManager;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
+import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
+import com.webank.wecross.stub.bcos.abi.ABICodecJsonWrapper;
+import com.webank.wecross.stub.bcos.abi.ABIDefinition;
+import com.webank.wecross.stub.bcos.abi.ABIDefinitionFactory;
+import com.webank.wecross.stub.bcos.abi.ABIObject;
+import com.webank.wecross.stub.bcos.abi.ABIObjectFactory;
+import com.webank.wecross.stub.bcos.abi.ContractABIDefinition;
 import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
@@ -32,6 +39,7 @@ import com.webank.wecross.stub.bcos.web3j.Web3jWrapperWithExceptionMock;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperWithNullMock;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Objects;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
@@ -111,10 +119,11 @@ public class BCOSDriverTest {
         String[] params = new String[] {"a", "b", "c"};
 
         TransactionRequest request = new TransactionRequest(func, params);
-        Function function = FunctionUtility.newFunction(func, params);
+        Function function = FunctionUtility.newDefaultFunction(func, params);
 
         TransactionParams transaction =
-                new TransactionParams(request, FunctionEncoder.encode(function), "0x0", "0x1");
+                new TransactionParams(
+                        request, FunctionEncoder.encode(function), TransactionParams.TP_YPE.CALL);
 
         byte[] data = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction);
         TransactionContext<TransactionRequest> requestTransactionContext =
@@ -123,47 +132,13 @@ public class BCOSDriverTest {
         assertEquals(requestTransactionContext.getData().getArgs().length, params.length);
     }
 
-    /*
-        @Test
-        public void decodeCallTransactionRequestExceptionTest() throws Exception {
-            assertTrue(Objects.isNull(driver.decodeTransactionRequest(null)));
-
-            String func = "func";
-            String[] params = new String[] {"a", "b", "c"};
-
-            TransactionRequest request = new TransactionRequest(func, params);
-            Function function = FunctionUtility.newFunction(func, params);
-
-            TransactionParams transaction0 =
-                    new TransactionParams(null, FunctionEncoder.encode(function), "0x0", "0x1");
-
-            byte[] data0 = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction0);
-            TransactionContext<TransactionRequest> requestTransactionContext0 =
-                    driver.decodeTransactionRequest(data0);
-            assertTrue(requestTransactionContext0 == null);
-
-            TransactionParams transaction1 = new TransactionParams(request, null, "0x0", "0x1");
-
-            byte[] data1 = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction1);
-            TransactionContext<TransactionRequest> requestTransactionContext1 =
-                    driver.decodeTransactionRequest(data1);
-            assertTrue(requestTransactionContext1 == null);
-
-            TransactionParams transaction2 = new TransactionParams(request, "0x00", "0x0", "0x1");
-
-            byte[] data2 = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction2);
-            TransactionContext<TransactionRequest> requestTransactionContext2 =
-                    driver.decodeTransactionRequest(data2);
-            assertTrue(requestTransactionContext2 == null);
-        }
-    */
     @Test
     public void decodeSendTransactionTransactionRequestTest() throws Exception {
         String func = "func";
         String[] params = new String[] {"a", "b", "c"};
 
         TransactionRequest request = new TransactionRequest(func, params);
-        Function function = FunctionUtility.newFunction(func, params);
+        Function function = FunctionUtility.newDefaultFunction(func, params);
         String signTx =
                 SignTransaction.sign(
                         GenCredential.create(),
@@ -173,13 +148,88 @@ public class BCOSDriverTest {
                         BigInteger.valueOf(1111),
                         FunctionEncoder.encode(function));
 
-        TransactionParams transaction = new TransactionParams(request, signTx, null, null);
+        TransactionParams transaction =
+                new TransactionParams(request, signTx, TransactionParams.TP_YPE.SEND_TX);
 
         byte[] data = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction);
         TransactionContext<TransactionRequest> requestTransactionContext =
                 driver.decodeTransactionRequest(data);
         assertEquals(requestTransactionContext.getData().getMethod(), func);
         assertEquals(requestTransactionContext.getData().getArgs().length, params.length);
+    }
+
+    @Test
+    public void decodeProxySendTransactionTransactionRequestTest() throws Exception {
+        String func = "set";
+        String[] params = new String[] {"a"};
+
+        String abi =
+                "[{\"constant\":false,\"inputs\":[{\"name\":\"n\",\"type\":\"string\"}],\"name\":\"set\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"get\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]";
+
+        ContractABIDefinition contractABIDefinition = ABIDefinitionFactory.loadABI(abi);
+        ABIDefinition abiDefinition = contractABIDefinition.getFunctions().get("set").get(0);
+        ABIObject inputObject = ABIObjectFactory.createInputObject(abiDefinition);
+        ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
+        ABIObject encoded = abiCodecJsonWrapper.encode(inputObject, Arrays.asList(params));
+
+        TransactionRequest request = new TransactionRequest(func, params);
+        Function function =
+                FunctionUtility.newSendTransactionProxyFunction(
+                        "1", 1, "a.b.Hello", "set(string)", encoded.encode());
+        String signTx =
+                SignTransaction.sign(
+                        GenCredential.create(),
+                        "0x0",
+                        BigInteger.valueOf(Web3jDefaultConfig.DEFAULT_CHAIN_ID),
+                        BigInteger.valueOf(Web3jDefaultConfig.DEFAULT_GROUP_ID),
+                        BigInteger.valueOf(1111),
+                        FunctionEncoder.encode(function));
+
+        TransactionParams transaction =
+                new TransactionParams(request, signTx, TransactionParams.TP_YPE.SEND_TX_BY_PROXY);
+        transaction.setAbi(abi);
+
+        byte[] data = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction);
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                driver.decodeTransactionRequest(data);
+        assertEquals(requestTransactionContext.getData().getMethod(), func);
+        assertEquals(requestTransactionContext.getData().getArgs().length, params.length);
+        assertEquals(requestTransactionContext.getData().getArgs()[0], params[0]);
+    }
+
+    @Test
+    public void decodeProxyCallTransactionRequestTest() throws Exception {
+        String func = "set";
+        String[] params = new String[] {"a"};
+
+        String abi =
+                "[{\"constant\":false,\"inputs\":[{\"name\":\"n\",\"type\":\"string\"}],\"name\":\"set\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"get\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]";
+
+        ContractABIDefinition contractABIDefinition = ABIDefinitionFactory.loadABI(abi);
+        ABIDefinition abiDefinition = contractABIDefinition.getFunctions().get("set").get(0);
+        ABIObject inputObject = ABIObjectFactory.createInputObject(abiDefinition);
+        ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
+        ABIObject encoded = abiCodecJsonWrapper.encode(inputObject, Arrays.asList(params));
+
+        Function function =
+                FunctionUtility.newConstantCallProxyFunction(
+                        "1", "a.b.Hello", "set(string)", encoded.encode());
+
+        TransactionRequest request = new TransactionRequest(func, params);
+
+        TransactionParams transaction =
+                new TransactionParams(
+                        request,
+                        FunctionEncoder.encode(function),
+                        TransactionParams.TP_YPE.CALL_BY_PROXY);
+        transaction.setAbi(abi);
+
+        byte[] data = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction);
+        TransactionContext<TransactionRequest> requestTransactionContext =
+                driver.decodeTransactionRequest(data);
+        assertEquals(requestTransactionContext.getData().getMethod(), func);
+        assertEquals(requestTransactionContext.getData().getArgs().length, params.length);
+        assertEquals(requestTransactionContext.getData().getArgs()[0], params[0]);
     }
 
     @Test
@@ -340,81 +390,13 @@ public class BCOSDriverTest {
                 transactionResponse.getErrorCode().intValue(), BCOSStatusCode.CallNotSuccessStatus);
     }
 
-    /*
     @Test
-    public void sendTransactionTest() throws Exception {
-
-        Request request = new Request();
-        request.setType(BCOSRequestType.SEND_TRANSACTION);
-
-        String hash = "0x8b3946912d1133f9fb0722a7b607db2456d468386c2e86b035e81ef91d94eb90";
-        String funName = "funcName";
-        String[] params = new String[] {"abc", "def", "hig", "xxxxx"};
-
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createSendTxTransactionRequestContext(funName, params);
-        TransactionResponse transactionResponse =
-                driver.sendTransaction(requestTransactionContext, txVerifyConnection);
-
-        assertTrue(transactionResponse.getErrorCode() == 0);
-        assertEquals(transactionResponse.getHash(), hash);
-    }
-    */
-
-    //    @Test
-    //    public void sendTransactionFailedTest() {
-    //
-    //        Request request = new Request();
-    //        request.setType(BCOSRequestType.SEND_TRANSACTION);
-    //
-    //        String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
-    //        String funName = "funcName";
-    //        String[] params = new String[] {"abc", "def", "hig", "xxxxx"};
-    //
-    //        TransactionContext<TransactionRequest> requestTransactionContext =
-    //                createTransactionRequestContext(funName, params);
-    //        TransactionResponse transactionResponse = null;
-    //        try {
-    //            transactionResponse =
-    //                    driver.sendTransaction(requestTransactionContext, exceptionConnection);
-    //        } catch (TransactionException e) {
-    //            assertTrue(e.getErrorCode().intValue() ==
-    // BCOSStatusCode.HandleSendTransactionFailed);
-    //        }
-    //
-    //        assertTrue(Objects.isNull(transactionResponse));
-    //    }
-
-    //    @Test
-    //    public void sendTransactionFailedTest0() {
-    //
-    //        Request request = new Request();
-    //        request.setType(BCOSRequestType.SEND_TRANSACTION);
-    //
-    //        String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
-    //        String funName = "funcName";
-    //        String[] params = new String[] {"abc", "def", "hig", "xxxxx"};
-    //
-    //        TransactionContext<TransactionRequest> requestTransactionContext =
-    //                createTransactionRequestContext(funName, params);
-    //        TransactionResponse transactionResponse = null;
-    //        try {
-    //            transactionResponse =
-    //                    driver.sendTransaction(requestTransactionContext, nonExistConnection);
-    //        } catch (TransactionException e) {
-    //            assertTrue(e.getErrorCode().intValue() ==
-    // BCOSStatusCode.TransactionReceiptNotExist);
-    //        }
-    //
-    //        assertTrue(Objects.isNull(transactionResponse));
-    //    }
-
-    @Test
-    public void getVerifyTransactionTest() throws IOException {
+    public void getVerifyTransactionTest() throws Exception {
         String transactionHash =
                 "0x8b3946912d1133f9fb0722a7b607db2456d468386c2e86b035e81ef91d94eb90";
         long blockNumber = 9;
         driver.asyncGetVerifiedTransaction(
+                Path.decode("a.b.c"),
                 transactionHash,
                 blockNumber,
                 txVerifyBlockHeaderManager,
@@ -426,11 +408,12 @@ public class BCOSDriverTest {
     }
 
     @Test
-    public void getVerifyTransactionExceptionTest() throws IOException {
+    public void getVerifyTransactionExceptionTest() throws Exception {
         String transactionHash =
                 "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         long blockNumber = 11111;
         driver.asyncGetVerifiedTransaction(
+                Path.decode("a.b.c"),
                 transactionHash,
                 blockNumber,
                 blockHeaderManager,
@@ -439,11 +422,12 @@ public class BCOSDriverTest {
     }
 
     @Test
-    public void getVerifyTransactionNotExistTest() throws IOException {
+    public void getVerifyTransactionNotExistTest() throws Exception {
         String transactionHash =
                 "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         long blockNumber = 11111;
         driver.asyncGetVerifiedTransaction(
+                Path.decode("a.b.c"),
                 transactionHash,
                 blockNumber,
                 blockHeaderManager,
@@ -494,6 +478,7 @@ public class BCOSDriverTest {
             assertTrue(e.getMessage().equals("BlockHeaderManager is null"));
         }
 
+        /*
         try {
             TransactionContext<TransactionRequest> requestTransactionContext =
                     createTransactionRequestContext(
@@ -502,7 +487,7 @@ public class BCOSDriverTest {
         } catch (BCOSStubException e) {
             assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
             assertTrue(e.getMessage().equals("ResourceInfo is null"));
-        }
+        }*/
 
         try {
             TransactionContext<TransactionRequest> requestTransactionContext =
@@ -527,60 +512,4 @@ public class BCOSDriverTest {
             assertTrue(e.getMessage().equals("Method is null"));
         }
     }
-
-    //    @Test
-    //    public void checkPropertiesTest() {
-    //
-    //        String name = "HelloWeCross";
-    //        Map<Object, Object> properties = new HashMap<>();
-    //
-    //        BCOSDriver bcosDriver = (BCOSDriver) driver;
-    //        try {
-    //            ((BCOSDriver) driver).checkProperties(properties);
-    //        } catch (BCOSStubException e) {
-    //            assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
-    //            assertTrue(e.getMessage().equals(" Not found contract address, resource: " +
-    // name));
-    //        }
-    //
-    //        try {
-    //            properties.put(name, "0x0");
-    //            ((BCOSDriver) driver).checkProperties(name, properties);
-    //        } catch (BCOSStubException e) {
-    //            assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
-    //            assertTrue(e.getMessage().equals(" Not found groupId, resource: " + name));
-    //        }
-    //
-    //        try {
-    //            properties.put(BCOSConstant.BCOS_GROUP_ID, 1);
-    //            ((BCOSDriver) driver).checkProperties(name, properties);
-    //        } catch (BCOSStubException e) {
-    //            assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
-    //            assertTrue(e.getMessage().equals(" Not found chainId, resource: " + name));
-    //        }
-    //
-    //        try {
-    //            properties.put(name, 1);
-    //            ((BCOSDriver) driver).checkProperties(name, properties);
-    //        } catch (BCOSStubException e) {
-    //            assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
-    //            assertTrue(e.getMessage().startsWith("errorMessage"));
-    //        }
-    //
-    //        try {
-    //            properties.put(BCOSConstant.BCOS_GROUP_ID, "");
-    //            ((BCOSDriver) driver).checkProperties(name, properties);
-    //        } catch (BCOSStubException e) {
-    //            assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
-    //            assertTrue(e.getMessage().startsWith("errorMessage"));
-    //        }
-    //
-    //        try {
-    //            properties.put(BCOSConstant.BCOS_CHAIN_ID, "");
-    //            ((BCOSDriver) driver).checkProperties(name, properties);
-    //        } catch (BCOSStubException e) {
-    //            assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
-    //            assertTrue(e.getMessage().startsWith("errorMessage"));
-    //        }
-    //    }
 }

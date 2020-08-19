@@ -119,6 +119,6 @@ public class Web3jWrapperImplMock implements Web3jWrapper {
 
     @Override
     public Web3j getWeb3j() {
-        return null;
+        return new MockWeb3j();
     }
 }

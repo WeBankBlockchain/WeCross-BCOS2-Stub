@@ -17,6 +17,14 @@ public class TransactionProof {
         this.receiptAndProof = receiptAndProof;
     }
 
+    public void setTransAndProof(TransactionWithProof.TransAndProof transAndProof) {
+        this.transAndProof = transAndProof;
+    }
+
+    public void setReceiptAndProof(TransactionReceiptWithProof.ReceiptAndProof receiptAndProof) {
+        this.receiptAndProof = receiptAndProof;
+    }
+
     public TransactionWithProof.TransAndProof getTransAndProof() {
         return transAndProof;
     }

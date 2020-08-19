@@ -14,7 +14,7 @@ plugins {
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'com.webank.wecross'
-version '1.0.0-rc4-06301-SNAPSHOT'
+version '1.0.0-rc4'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -44,37 +44,35 @@ configurations {
     all*.exclude group: 'org.java-websocket', module: 'Java-WebSocket'
     all*.exclude group: 'org.antlr', module: '*'
     all*.exclude group: 'de.vandermeer', module: '*'
-    all*.exclude group: 'net.bytebuddy', module: 'byte-buddy'
     all*.exclude group: 'com.alibaba', module: 'druid'
     all*.exclude group: 'org.apache.httpcomponents', module: 'httpclient'
-    all*.exclude group: 'org.mockito', module: 'mockito-core'
     all*.exclude group: 'io.reactivex', module: 'rxjava'
     all*.exclude group: 'org.ethereum', module: 'solcJ-all'
     all*.exclude group: 'ch.qos.logback', module: 'logback-classic'
     all*.exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+    all*.exclude group: 'com.alibaba', module: 'fastjson'
 
     integTestImplementation.extendsFrom implementation
     integTestTestImplementation.extendsFrom testImplementation
-
-    all*.resolutionStrategy {
-        force 'com.alibaba:fastjson:1.2.67'
-    }
 }
 
 dependencies {
     // implementation 'com.webank:wecross-java-stub:1.0.0-rc2'
-    implementation 'com.webank:wecross-java-stub:1.0.0-rc4-07010-SNAPSHOT'
+    implementation 'com.webank:wecross-java-stub:1.0.0-rc4-07060-SNAPSHOT'
     implementation 'org.slf4j:slf4j-api:1.7.30'
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'
     implementation 'com.google.guava:guava:28.1-jre'
-    implementation 'org.fisco-bcos:web3sdk:2.4.0'
+    implementation 'org.fisco-bcos:web3sdk:2.5.1'
     implementation 'org.fisco-bcos:solcJ:0.5.2-rc1'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.slf4j:slf4j-log4j12:1.7.25'
-    // testImplementation 'org.springframework.boot:spring-boot-starter-test:2.1.4.RELEASE'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.1.13.RELEASE'
+
+    integTestImplementation 'junit:junit:4.12'
+    integTestImplementation 'org.slf4j:slf4j-log4j12:1.7.25'
 }
 
 sourceSets {
@@ -183,6 +181,14 @@ task cleanDistAndLogDir(type: Delete) {
 tasks.clean.dependsOn(tasks.cleanDistAndLogDir)
 
 test {
+    testLogging {
+        showStandardStreams = true
+        events 'passed', 'skipped', 'failed'
+    }
+
+}
+
+integTest {
     testLogging {
         showStandardStreams = true
         events 'passed', 'skipped', 'failed'

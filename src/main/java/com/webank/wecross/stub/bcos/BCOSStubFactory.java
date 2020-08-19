@@ -1,6 +1,11 @@
 package com.webank.wecross.stub.bcos;
 
-import com.webank.wecross.stub.*;
+import com.webank.wecross.stub.Account;
+import com.webank.wecross.stub.Connection;
+import com.webank.wecross.stub.Driver;
+import com.webank.wecross.stub.Stub;
+import com.webank.wecross.stub.StubFactory;
+import com.webank.wecross.stub.WeCrossContext;
 import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
 import com.webank.wecross.stub.bcos.custom.CommandHandlerDispatcher;
 import com.webank.wecross.stub.bcos.proxy.ProxyContractDeployment;
@@ -15,7 +20,10 @@ import org.apache.commons.io.FileUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
+import org.fisco.bcos.web3j.crypto.Credentials;
+import org.fisco.bcos.web3j.crypto.ECKeyPair;
 import org.fisco.bcos.web3j.crypto.EncryptType;
+import org.fisco.bcos.web3j.crypto.gm.GenCredential;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +43,8 @@ public class BCOSStubFactory implements StubFactory {
     public Driver newDriver() {
         logger.info("New driver type:{}", EncryptType.encryptType);
         BCOSDriver driver = new BCOSDriver();
-        CommandHandlerDispatcher commandHandlerDispatcher = new CommandHandlerDispatcher();
+        CommandHandlerDispatcher commandHandlerDispatcher =
+                new CommandHandlerDispatcher(driver.getAsyncCnsService());
         commandHandlerDispatcher.initializeCommandMapper();
         driver.setCommandHandlerDispatcher(commandHandlerDispatcher);
         return driver;
@@ -52,7 +61,8 @@ public class BCOSStubFactory implements StubFactory {
                 String errorMsg =
                         "WeCrossProxy error: WeCrossProxy contract has not been deployed!";
                 String help =
-                        "Please deploy WeCrossProxy contract by: " + ProxyContractDeployment.USAGE;
+                        "Please deploy WeCrossProxy contract by: "
+                                + ProxyContractDeployment.getUsage(path);
                 System.out.println(errorMsg + "\n" + help);
                 throw new Exception(errorMsg);
             }
@@ -87,8 +97,11 @@ public class BCOSStubFactory implements StubFactory {
             keyPairGenerator.initialize(256);
             KeyPair keyPair = keyPairGenerator.generateKeyPair();
             PrivateKey ecPrivateKey = keyPair.getPrivate();
+            Credentials credentials =
+                    GenCredential.create(ECKeyPair.create(keyPair)); // GM or normal
+            String accountAddress = credentials.getAddress();
 
-            String keyFile = path + "/account.key";
+            String keyFile = path + "/" + accountAddress + ".key";
             File file = new File(keyFile);
 
             if (!file.createNewFile()) {
@@ -106,8 +119,10 @@ public class BCOSStubFactory implements StubFactory {
             String accountTemplate =
                     "[account]\n"
                             + "    type='BCOS2.0'\n"
-                            + "    accountFile='account.key'\n"
-                            + "    password=''";
+                            + "    accountFile='"
+                            + file.getName()
+                            + "'\n"
+                            + "    password='' # if use *.p12 accountFile";
             String confFilePath = path + "/account.toml";
             File confFile = new File(confFilePath);
             if (!confFile.createNewFile()) {
@@ -122,6 +137,13 @@ public class BCOSStubFactory implements StubFactory {
                 fileWriter.close();
             }
 
+            String name = new File(path).getName();
+            System.out.println(
+                    "SUCCESS: Account \""
+                            + name
+                            + "\" config framework has been generated to \""
+                            + path
+                            + "\"");
         } catch (Exception e) {
             logger.error("Exception: ", e);
         }
@@ -149,13 +171,7 @@ public class BCOSStubFactory implements StubFactory {
                             + "    sslKey = 'sdk.key'\n"
                             + "    timeout = 300000  # ms, default 60000ms\n"
                             + "    connectionsStr = ['127.0.0.1:20200']\n"
-                            + "\n"
-                            + "# resources is a list\n"
-                            + "[[resources]]\n"
-                            + "    # name cannot be repeated\n"
-                            + "    name = 'HelloWeCross'\n"
-                            + "    type = 'BCOS_CONTRACT'\n"
-                            + "    contractAddress = '0x0'";
+                            + "\n";
             String confFilePath = path + "/stub.toml";
             File confFile = new File(confFilePath);
             if (!confFile.createNewFile()) {
@@ -172,6 +188,12 @@ public class BCOSStubFactory implements StubFactory {
 
             generateProxyContract(path);
 
+            System.out.println(
+                    "SUCCESS: Chain \""
+                            + chainName
+                            + "\" config framework has been generated to \""
+                            + path
+                            + "\"");
         } catch (Exception e) {
             logger.error("Exception: ", e);
         }
@@ -194,9 +216,14 @@ public class BCOSStubFactory implements StubFactory {
         System.out.println("For deploy proxy contract:");
         System.out.println(
                 "    java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.normal.proxy.ProxyContractDeployment");
+        System.out.println("For chain performance test, please run the command for more info:");
         System.out.println(
-                "For pure chain performance test, please run the command for more info:");
+                "    Pure:    java -cp conf/:lib/*:plugin/* "
+                        + com.webank.wecross.stub.bcos.performance.hellowecross.PerformanceTest
+                                .class.getName());
         System.out.println(
-                "    java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.normal.performance.normal.PerformanceTest");
+                "    Proxy:   java -cp conf/:lib/*:plugin/* "
+                        + com.webank.wecross.stub.bcos.performance.hellowecross.proxy
+                                .PerformanceTest.class.getName());
     }
 }

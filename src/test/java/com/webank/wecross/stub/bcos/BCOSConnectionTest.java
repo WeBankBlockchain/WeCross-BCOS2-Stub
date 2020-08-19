@@ -6,11 +6,7 @@ import static junit.framework.TestCase.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.webank.wecross.stub.BlockHeader;
-import com.webank.wecross.stub.Request;
-import com.webank.wecross.stub.ResourceInfo;
-import com.webank.wecross.stub.Response;
-import com.webank.wecross.stub.TransactionRequest;
+import com.webank.wecross.stub.*;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
@@ -19,7 +15,6 @@ import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
-import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperCallNotSucStatus;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImplMock;
@@ -37,7 +32,6 @@ import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.channel.StatusCode;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Transaction;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.junit.Test;
 
@@ -184,13 +178,15 @@ public class BCOSConnectionTest {
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
         String[] params = new String[] {"abc", "def", "hig"};
-        Function function = FunctionUtility.newFunction(funName, params);
+        Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         String abi = FunctionEncoder.encode(function);
 
         TransactionRequest transactionRequest = new TransactionRequest(funName, params);
         TransactionParams transactionParams =
-                new TransactionParams(transactionRequest, abi, address, address);
+                new TransactionParams(transactionRequest, abi, TransactionParams.TP_YPE.CALL);
+        transactionParams.setFrom(address);
+        transactionParams.setTo(address);
 
         Request request = new Request();
         request.setType(BCOSRequestType.CALL);
@@ -206,7 +202,7 @@ public class BCOSConnectionTest {
 
         String data = callOutput.getOutput();
 
-        String[] strings = FunctionUtility.decodeOutput(data);
+        String[] strings = FunctionUtility.decodeDefaultOutput(data);
         assertEquals(strings.length, params.length);
 
         for (int i = 0; i < params.length; i++) {
@@ -223,13 +219,15 @@ public class BCOSConnectionTest {
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
         String[] params = new String[] {"abc", "def", "hig"};
-        Function function = FunctionUtility.newFunction(funName, params);
+        Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         String abi = FunctionEncoder.encode(function);
 
         TransactionRequest transactionRequest = new TransactionRequest(funName, params);
         TransactionParams transactionParams =
-                new TransactionParams(transactionRequest, abi, address, address);
+                new TransactionParams(transactionRequest, abi, TransactionParams.TP_YPE.CALL);
+        transactionParams.setTo(address);
+        transactionParams.setFrom(address);
 
         Request request = new Request();
         request.setType(BCOSRequestType.CALL);
@@ -248,13 +246,15 @@ public class BCOSConnectionTest {
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
         String[] params = new String[] {"abc", "def", "hig"};
-        Function function = FunctionUtility.newFunction(funName, params);
+        Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         String abi = FunctionEncoder.encode(function);
 
         TransactionRequest transactionRequest = new TransactionRequest(funName, params);
         TransactionParams transactionParams =
-                new TransactionParams(transactionRequest, abi, address, address);
+                new TransactionParams(transactionRequest, abi, TransactionParams.TP_YPE.CALL);
+        transactionParams.setTo(address);
+        transactionParams.setFrom(address);
 
         Request request = new Request();
         request.setType(BCOSRequestType.CALL);
@@ -276,7 +276,7 @@ public class BCOSConnectionTest {
         String funName = "funcName";
         String[] params = new String[] {"abc", "def", "hig"};
 
-        Function function = FunctionUtility.newFunction(funName, params);
+        Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         String abi = FunctionEncoder.encode(function);
 
@@ -292,7 +292,8 @@ public class BCOSConnectionTest {
         TransactionRequest transactionRequest = new TransactionRequest();
         transactionRequest.setMethod(funName);
         transactionRequest.setArgs(params);
-        TransactionParams transaction1 = new TransactionParams(transactionRequest, sign);
+        TransactionParams transaction1 =
+                new TransactionParams(transactionRequest, sign, TransactionParams.TP_YPE.SEND_TX);
 
         request.setData(ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction1));
 
@@ -323,7 +324,7 @@ public class BCOSConnectionTest {
         String funName = "funcName";
         String[] params = new String[] {"abc", "def", "hig"};
 
-        Function function = FunctionUtility.newFunction(funName, params);
+        Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         String abi = FunctionEncoder.encode(function);
 
@@ -339,7 +340,8 @@ public class BCOSConnectionTest {
         TransactionRequest transactionRequest = new TransactionRequest();
         transactionRequest.setMethod(funName);
         transactionRequest.setArgs(params);
-        TransactionParams transaction1 = new TransactionParams(transactionRequest, sign);
+        TransactionParams transaction1 =
+                new TransactionParams(transactionRequest, sign, TransactionParams.TP_YPE.SEND_TX);
 
         request.setData(ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction1));
 
@@ -360,7 +362,7 @@ public class BCOSConnectionTest {
         String funName = "funcName";
         String[] params = new String[] {"abc", "def", "hig"};
 
-        Function function = FunctionUtility.newFunction(funName, params);
+        Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         String abi = FunctionEncoder.encode(function);
 
@@ -376,39 +378,14 @@ public class BCOSConnectionTest {
         TransactionRequest transactionRequest = new TransactionRequest();
         transactionRequest.setMethod(funName);
         transactionRequest.setArgs(params);
-        TransactionParams transaction1 = new TransactionParams(transactionRequest, sign);
+        TransactionParams transaction1 =
+                new TransactionParams(transactionRequest, sign, TransactionParams.TP_YPE.SEND_TX);
 
         request.setData(ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction1));
 
         Response response = connection.send(request);
 
         assertEquals(response.getErrorCode(), BCOSStatusCode.TransactionReceiptNotExist);
-    }
-
-    @Test
-    public void handleGetTransactionProofTest() throws IOException {
-        String hash = "0x633a3386a189455354c058af6606d705697f3b216ad555958dc680f68cc4e99d";
-        Request request = new Request();
-        request.setType(BCOSRequestType.GET_TRANSACTION_PROOF);
-        request.setData(hash.getBytes(StandardCharsets.UTF_8));
-
-        Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
-        BCOSConnection connection = new BCOSConnection(web3jWrapper);
-        Response response = connection.send(request);
-
-        assertEquals(response.getErrorCode(), BCOSStatusCode.Success);
-        TransactionProof transactionProof =
-                ObjectMapperFactory.getObjectMapper()
-                        .readValue(response.getData(), TransactionProof.class);
-        TransactionReceipt transactionReceipt =
-                transactionProof.getReceiptAndProof().getTransactionReceipt();
-        Transaction transaction = transactionProof.getTransAndProof().getTransaction();
-
-        assertEquals(transactionReceipt.getBlockNumber().longValue(), 35);
-        assertEquals(transaction.getBlockNumber().longValue(), 35);
-        assertEquals(
-                transactionReceipt.getTransactionHash(),
-                "0x633a3386a189455354c058af6606d705697f3b216ad555958dc680f68cc4e99d");
     }
 
     @Test
@@ -422,20 +399,6 @@ public class BCOSConnectionTest {
         BCOSConnection connection = new BCOSConnection(web3jWrapper);
         Response response = connection.send(request);
 
-        assertEquals(response.getErrorCode(), BCOSStatusCode.HandleGetTransactionProofFailed);
-    }
-
-    @Test
-    public void handleFailedGetTransactionProofTest0() throws IOException {
-        String hash = "0x633a3386a189455354c058af6606d705697f3b216ad555958dc680f68cc4e99d";
-        Request request = new Request();
-        request.setType(BCOSRequestType.GET_TRANSACTION_PROOF);
-        request.setData(hash.getBytes(StandardCharsets.UTF_8));
-
-        Web3jWrapper web3jWrapper = new Web3jWrapperWithNullMock();
-        BCOSConnection connection = new BCOSConnection(web3jWrapper);
-        Response response = connection.send(request);
-
-        assertEquals(response.getErrorCode(), BCOSStatusCode.TransactionProofNotExist);
+        assertEquals(response.getErrorCode(), BCOSStatusCode.UnrecognizedRequestType);
     }
 }

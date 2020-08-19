@@ -1,7 +1,10 @@
 package com.webank.wecross.stub.bcos.custom;
 
-import com.webank.wecross.stub.*;
-import java.util.Map;
+import com.webank.wecross.stub.Account;
+import com.webank.wecross.stub.BlockHeaderManager;
+import com.webank.wecross.stub.Connection;
+import com.webank.wecross.stub.Driver;
+import com.webank.wecross.stub.Path;
 
 public interface CommandHandler {
     /**
@@ -12,7 +15,6 @@ public interface CommandHandler {
      * @param account if needs to sign
      * @param blockHeaderManager if needs to verify transaction
      * @param connection chain connection
-     * @param abiMap store abi
      * @param callback
      */
     void handle(
@@ -21,6 +23,5 @@ public interface CommandHandler {
             Account account,
             BlockHeaderManager blockHeaderManager,
             Connection connection,
-            Map<String, String> abiMap,
             Driver.CustomCommandCallback callback);
 }

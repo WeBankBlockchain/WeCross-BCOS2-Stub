@@ -1,5 +1,6 @@
 package com.webank.wecross.stub.bcos.custom;
 
+import com.webank.wecross.stub.bcos.AsyncCnsService;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,14 +22,29 @@ public class CommandHandlerDispatcher {
         this.commandMapper = commandMapper;
     }
 
-    public void initializeCommandMapper() {
-        DeployContractHandler deployContractHandler = new DeployContractHandler();
-        registerCommandHandler(BCOSConstant.CUSTOM_COMMAND_DEPLOY, deployContractHandler);
+    public CommandHandlerDispatcher(AsyncCnsService asyncCnsService) {
+        this.asyncCnsService = asyncCnsService;
+    }
 
-        RegisterCnsHandler registerCnsHandler = new RegisterCnsHandler();
-        registerCommandHandler(BCOSConstant.CUSTOM_COMMAND_REGISTER, registerCnsHandler);
-        logger.info("initialize size: {}", commandMapper.size());
-        logger.info("commands: {} ", commandMapper.keySet());
+    private AsyncCnsService asyncCnsService;
+
+    public AsyncCnsService getAsyncCnsService() {
+        return asyncCnsService;
+    }
+
+    public void setAsyncCnsService(AsyncCnsService asyncCnsService) {
+        this.asyncCnsService = asyncCnsService;
+    }
+
+    public void initializeCommandMapper() {
+
+        registerCommandHandler(
+                BCOSConstant.CUSTOM_COMMAND_DEPLOY,
+                new DeployContractHandler(getAsyncCnsService()));
+        registerCommandHandler(
+                BCOSConstant.CUSTOM_COMMAND_REGISTER, new RegisterCnsHandler(getAsyncCnsService()));
+
+        logger.info("list custom commands: {} ", commandMapper.keySet());
     }
 
     /**
@@ -50,7 +66,7 @@ public class CommandHandlerDispatcher {
         CommandHandler commandHandler = commandMapper.get(command);
         if (Objects.isNull(commandHandler)) {
             logger.warn("command '{}' not found", command);
-        } else {
+        } else if (logger.isTraceEnabled()) {
             logger.trace("command: {}, handler: {}", command, commandHandler.getClass().getName());
         }
 
