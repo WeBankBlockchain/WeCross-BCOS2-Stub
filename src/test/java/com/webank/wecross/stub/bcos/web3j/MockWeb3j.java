@@ -10,6 +10,7 @@ import org.fisco.bcos.web3j.protocol.core.DefaultBlockParameter;
 import org.fisco.bcos.web3j.protocol.core.Request;
 import org.fisco.bcos.web3j.protocol.core.methods.request.Transaction;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
+import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlockHeader;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosFilter;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosLog;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosTransaction;
@@ -141,6 +142,18 @@ public class MockWeb3j implements Web3j {
     }
 
     @Override
+    public Request<?, BcosBlockHeader> getBlockHeaderByHash(
+            String blockHash, boolean returnSealerList) {
+        return null;
+    }
+
+    @Override
+    public Request<?, BcosBlockHeader> getBlockHeaderByNumber(
+            BigInteger blockNumber, boolean returnSealerList) {
+        return null;
+    }
+
+    @Override
     public Request<?, BcosBlock> getBlockByHash(
             String blockHash, boolean returnFullTransactionObjects) {
         return null;
@@ -149,6 +162,12 @@ public class MockWeb3j implements Web3j {
     @Override
     public Request<?, BcosBlock> getBlockByNumber(
             DefaultBlockParameter defaultBlockParameter, boolean returnFullTransactionObjects) {
+        return null;
+    }
+
+    @Override
+    public Request<?, BcosBlock> getBlockByNumber(
+            BigInteger blockNumber, boolean returnFullTransactionObjects) {
         return null;
     }
 
