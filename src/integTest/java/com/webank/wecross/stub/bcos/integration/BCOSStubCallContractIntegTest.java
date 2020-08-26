@@ -30,7 +30,6 @@ import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
-import com.webank.wecross.stub.bcos.custom.CommandHandler;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import com.webank.wecross.stub.bcos.performance.hellowecross.HelloWeCross;
 import com.webank.wecross.stub.bcos.proxy.ProxyContract;
@@ -458,7 +457,9 @@ public class BCOSStubCallContractIntegTest {
 
         AsyncToSync asyncToSync = new AsyncToSync();
 
-        CommandHandler commandHandler = new DeployContractHandler(asyncCnsService);
+        DeployContractHandler commandHandler = new DeployContractHandler();
+        commandHandler.setAsyncCnsService(asyncCnsService);
+
         commandHandler.handle(Path.decode("a.b.HelloWorld"),
                 args,
                 account,
@@ -498,7 +499,9 @@ public class BCOSStubCallContractIntegTest {
 
         AsyncToSync asyncToSync = new AsyncToSync();
 
-        CommandHandler commandHandler = new DeployContractHandler(asyncCnsService);
+        DeployContractHandler commandHandler = new DeployContractHandler();
+        commandHandler.setAsyncCnsService(asyncCnsService);
+
         commandHandler.handle(Path.decode("a.b.TupleTest"), args, account, blockHeaderManager, connection, (error, response) -> {
             assertNull(error);
             assertNotNull(response);
@@ -535,7 +538,9 @@ public class BCOSStubCallContractIntegTest {
         byte[] contractBytes;
         contractBytes = Files.readAllBytes(file.toPath());
 
-        CommandHandler commandHandler = new DeployContractHandler(asyncCnsService);
+        DeployContractHandler commandHandler = new DeployContractHandler();
+        commandHandler.setAsyncCnsService(asyncCnsService);
+
         for (int i = 0; i < 3; i++) {
             String constructorParams = "constructor params";
             String baseName = "HelloWorld";

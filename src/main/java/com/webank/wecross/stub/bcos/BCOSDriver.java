@@ -69,7 +69,7 @@ public class BCOSDriver implements Driver {
 
     private CommandHandlerDispatcher commandHandlerDispatcher;
 
-    private AsyncCnsService asyncCnsService = new AsyncCnsService();
+    private AsyncCnsService asyncCnsService = null;
     private ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
 
     public BCOSDriver() {
@@ -82,6 +82,14 @@ public class BCOSDriver implements Driver {
 
     public void setAsyncCnsService(AsyncCnsService asyncCnsService) {
         this.asyncCnsService = asyncCnsService;
+    }
+
+    public ABICodecJsonWrapper getAbiCodecJsonWrapper() {
+        return abiCodecJsonWrapper;
+    }
+
+    public void setAbiCodecJsonWrapper(ABICodecJsonWrapper abiCodecJsonWrapper) {
+        this.abiCodecJsonWrapper = abiCodecJsonWrapper;
     }
 
     @Override

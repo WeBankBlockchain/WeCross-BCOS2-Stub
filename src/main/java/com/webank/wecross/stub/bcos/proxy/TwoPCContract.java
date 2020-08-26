@@ -2,7 +2,6 @@ package com.webank.wecross.stub.bcos.proxy;
 
 import com.webank.wecross.stub.BlockHeaderManager;
 import com.webank.wecross.stub.Driver;
-import com.webank.wecross.stub.bcos.AsyncCnsService;
 import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
@@ -20,13 +19,28 @@ public class TwoPCContract {
         this.account = account;
         this.connection = connection;
         this.blockHeaderManager = new DefaultBlockHeaderManager(connection);
-        this.deployContractHandler = new DeployContractHandler(new AsyncCnsService());
     }
 
     private BCOSAccount account;
     private BCOSConnection connection;
     private BlockHeaderManager blockHeaderManager;
     private DeployContractHandler deployContractHandler;
+
+    public BlockHeaderManager getBlockHeaderManager() {
+        return blockHeaderManager;
+    }
+
+    public void setBlockHeaderManager(BlockHeaderManager blockHeaderManager) {
+        this.blockHeaderManager = blockHeaderManager;
+    }
+
+    public DeployContractHandler getDeployContractHandler() {
+        return deployContractHandler;
+    }
+
+    public void setDeployContractHandler(DeployContractHandler deployContractHandler) {
+        this.deployContractHandler = deployContractHandler;
+    }
 
     public BCOSAccount getAccount() {
         return account;

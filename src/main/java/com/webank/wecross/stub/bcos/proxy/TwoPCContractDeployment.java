@@ -1,5 +1,7 @@
 package com.webank.wecross.stub.bcos.proxy;
 
+import com.webank.wecross.stub.bcos.AsyncCnsService;
+import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import java.io.File;
 import java.nio.file.Files;
 import org.slf4j.Logger;
@@ -115,9 +117,14 @@ public class TwoPCContractDeployment {
             int fromIndex,
             int toIndex) {
         try {
+            AsyncCnsService asyncCnsService = new AsyncCnsService();
+            DeployContractHandler deployContractHandler = new DeployContractHandler();
+            deployContractHandler.setAsyncCnsService(asyncCnsService);
+
             ProxyContract proxyContract = new ProxyContract(null, chainName, accountName);
             TwoPCContract twoPCContract =
                     new TwoPCContract(proxyContract.getAccount(), proxyContract.getConnection());
+            twoPCContract.setDeployContractHandler(deployContractHandler);
 
             PathMatchingResourcePatternResolver resolver =
                     new PathMatchingResourcePatternResolver();

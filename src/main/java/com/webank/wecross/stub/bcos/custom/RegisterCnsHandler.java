@@ -7,7 +7,6 @@ import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.bcos.AsyncCnsService;
-import com.webank.wecross.stub.bcos.BCOSDriver;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -26,10 +25,6 @@ public class RegisterCnsHandler implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RegisterCnsHandler.class);
 
     public AsyncCnsService asyncCnsService;
-
-    public RegisterCnsHandler(AsyncCnsService asyncCnsService) {
-        this.asyncCnsService = asyncCnsService;
-    }
 
     public AsyncCnsService getAsyncCnsService() {
         return asyncCnsService;
@@ -135,8 +130,6 @@ public class RegisterCnsHandler implements CommandHandler {
             }
         }
 
-        Driver driver = new BCOSDriver();
-
         String finalAbi = abi;
         String finalAddress = address;
         asyncCnsService.registerCNSByProxy(
@@ -147,7 +140,6 @@ public class RegisterCnsHandler implements CommandHandler {
                 account,
                 blockHeaderManager,
                 connection,
-                driver,
                 e -> {
                     if (Objects.nonNull(e)) {
                         logger.warn("registering abi failed", e);
