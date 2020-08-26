@@ -201,6 +201,11 @@ public class MockWeb3j implements Web3j {
     }
 
     @Override
+    public BigInteger getBlockLimit() {
+        return null;
+    }
+
+    @Override
     public Request<?, PendingTxSize> getPendingTxSize() {
         return null;
     }

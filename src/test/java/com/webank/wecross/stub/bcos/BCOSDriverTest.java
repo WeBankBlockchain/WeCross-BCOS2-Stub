@@ -90,8 +90,8 @@ public class BCOSDriverTest {
     @Before
     public void initializer() throws Exception {
 
-        BCOSStubFactory bcosStubFactory = new BCOSStubFactory();
-        driver = bcosStubFactory.newDriver();
+        BCOSStubFactory bcosSubFactory = new BCOSStubFactory();
+        driver = bcosSubFactory.newDriver();
         account = BCOSAccountFactory.build("bcos", "classpath:/accounts/bcos");
         connection =
                 BCOSConnectionFactory.build(

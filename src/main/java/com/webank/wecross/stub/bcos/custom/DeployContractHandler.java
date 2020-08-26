@@ -1,7 +1,6 @@
 package com.webank.wecross.stub.bcos.custom;
 
 import com.webank.wecross.stub.Account;
-import com.webank.wecross.stub.BlockHeaderManager;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Path;
@@ -9,7 +8,6 @@ import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.bcos.AsyncCnsService;
-import com.webank.wecross.stub.bcos.BCOSDriver;
 import com.webank.wecross.stub.bcos.abi.ABICodecJsonWrapper;
 import com.webank.wecross.stub.bcos.abi.ABIDefinition;
 import com.webank.wecross.stub.bcos.abi.ABIDefinitionFactory;
@@ -40,10 +38,6 @@ public class DeployContractHandler implements CommandHandler {
     private ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
 
     public AsyncCnsService asyncCnsService;
-
-    public DeployContractHandler(AsyncCnsService asyncCnsService) {
-        this.asyncCnsService = asyncCnsService;
-    }
 
     public AsyncCnsService getAsyncCnsService() {
         return asyncCnsService;
@@ -81,7 +75,7 @@ public class DeployContractHandler implements CommandHandler {
             return;
         }
 
-        Driver driver = new BCOSDriver();
+        Driver driver = getAsyncCnsService().getBcosDriver();
         /** constructor params */
         List<String> params = null;
         if (args.length > 4) {
@@ -94,7 +88,7 @@ public class DeployContractHandler implements CommandHandler {
         /** First compile the contract source code */
         CompilationResult.ContractMetadata metadata;
         try {
-            boolean sm = EncryptType.encryptType != 0;
+            boolean sm = (EncryptType.encryptType == EncryptType.SM2_TYPE);
 
             File sourceFile = File.createTempFile("BCOSContract-", "-" + cnsName + ".sol");
             try (OutputStream outputStream = new FileOutputStream(sourceFile)) {

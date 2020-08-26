@@ -152,8 +152,6 @@ public class BCOSConnectionTest {
 
     @Test
     public void handleFailedGetBlockTest() throws IOException {
-        BCOSDriver driver = new BCOSDriver();
-
         Web3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
         BCOSConnection connection = new BCOSConnection(web3jWrapper);
         Request request = new Request();

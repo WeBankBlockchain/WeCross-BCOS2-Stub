@@ -34,6 +34,16 @@ public class AsyncCnsService {
     private static final long CLEAR_EXPIRES = 30 * 60; // 30 min
     private Semaphore queryABISemaphore = new Semaphore(1, true);
 
+    private BCOSDriver bcosDriver = null;
+
+    public BCOSDriver getBcosDriver() {
+        return bcosDriver;
+    }
+
+    public void setBcosDriver(BCOSDriver bcosDriver) {
+        this.bcosDriver = bcosDriver;
+    }
+
     public AsyncCnsService() {
         this.scheduledExecutorService.scheduleAtFixedRate(
                 new Runnable() {
@@ -197,7 +207,6 @@ public class AsyncCnsService {
             Account account,
             BlockHeaderManager blockHeaderManager,
             Connection connection,
-            Driver driver,
             InsertCallback callback) {
 
         Path path = new Path();
@@ -212,7 +221,7 @@ public class AsyncCnsService {
                 new TransactionContext<>(
                         transactionRequest, account, path, null, blockHeaderManager);
 
-        driver.asyncSendTransactionByProxy(
+        bcosDriver.asyncSendTransactionByProxy(
                 requestTransactionContext,
                 connection,
                 (exception, res) -> {
