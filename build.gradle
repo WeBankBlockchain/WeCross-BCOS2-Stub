@@ -56,23 +56,28 @@ configurations {
     integTestTestImplementation.extendsFrom testImplementation
 }
 
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
 dependencies {
-    // implementation 'com.webank:wecross-java-stub:1.0.0-rc2'
-    implementation 'com.webank:wecross-java-stub:1.0.0-rc4-07060-SNAPSHOT'
+    implementation ('com.webank:wecross-java-stub:1.0.0-rc5-09010-SNAPSHOT') {
+        changing=true
+    }
     implementation 'org.slf4j:slf4j-api:1.7.30'
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'
-    implementation 'com.google.guava:guava:28.1-jre'
+    implementation 'com.google.guava:guava:29.0-jre'
     implementation 'org.fisco-bcos:web3sdk:2.6.2-SNAPSHOT'
     implementation 'org.fisco-bcos:solcJ:0.5.2.0'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
-    testImplementation 'org.slf4j:slf4j-log4j12:1.7.25'
+    testImplementation 'org.slf4j:slf4j-log4j12:1.7.30'
     testImplementation 'org.springframework.boot:spring-boot-starter-test:2.1.13.RELEASE'
 
     integTestImplementation 'junit:junit:4.12'
-    integTestImplementation 'org.slf4j:slf4j-log4j12:1.7.25'
+    integTestImplementation 'org.slf4j:slf4j-log4j12:1.7.30'
 }
 
 sourceSets {
@@ -204,6 +209,16 @@ jacocoTestReport {
     }
 }
 
+ext {
+    if (!project.hasProperty("NEXUS_USERNAME")) {
+        NEXUS_USERNAME="xxx"
+    }
+
+    if (!project.hasProperty("NEXUS_PASSWORD")) {
+        NEXUS_PASSWORD="xxx"
+    }
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -244,10 +259,6 @@ publishing {
             def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
             url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
 
-            //*
-            def NEXUS_USERNAME = ''
-            def NEXUS_PASSWORD = ''
-            //*/
             credentials {
                 username = NEXUS_USERNAME
                 password = NEXUS_PASSWORD
