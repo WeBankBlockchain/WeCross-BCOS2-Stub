@@ -61,6 +61,7 @@ public abstract class BCOSBaseStubFactory implements StubFactory {
         /** Initializes the custom command dispatcher */
         RegisterCnsHandler registerCnsHandler = new RegisterCnsHandler();
         registerCnsHandler.setAsyncCnsService(asyncCnsService);
+
         DeployContractHandler deployContractHandler = new DeployContractHandler();
         deployContractHandler.setAsyncCnsService(asyncCnsService);
 
@@ -84,7 +85,7 @@ public abstract class BCOSBaseStubFactory implements StubFactory {
     public Connection newConnection(String path) {
         try {
             logger.info("New connection: {} type:{}", path, EncryptType.encryptType);
-            BCOSConnection connection = BCOSConnectionFactory.build(path, "stub.toml", null);
+            BCOSConnection connection = BCOSConnectionFactory.build(path, "stub.toml");
 
             // check proxy contract
             if (!connection.hasProxyDeployed()) {

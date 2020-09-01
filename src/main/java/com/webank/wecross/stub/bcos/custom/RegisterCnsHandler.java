@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 public class RegisterCnsHandler implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RegisterCnsHandler.class);
 
-    public AsyncCnsService asyncCnsService;
+    private AsyncCnsService asyncCnsService;
 
     public AsyncCnsService getAsyncCnsService() {
         return asyncCnsService;

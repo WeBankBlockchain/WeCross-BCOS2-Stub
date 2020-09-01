@@ -18,7 +18,7 @@ public class TwoPCContract {
     public TwoPCContract(BCOSAccount account, BCOSConnection connection) {
         this.account = account;
         this.connection = connection;
-        this.blockHeaderManager = new DefaultBlockHeaderManager(connection);
+        this.blockHeaderManager = new DefaultBlockHeaderManager(connection.getWeb3jWrapper());
     }
 
     private BCOSAccount account;

@@ -10,7 +10,9 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
+import com.webank.wecross.stub.bcos.web3j.Web3jUtility;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
+import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 import java.io.File;
 import java.math.BigInteger;
 import java.util.concurrent.CompletableFuture;
@@ -22,6 +24,7 @@ import org.fisco.bcos.web3j.precompile.cns.CnsService;
 import org.fisco.bcos.web3j.precompile.common.PrecompiledCommon;
 import org.fisco.bcos.web3j.precompile.common.PrecompiledResponse;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
+import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.fisco.solc.compiler.CompilationResult;
 import org.fisco.solc.compiler.SolidityCompiler;
@@ -52,11 +55,15 @@ public class ProxyContract {
                 bcosStubConfig.getType().toLowerCase().contains("gm")
                         ? new BCOSGMStubFactory()
                         : new BCOSStubFactory();
+
+        Web3j web3j = Web3jUtility.initWeb3j(bcosStubConfig.getChannelService());
+        Web3jWrapper web3jWrapper = new Web3jWrapperImpl(web3j);
+
         account =
                 (BCOSAccount)
                         bcosStubFactory.newAccount(
                                 accountName, "classpath:accounts" + File.separator + accountName);
-        connection = BCOSConnectionFactory.build(chainPath, "stub.toml", null);
+        connection = BCOSConnectionFactory.build(bcosStubConfig, web3jWrapper);
 
         if (account == null) {
             throw new Exception("Account " + accountName + " not found");
@@ -210,7 +217,7 @@ public class ProxyContract {
 
     public static void check(String chainPath) {
         try {
-            BCOSConnection connection = BCOSConnectionFactory.build(chainPath, "stub.toml", null);
+            BCOSConnection connection = BCOSConnectionFactory.build(chainPath, "stub.toml");
 
             if (!connection.hasProxyDeployed()) {
                 System.out.println("WeCrossProxy has not been deployed");

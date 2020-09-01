@@ -47,9 +47,6 @@ public class FunctionUtility {
     public static final String ProxyCallWithTransactionIdMethodId =
             FunctionEncoder.buildMethodId("constantCall(string,string,string,bytes)");
 
-    public static final String ProxyCallMethodId =
-            FunctionEncoder.buildMethodId("constantCall(string,bytes)");
-
     public static final List<TypeReference<?>> abiTypeReferenceOutputs =
             Collections.singletonList(new TypeReference<DynamicArray<Utf8String>>() {});
 
@@ -148,7 +145,7 @@ public class FunctionUtility {
                         Arrays.<Type>asList(
                                 new org.fisco.bcos.web3j.abi.datatypes.Utf8String(id),
                                 new Uint256(seq),
-                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(path.toString()),
+                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(path),
                                 new org.fisco.bcos.web3j.abi.datatypes.Utf8String(methodSignature),
                                 new org.fisco.bcos.web3j.abi.datatypes.DynamicBytes(
                                         Numeric.hexStringToByteArray(abi))),
@@ -198,7 +195,7 @@ public class FunctionUtility {
                                 new TypeReference<Utf8String>() {},
                                 new TypeReference<DynamicBytes>() {}));
         List<Type> results = FunctionReturnDecoder.decode(data, function.getOutputParameters());
-        ;
+
         return new Tuple4<String, String, String, byte[]>(
                 (String) results.get(0).getValue(),
                 (String) results.get(1).getValue(),
@@ -227,7 +224,7 @@ public class FunctionUtility {
                                 new TypeReference<Utf8String>() {},
                                 new TypeReference<DynamicBytes>() {}));
         List<Type> results = FunctionReturnDecoder.decode(data, function.getOutputParameters());
-        ;
+
         return new Tuple5<String, BigInteger, String, String, byte[]>(
                 (String) results.get(0).getValue(),
                 (BigInteger) results.get(1).getValue(),
@@ -254,9 +251,8 @@ public class FunctionUtility {
                                 new TypeReference<Utf8String>() {},
                                 new TypeReference<DynamicBytes>() {}));
         List<Type> results = FunctionReturnDecoder.decode(data, function.getOutputParameters());
-        ;
-        return new Tuple2<String, byte[]>(
-                (String) results.get(0).getValue(), (byte[]) results.get(1).getValue());
+
+        return new Tuple2<>((String) results.get(0).getValue(), (byte[]) results.get(1).getValue());
     }
 
     public static List<String> convertToStringList(List<Type> typeList) {

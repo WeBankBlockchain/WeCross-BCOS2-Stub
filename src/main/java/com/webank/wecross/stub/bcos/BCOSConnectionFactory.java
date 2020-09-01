@@ -18,21 +18,10 @@ import org.slf4j.LoggerFactory;
 public class BCOSConnectionFactory {
     private static final Logger logger = LoggerFactory.getLogger(BCOSConnectionFactory.class);
 
-    public static BCOSConnection build(
-            String stubConfigPath, String configName, Web3jWrapper web3jWrapper) throws Exception {
+    public static BCOSConnection build(BCOSStubConfig bcosStubConfig, Web3jWrapper web3jWrapper)
+            throws Exception {
         /** load stub.toml config */
-        logger.info(" stubConfigPath: {} ", stubConfigPath);
-        BCOSStubConfigParser bcosStubConfigParser =
-                new BCOSStubConfigParser(stubConfigPath, configName);
-        BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
-
-        /** web3jWrapper is null ,create default one */
-        if (Objects.isNull(web3jWrapper)) {
-            Web3j web3j = Web3jUtility.initWeb3j(bcosStubConfig.getChannelService());
-            web3jWrapper = new Web3jWrapperImpl(web3j);
-            logger.info(" web3j: {} ", web3j);
-        }
-
+        logger.info(" stubConfigPath: {} ", bcosStubConfig);
         checkBCOSVersion(web3jWrapper);
 
         BCOSConnection bcosConnection = new BCOSConnection(web3jWrapper);
@@ -51,6 +40,20 @@ public class BCOSConnectionFactory {
             bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_ABI, cnsInfo.getAbi());
         }
         return bcosConnection;
+    }
+
+    public static BCOSConnection build(String stubConfigPath, String configName) throws Exception {
+        /** load stub.toml config */
+        logger.info(" stubConfigPath: {} ", stubConfigPath);
+        BCOSStubConfigParser bcosStubConfigParser =
+                new BCOSStubConfigParser(stubConfigPath, configName);
+        BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
+
+        Web3j web3j = Web3jUtility.initWeb3j(bcosStubConfig.getChannelService());
+        Web3jWrapper web3jWrapper = new Web3jWrapperImpl(web3j);
+        logger.info(" web3j: {} ", web3j);
+
+        return build(bcosStubConfig, web3jWrapper);
     }
 
     public static void checkBCOSVersion(Web3jWrapper web3jWrapper) throws Exception {
