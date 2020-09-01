@@ -21,7 +21,6 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.BCOSStubException;
-import com.webank.wecross.stub.bcos.common.RequestFactory;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.RevertMessage;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
@@ -32,11 +31,13 @@ import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.verify.MerkleValidation;
 import java.math.BigInteger;
 import java.security.InvalidParameterException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.Semaphore;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.bouncycastle.util.encoders.Hex;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
@@ -93,7 +94,7 @@ public class BCOSDriver implements Driver {
     }
 
     @Override
-    public TransactionContext<TransactionRequest> decodeTransactionRequest(byte[] data) {
+    public ImmutablePair<Boolean, TransactionRequest> decodeTransactionRequest(byte[] data) {
         try {
             TransactionParams transactionParams =
                     objectMapper.readValue(data, TransactionParams.class);
@@ -105,17 +106,17 @@ public class BCOSDriver implements Driver {
             Objects.requireNonNull(
                     transactionParams.getTransactionRequest(), "TransactionRequest is null");
             Objects.requireNonNull(transactionParams.getData(), "Data is null");
-            Objects.requireNonNull(transactionParams.getTp_ype(), "type is null");
+            Objects.requireNonNull(transactionParams.getType(), "type is null");
 
             TransactionRequest tr = transactionParams.getTransactionRequest();
-            TransactionParams.TP_YPE tp_ype = transactionParams.getTp_ype();
+            TransactionParams.TYPE type = transactionParams.getType();
             String abi = "";
             String encodeAbi = "";
-            switch (tp_ype) {
+            switch (type) {
                 case SEND_TX_BY_PROXY:
                 case CALL_BY_PROXY:
                     {
-                        if (tp_ype == TransactionParams.TP_YPE.SEND_TX_BY_PROXY) {
+                        if (type == TransactionParams.TYPE.SEND_TX_BY_PROXY) {
                             ExtendedRawTransaction extendedRawTransaction =
                                     ExtendedTransactionDecoder.decode(transactionParams.getData());
 
@@ -189,7 +190,7 @@ public class BCOSDriver implements Driver {
                 case SEND_TX:
                 case CALL:
                     {
-                        if (tp_ype == TransactionParams.TP_YPE.SEND_TX) {
+                        if (type == TransactionParams.TYPE.SEND_TX) {
                             ExtendedRawTransaction extendedRawTransaction =
                                     ExtendedTransactionDecoder.decode(transactionParams.getData());
                             abi = extendedRawTransaction.getData();
@@ -205,27 +206,22 @@ public class BCOSDriver implements Driver {
                     }
                 default:
                     {
-                        throw new InvalidParameterException(" unknown tp type: " + tp_ype);
+                        // not call/sendTransaction
+                        return new ImmutablePair<>(false, null);
                     }
             }
 
             if (Numeric.cleanHexPrefix(encodeAbi).equals(Numeric.cleanHexPrefix(abi))) {
-                return new TransactionContext<>(tr, null, null, null, null);
+                return new ImmutablePair<>(true, tr);
             }
 
             logger.warn(" abi not meet expectations, abi:{}, encodeAbi:{}", abi, encodeAbi);
+            return new ImmutablePair<>(true, null);
 
         } catch (Exception e) {
             logger.error(" decodeTransactionRequest e: ", e);
+            return new ImmutablePair<>(false, null);
         }
-
-        return null;
-    }
-
-    @Override
-    public boolean isTransaction(Request request) {
-        return (request.getType() == BCOSRequestType.SEND_TRANSACTION)
-                || (request.getType() == BCOSRequestType.CALL);
     }
 
     @Override
@@ -238,95 +234,77 @@ public class BCOSDriver implements Driver {
         }
     }
 
-    class CallAndSendTxResponseCallback implements Callback {
-
-        public CallAndSendTxResponseCallback() {
-            try {
-                this.semaphore.acquire();
-            } catch (InterruptedException e) {
-                logger.error(" e: ", e);
-                Thread.currentThread().interrupt();
-            }
+    @Override
+    public List<ResourceInfo> getResources(Connection connection) {
+        if (connection instanceof BCOSConnection) {
+            return ((BCOSConnection) connection).getResources();
         }
 
-        private Semaphore semaphore = new Semaphore(1, true);
-        private TransactionException transactionException;
-        private TransactionResponse transactionResponse;
+        logger.error(" Not BCOS connection, connection name: {}", connection.getClass().getName());
+        return new ArrayList<>();
+    }
 
-        public Semaphore getSemaphore() {
-            return semaphore;
+    @Override
+    public Map<String, String> getProperties(Connection connection) {
+        if (connection instanceof BCOSConnection) {
+            return ((BCOSConnection) connection).getProperties();
         }
 
-        public void setSemaphore(Semaphore semaphore) {
-            this.semaphore = semaphore;
-        }
+        logger.error(" Not BCOS connection, connection name: {}", connection.getClass().getName());
+        return new HashMap<>();
+    }
 
-        public TransactionException getTransactionException() {
-            return transactionException;
-        }
-
-        public void setTransactionException(TransactionException transactionException) {
-            this.transactionException = transactionException;
-        }
-
-        public TransactionResponse getTransactionResponse() {
-            return transactionResponse;
-        }
-
-        public void setTransactionResponse(TransactionResponse transactionResponse) {
-            this.transactionResponse = transactionResponse;
-        }
-
-        @Override
-        public void onTransactionResponse(
-                TransactionException transactionException,
-                TransactionResponse transactionResponse) {
-            this.transactionException = transactionException;
-            this.transactionResponse = transactionResponse;
-            this.getSemaphore().release();
+    @Override
+    public void asyncCall(
+            TransactionContext context,
+            TransactionRequest request,
+            boolean byProxy,
+            Connection connection,
+            Callback callback) {
+        if (byProxy) {
+            asyncCallByProxy(context, request, connection, callback);
+        } else {
+            asyncCall(context, request, connection, callback);
         }
     }
 
     @Override
-    public TransactionResponse call(
-            TransactionContext<TransactionRequest> request, Connection connection)
-            throws TransactionException {
-
-        CallAndSendTxResponseCallback callAndSendTxResponseCallback =
-                new CallAndSendTxResponseCallback();
-        asyncCall(request, connection, callAndSendTxResponseCallback);
-
-        try {
-            callAndSendTxResponseCallback.getSemaphore().acquire();
-        } catch (InterruptedException e) {
-            logger.error(" e: ", e);
-            Thread.currentThread().interrupt();
+    public void asyncSendTransaction(
+            TransactionContext context,
+            TransactionRequest request,
+            boolean byProxy,
+            Connection connection,
+            Callback callback) {
+        if (byProxy) {
+            asyncSendTransactionByProxy(context, request, connection, callback);
+        } else {
+            asyncSendTransaction(context, request, connection, callback);
         }
-
-        if (callAndSendTxResponseCallback.getTransactionException() != null) {
-            throw callAndSendTxResponseCallback.getTransactionException();
-        }
-
-        return callAndSendTxResponseCallback.getTransactionResponse();
     }
 
-    @Override
-    public void asyncCallByProxy(
-            TransactionContext<TransactionRequest> request,
+    /**
+     * @param context
+     * @param request
+     * @param connection
+     * @param callback
+     */
+    private void asyncCallByProxy(
+            TransactionContext context,
+            TransactionRequest request,
             Connection connection,
             Callback callback) {
 
         TransactionResponse transactionResponse = new TransactionResponse();
 
         try {
-            Map<String, String> properties = connection.getProperties();
+            Map<String, String> properties = getProperties(connection);
 
             // input validation
             // checkRequest(request);
             checkProperties(properties);
 
             String contractAddress = properties.get(BCOSConstant.BCOS_PROXY_NAME);
-            Path path = request.getPath();
+            Path path = context.getPath();
             String name = path.getResource();
 
             // query abi
@@ -349,8 +327,8 @@ public class BCOSDriver implements Driver {
                             }
 
                             // encode
-                            String[] args = request.getData().getArgs();
-                            String method = request.getData().getMethod();
+                            String[] args = request.getArgs();
+                            String method = request.getMethod();
                             ContractABIDefinition contractABIDefinition =
                                     ABIDefinitionFactory.loadABI(abi);
 
@@ -373,10 +351,7 @@ public class BCOSDriver implements Driver {
                             }
 
                             String transactionID =
-                                    (String)
-                                            request.getData()
-                                                    .getOptions()
-                                                    .get(BCOSConstant.TRANSACTION_ID);
+                                    (String) request.getOptions().get(BCOSConstant.TRANSACTION_ID);
 
                             Function function = null;
                             if (Objects.isNull(transactionID) || transactionID.isEmpty()) {
@@ -396,8 +371,8 @@ public class BCOSDriver implements Driver {
 
                             // BCOSAccount to get credentials to sign the transaction
                             String from = BCOSConstant.DEFAULT_ADDRESS;
-                            if (Objects.nonNull(request.getAccount())) {
-                                BCOSAccount bcosAccount = (BCOSAccount) request.getAccount();
+                            if (Objects.nonNull(context.getAccount())) {
+                                BCOSAccount bcosAccount = (BCOSAccount) context.getAccount();
                                 Credentials credentials = bcosAccount.getCredentials();
                                 from = credentials.getAddress();
                             }
@@ -407,21 +382,21 @@ public class BCOSDriver implements Driver {
                                         " name:{}, address: {}, method: {}, args: {}",
                                         BCOSConstant.BCOS_PROXY_NAME,
                                         contractAddress,
-                                        request.getData().getMethod(),
-                                        request.getData().getArgs());
+                                        request.getMethod(),
+                                        request.getArgs());
                             }
 
                             TransactionParams transaction =
                                     new TransactionParams(
-                                            request.getData(),
+                                            request,
                                             FunctionEncoder.encode(function),
-                                            TransactionParams.TP_YPE.CALL_BY_PROXY);
+                                            TransactionParams.TYPE.CALL_BY_PROXY);
                             transaction.setFrom(from);
                             transaction.setTo(contractAddress);
                             transaction.setAbi(abi);
 
                             Request req =
-                                    RequestFactory.requestBuilder(
+                                    Request.newRequest(
                                             BCOSRequestType.CALL,
                                             objectMapper.writeValueAsBytes(transaction));
 
@@ -526,29 +501,35 @@ public class BCOSDriver implements Driver {
         }
     }
 
-    @Override
-    public void asyncCall(
-            TransactionContext<TransactionRequest> request,
+    /**
+     * @param context
+     * @param request
+     * @param connection
+     * @param callback
+     */
+    private void asyncCall(
+            TransactionContext context,
+            TransactionRequest request,
             Connection connection,
             Callback callback) {
+
         TransactionResponse transactionResponse = new TransactionResponse();
 
         try {
-            Map<String, String> properties = connection.getProperties();
+            Map<String, String> properties = getProperties(connection);
 
             // input validation
-            checkRequest(request);
+            checkRequest(context, request);
             checkProperties(properties);
 
             String contractAddress = properties.get(BCOSConstant.BCOS_PROXY_NAME);
 
             // Function object
             Function function =
-                    FunctionUtility.newDefaultFunction(
-                            request.getData().getMethod(), request.getData().getArgs());
+                    FunctionUtility.newDefaultFunction(request.getMethod(), request.getArgs());
 
             // BCOSAccount to get credentials to sign the transaction
-            BCOSAccount bcosAccount = (BCOSAccount) request.getAccount();
+            BCOSAccount bcosAccount = (BCOSAccount) context.getAccount();
             Credentials credentials = bcosAccount.getCredentials();
 
             if (logger.isDebugEnabled()) {
@@ -556,20 +537,18 @@ public class BCOSDriver implements Driver {
                         " name:{}, address: {}, method: {}, args: {}",
                         BCOSConstant.BCOS_PROXY_NAME,
                         contractAddress,
-                        request.getData().getMethod(),
-                        request.getData().getArgs());
+                        request.getMethod(),
+                        request.getArgs());
             }
 
             TransactionParams transaction =
                     new TransactionParams(
-                            request.getData(),
-                            FunctionEncoder.encode(function),
-                            TransactionParams.TP_YPE.CALL);
+                            request, FunctionEncoder.encode(function), TransactionParams.TYPE.CALL);
 
             transaction.setFrom(credentials.getAddress());
             transaction.setTo(contractAddress);
             Request req =
-                    RequestFactory.requestBuilder(
+                    Request.newRequest(
                             BCOSRequestType.CALL, objectMapper.writeValueAsBytes(transaction));
 
             // decodeTransactionRequest(req.getData());
@@ -647,42 +626,25 @@ public class BCOSDriver implements Driver {
         }
     }
 
-    @Override
-    public TransactionResponse sendTransaction(
-            TransactionContext<TransactionRequest> request, Connection connection)
-            throws TransactionException {
-
-        CallAndSendTxResponseCallback callAndSendTxResponseCallback =
-                new CallAndSendTxResponseCallback();
-        asyncSendTransaction(request, connection, callAndSendTxResponseCallback);
-
-        try {
-            callAndSendTxResponseCallback.getSemaphore().acquire();
-        } catch (InterruptedException e) {
-            logger.error(" e: ", e);
-            Thread.currentThread().interrupt();
-        }
-
-        if (callAndSendTxResponseCallback.getTransactionException() != null) {
-            throw callAndSendTxResponseCallback.getTransactionException();
-        }
-
-        return callAndSendTxResponseCallback.getTransactionResponse();
-    }
-
-    @Override
-    public void asyncSendTransaction(
-            TransactionContext<TransactionRequest> request,
+    /**
+     * @param context
+     * @param request
+     * @param connection
+     * @param callback
+     */
+    private void asyncSendTransaction(
+            TransactionContext context,
+            TransactionRequest request,
             Connection connection,
             Callback callback) {
 
         TransactionResponse transactionResponse = new TransactionResponse();
 
         try {
-            Map<String, String> properties = connection.getProperties();
+            Map<String, String> properties = getProperties(connection);
 
             // input validation
-            checkRequest(request);
+            checkRequest(context, request);
             checkProperties(properties);
 
             // contractAddress
@@ -692,7 +654,7 @@ public class BCOSDriver implements Driver {
             // chainId
             int chainId = Integer.parseInt(properties.get(BCOSConstant.BCOS_CHAIN_ID));
 
-            request.getBlockHeaderManager()
+            context.getBlockHeaderManager()
                     .asyncGetBlockNumber(
                             (blockNumberException, blockNumber) -> {
                                 if (Objects.nonNull(blockNumberException)) {
@@ -704,22 +666,21 @@ public class BCOSDriver implements Driver {
                                     return;
                                 }
                                 // BCOSAccount to get credentials to sign the transaction
-                                BCOSAccount bcosAccount = (BCOSAccount) request.getAccount();
+                                BCOSAccount bcosAccount = (BCOSAccount) context.getAccount();
                                 Credentials credentials = bcosAccount.getCredentials();
 
                                 // Function object
                                 Function function =
                                         FunctionUtility.newDefaultFunction(
-                                                request.getData().getMethod(),
-                                                request.getData().getArgs());
+                                                request.getMethod(), request.getArgs());
 
                                 if (logger.isDebugEnabled()) {
                                     logger.debug(
                                             "asyncSendTransaction contractAddress: {}, blockNumber: {}, method: {}, args: {}",
                                             contractAddress,
                                             blockNumber,
-                                            request.getData().getMethod(),
-                                            request.getData().getArgs());
+                                            request.getMethod(),
+                                            request.getArgs());
                                 }
 
                                 // get signed transaction hex string
@@ -734,14 +695,12 @@ public class BCOSDriver implements Driver {
 
                                 TransactionParams transaction =
                                         new TransactionParams(
-                                                request.getData(),
-                                                signTx,
-                                                TransactionParams.TP_YPE.SEND_TX);
+                                                request, signTx, TransactionParams.TYPE.SEND_TX);
 
                                 Request req;
                                 try {
                                     req =
-                                            RequestFactory.requestBuilder(
+                                            Request.newRequest(
                                                     BCOSRequestType.SEND_TRANSACTION,
                                                     objectMapper.writeValueAsBytes(transaction));
                                 } catch (JsonProcessingException e) {
@@ -772,7 +731,7 @@ public class BCOSDriver implements Driver {
                                                                 TransactionReceipt.class);
 
                                                 if (receipt.isStatusOK()) {
-                                                    request.getBlockHeaderManager()
+                                                    context.getBlockHeaderManager()
                                                             .asyncGetBlockHeader(
                                                                     receipt.getBlockNumber()
                                                                             .longValue(),
@@ -908,18 +867,24 @@ public class BCOSDriver implements Driver {
         }
     }
 
-    @Override
-    public void asyncSendTransactionByProxy(
-            TransactionContext<TransactionRequest> request,
+    /**
+     * @param context
+     * @param request
+     * @param connection
+     * @param callback
+     */
+    private void asyncSendTransactionByProxy(
+            TransactionContext context,
+            TransactionRequest request,
             Connection connection,
             Callback callback) {
         TransactionResponse transactionResponse = new TransactionResponse();
 
         try {
-            Map<String, String> properties = connection.getProperties();
+            Map<String, String> properties = getProperties(connection);
 
             // input validation
-            checkRequest(request);
+            checkRequest(context, request);
             checkProperties(properties);
 
             // contractAddress
@@ -929,7 +894,7 @@ public class BCOSDriver implements Driver {
             // chainId
             int chainId = Integer.parseInt(properties.get(BCOSConstant.BCOS_CHAIN_ID));
 
-            request.getBlockHeaderManager()
+            context.getBlockHeaderManager()
                     .asyncGetBlockNumber(
                             (blockNumberException, blockNumber) -> {
                                 if (Objects.nonNull(blockNumberException)) {
@@ -941,10 +906,10 @@ public class BCOSDriver implements Driver {
                                     return;
                                 }
                                 // BCOSAccount to get credentials to sign the transaction
-                                BCOSAccount bcosAccount = (BCOSAccount) request.getAccount();
+                                BCOSAccount bcosAccount = (BCOSAccount) context.getAccount();
                                 Credentials credentials = bcosAccount.getCredentials();
 
-                                Path path = request.getPath();
+                                Path path = context.getPath();
                                 String name = path.getResource();
 
                                 // query abi
@@ -967,8 +932,8 @@ public class BCOSDriver implements Driver {
                                                 }
 
                                                 // encode
-                                                String[] args = request.getData().getArgs();
-                                                String method = request.getData().getMethod();
+                                                String[] args = request.getArgs();
+                                                String method = request.getMethod();
                                                 ContractABIDefinition contractABIDefinition =
                                                         ABIDefinitionFactory.loadABI(abi);
 
@@ -997,16 +962,14 @@ public class BCOSDriver implements Driver {
 
                                                 String transactionID =
                                                         (String)
-                                                                request.getData()
-                                                                        .getOptions()
+                                                                request.getOptions()
                                                                         .get(
                                                                                 BCOSConstant
                                                                                         .TRANSACTION_ID);
 
                                                 String transactionSeq =
                                                         (String)
-                                                                request.getData()
-                                                                        .getOptions()
+                                                                request.getOptions()
                                                                         .get(
                                                                                 BCOSConstant
                                                                                         .TRANSACTION_SEQ);
@@ -1039,14 +1002,14 @@ public class BCOSDriver implements Driver {
                                                                             encodedArgs);
                                                 }
 
-                                                if (logger.isDebugEnabled()) {
+                                                /*if (logger.isDebugEnabled()) {
                                                     logger.debug(
                                                             " contractAddress: {}, blockNumber: {}, method: {}, args: {}",
                                                             contractAddress,
                                                             blockNumber,
-                                                            request.getData().getMethod(),
-                                                            request.getData().getArgs());
-                                                }
+                                                            request.getMethod(),
+                                                            request.getArgs());
+                                                }*/
 
                                                 String encodedAbi =
                                                         FunctionEncoder.encode(function);
@@ -1062,14 +1025,14 @@ public class BCOSDriver implements Driver {
 
                                                 TransactionParams transaction =
                                                         new TransactionParams(
-                                                                request.getData(),
+                                                                request,
                                                                 signTx,
-                                                                TransactionParams.TP_YPE
+                                                                TransactionParams.TYPE
                                                                         .SEND_TX_BY_PROXY);
 
                                                 transaction.setAbi(abi);
                                                 Request req =
-                                                        RequestFactory.requestBuilder(
+                                                        Request.newRequest(
                                                                 BCOSRequestType.SEND_TRANSACTION,
                                                                 objectMapper.writeValueAsBytes(
                                                                         transaction));
@@ -1100,7 +1063,7 @@ public class BCOSDriver implements Driver {
                                                                 }
 
                                                                 if (receipt.isStatusOK()) {
-                                                                    request.getBlockHeaderManager()
+                                                                    context.getBlockHeaderManager()
                                                                             .asyncGetBlockHeader(
                                                                                     receipt.getBlockNumber()
                                                                                             .longValue(),
@@ -1292,7 +1255,7 @@ public class BCOSDriver implements Driver {
 
     @Override
     public void asyncGetBlockNumber(Connection connection, GetBlockNumberCallback callback) {
-        Request request = RequestFactory.requestBuilder(BCOSRequestType.GET_BLOCK_NUMBER, "");
+        Request request = Request.newRequest(BCOSRequestType.GET_BLOCK_NUMBER, "");
 
         connection.asyncSend(
                 request,
@@ -1316,7 +1279,7 @@ public class BCOSDriver implements Driver {
     public void asyncGetBlockHeader(
             long blockNumber, Connection connection, GetBlockHeaderCallback callback) {
         Request request =
-                RequestFactory.requestBuilder(
+                Request.newRequest(
                         BCOSRequestType.GET_BLOCK_HEADER,
                         BigInteger.valueOf(blockNumber).toByteArray());
         connection.asyncSend(
@@ -1596,8 +1559,7 @@ public class BCOSDriver implements Driver {
             RequestTransactionProofCallback callback) {
 
         Request request =
-                RequestFactory.requestBuilder(
-                        BCOSRequestType.GET_TRANSACTION_PROOF, transactionHash);
+                Request.newRequest(BCOSRequestType.GET_TRANSACTION_PROOF, transactionHash);
         connection.asyncSend(
                 request,
                 response -> {
@@ -1665,24 +1627,35 @@ public class BCOSDriver implements Driver {
                                 new TransactionRequest(
                                         BCOSConstant.PROXY_METHOD_ADDPATH,
                                         new String[] {path.toString()});
-                        TransactionContext<TransactionRequest> context =
-                                new TransactionContext<>(
-                                        request,
-                                        account,
-                                        path,
-                                        new ResourceInfo(),
-                                        blockHeaderManager);
-                        try {
-                            TransactionResponse transactionResponse =
-                                    sendTransaction(context, connection);
-                            if (transactionResponse.getErrorCode() != 0) {
-                                logger.warn(
-                                        "setting path into proxy contract failed: {}",
-                                        transactionResponse.getErrorMessage());
-                            }
-                        } catch (TransactionException e) {
-                            logger.warn("setting path into proxy contract failed,", e);
-                        }
+
+                        TransactionContext context =
+                                new TransactionContext(
+                                        account, path, new ResourceInfo(), blockHeaderManager);
+
+                        asyncSendTransaction(
+                                context,
+                                request,
+                                false,
+                                connection,
+                                new Callback() {
+                                    @Override
+                                    public void onTransactionResponse(
+                                            TransactionException transactionException,
+                                            TransactionResponse transactionResponse) {
+                                        if (transactionException != null) {
+                                            logger.warn(
+                                                    "setting path into proxy contract failed,",
+                                                    transactionException);
+                                            return;
+                                        }
+
+                                        if (transactionResponse.getErrorCode() != 0) {
+                                            logger.warn(
+                                                    "setting path into proxy contract failed: {}",
+                                                    transactionResponse.getErrorMessage());
+                                        }
+                                    }
+                                });
                     }
                 });
     }
@@ -1717,33 +1690,28 @@ public class BCOSDriver implements Driver {
      * @param request
      * @throws BCOSStubException
      */
-    public void checkRequest(TransactionContext<TransactionRequest> request)
+    public void checkRequest(TransactionContext context, TransactionRequest request)
             throws BCOSStubException {
-        if (Objects.isNull(request)) {
+        if (Objects.isNull(context)) {
             throw new BCOSStubException(
                     BCOSStatusCode.InvalidParameter, "TransactionContext is null");
         }
 
-        if (Objects.isNull(request.getBlockHeaderManager())) {
+        if (Objects.isNull(request)) {
+            throw new BCOSStubException(
+                    BCOSStatusCode.InvalidParameter, "TransactionRequest is null");
+        }
+
+        if (Objects.isNull(context.getBlockHeaderManager())) {
             throw new BCOSStubException(
                     BCOSStatusCode.InvalidParameter, "BlockHeaderManager is null");
         }
 
-        if (Objects.isNull(request.getAccount())) {
+        if (Objects.isNull(context.getAccount())) {
             throw new BCOSStubException(BCOSStatusCode.InvalidParameter, "Account is null");
         }
 
-        /*
-        if (Objects.isNull(request.getResourceInfo())) {
-            throw new BCOSStubException(BCOSStatusCode.InvalidParameter, "ResourceInfo is null");
-        }*/
-
-        if (Objects.isNull(request.getData())) {
-            throw new BCOSStubException(BCOSStatusCode.InvalidParameter, "Data is null");
-        }
-
-        if (Objects.isNull(request.getData().getMethod())
-                || "".equals(request.getData().getMethod())) {
+        if (Objects.isNull(request.getMethod()) || "".equals(request.getMethod())) {
             throw new BCOSStubException(BCOSStatusCode.InvalidParameter, "Method is null");
         }
     }

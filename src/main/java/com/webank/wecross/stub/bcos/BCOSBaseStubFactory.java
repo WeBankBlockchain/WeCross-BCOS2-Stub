@@ -61,6 +61,7 @@ public abstract class BCOSBaseStubFactory implements StubFactory {
         /** Initializes the custom command dispatcher */
         RegisterCnsHandler registerCnsHandler = new RegisterCnsHandler();
         registerCnsHandler.setAsyncCnsService(asyncCnsService);
+
         DeployContractHandler deployContractHandler = new DeployContractHandler();
         deployContractHandler.setAsyncCnsService(asyncCnsService);
 

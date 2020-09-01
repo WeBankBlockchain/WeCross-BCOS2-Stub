@@ -12,6 +12,7 @@ import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
+import com.webank.wecross.stub.bcos.contract.BlockUtility;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
@@ -46,7 +47,7 @@ public class BCOSConnectionTest {
         BcosBlock.Block block = objectMapper.readValue(blockJson, BcosBlock.Block.class);
 
         BCOSConnection connection = new BCOSConnection(null);
-        BlockHeader blockHeader = connection.convertToBlockHeader(block);
+        BlockHeader blockHeader = BlockUtility.convertToBlockHeader(block);
 
         assertEquals(blockHeader.getHash(), block.getHash());
         assertEquals(blockHeader.getPrevHash(), block.getParentHash());
@@ -182,7 +183,7 @@ public class BCOSConnectionTest {
 
         TransactionRequest transactionRequest = new TransactionRequest(funName, params);
         TransactionParams transactionParams =
-                new TransactionParams(transactionRequest, abi, TransactionParams.TP_YPE.CALL);
+                new TransactionParams(transactionRequest, abi, TransactionParams.TYPE.CALL);
         transactionParams.setFrom(address);
         transactionParams.setTo(address);
 
@@ -223,7 +224,7 @@ public class BCOSConnectionTest {
 
         TransactionRequest transactionRequest = new TransactionRequest(funName, params);
         TransactionParams transactionParams =
-                new TransactionParams(transactionRequest, abi, TransactionParams.TP_YPE.CALL);
+                new TransactionParams(transactionRequest, abi, TransactionParams.TYPE.CALL);
         transactionParams.setTo(address);
         transactionParams.setFrom(address);
 
@@ -250,7 +251,7 @@ public class BCOSConnectionTest {
 
         TransactionRequest transactionRequest = new TransactionRequest(funName, params);
         TransactionParams transactionParams =
-                new TransactionParams(transactionRequest, abi, TransactionParams.TP_YPE.CALL);
+                new TransactionParams(transactionRequest, abi, TransactionParams.TYPE.CALL);
         transactionParams.setTo(address);
         transactionParams.setFrom(address);
 
@@ -291,7 +292,7 @@ public class BCOSConnectionTest {
         transactionRequest.setMethod(funName);
         transactionRequest.setArgs(params);
         TransactionParams transaction1 =
-                new TransactionParams(transactionRequest, sign, TransactionParams.TP_YPE.SEND_TX);
+                new TransactionParams(transactionRequest, sign, TransactionParams.TYPE.SEND_TX);
 
         request.setData(ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction1));
 
@@ -339,7 +340,7 @@ public class BCOSConnectionTest {
         transactionRequest.setMethod(funName);
         transactionRequest.setArgs(params);
         TransactionParams transaction1 =
-                new TransactionParams(transactionRequest, sign, TransactionParams.TP_YPE.SEND_TX);
+                new TransactionParams(transactionRequest, sign, TransactionParams.TYPE.SEND_TX);
 
         request.setData(ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction1));
 
@@ -377,7 +378,7 @@ public class BCOSConnectionTest {
         transactionRequest.setMethod(funName);
         transactionRequest.setArgs(params);
         TransactionParams transaction1 =
-                new TransactionParams(transactionRequest, sign, TransactionParams.TP_YPE.SEND_TX);
+                new TransactionParams(transactionRequest, sign, TransactionParams.TYPE.SEND_TX);
 
         request.setData(ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction1));
 

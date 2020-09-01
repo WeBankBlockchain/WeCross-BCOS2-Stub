@@ -219,12 +219,13 @@ public class DeployContractHandler implements CommandHandler {
                         "deployContractWithRegisterCNS",
                         Arrays.asList(name, version, base64Bin, abi).toArray(new String[0]));
 
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                new TransactionContext<>(
-                        transactionRequest, account, path, new ResourceInfo(), blockHeaderManager);
+        TransactionContext transactionContext =
+                new TransactionContext(account, path, new ResourceInfo(), blockHeaderManager);
 
-        driver.asyncSendTransactionByProxy(
-                requestTransactionContext,
+        driver.asyncSendTransaction(
+                transactionContext,
+                transactionRequest,
+                true,
                 connection,
                 (exception, res) -> {
                     if (Objects.nonNull(exception)) {

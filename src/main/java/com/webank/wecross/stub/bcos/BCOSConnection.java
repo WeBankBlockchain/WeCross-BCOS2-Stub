@@ -3,7 +3,6 @@ package com.webank.wecross.stub.bcos;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.ResourceInfo;
@@ -12,6 +11,7 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.BCOSStubException;
+import com.webank.wecross.stub.bcos.contract.BlockUtility;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
@@ -110,7 +110,6 @@ public class BCOSConnection implements Connection {
         this.resourcesCache = resourcesCache;
     }
 
-    @Override
     public List<ResourceInfo> getResources() {
         List<ResourceInfo> resources =
                 new ArrayList<ResourceInfo>() {
@@ -137,7 +136,6 @@ public class BCOSConnection implements Connection {
         return resources;
     }
 
-    @Override
     public Map<String, String> getProperties() {
         return properties;
     }
@@ -488,23 +486,6 @@ public class BCOSConnection implements Connection {
                 });
     }
 
-    /**
-     * convert Block to BlockHeader
-     *
-     * @param block
-     * @return
-     */
-    public BlockHeader convertToBlockHeader(BcosBlock.Block block) {
-        BlockHeader blockHeader = new BlockHeader();
-        blockHeader.setHash(block.getHash());
-        blockHeader.setPrevHash(block.getParentHash());
-        blockHeader.setNumber(block.getNumber().longValue());
-        blockHeader.setReceiptRoot(block.getReceiptsRoot());
-        blockHeader.setStateRoot(block.getStateRoot());
-        blockHeader.setTransactionRoot(block.getTransactionsRoot());
-        return blockHeader;
-    }
-
     public void handleAsyncGetBlockHeaderRequest(Request request, Callback callback) {
         Response response = new Response();
         try {
@@ -513,7 +494,8 @@ public class BCOSConnection implements Connection {
 
             response.setErrorCode(BCOSStatusCode.Success);
             response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
-            response.setData(objectMapper.writeValueAsBytes(convertToBlockHeader(block)));
+            response.setData(
+                    objectMapper.writeValueAsBytes(BlockUtility.convertToBlockHeader(block)));
             logger.debug(" getBlockByNumber, blockNumber: {}, block: {}", blockNumber, block);
         } catch (Exception e) {
             logger.warn(" Exception, e: {}", e);
