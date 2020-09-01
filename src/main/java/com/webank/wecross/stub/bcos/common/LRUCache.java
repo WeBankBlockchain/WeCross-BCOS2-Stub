@@ -33,12 +33,6 @@ public class LRUCache<K, V> {
         }
     }
 
-    public void printSequence() {
-        synchronized (this) {
-            System.out.println(lruCacheMap.keySet());
-        }
-    }
-
     public void clear() {
         synchronized (this) {
             lruCacheMap.clear();

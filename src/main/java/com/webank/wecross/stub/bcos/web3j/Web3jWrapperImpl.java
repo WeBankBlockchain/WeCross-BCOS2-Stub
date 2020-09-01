@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.protocol.Web3j;
-import org.fisco.bcos.web3j.protocol.core.DefaultBlockParameter;
-import org.fisco.bcos.web3j.protocol.core.DefaultBlockParameterName;
 import org.fisco.bcos.web3j.protocol.core.methods.request.Transaction;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BlockNumber;
@@ -33,11 +31,7 @@ public class Web3jWrapperImpl implements Web3jWrapper {
 
     @Override
     public BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException {
-        BcosBlock bcosBlock =
-                web3j.getBlockByNumber(
-                                DefaultBlockParameter.valueOf(BigInteger.valueOf(blockNumber)),
-                                false)
-                        .send();
+        BcosBlock bcosBlock = web3j.getBlockByNumber(BigInteger.valueOf(blockNumber), false).send();
         return bcosBlock.getResult();
     }
 
@@ -69,8 +63,7 @@ public class Web3jWrapperImpl implements Web3jWrapper {
         Call ethCall =
                 web3j.call(
                                 Transaction.createEthCallTransaction(
-                                        accountAddress, contractAddress, data),
-                                DefaultBlockParameterName.LATEST)
+                                        accountAddress, contractAddress, data))
                         .send();
         return ethCall.getResult();
     }

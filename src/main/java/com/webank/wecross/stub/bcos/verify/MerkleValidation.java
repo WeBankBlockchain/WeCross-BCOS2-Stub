@@ -20,26 +20,15 @@ public class MerkleValidation {
     /**
      * @param blockNumber
      * @param hash transaction hash
-     * @param bytesBlockHeader
      * @param transactionReceipt
      * @throws BCOSStubException
      */
     public void verifyTransactionReceiptProof(
             long blockNumber,
             String hash,
-            byte[] bytesBlockHeader,
+            BlockHeader blockHeader,
             TransactionReceipt transactionReceipt)
             throws BCOSStubException {
-
-        // decode block header
-        BlockHeader blockHeader = decodeBlockHeader(bytesBlockHeader);
-        if (Objects.isNull(blockHeader)) {
-            throw new BCOSStubException(
-                    BCOSStatusCode.InvalidEncodedBlockHeader,
-                    BCOSStatusCode.getStatusMessage(BCOSStatusCode.InvalidEncodedBlockHeader)
-                            + ", blockNumber: "
-                            + blockNumber);
-        }
 
         // verify transaction
         if (!MerkleProofUtility.verifyTransactionReceipt(
@@ -87,26 +76,13 @@ public class MerkleValidation {
             VerifyCallback callback) {
         blockHeaderManager.asyncGetBlockHeader(
                 blockNumber,
-                (blockHeaderException, bytesBlockHeader) -> {
-                    if (Objects.nonNull(blockHeaderException) || bytesBlockHeader.length == 0) {
+                (blockHeaderException, blockHeader) -> {
+                    if (Objects.nonNull(blockHeaderException)) {
                         callback.onResponse(
                                 new BCOSStubException(
                                         BCOSStatusCode.FetchBlockHeaderFailed,
                                         BCOSStatusCode.getStatusMessage(
                                                         BCOSStatusCode.FetchBlockHeaderFailed)
-                                                + ", blockNumber: "
-                                                + blockNumber));
-                        return;
-                    }
-
-                    // decode block header
-                    BlockHeader blockHeader = decodeBlockHeader(bytesBlockHeader);
-                    if (Objects.isNull(blockHeader)) {
-                        callback.onResponse(
-                                new BCOSStubException(
-                                        BCOSStatusCode.InvalidEncodedBlockHeader,
-                                        BCOSStatusCode.getStatusMessage(
-                                                        BCOSStatusCode.InvalidEncodedBlockHeader)
                                                 + ", blockNumber: "
                                                 + blockNumber));
                         return;
@@ -143,14 +119,5 @@ public class MerkleValidation {
 
                     callback.onResponse(null);
                 });
-    }
-
-    private BlockHeader decodeBlockHeader(byte[] data) {
-        try {
-            return objectMapper.readValue(data, BlockHeader.class);
-        } catch (Exception e) {
-            logger.error("decoding block header failed", e);
-            return null;
-        }
     }
 }

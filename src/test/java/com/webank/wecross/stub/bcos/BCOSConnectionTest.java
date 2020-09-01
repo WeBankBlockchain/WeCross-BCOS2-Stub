@@ -12,6 +12,7 @@ import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
+import com.webank.wecross.stub.bcos.contract.BlockUtility;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
@@ -46,7 +47,7 @@ public class BCOSConnectionTest {
         BcosBlock.Block block = objectMapper.readValue(blockJson, BcosBlock.Block.class);
 
         BCOSConnection connection = new BCOSConnection(null);
-        BlockHeader blockHeader = connection.convertToBlockHeader(block);
+        BlockHeader blockHeader = BlockUtility.convertToBlockHeader(block);
 
         assertEquals(blockHeader.getHash(), block.getHash());
         assertEquals(blockHeader.getPrevHash(), block.getParentHash());
@@ -75,13 +76,20 @@ public class BCOSConnectionTest {
     }
 
     @Test
-    public void handleUnknownTypeTest() throws IOException {
+    public void handleUnknownTypeTest() throws IOException, InterruptedException {
         Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
         BCOSConnection connection = new BCOSConnection(web3jWrapper);
         Request request = new Request();
         request.setType(2000);
-        Response response = connection.send(request);
-        assertEquals(response.getErrorCode(), BCOSStatusCode.UnrecognizedRequestType);
+        connection.asyncSend(
+                request,
+                new Connection.Callback() {
+                    @Override
+                    public void onResponse(Response response) {
+                        assertEquals(
+                                response.getErrorCode(), BCOSStatusCode.UnrecognizedRequestType);
+                    }
+                });
     }
 
     @Test
@@ -115,12 +123,11 @@ public class BCOSConnectionTest {
 
     @Test
     public void handleGetBlockTest() throws IOException {
-        BCOSDriver driver = new BCOSDriver();
 
         Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
         BCOSConnection connection = new BCOSConnection(web3jWrapper);
         Request request = new Request();
-        request.setType(BCOSRequestType.GET_BLOCK_HEADER);
+        request.setType(BCOSRequestType.GET_BLOCK_BY_NUMBER);
 
         request.setData(BigInteger.valueOf(11111).toByteArray());
 
@@ -130,7 +137,14 @@ public class BCOSConnectionTest {
                     assertTrue(Objects.nonNull(connection.getWeb3jWrapper()));
                     assertEquals(response.getErrorCode(), 0);
 
-                    BlockHeader blockHeader = driver.decodeBlockHeader(response.getData());
+                    Block block = null;
+                    try {
+                        block = BlockUtility.convertToBlock(response.getData(), true);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    BlockHeader blockHeader = block.getBlockHeader();
                     assertEquals(
                             blockHeader.getHash(),
                             "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0");
@@ -155,15 +169,14 @@ public class BCOSConnectionTest {
         Web3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
         BCOSConnection connection = new BCOSConnection(web3jWrapper);
         Request request = new Request();
-        request.setType(BCOSRequestType.GET_BLOCK_HEADER);
+        request.setType(BCOSRequestType.GET_BLOCK_BY_NUMBER);
 
         request.setData(BigInteger.valueOf(11111).toByteArray());
         connection.asyncSend(
                 request,
                 response -> {
                     assertTrue(Objects.nonNull(connection.getWeb3jWrapper()));
-                    assertEquals(
-                            response.getErrorCode(), BCOSStatusCode.HandleGetBlockHeaderFailed);
+                    assertEquals(response.getErrorCode(), BCOSStatusCode.HandleGetBlockFailed);
                 });
     }
 
@@ -182,30 +195,40 @@ public class BCOSConnectionTest {
 
         TransactionRequest transactionRequest = new TransactionRequest(funName, params);
         TransactionParams transactionParams =
-                new TransactionParams(transactionRequest, abi, TransactionParams.TP_YPE.CALL);
+                new TransactionParams(transactionRequest, abi, TransactionParams.SUB_TYPE.CALL);
         transactionParams.setFrom(address);
         transactionParams.setTo(address);
 
         Request request = new Request();
         request.setType(BCOSRequestType.CALL);
         request.setData(ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transactionParams));
-        Response response = connection.send(request);
+        connection.asyncSend(
+                request,
+                new Connection.Callback() {
+                    @Override
+                    public void onResponse(Response response) {
+                        assertEquals(response.getErrorCode(), BCOSStatusCode.Success);
 
-        assertEquals(response.getErrorCode(), BCOSStatusCode.Success);
+                        Call.CallOutput callOutput = null;
+                        try {
+                            callOutput =
+                                    ObjectMapperFactory.getObjectMapper()
+                                            .readValue(response.getData(), Call.CallOutput.class);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        assertEquals(callOutput.getStatus(), StatusCode.Success);
 
-        Call.CallOutput callOutput =
-                ObjectMapperFactory.getObjectMapper()
-                        .readValue(response.getData(), Call.CallOutput.class);
-        assertEquals(callOutput.getStatus(), StatusCode.Success);
+                        String data = callOutput.getOutput();
 
-        String data = callOutput.getOutput();
+                        String[] strings = FunctionUtility.decodeDefaultOutput(data);
+                        assertEquals(strings.length, params.length);
 
-        String[] strings = FunctionUtility.decodeDefaultOutput(data);
-        assertEquals(strings.length, params.length);
-
-        for (int i = 0; i < params.length; i++) {
-            assertEquals(strings[i], params[i]);
-        }
+                        for (int i = 0; i < params.length; i++) {
+                            assertEquals(strings[i], params[i]);
+                        }
+                    }
+                });
     }
 
     @Test
@@ -223,16 +246,22 @@ public class BCOSConnectionTest {
 
         TransactionRequest transactionRequest = new TransactionRequest(funName, params);
         TransactionParams transactionParams =
-                new TransactionParams(transactionRequest, abi, TransactionParams.TP_YPE.CALL);
+                new TransactionParams(transactionRequest, abi, TransactionParams.SUB_TYPE.CALL);
         transactionParams.setTo(address);
         transactionParams.setFrom(address);
 
         Request request = new Request();
         request.setType(BCOSRequestType.CALL);
         request.setData(ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transactionParams));
-        Response response = connection.send(request);
-
-        assertEquals(response.getErrorCode(), BCOSStatusCode.HandleCallRequestFailed);
+        connection.asyncSend(
+                request,
+                new Connection.Callback() {
+                    @Override
+                    public void onResponse(Response response) {
+                        assertEquals(
+                                response.getErrorCode(), BCOSStatusCode.HandleCallRequestFailed);
+                    }
+                });
     }
 
     @Test
@@ -250,16 +279,21 @@ public class BCOSConnectionTest {
 
         TransactionRequest transactionRequest = new TransactionRequest(funName, params);
         TransactionParams transactionParams =
-                new TransactionParams(transactionRequest, abi, TransactionParams.TP_YPE.CALL);
+                new TransactionParams(transactionRequest, abi, TransactionParams.SUB_TYPE.CALL);
         transactionParams.setTo(address);
         transactionParams.setFrom(address);
 
         Request request = new Request();
         request.setType(BCOSRequestType.CALL);
         request.setData(ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transactionParams));
-        Response response = connection.send(request);
-
-        assertEquals(response.getErrorCode(), BCOSStatusCode.Success);
+        connection.asyncSend(
+                request,
+                new Connection.Callback() {
+                    @Override
+                    public void onResponse(Response response) {
+                        assertEquals(response.getErrorCode(), BCOSStatusCode.Success);
+                    }
+                });
     }
 
     @Test
@@ -291,27 +325,38 @@ public class BCOSConnectionTest {
         transactionRequest.setMethod(funName);
         transactionRequest.setArgs(params);
         TransactionParams transaction1 =
-                new TransactionParams(transactionRequest, sign, TransactionParams.TP_YPE.SEND_TX);
+                new TransactionParams(transactionRequest, sign, TransactionParams.SUB_TYPE.SEND_TX);
 
         request.setData(ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction1));
 
-        Response response = connection.send(request);
+        connection.asyncSend(
+                request,
+                new Connection.Callback() {
+                    @Override
+                    public void onResponse(Response response) {
+                        assertEquals(response.getErrorCode(), BCOSStatusCode.Success);
+                        TransactionReceipt transactionReceipt = null;
+                        try {
+                            transactionReceipt =
+                                    ObjectMapperFactory.getObjectMapper()
+                                            .readValue(
+                                                    response.getData(), TransactionReceipt.class);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
 
-        assertEquals(response.getErrorCode(), BCOSStatusCode.Success);
-        TransactionReceipt transactionReceipt =
-                ObjectMapperFactory.getObjectMapper()
-                        .readValue(response.getData(), TransactionReceipt.class);
-
-        assertEquals(transactionReceipt.getBlockNumber().longValue(), 9);
-        assertEquals(
-                transactionReceipt.getTransactionHash(),
-                "0x8b3946912d1133f9fb0722a7b607db2456d468386c2e86b035e81ef91d94eb90");
-        assertFalse(transactionReceipt.getTxProof().isEmpty());
-        assertFalse(transactionReceipt.getReceiptProof().isEmpty());
+                        assertEquals(transactionReceipt.getBlockNumber().longValue(), 9);
+                        assertEquals(
+                                transactionReceipt.getTransactionHash(),
+                                "0x8b3946912d1133f9fb0722a7b607db2456d468386c2e86b035e81ef91d94eb90");
+                        assertFalse(transactionReceipt.getTxProof().isEmpty());
+                        assertFalse(transactionReceipt.getReceiptProof().isEmpty());
+                    }
+                });
     }
 
     @Test
-    public void handleFailedSendTransactionTest() throws IOException {
+    public void handleFailedSendTransactionTest() throws IOException, InterruptedException {
 
         Web3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
         BCOSConnection connection = new BCOSConnection(web3jWrapper);
@@ -339,17 +384,27 @@ public class BCOSConnectionTest {
         transactionRequest.setMethod(funName);
         transactionRequest.setArgs(params);
         TransactionParams transaction1 =
-                new TransactionParams(transactionRequest, sign, TransactionParams.TP_YPE.SEND_TX);
+                new TransactionParams(transactionRequest, sign, TransactionParams.SUB_TYPE.SEND_TX);
 
         request.setData(ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction1));
 
-        Response response = connection.send(request);
-
-        assertEquals(response.getErrorCode(), BCOSStatusCode.HandleSendTransactionFailed);
+        AsyncToSync asyncToSync = new AsyncToSync();
+        connection.asyncSend(
+                request,
+                new Connection.Callback() {
+                    @Override
+                    public void onResponse(Response response) {
+                        assertEquals(
+                                response.getErrorCode(),
+                                BCOSStatusCode.HandleSendTransactionFailed);
+                        asyncToSync.getSemaphore().release();
+                    }
+                });
+        asyncToSync.getSemaphore().acquire();
     }
 
     @Test
-    public void handleFailedSendTransactionTest0() throws IOException {
+    public void handleFailedSendTransactionTest0() throws IOException, InterruptedException {
 
         Web3jWrapper web3jWrapper = new Web3jWrapperWithNullMock();
         BCOSConnection connection = new BCOSConnection(web3jWrapper);
@@ -377,17 +432,26 @@ public class BCOSConnectionTest {
         transactionRequest.setMethod(funName);
         transactionRequest.setArgs(params);
         TransactionParams transaction1 =
-                new TransactionParams(transactionRequest, sign, TransactionParams.TP_YPE.SEND_TX);
+                new TransactionParams(transactionRequest, sign, TransactionParams.SUB_TYPE.SEND_TX);
 
         request.setData(ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction1));
 
-        Response response = connection.send(request);
-
-        assertEquals(response.getErrorCode(), BCOSStatusCode.TransactionReceiptNotExist);
+        AsyncToSync asyncToSync = new AsyncToSync();
+        connection.asyncSend(
+                request,
+                new Connection.Callback() {
+                    @Override
+                    public void onResponse(Response response) {
+                        assertEquals(
+                                response.getErrorCode(), BCOSStatusCode.TransactionReceiptNotExist);
+                        asyncToSync.getSemaphore().release();
+                    }
+                });
+        asyncToSync.getSemaphore().acquire();
     }
 
     @Test
-    public void handleFailedGetTransactionProofTest() throws IOException {
+    public void handleFailedGetTransactionProofTest() throws IOException, InterruptedException {
         String hash = "0x633a3386a189455354c058af6606d705697f3b216ad555958dc680f68cc4e99d";
         Request request = new Request();
         request.setType(BCOSRequestType.GET_TRANSACTION_PROOF);
@@ -395,8 +459,14 @@ public class BCOSConnectionTest {
 
         Web3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
         BCOSConnection connection = new BCOSConnection(web3jWrapper);
-        Response response = connection.send(request);
 
-        assertEquals(response.getErrorCode(), BCOSStatusCode.UnrecognizedRequestType);
+        connection.asyncSend(
+                request,
+                new Connection.Callback() {
+                    @Override
+                    public void onResponse(Response response) {
+                        assertEquals(response.getErrorCode(), BCOSStatusCode.UnclassifiedError);
+                    }
+                });
     }
 }

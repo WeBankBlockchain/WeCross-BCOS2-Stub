@@ -1,9 +1,9 @@
-package com.webank.wecross.stub.bcos.integration;
+package com.webank.wecross.stub.bcos;
 
 import java.util.concurrent.Semaphore;
 
-class AsyncToSync  {
-    AsyncToSync() {
+public class AsyncToSync {
+    public AsyncToSync() {
         try {
             semaphore.acquire(1);
         } catch (InterruptedException e) {

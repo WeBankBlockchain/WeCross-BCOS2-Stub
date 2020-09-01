@@ -5,8 +5,11 @@ import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import com.webank.wecross.stub.Connection;
+import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
+import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
+import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImplMock;
 import java.io.IOException;
 import java.util.List;
@@ -16,10 +19,16 @@ public class BCOSConnectionFactoryTest {
     @Test
     public void buildTest() throws IOException {
         try {
+
+            BCOSStubConfigParser bcosStubConfigParser =
+                    new BCOSStubConfigParser("./", "stub-sample-ut.toml");
+            BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
+
             Connection connection =
-                    BCOSConnectionFactory.build(
-                            "./", "stub-sample-ut.toml", new Web3jWrapperImplMock());
-            List<ResourceInfo> resources = connection.getResources();
+                    BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperImplMock());
+
+            Driver driver = new BCOSDriver();
+            List<ResourceInfo> resources = driver.getResources(connection);
             assertTrue(resources.size() == 3);
             ResourceInfo resourceInfo = resources.get(0);
             assertEquals(resourceInfo.getName(), "HelloWeCross");

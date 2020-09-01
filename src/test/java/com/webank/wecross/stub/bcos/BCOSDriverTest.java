@@ -2,7 +2,6 @@ package com.webank.wecross.stub.bcos;
 
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import com.webank.wecross.stub.Account;
@@ -10,7 +9,6 @@ import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.BlockHeaderManager;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
-import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.TransactionContext;
@@ -22,6 +20,8 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.BCOSStubException;
+import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
+import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Objects;
+import org.apache.commons.lang3.tuple.Pair;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
 import org.fisco.bcos.web3j.abi.wrapper.ABICodecJsonWrapper;
@@ -60,31 +61,11 @@ public class BCOSDriverTest {
     private ResourceInfo resourceInfo = null;
     private BlockHeaderManager blockHeaderManager = null;
     private BlockHeaderManager txVerifyBlockHeaderManager = null;
+    private TransactionContext transactionContext = null;
 
-    public TransactionContext<TransactionRequest> createTransactionRequestContext(
-            String method, String[] args) {
+    public TransactionRequest createTransactionRequest(String method, String[] args) {
         TransactionRequest transactionRequest = new TransactionRequest(method, args);
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                new TransactionContext<TransactionRequest>(
-                        transactionRequest, account, null, resourceInfo, blockHeaderManager);
-        requestTransactionContext.setAccount(account);
-        requestTransactionContext.setBlockHeaderManager(blockHeaderManager);
-        requestTransactionContext.setData(transactionRequest);
-        requestTransactionContext.setResourceInfo(resourceInfo);
-        return requestTransactionContext;
-    }
-
-    public TransactionContext<TransactionRequest> createSendTxTransactionRequestContext(
-            String method, String[] args) {
-        TransactionRequest transactionRequest = new TransactionRequest(method, args);
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                new TransactionContext<TransactionRequest>(
-                        transactionRequest, account, null, resourceInfo, blockHeaderManager);
-        requestTransactionContext.setAccount(account);
-        requestTransactionContext.setBlockHeaderManager(txVerifyBlockHeaderManager);
-        requestTransactionContext.setData(transactionRequest);
-        requestTransactionContext.setResourceInfo(resourceInfo);
-        return requestTransactionContext;
+        return transactionRequest;
     }
 
     @Before
@@ -93,24 +74,27 @@ public class BCOSDriverTest {
         BCOSStubFactory bcosSubFactory = new BCOSStubFactory();
         driver = bcosSubFactory.newDriver();
         account = BCOSAccountFactory.build("bcos", "classpath:/accounts/bcos");
-        connection =
-                BCOSConnectionFactory.build(
-                        "./", "stub-sample-ut.toml", new Web3jWrapperImplMock());
+
+        BCOSStubConfigParser bcosStubConfigParser =
+                new BCOSStubConfigParser("./", "stub-sample-ut.toml");
+        BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
+
+        connection = BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperImplMock());
         exceptionConnection =
-                BCOSConnectionFactory.build(
-                        "./", "stub-sample-ut.toml", new Web3jWrapperWithExceptionMock());
+                BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperWithExceptionMock());
         nonExistConnection =
-                BCOSConnectionFactory.build(
-                        "./", "stub-sample-ut.toml", new Web3jWrapperWithNullMock());
+                BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperWithNullMock());
         callNotOkStatusConnection =
-                BCOSConnectionFactory.build(
-                        "./", "stub-sample-ut.toml", new Web3jWrapperCallNotSucStatus());
+                BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperCallNotSucStatus());
         txVerifyConnection =
-                BCOSConnectionFactory.build(
-                        "./", "stub-sample-ut.toml", new Web3jWrapperTxVerifyMock());
+                BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperTxVerifyMock());
+
         blockHeaderManager = new BlockHeaderManagerImplMock(new Web3jWrapperImplMock());
         txVerifyBlockHeaderManager = new BlockHeaderManagerImplMock(new Web3jWrapperTxVerifyMock());
         resourceInfo = ((BCOSConnection) connection).getResourceInfoList().get(0);
+
+        transactionContext =
+                new TransactionContext(account, null, resourceInfo, blockHeaderManager);
     }
 
     @Test
@@ -123,13 +107,15 @@ public class BCOSDriverTest {
 
         TransactionParams transaction =
                 new TransactionParams(
-                        request, FunctionEncoder.encode(function), TransactionParams.TP_YPE.CALL);
+                        request, FunctionEncoder.encode(function), TransactionParams.SUB_TYPE.CALL);
 
         byte[] data = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction);
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                driver.decodeTransactionRequest(data);
-        assertEquals(requestTransactionContext.getData().getMethod(), func);
-        assertEquals(requestTransactionContext.getData().getArgs().length, params.length);
+
+        Pair<Boolean, TransactionRequest> booleanTransactionRequestPair =
+                driver.decodeTransactionRequest(Request.newRequest(BCOSRequestType.CALL, data));
+        assertTrue(booleanTransactionRequestPair.getKey() == true);
+        assertEquals(booleanTransactionRequestPair.getValue().getMethod(), func);
+        assertEquals(booleanTransactionRequestPair.getValue().getArgs().length, params.length);
     }
 
     @Test
@@ -149,13 +135,16 @@ public class BCOSDriverTest {
                         FunctionEncoder.encode(function));
 
         TransactionParams transaction =
-                new TransactionParams(request, signTx, TransactionParams.TP_YPE.SEND_TX);
+                new TransactionParams(request, signTx, TransactionParams.SUB_TYPE.SEND_TX);
 
         byte[] data = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction);
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                driver.decodeTransactionRequest(data);
-        assertEquals(requestTransactionContext.getData().getMethod(), func);
-        assertEquals(requestTransactionContext.getData().getArgs().length, params.length);
+
+        Pair<Boolean, TransactionRequest> booleanTransactionRequestPair =
+                driver.decodeTransactionRequest(
+                        Request.newRequest(BCOSRequestType.SEND_TRANSACTION, data));
+        assertTrue(booleanTransactionRequestPair.getKey() == true);
+        assertEquals(booleanTransactionRequestPair.getValue().getMethod(), func);
+        assertEquals(booleanTransactionRequestPair.getValue().getArgs().length, params.length);
     }
 
     @Test
@@ -186,15 +175,17 @@ public class BCOSDriverTest {
                         FunctionEncoder.encode(function));
 
         TransactionParams transaction =
-                new TransactionParams(request, signTx, TransactionParams.TP_YPE.SEND_TX_BY_PROXY);
+                new TransactionParams(request, signTx, TransactionParams.SUB_TYPE.SEND_TX_BY_PROXY);
         transaction.setAbi(abi);
 
         byte[] data = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction);
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                driver.decodeTransactionRequest(data);
-        assertEquals(requestTransactionContext.getData().getMethod(), func);
-        assertEquals(requestTransactionContext.getData().getArgs().length, params.length);
-        assertEquals(requestTransactionContext.getData().getArgs()[0], params[0]);
+        Pair<Boolean, TransactionRequest> booleanTransactionRequestPair =
+                driver.decodeTransactionRequest(
+                        Request.newRequest(BCOSRequestType.SEND_TRANSACTION, data));
+        assertTrue(booleanTransactionRequestPair.getKey() == true);
+        assertEquals(booleanTransactionRequestPair.getValue().getMethod(), func);
+        assertEquals(booleanTransactionRequestPair.getValue().getArgs().length, params.length);
+        assertEquals(booleanTransactionRequestPair.getValue().getArgs()[0], params[0]);
     }
 
     @Test
@@ -221,42 +212,16 @@ public class BCOSDriverTest {
                 new TransactionParams(
                         request,
                         FunctionEncoder.encode(function),
-                        TransactionParams.TP_YPE.CALL_BY_PROXY);
+                        TransactionParams.SUB_TYPE.CALL_BY_PROXY);
         transaction.setAbi(abi);
 
         byte[] data = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction);
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                driver.decodeTransactionRequest(data);
-        assertEquals(requestTransactionContext.getData().getMethod(), func);
-        assertEquals(requestTransactionContext.getData().getArgs().length, params.length);
-        assertEquals(requestTransactionContext.getData().getArgs()[0], params[0]);
-    }
-
-    @Test
-    public void isTransactionTest() throws IOException {
-        Request request = new Request();
-        request.setData(new byte[0]);
-
-        request.setType(BCOSRequestType.CALL);
-        assertTrue(driver.isTransaction(request));
-        request.setType(BCOSRequestType.SEND_TRANSACTION);
-        assertTrue(driver.isTransaction(request));
-
-        request.setType(BCOSRequestType.GET_BLOCK_NUMBER);
-        assertFalse(driver.isTransaction(request));
-        request.setType(BCOSRequestType.GET_BLOCK_HEADER);
-        assertFalse(driver.isTransaction(request));
-
-        request.setType(BCOSRequestType.GET_TRANSACTION_PROOF);
-        assertFalse(driver.isTransaction(request));
-
-        request.setType(11111);
-        assertFalse(driver.isTransaction(request));
-    }
-
-    @Test
-    public void decodeBlockHeaderTest() throws IOException {
-        assertTrue(Objects.isNull(driver.decodeBlockHeader(new byte[0])));
+        Pair<Boolean, TransactionRequest> booleanTransactionRequestPair =
+                driver.decodeTransactionRequest(Request.newRequest(BCOSRequestType.CALL, data));
+        assertTrue(booleanTransactionRequestPair.getKey() == true);
+        assertEquals(booleanTransactionRequestPair.getValue().getMethod(), func);
+        assertEquals(booleanTransactionRequestPair.getValue().getArgs().length, params.length);
+        assertEquals(booleanTransactionRequestPair.getValue().getArgs()[0], params[0]);
     }
 
     @Test
@@ -280,16 +245,57 @@ public class BCOSDriverTest {
     public void getBlockHeaderTest() throws IOException {
 
         Request request = new Request();
-        request.setType(BCOSRequestType.GET_BLOCK_HEADER);
+        request.setType(BCOSRequestType.GET_BLOCK_BY_NUMBER);
         request.setData(BigInteger.valueOf(11111).toByteArray());
 
-        driver.asyncGetBlockHeader(
+        driver.asyncGetBlock(
                 1111,
+                true,
                 connection,
-                (e, bytesBlockHeader) -> {
-                    assertTrue(Objects.nonNull(bytesBlockHeader));
+                (e, block) -> {
+                    assertTrue(Objects.isNull(e));
+                    assertTrue(Objects.nonNull(block));
+                    assertTrue(block.getRawBytes().length > 1);
+                    assertTrue(block.getTransactionsHashes().isEmpty());
 
-                    BlockHeader blockHeader = driver.decodeBlockHeader(bytesBlockHeader);
+                    BlockHeader blockHeader = block.getBlockHeader();
+                    assertEquals(
+                            blockHeader.getHash(),
+                            "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0");
+                    assertEquals(
+                            blockHeader.getPrevHash(),
+                            "0xed0ef6826277efbc9601dedc1b6ea20067eed219e415e1038f111155b8fc1e24");
+                    assertEquals(
+                            blockHeader.getReceiptRoot(),
+                            "0x2a4433b7611c4b1fae16b873ced1dec9a65b82416e448f58fded002c05a10082");
+                    assertEquals(
+                            blockHeader.getStateRoot(),
+                            "0xce8a92c9311e9e0b77842c86adf8fcf91cbab8fb5daefc85b21f501ca8b1f682");
+                    assertEquals(blockHeader.getNumber(), 331);
+                    assertEquals(
+                            blockHeader.getTransactionRoot(),
+                            "0x07009a9d655cee91e95dcd1c53d5917a58f80e6e6ac689bae24bd911d75c471c");
+                });
+    }
+
+    @Test
+    public void getBlockTest() throws IOException {
+
+        Request request = new Request();
+        request.setType(BCOSRequestType.GET_BLOCK_BY_NUMBER);
+        request.setData(BigInteger.valueOf(11111).toByteArray());
+
+        driver.asyncGetBlock(
+                1111,
+                false,
+                connection,
+                (e, block) -> {
+                    assertTrue(Objects.isNull(e));
+                    assertTrue(Objects.nonNull(block));
+                    assertTrue(block.getRawBytes().length > 1);
+                    assertTrue(!block.getTransactionsHashes().isEmpty());
+
+                    BlockHeader blockHeader = block.getBlockHeader();
                     assertEquals(
                             blockHeader.getHash(),
                             "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0");
@@ -313,13 +319,11 @@ public class BCOSDriverTest {
     public void getBlockHeaderFailedTest() throws IOException {
 
         Request request = new Request();
-        request.setType(BCOSRequestType.GET_BLOCK_HEADER);
+        request.setType(BCOSRequestType.GET_BLOCK_BY_NUMBER);
         request.setData(BigInteger.valueOf(11111).toByteArray());
 
-        driver.asyncGetBlockHeader(
-                1111,
-                exceptionConnection,
-                (e, blockHeader) -> assertTrue(Objects.isNull(blockHeader)));
+        driver.asyncGetBlock(
+                1111, false, exceptionConnection, (e, block) -> assertTrue(Objects.isNull(block)));
     }
 
     @Test
@@ -334,21 +338,32 @@ public class BCOSDriverTest {
         BCOSConnection bcosConnection = (BCOSConnection) connection;
         bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_NAME, address);
 
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(funName, params);
-        TransactionResponse transactionResponse =
-                driver.call(requestTransactionContext, connection);
+        TransactionRequest transactionRequest = createTransactionRequest(funName, params);
+        AsyncToSync asyncToSync = new AsyncToSync();
+        driver.asyncCall(
+                transactionContext,
+                transactionRequest,
+                false,
+                connection,
+                new Driver.Callback() {
+                    @Override
+                    public void onTransactionResponse(
+                            TransactionException transactionException,
+                            TransactionResponse transactionResponse) {
+                        assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.Success);
+                        assertTrue(transactionResponse.getResult().length == params.length);
 
-        assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.Success);
-        assertTrue(transactionResponse.getResult().length == params.length);
-
-        for (int i = 0; i < params.length; ++i) {
-            assertEquals(params[i], transactionResponse.getResult()[i]);
-        }
+                        for (int i = 0; i < params.length; ++i) {
+                            assertEquals(params[i], transactionResponse.getResult()[i]);
+                        }
+                        asyncToSync.getSemaphore().release();
+                    }
+                });
+        asyncToSync.getSemaphore().acquire();
     }
 
     @Test
-    public void callFailedTest() {
+    public void callFailedTest() throws InterruptedException {
 
         Request request = new Request();
         request.setType(BCOSRequestType.CALL);
@@ -357,16 +372,26 @@ public class BCOSDriverTest {
         String funName = "funcName";
         String[] params = new String[] {"abc", "def", "hig", "xxxxx"};
 
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(funName, params);
-        TransactionResponse transactionResponse = null;
-        try {
-            transactionResponse = driver.call(requestTransactionContext, exceptionConnection);
-        } catch (TransactionException e) {
-            assertEquals(e.getErrorCode().intValue(), BCOSStatusCode.InvalidParameter);
-        }
+        TransactionRequest transactionRequest = createTransactionRequest(funName, params);
 
-        assertTrue(Objects.isNull(transactionResponse));
+        AsyncToSync asyncToSync = new AsyncToSync();
+
+        driver.asyncCall(
+                transactionContext,
+                transactionRequest,
+                false,
+                exceptionConnection,
+                new Driver.Callback() {
+                    @Override
+                    public void onTransactionResponse(
+                            TransactionException transactionException,
+                            TransactionResponse transactionResponse) {
+                        assertTrue(Objects.isNull(transactionResponse));
+                        asyncToSync.getSemaphore().release();
+                    }
+                });
+
+        asyncToSync.getSemaphore().acquire();
     }
 
     @Test
@@ -381,13 +406,26 @@ public class BCOSDriverTest {
         BCOSConnection bcosConnection = (BCOSConnection) callNotOkStatusConnection;
         bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_NAME, "0x0");
 
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(funName, params);
-        TransactionResponse transactionResponse =
-                driver.call(requestTransactionContext, callNotOkStatusConnection);
+        TransactionRequest transactionRequest = createTransactionRequest(funName, params);
+        AsyncToSync asyncToSync = new AsyncToSync();
 
-        assertEquals(
-                transactionResponse.getErrorCode().intValue(), BCOSStatusCode.CallNotSuccessStatus);
+        driver.asyncCall(
+                transactionContext,
+                transactionRequest,
+                false,
+                callNotOkStatusConnection,
+                new Driver.Callback() {
+                    @Override
+                    public void onTransactionResponse(
+                            TransactionException transactionException,
+                            TransactionResponse transactionResponse) {
+                        assertEquals(
+                                transactionResponse.getErrorCode().intValue(),
+                                BCOSStatusCode.CallNotSuccessStatus);
+                        asyncToSync.getSemaphore().release();
+                    }
+                });
+        asyncToSync.getSemaphore().acquire();
     }
 
     @Test
@@ -395,8 +433,7 @@ public class BCOSDriverTest {
         String transactionHash =
                 "0x8b3946912d1133f9fb0722a7b607db2456d468386c2e86b035e81ef91d94eb90";
         long blockNumber = 9;
-        driver.asyncGetVerifiedTransaction(
-                Path.decode("a.b.c"),
+        driver.asyncGetTransaction(
                 transactionHash,
                 blockNumber,
                 txVerifyBlockHeaderManager,
@@ -412,8 +449,7 @@ public class BCOSDriverTest {
         String transactionHash =
                 "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         long blockNumber = 11111;
-        driver.asyncGetVerifiedTransaction(
-                Path.decode("a.b.c"),
+        driver.asyncGetTransaction(
                 transactionHash,
                 blockNumber,
                 blockHeaderManager,
@@ -426,8 +462,7 @@ public class BCOSDriverTest {
         String transactionHash =
                 "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         long blockNumber = 11111;
-        driver.asyncGetVerifiedTransaction(
-                Path.decode("a.b.c"),
+        driver.asyncGetTransaction(
                 transactionHash,
                 blockNumber,
                 blockHeaderManager,
@@ -435,14 +470,10 @@ public class BCOSDriverTest {
                 (e, verifiedTransaction) -> assertTrue(Objects.isNull(verifiedTransaction)));
     }
 
-    public TransactionContext<TransactionRequest> createTransactionRequestContext(
-            Account account,
-            BlockHeaderManager blockHeaderManager,
-            ResourceInfo resourceInfo,
-            TransactionRequest transactionRequest) {
-        TransactionContext<TransactionRequest> transactionContext =
-                new TransactionContext<>(
-                        transactionRequest, account, null, resourceInfo, blockHeaderManager);
+    public TransactionContext createTransactionContext(
+            Account account, BlockHeaderManager blockHeaderManager, ResourceInfo resourceInfo) {
+        TransactionContext transactionContext =
+                new TransactionContext(account, null, resourceInfo, blockHeaderManager);
         return transactionContext;
     }
 
@@ -451,62 +482,40 @@ public class BCOSDriverTest {
 
         BCOSDriver bcosDriver = (BCOSDriver) driver;
         try {
-            TransactionContext<TransactionRequest> requestTransactionContext = null;
-            bcosDriver.checkRequest(requestTransactionContext);
+            bcosDriver.checkRequest(transactionContext, null);
+        } catch (BCOSStubException e) {
+            assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
+            assertTrue(e.getMessage().equals("TransactionRequest is null"));
+        }
+
+        try {
+            bcosDriver.checkRequest(null, null);
         } catch (BCOSStubException e) {
             assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
             assertTrue(e.getMessage().equals("TransactionContext is null"));
         }
 
         try {
-            TransactionContext<TransactionRequest> requestTransactionContext =
-                    createTransactionRequestContext(
-                            null, blockHeaderManager, resourceInfo, new TransactionRequest());
-            bcosDriver.checkRequest(requestTransactionContext);
+            TransactionContext transactionContext =
+                    createTransactionContext(null, blockHeaderManager, resourceInfo);
+            bcosDriver.checkRequest(transactionContext, new TransactionRequest());
         } catch (BCOSStubException e) {
             assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
             assertTrue(e.getMessage().equals("Account is null"));
         }
 
         try {
-            TransactionContext<TransactionRequest> requestTransactionContext =
-                    createTransactionRequestContext(
-                            account, null, resourceInfo, new TransactionRequest());
-            bcosDriver.checkRequest(requestTransactionContext);
+            TransactionContext transactionContext =
+                    createTransactionContext(account, null, resourceInfo);
+            bcosDriver.checkRequest(transactionContext, new TransactionRequest());
         } catch (BCOSStubException e) {
             assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
             assertTrue(e.getMessage().equals("BlockHeaderManager is null"));
         }
 
-        /*
         try {
-            TransactionContext<TransactionRequest> requestTransactionContext =
-                    createTransactionRequestContext(
-                            account, blockHeaderManager, null, new TransactionRequest());
-            bcosDriver.checkRequest(requestTransactionContext);
-        } catch (BCOSStubException e) {
-            assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
-            assertTrue(e.getMessage().equals("ResourceInfo is null"));
-        }*/
-
-        try {
-            TransactionContext<TransactionRequest> requestTransactionContext =
-                    createTransactionRequestContext(
-                            account, blockHeaderManager, resourceInfo, null);
-            bcosDriver.checkRequest(requestTransactionContext);
-        } catch (BCOSStubException e) {
-            assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
-            assertTrue(e.getMessage().equals("Data is null"));
-        }
-
-        try {
-            TransactionContext<TransactionRequest> requestTransactionContext =
-                    createTransactionRequestContext(
-                            account,
-                            blockHeaderManager,
-                            resourceInfo,
-                            new TransactionRequest(null, null));
-            bcosDriver.checkRequest(requestTransactionContext);
+            TransactionRequest transactionRequest = new TransactionRequest(null, null);
+            bcosDriver.checkRequest(transactionContext, transactionRequest);
         } catch (BCOSStubException e) {
             assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
             assertTrue(e.getMessage().equals("Method is null"));

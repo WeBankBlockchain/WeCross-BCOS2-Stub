@@ -61,9 +61,8 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
                 (List<Map<String, String>>) stubConfig.get("resources");
 
         if (resourcesConfigValue == null) {
-            resourcesConfigValue = new ArrayList<Map<String, String>>();
+            resourcesConfigValue = new ArrayList<>();
         }
-        // requireItemNotNull(resourcesConfigValue, "resources", getConfigPath());
 
         List<BCOSStubConfig.Resource> bcosResources =
                 getBCOSResourceConfig(getConfigPath(), chain, resourcesConfigValue);

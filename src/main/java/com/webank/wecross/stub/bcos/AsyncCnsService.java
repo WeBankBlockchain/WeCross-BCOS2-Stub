@@ -46,15 +46,7 @@ public class AsyncCnsService {
 
     public AsyncCnsService() {
         this.scheduledExecutorService.scheduleAtFixedRate(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        abiCache.clear();
-                    }
-                },
-                CLEAR_EXPIRES,
-                CLEAR_EXPIRES,
-                TimeUnit.SECONDS);
+                () -> abiCache.clear(), CLEAR_EXPIRES, CLEAR_EXPIRES, TimeUnit.SECONDS);
     }
 
     public interface QueryCallback {
@@ -67,7 +59,7 @@ public class AsyncCnsService {
 
             /** WeCrossProxy ABI */
             if (BCOSConstant.BCOS_PROXY_NAME.equals(name)) {
-                String proxyABI = connection.getProperties().get(BCOSConstant.BCOS_PROXY_ABI);
+                String proxyABI = driver.getProperties(connection).get(BCOSConstant.BCOS_PROXY_ABI);
                 if (logger.isTraceEnabled()) {
                     logger.trace("ProxyABI: {}", proxyABI);
                 }
@@ -159,11 +151,12 @@ public class AsyncCnsService {
         Path path = new Path();
         path.setResource(BCOSConstant.BCOS_PROXY_NAME);
 
-        TransactionContext<TransactionRequest> request =
-                new TransactionContext<>(transactionRequest, null, path, null, null);
+        TransactionContext transactionContext = new TransactionContext(null, path, null, null);
 
-        driver.asyncCallByProxy(
-                request,
+        driver.asyncCall(
+                transactionContext,
+                transactionRequest,
+                true,
                 connection,
                 (transactionException, connectionResponse) -> {
                     try {
@@ -217,12 +210,13 @@ public class AsyncCnsService {
                         "registerCNS",
                         Arrays.asList(name, version, address, abi).toArray(new String[0]));
 
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                new TransactionContext<>(
-                        transactionRequest, account, path, null, blockHeaderManager);
+        TransactionContext requestTransactionContext =
+                new TransactionContext(account, path, null, blockHeaderManager);
 
-        bcosDriver.asyncSendTransactionByProxy(
+        bcosDriver.asyncSendTransaction(
                 requestTransactionContext,
+                transactionRequest,
+                true,
                 connection,
                 (exception, res) -> {
                     if (Objects.nonNull(exception)) {
@@ -261,7 +255,6 @@ public class AsyncCnsService {
     }
 
     public void addAbiToCache(String name, String abi) {
-        // logger.info(" add abi cache, name: {}, abi: {}", name, abi);
         this.abiCache.put(name, abi);
     }
 }

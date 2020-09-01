@@ -24,6 +24,7 @@ repositories {
     // Use jcenter for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
+    maven { url "https://maven.aliyun.com/nexus/content/groups/public/" }
     maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
 }
 
@@ -56,20 +57,18 @@ configurations {
     integTestTestImplementation.extendsFrom testImplementation
 }
 
-configurations.all {
-    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-}
+//configurations.all {
+//    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+//}
 
 dependencies {
-    implementation ('com.webank:wecross-java-stub:1.0.0-rc5-09010-SNAPSHOT') {
-        changing=true
-    }
-    implementation 'org.slf4j:slf4j-api:1.7.30'
+    implementation 'com.webank:wecross-java-stub:1.0.0-rc5-09041-SNAPSHOT'
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'
     implementation 'com.google.guava:guava:29.0-jre'
     implementation 'org.fisco-bcos:web3sdk:2.6.2-SNAPSHOT'
     implementation 'org.fisco-bcos:solcJ:0.5.2.0'
+    implementation 'org.apache.commons:commons-lang3:3.11'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'

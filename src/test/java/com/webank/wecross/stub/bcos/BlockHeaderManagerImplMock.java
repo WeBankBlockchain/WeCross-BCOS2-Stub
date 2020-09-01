@@ -2,6 +2,7 @@ package com.webank.wecross.stub.bcos;
 
 import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.BlockHeaderManager;
+import com.webank.wecross.stub.bcos.contract.BlockUtility;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -28,8 +29,7 @@ public class BlockHeaderManagerImplMock implements BlockHeaderManager {
     public byte[] getBlockHeader(long l) {
         try {
             BcosBlock.Block block = web3jWrapper.getBlockByNumber(l);
-            BCOSConnection connection = new BCOSConnection(null);
-            BlockHeader blockHeader = connection.convertToBlockHeader(block);
+            BlockHeader blockHeader = BlockUtility.convertToBlockHeader(block);
             return ObjectMapperFactory.getObjectMapper().writeValueAsBytes(blockHeader);
         } catch (IOException e) {
             return new byte[0];
