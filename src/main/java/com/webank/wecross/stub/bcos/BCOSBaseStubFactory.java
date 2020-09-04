@@ -10,7 +10,7 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.custom.CommandHandlerDispatcher;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import com.webank.wecross.stub.bcos.custom.RegisterCnsHandler;
-import com.webank.wecross.stub.bcos.proxy.ProxyContractDeployment;
+import com.webank.wecross.stub.bcos.preparation.ProxyContractDeployment;
 import java.io.File;
 import java.io.FileWriter;
 import java.net.URL;

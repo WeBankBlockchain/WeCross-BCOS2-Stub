@@ -1,4 +1,4 @@
-package com.webank.wecross.stub.bcos.proxy;
+package com.webank.wecross.stub.bcos.preparation;
 
 import com.webank.wecross.stub.bcos.AsyncCnsService;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
@@ -40,7 +40,7 @@ public class TwoPCContractDeployment {
         System.exit(sig);
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         if (args.length < 7) {
             usage();
         }

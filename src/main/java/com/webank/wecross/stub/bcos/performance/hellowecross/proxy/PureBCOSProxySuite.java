@@ -5,7 +5,7 @@ import com.webank.wecross.stub.bcos.abi.ABIDefinitionFactory;
 import com.webank.wecross.stub.bcos.abi.ContractABIDefinition;
 import com.webank.wecross.stub.bcos.performance.hellowecross.HelloWeCross;
 import com.webank.wecross.stub.bcos.performance.hellowecross.PureBCOSSuite;
-import com.webank.wecross.stub.bcos.proxy.ProxyCNS;
+import com.webank.wecross.stub.bcos.preparation.CnsService;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 import java.math.BigInteger;
 import java.util.Objects;
@@ -22,7 +22,7 @@ public abstract class PureBCOSProxySuite extends PureBCOSSuite {
             String chainName, String accountName, boolean sm, String resourceOrAddress)
             throws Exception {
         super(chainName, accountName, sm);
-        this.cnsInfo = ProxyCNS.queryProxyCnsInfo(new Web3jWrapperImpl(getWeb3j()));
+        this.cnsInfo = CnsService.queryProxyCnsInfo(new Web3jWrapperImpl(getWeb3j()));
         this.abiCodecJsonWrapper = new ABICodecJsonWrapper();
         this.contractABIDefinition = ABIDefinitionFactory.loadABI(HelloWeCross.ABI);
         if (Objects.nonNull(this.cnsInfo)) {

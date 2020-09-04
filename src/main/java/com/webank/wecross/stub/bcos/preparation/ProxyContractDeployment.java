@@ -1,4 +1,4 @@
-package com.webank.wecross.stub.bcos.proxy;
+package com.webank.wecross.stub.bcos.preparation;
 
 import java.io.File;
 import org.slf4j.Logger;
@@ -51,23 +51,26 @@ public class ProxyContractDeployment {
         System.exit(sig);
     }
 
-    public static void main(String[] args) throws Exception {
-        switch (args.length) {
-            case 2:
-                handle2Args(args);
-                exit();
-                break;
-            case 3:
-                handle3Args(args);
-                exit();
-                break;
-            default:
-                usage();
-                exit();
+    public static void main(String[] args) {
+        try {
+            switch (args.length) {
+                case 2:
+                    handle2Args(args);
+                    break;
+                case 3:
+                    handle3Args(args);
+                    break;
+                default:
+                    usage();
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+        } finally {
+            exit();
         }
     }
 
-    public static void handle2Args(String[] args) throws Exception {
+    public static void handle2Args(String[] args) {
         if (args.length != 2) {
             usage();
         }

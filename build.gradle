@@ -91,6 +91,7 @@ sourceSets {
             exclude '**/*.crt'
             exclude '**/*.key'
             include 'WeCrossProxy.sol'
+            include 'WeCrossHub.sol'
         }
     }
 
@@ -126,7 +127,7 @@ task makeJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar, d
 
     manifest {
         attributes(
-                'Main-Class': 'com.webank.wecross.stub.bcos.normal.BCOSStubFactory',
+                'Main-Class': 'com.webank.wecross.stub.bcos.BCOSStubFactory',
                 'version': project.version,
         )
     }

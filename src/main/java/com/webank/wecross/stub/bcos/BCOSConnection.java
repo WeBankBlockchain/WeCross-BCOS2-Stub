@@ -427,4 +427,12 @@ public class BCOSConnection implements Connection {
     public boolean hasProxyDeployed() {
         return getProperties().containsKey(BCOSConstant.BCOS_PROXY_NAME);
     }
+
+    public boolean hasHubDeployed() {
+        return getProperties().containsKey(BCOSConstant.BCOS_HUB_NAME);
+    }
+
+    public String getHubAddress() {
+        return getProperties().get(BCOSConstant.BCOS_HUB_NAME);
+    }
 }
