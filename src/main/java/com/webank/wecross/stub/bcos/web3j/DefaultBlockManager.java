@@ -1,16 +1,16 @@
 package com.webank.wecross.stub.bcos.web3j;
 
-import com.webank.wecross.stub.BlockHeader;
-import com.webank.wecross.stub.BlockHeaderManager;
+import com.webank.wecross.stub.Block;
+import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.bcos.contract.BlockUtility;
 import java.io.IOException;
 import java.math.BigInteger;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 
-public class DefaultBlockHeaderManager implements BlockHeaderManager {
+public class DefaultBlockManager implements BlockManager {
     private Web3jWrapper web3jWrapper;
 
-    public DefaultBlockHeaderManager(Web3jWrapper web3jWrapper) {
+    public DefaultBlockManager(Web3jWrapper web3jWrapper) {
         this.web3jWrapper = web3jWrapper;
     }
 
@@ -23,9 +23,9 @@ public class DefaultBlockHeaderManager implements BlockHeaderManager {
         }
     }
 
-    public BlockHeader getBlockHeader(long l) throws IOException {
+    public Block getBlock(long l) throws IOException {
         BcosBlock.Block block = web3jWrapper.getBlockByNumber(l);
-        return BlockUtility.convertToBlockHeader(block);
+        return BlockUtility.convertToBlock(block, true);
     }
 
     @Override
@@ -45,10 +45,10 @@ public class DefaultBlockHeaderManager implements BlockHeaderManager {
     }
 
     @Override
-    public void asyncGetBlockHeader(long blockNumber, GetBlockHeaderCallback callback) {
+    public void asyncGetBlock(long blockNumber, GetBlockCallback callback) {
         try {
-            BlockHeader blockHeader = getBlockHeader(blockNumber);
-            callback.onResponse(null, blockHeader);
+            Block block = getBlock(blockNumber);
+            callback.onResponse(null, block);
         } catch (IOException e) {
             callback.onResponse(e, null);
         }

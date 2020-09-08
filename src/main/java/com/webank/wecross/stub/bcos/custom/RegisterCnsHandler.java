@@ -1,7 +1,7 @@
 package com.webank.wecross.stub.bcos.custom;
 
 import com.webank.wecross.stub.Account;
-import com.webank.wecross.stub.BlockHeaderManager;
+import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Path;
@@ -40,7 +40,7 @@ public class RegisterCnsHandler implements CommandHandler {
             Path path,
             Object[] args,
             Account account,
-            BlockHeaderManager blockHeaderManager,
+            BlockManager blockManager,
             Connection connection,
             Driver.CustomCommandCallback callback) {
         if (Objects.isNull(args) || args.length < 5) {
@@ -138,7 +138,7 @@ public class RegisterCnsHandler implements CommandHandler {
                 version,
                 abi,
                 account,
-                blockHeaderManager,
+                blockManager,
                 connection,
                 e -> {
                     if (Objects.nonNull(e)) {

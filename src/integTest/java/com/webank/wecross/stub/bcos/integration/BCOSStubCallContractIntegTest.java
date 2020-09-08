@@ -8,7 +8,7 @@ import static junit.framework.TestCase.assertTrue;
 
 import com.webank.wecross.stub.Account;
 import com.webank.wecross.stub.BlockHeader;
-import com.webank.wecross.stub.BlockHeaderManager;
+import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Path;
@@ -37,7 +37,7 @@ import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import com.webank.wecross.stub.bcos.performance.hellowecross.HelloWeCross;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.proxy.ProxyContract;
-import com.webank.wecross.stub.bcos.web3j.DefaultBlockHeaderManager;
+import com.webank.wecross.stub.bcos.web3j.DefaultBlockManager;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 
@@ -71,7 +71,7 @@ public class BCOSStubCallContractIntegTest {
     private Account account = null;
     private Connection connection = null;
     private ResourceInfo resourceInfo = null;
-    private BlockHeaderManager blockHeaderManager = null;
+    private BlockManager blockManager = null;
     private ConnectionEventHandlerImplMock connectionEventHandlerImplMock = new ConnectionEventHandlerImplMock();
 
     private AsyncCnsService asyncCnsService = null;
@@ -116,12 +116,12 @@ public class BCOSStubCallContractIntegTest {
         this.resourceInfo = resourceInfo;
     }
 
-    public BlockHeaderManager getBlockHeaderManager() {
-        return blockHeaderManager;
+    public BlockManager getBlockManager() {
+        return blockManager;
     }
 
-    public void setBlockHeaderManager(BlockHeaderManager blockHeaderManager) {
-        this.blockHeaderManager = blockHeaderManager;
+    public void setBlockManager(BlockManager blockManager) {
+        this.blockManager = blockManager;
     }
 
     public TransactionRequest createTransactionRequest(
@@ -131,7 +131,7 @@ public class BCOSStubCallContractIntegTest {
 
     public TransactionContext createTransactionContext(
             Path path) {
-                return new TransactionContext( account, path, resourceInfo, blockHeaderManager);
+                return new TransactionContext( account, path, resourceInfo, blockManager);
     }
 
     @Before
@@ -155,7 +155,7 @@ public class BCOSStubCallContractIntegTest {
         Web3jWrapperImpl web3jWrapperImpl = (Web3jWrapperImpl) web3jWrapper;
 
         BCOSAccount bcosAccount = (BCOSAccount) account;
-        blockHeaderManager = new DefaultBlockHeaderManager(web3jWrapper);
+        blockManager = new DefaultBlockManager(web3jWrapper);
         asyncCnsService = ((BCOSDriver) driver).getAsyncCnsService();
 
         helloWeCross =
@@ -202,7 +202,7 @@ public class BCOSStubCallContractIntegTest {
         Optional<TransactionReceipt> transactionReceipt = helloWeCross.getTransactionReceipt();
         AsyncToSync asyncToSync = new AsyncToSync();
 
-        driver.asyncGetTransaction(transactionReceipt.get().getTransactionHash(), 1, blockHeaderManager, connection, (e, transaction) -> {
+        driver.asyncGetTransaction(transactionReceipt.get().getTransactionHash(), 1, blockManager, connection, (e, transaction) -> {
             assertTrue(Objects.nonNull(transaction));
             assertTrue(Objects.isNull(e));
             assertFalse(transaction.isTransactionByProxy());
@@ -376,7 +376,7 @@ public class BCOSStubCallContractIntegTest {
         asyncToSync.getSemaphore().acquire();
 
         AsyncToSync asyncToSync3 = new AsyncToSync();
-        driver.asyncGetTransaction(hash[0], 1, blockHeaderManager, connection, (e, transaction) -> {
+        driver.asyncGetTransaction(hash[0], 1, blockManager, connection, (e, transaction) -> {
             assertTrue(Objects.nonNull(transaction));
             assertTrue(Objects.isNull(e));
             assertFalse(transaction.isTransactionByProxy());
@@ -444,7 +444,7 @@ public class BCOSStubCallContractIntegTest {
 
 
         AsyncToSync asyncToSync1 = new AsyncToSync();
-        driver.asyncGetTransaction(hash[0], 1, blockHeaderManager, connection, (e, transaction) -> {
+        driver.asyncGetTransaction(hash[0], 1, blockManager, connection, (e, transaction) -> {
             assertTrue(Objects.isNull(transaction));
             assertTrue(Objects.nonNull(e));
             BCOSStubException e1 = (BCOSStubException)e;
@@ -458,7 +458,7 @@ public class BCOSStubCallContractIntegTest {
     public void getVerifiedTransactionNotExistTest() throws Exception {
         AsyncToSync asyncToSync = new AsyncToSync();
         String transactionHash = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
-        driver.asyncGetTransaction(transactionHash, 1, blockHeaderManager, connection, (e, verifiedTransaction) -> {
+        driver.asyncGetTransaction(transactionHash, 1, blockManager, connection, (e, verifiedTransaction) -> {
             assertTrue(Objects.isNull(verifiedTransaction));
             asyncToSync.getSemaphore().release();
         });
@@ -496,7 +496,7 @@ public class BCOSStubCallContractIntegTest {
         commandHandler.handle(Path.decode("a.b.HelloWorld"),
                 args,
                 account,
-                blockHeaderManager,
+                blockManager,
                 connection,
                 (error, response) -> {
             assertNull(error);
@@ -535,7 +535,7 @@ public class BCOSStubCallContractIntegTest {
         DeployContractHandler commandHandler = new DeployContractHandler();
         commandHandler.setAsyncCnsService(asyncCnsService);
 
-        commandHandler.handle(Path.decode("a.b.TupleTest"), args, account, blockHeaderManager, connection, (error, response) -> {
+        commandHandler.handle(Path.decode("a.b.TupleTest"), args, account, blockManager, connection, (error, response) -> {
             assertNull(error);
             assertNotNull(response);
             assertTrue(((String)response).length() == 42);
@@ -590,7 +590,7 @@ public class BCOSStubCallContractIntegTest {
             commandHandler.handle(Path.decode("a.b." + baseName + i),
                     args,
                     account,
-                    blockHeaderManager,
+                    blockManager,
                     connection,
                     (error, response) -> {
                         assertNull(error);
@@ -645,7 +645,7 @@ public class BCOSStubCallContractIntegTest {
         asyncToSync.semaphore.acquire(1);
 
         AsyncToSync asyncToSync1 = new AsyncToSync();
-        driver.asyncGetTransaction(hash.get(), 1, blockHeaderManager, connection, new Driver.GetTransactionCallback() {
+        driver.asyncGetTransaction(hash.get(), 1, blockManager, connection, new Driver.GetTransactionCallback() {
             @Override
             public void onResponse(Exception e, Transaction transaction) {
                 assertTrue(Objects.isNull(e));
@@ -688,7 +688,7 @@ public class BCOSStubCallContractIntegTest {
         asyncToSync.semaphore.acquire(1);
 
         AsyncToSync asyncToSync1 = new AsyncToSync();
-        driver.asyncGetTransaction(hash.get(), 1, blockHeaderManager, connection, (exception, res) -> {
+        driver.asyncGetTransaction(hash.get(), 1, blockManager, connection, (exception, res) -> {
             assertTrue(Objects.isNull(exception));
             assertTrue(res.getTransactionHash().equals(hash.get()));
             assertTrue(res.isTransactionByProxy());
@@ -728,7 +728,7 @@ public class BCOSStubCallContractIntegTest {
         asyncToSync.semaphore.acquire(1);
 
         AsyncToSync asyncToSync1 = new AsyncToSync();
-        driver.asyncGetTransaction(hash.get(), 1, blockHeaderManager, connection, (exception, transaction) -> {
+        driver.asyncGetTransaction(hash.get(), 1, blockManager, connection, (exception, transaction) -> {
             assertTrue(Objects.isNull(exception));
             assertTrue(transaction.getTransactionHash().equals(hash.get()));
             assertTrue(transaction.isTransactionByProxy());

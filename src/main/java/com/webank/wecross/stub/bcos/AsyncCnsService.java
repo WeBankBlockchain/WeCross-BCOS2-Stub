@@ -2,7 +2,7 @@ package com.webank.wecross.stub.bcos;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.stub.Account;
-import com.webank.wecross.stub.BlockHeaderManager;
+import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Path;
@@ -31,7 +31,7 @@ public class AsyncCnsService {
     private LRUCache<String, String> abiCache = new LRUCache<>(32);
     private ScheduledExecutorService scheduledExecutorService =
             new ScheduledThreadPoolExecutor(1024);
-    private static final long CLEAR_EXPIRES = 30 * 60; // 30 min
+    private static final long CLEAR_EXPIRES = 30L * 60L; // 30 min
     private Semaphore queryABISemaphore = new Semaphore(1, true);
 
     private BCOSDriver bcosDriver = null;
@@ -198,7 +198,7 @@ public class AsyncCnsService {
             String version,
             String abi,
             Account account,
-            BlockHeaderManager blockHeaderManager,
+            BlockManager blockManager,
             Connection connection,
             InsertCallback callback) {
 
@@ -211,7 +211,7 @@ public class AsyncCnsService {
                         Arrays.asList(name, version, address, abi).toArray(new String[0]));
 
         TransactionContext requestTransactionContext =
-                new TransactionContext(account, path, null, blockHeaderManager);
+                new TransactionContext(account, path, null, blockManager);
 
         bcosDriver.asyncSendTransaction(
                 requestTransactionContext,

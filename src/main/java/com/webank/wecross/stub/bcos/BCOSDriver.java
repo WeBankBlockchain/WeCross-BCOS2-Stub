@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.webank.wecross.stub.Account;
 import com.webank.wecross.stub.Block;
-import com.webank.wecross.stub.BlockHeaderManager;
+import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Path;
@@ -665,7 +665,7 @@ public class BCOSDriver implements Driver {
             // chainId
             int chainId = Integer.parseInt(properties.get(BCOSConstant.BCOS_CHAIN_ID));
 
-            context.getBlockHeaderManager()
+            context.getBlockManager()
                     .asyncGetBlockNumber(
                             (blockNumberException, blockNumber) -> {
                                 if (Objects.nonNull(blockNumberException)) {
@@ -742,21 +742,20 @@ public class BCOSDriver implements Driver {
                                                                 TransactionReceipt.class);
 
                                                 if (receipt.isStatusOK()) {
-                                                    context.getBlockHeaderManager()
-                                                            .asyncGetBlockHeader(
+                                                    context.getBlockManager()
+                                                            .asyncGetBlock(
                                                                     receipt.getBlockNumber()
                                                                             .longValue(),
-                                                                    (blockHeaderException,
-                                                                            blockHeader) -> {
+                                                                    (blockException, block) -> {
                                                                         try {
                                                                             if (Objects.nonNull(
-                                                                                    blockHeaderException)) {
+                                                                                    blockException)) {
                                                                                 callback
                                                                                         .onTransactionResponse(
                                                                                                 new TransactionException(
                                                                                                         BCOSStatusCode
                                                                                                                 .HandleGetBlockNumberFailed,
-                                                                                                        blockHeaderException
+                                                                                                        blockException
                                                                                                                 .getMessage()),
                                                                                                 null);
                                                                                 return;
@@ -766,11 +765,10 @@ public class BCOSDriver implements Driver {
                                                                                             new MerkleValidation();
                                                                             merkleValidation
                                                                                     .verifyTransactionReceiptProof(
-                                                                                            receipt.getBlockNumber()
-                                                                                                    .longValue(),
                                                                                             receipt
                                                                                                     .getTransactionHash(),
-                                                                                            blockHeader,
+                                                                                            block
+                                                                                                    .getBlockHeader(),
                                                                                             receipt);
 
                                                                             transactionResponse
@@ -908,7 +906,7 @@ public class BCOSDriver implements Driver {
             // chainId
             int chainId = Integer.parseInt(properties.get(BCOSConstant.BCOS_CHAIN_ID));
 
-            context.getBlockHeaderManager()
+            context.getBlockManager()
                     .asyncGetBlockNumber(
                             (blockNumberException, blockNumber) -> {
                                 if (Objects.nonNull(blockNumberException)) {
@@ -1066,22 +1064,22 @@ public class BCOSDriver implements Driver {
                                                                 }
 
                                                                 if (receipt.isStatusOK()) {
-                                                                    context.getBlockHeaderManager()
-                                                                            .asyncGetBlockHeader(
+                                                                    context.getBlockManager()
+                                                                            .asyncGetBlock(
                                                                                     receipt.getBlockNumber()
                                                                                             .longValue(),
-                                                                                    (blockHeaderException,
-                                                                                            blockHeader) -> {
+                                                                                    (blockException,
+                                                                                            block) -> {
                                                                                         try {
                                                                                             if (Objects
                                                                                                     .nonNull(
-                                                                                                            blockHeaderException)) {
+                                                                                                            blockException)) {
                                                                                                 callback
                                                                                                         .onTransactionResponse(
                                                                                                                 new TransactionException(
                                                                                                                         BCOSStatusCode
                                                                                                                                 .HandleGetBlockNumberFailed,
-                                                                                                                        blockHeaderException
+                                                                                                                        blockException
                                                                                                                                 .getMessage()),
                                                                                                                 null);
                                                                                                 return;
@@ -1091,11 +1089,10 @@ public class BCOSDriver implements Driver {
                                                                                                             new MerkleValidation();
                                                                                             merkleValidation
                                                                                                     .verifyTransactionReceiptProof(
-                                                                                                            receipt.getBlockNumber()
-                                                                                                                    .longValue(),
                                                                                                             receipt
                                                                                                                     .getTransactionHash(),
-                                                                                                            blockHeader,
+                                                                                                            block
+                                                                                                                    .getBlockHeader(),
                                                                                                             receipt);
 
                                                                                             transactionResponse
@@ -1325,7 +1322,7 @@ public class BCOSDriver implements Driver {
     public void asyncGetTransaction(
             String transactionHash,
             long blockNumber,
-            BlockHeaderManager blockHeaderManager,
+            BlockManager blockManager,
             Connection connection,
             GetTransactionCallback callback) {
 
@@ -1341,9 +1338,6 @@ public class BCOSDriver implements Driver {
                     }
 
                     try {
-
-                        // TO DO, check if tx exist
-
                         TransactionReceiptWithProof.ReceiptAndProof receiptAndProof =
                                 proof.getReceiptAndProof();
                         TransactionWithProof.TransAndProof transAndProof = proof.getTransAndProof();
@@ -1353,7 +1347,7 @@ public class BCOSDriver implements Driver {
                         merkleValidation.verifyTransactionProof(
                                 receipt.getBlockNumber().longValue(),
                                 transactionHash,
-                                blockHeaderManager,
+                                blockManager,
                                 proof,
                                 verifyException -> {
                                     if (Objects.nonNull(verifyException)) {
@@ -1627,7 +1621,7 @@ public class BCOSDriver implements Driver {
             Path path,
             Object[] args,
             Account account,
-            BlockHeaderManager blockHeaderManager,
+            BlockManager blockManager,
             Connection connection,
             CustomCommandCallback callback) {
         CommandHandler commandHandler = commandHandlerDispatcher.matchCommandHandler(command);
@@ -1640,7 +1634,7 @@ public class BCOSDriver implements Driver {
                 path,
                 args,
                 account,
-                blockHeaderManager,
+                blockManager,
                 connection,
                 (error, response) -> {
                     callback.onResponse(error, response);
@@ -1656,7 +1650,7 @@ public class BCOSDriver implements Driver {
 
                         TransactionContext context =
                                 new TransactionContext(
-                                        account, path, new ResourceInfo(), blockHeaderManager);
+                                        account, path, new ResourceInfo(), blockManager);
 
                         asyncSendTransaction(
                                 context,
@@ -1723,7 +1717,7 @@ public class BCOSDriver implements Driver {
                     BCOSStatusCode.InvalidParameter, "TransactionRequest is null");
         }
 
-        if (Objects.isNull(context.getBlockHeaderManager())) {
+        if (Objects.isNull(context.getBlockManager())) {
             throw new BCOSStubException(
                     BCOSStatusCode.InvalidParameter, "BlockHeaderManager is null");
         }

@@ -6,7 +6,7 @@ import static junit.framework.TestCase.assertTrue;
 
 import com.webank.wecross.stub.Account;
 import com.webank.wecross.stub.BlockHeader;
-import com.webank.wecross.stub.BlockHeaderManager;
+import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Request;
@@ -59,8 +59,8 @@ public class BCOSDriverTest {
     private Connection nonExistConnection = null;
     private Connection txVerifyConnection = null;
     private ResourceInfo resourceInfo = null;
-    private BlockHeaderManager blockHeaderManager = null;
-    private BlockHeaderManager txVerifyBlockHeaderManager = null;
+    private BlockManager blockManager = null;
+    private BlockManager txVerifyBlockManager = null;
     private TransactionContext transactionContext = null;
 
     public TransactionRequest createTransactionRequest(String method, String[] args) {
@@ -89,12 +89,11 @@ public class BCOSDriverTest {
         txVerifyConnection =
                 BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperTxVerifyMock());
 
-        blockHeaderManager = new BlockHeaderManagerImplMock(new Web3jWrapperImplMock());
-        txVerifyBlockHeaderManager = new BlockHeaderManagerImplMock(new Web3jWrapperTxVerifyMock());
+        blockManager = new BlockManagerImplMock(new Web3jWrapperImplMock());
+        txVerifyBlockManager = new BlockManagerImplMock(new Web3jWrapperTxVerifyMock());
         resourceInfo = ((BCOSConnection) connection).getResourceInfoList().get(0);
 
-        transactionContext =
-                new TransactionContext(account, null, resourceInfo, blockHeaderManager);
+        transactionContext = new TransactionContext(account, null, resourceInfo, blockManager);
     }
 
     @Test
@@ -436,7 +435,7 @@ public class BCOSDriverTest {
         driver.asyncGetTransaction(
                 transactionHash,
                 blockNumber,
-                txVerifyBlockHeaderManager,
+                txVerifyBlockManager,
                 txVerifyConnection,
                 (e, verifiedTransaction) -> {
                     assertEquals(verifiedTransaction.getBlockNumber(), blockNumber);
@@ -452,7 +451,7 @@ public class BCOSDriverTest {
         driver.asyncGetTransaction(
                 transactionHash,
                 blockNumber,
-                blockHeaderManager,
+                blockManager,
                 exceptionConnection,
                 (e, verifiedTransaction) -> assertTrue(Objects.isNull(verifiedTransaction)));
     }
@@ -465,15 +464,15 @@ public class BCOSDriverTest {
         driver.asyncGetTransaction(
                 transactionHash,
                 blockNumber,
-                blockHeaderManager,
+                blockManager,
                 nonExistConnection,
                 (e, verifiedTransaction) -> assertTrue(Objects.isNull(verifiedTransaction)));
     }
 
     public TransactionContext createTransactionContext(
-            Account account, BlockHeaderManager blockHeaderManager, ResourceInfo resourceInfo) {
+            Account account, BlockManager blockManager, ResourceInfo resourceInfo) {
         TransactionContext transactionContext =
-                new TransactionContext(account, null, resourceInfo, blockHeaderManager);
+                new TransactionContext(account, null, resourceInfo, blockManager);
         return transactionContext;
     }
 
@@ -497,7 +496,7 @@ public class BCOSDriverTest {
 
         try {
             TransactionContext transactionContext =
-                    createTransactionContext(null, blockHeaderManager, resourceInfo);
+                    createTransactionContext(null, blockManager, resourceInfo);
             bcosDriver.checkRequest(transactionContext, new TransactionRequest());
         } catch (BCOSStubException e) {
             assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);

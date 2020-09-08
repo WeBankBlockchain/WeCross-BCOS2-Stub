@@ -1,11 +1,11 @@
 package com.webank.wecross.stub.bcos.proxy;
 
-import com.webank.wecross.stub.BlockHeaderManager;
+import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
-import com.webank.wecross.stub.bcos.web3j.DefaultBlockHeaderManager;
+import com.webank.wecross.stub.bcos.web3j.DefaultBlockManager;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import org.slf4j.Logger;
@@ -18,20 +18,20 @@ public class TwoPCContract {
     public TwoPCContract(BCOSAccount account, BCOSConnection connection) {
         this.account = account;
         this.connection = connection;
-        this.blockHeaderManager = new DefaultBlockHeaderManager(connection.getWeb3jWrapper());
+        this.blockManager = new DefaultBlockManager(connection.getWeb3jWrapper());
     }
 
     private BCOSAccount account;
     private BCOSConnection connection;
-    private BlockHeaderManager blockHeaderManager;
+    private BlockManager blockManager;
     private DeployContractHandler deployContractHandler;
 
-    public BlockHeaderManager getBlockHeaderManager() {
-        return blockHeaderManager;
+    public BlockManager getBlockManager() {
+        return blockManager;
     }
 
-    public void setBlockHeaderManager(BlockHeaderManager blockHeaderManager) {
-        this.blockHeaderManager = blockHeaderManager;
+    public void setBlockManager(BlockManager blockManager) {
+        this.blockManager = blockManager;
     }
 
     public DeployContractHandler getDeployContractHandler() {
@@ -86,27 +86,25 @@ public class TwoPCContract {
                     null,
                     params,
                     account,
-                    blockHeaderManager,
+                    blockManager,
                     connection,
-                    new Driver.CustomCommandCallback() {
-                        @Override
-                        public void onResponse(Exception error, Object response) {
-                            semaphore.release(1);
-                            if (Objects.nonNull(error)) {
-                                System.err.println(
-                                        " Unable deploy resource: "
-                                                + resource
-                                                + " ,e: "
-                                                + error.getMessage());
-                            } else {
-                                System.err.println(
-                                        " Deploy resource: "
-                                                + resource
-                                                + " successfully, address: "
-                                                + (String) response);
-                            }
-                        }
-                    });
+                    (Driver.CustomCommandCallback)
+                            (error, response) -> {
+                                semaphore.release(1);
+                                if (Objects.nonNull(error)) {
+                                    System.err.println(
+                                            " Unable deploy resource: "
+                                                    + resource
+                                                    + " ,e: "
+                                                    + error.getMessage());
+                                } else {
+                                    System.err.println(
+                                            " Deploy resource: "
+                                                    + resource
+                                                    + " successfully, address: "
+                                                    + (String) response);
+                                }
+                            });
         }
 
         semaphore.acquire(to - from + 1);
