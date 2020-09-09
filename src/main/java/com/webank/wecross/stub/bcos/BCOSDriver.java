@@ -1298,7 +1298,9 @@ public class BCOSDriver implements Driver {
                         callback.onResponse(new Exception(response.getErrorMessage()), -1);
                     } else {
                         BigInteger blockNumber = new BigInteger(response.getData());
-                        logger.debug(" blockNumber: {}", blockNumber);
+                        if (logger.isDebugEnabled()) {
+                            logger.debug(" blockNumber: {}", blockNumber);
+                        }
                         callback.onResponse(null, blockNumber.longValue());
                     }
                 });
@@ -1561,9 +1563,11 @@ public class BCOSDriver implements Driver {
                                                                 transactionRequest,
                                                                 transactionResponse);
 
-                                                logger.trace(
-                                                        " VerifiedTransaction: {}",
-                                                        verifiedTransaction);
+                                                if (logger.isTraceEnabled()) {
+                                                    logger.trace(
+                                                            " VerifiedTransaction: {}",
+                                                            verifiedTransaction);
+                                                }
                                                 callback.onResponse(null, verifiedTransaction);
                                             });
                                 });
@@ -1609,10 +1613,12 @@ public class BCOSDriver implements Driver {
 
                         TransactionProof transactionProof =
                                 objectMapper.readValue(response.getData(), TransactionProof.class);
-                        logger.debug(
-                                " transactionHash: {}, transactionProof: {}",
-                                transactionHash,
-                                transactionProof);
+                        if (logger.isDebugEnabled()) {
+                            logger.debug(
+                                    " transactionHash: {}, transactionProof: {}",
+                                    transactionHash,
+                                    transactionProof);
+                        }
 
                         callback.onResponse(null, transactionProof);
                     } catch (Exception e) {

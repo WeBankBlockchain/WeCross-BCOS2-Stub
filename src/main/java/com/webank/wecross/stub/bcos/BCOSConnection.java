@@ -185,7 +185,9 @@ public class BCOSConnection implements Connection {
                 } else {
                     Set<String> set = new HashSet<>();
                     set.add("a.b." + BCOSConstant.BCOS_PROXY_NAME);
-                    logger.debug(" listPaths empty and add proxy ");
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(" listPaths empty and add proxy ");
+                    }
                     return set.toArray(new String[0]);
                 }
             } else {
@@ -404,7 +406,9 @@ public class BCOSConnection implements Connection {
             response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
 
             response.setData(blockNumber.toByteArray());
-            logger.debug(" blockNumber: {}", blockNumber);
+            if (logger.isDebugEnabled()) {
+                logger.debug(" blockNumber: {}", blockNumber);
+            }
         } catch (Exception e) {
             logger.warn(" handleGetBlockNumberRequest Exception, e: {}", e);
             response.setErrorCode(BCOSStatusCode.HandleGetBlockNumberFailed);
@@ -474,11 +478,13 @@ public class BCOSConnection implements Connection {
                         response.setErrorMessage(
                                 BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
                         response.setData(objectMapper.writeValueAsBytes(transactionProof));
-                        logger.debug(
-                                " getTransactionProof, tx hash: {}, transAndProof: {}, receiptAndProof: {}",
-                                txHash,
-                                transactionProof.getTransAndProof(),
-                                transactionProof.getReceiptAndProof());
+                        if (logger.isDebugEnabled()) {
+                            logger.debug(
+                                    " getTransactionProof, tx hash: {}, transAndProof: {}, receiptAndProof: {}",
+                                    txHash,
+                                    transactionProof.getTransAndProof(),
+                                    transactionProof.getReceiptAndProof());
+                        }
                     } catch (Exception e) {
                         logger.warn(" handleGetTransactionProof Exception,", e);
                         response.setErrorCode(BCOSStatusCode.HandleGetTransactionProofFailed);
@@ -514,7 +520,9 @@ public class BCOSConnection implements Connection {
             response.setErrorCode(BCOSStatusCode.Success);
             response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
             response.setData(objectMapper.writeValueAsBytes(convertToBlockHeader(block)));
-            logger.debug(" getBlockByNumber, blockNumber: {}, block: {}", blockNumber, block);
+            if (logger.isDebugEnabled()) {
+                logger.debug(" getBlockByNumber, blockNumber: {}, block: {}", blockNumber, block);
+            }
         } catch (Exception e) {
             logger.warn(" Exception, e: {}", e);
             response.setErrorCode(BCOSStatusCode.HandleGetBlockHeaderFailed);

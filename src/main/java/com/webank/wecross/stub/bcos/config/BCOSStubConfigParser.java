@@ -147,7 +147,9 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         channelServiceConfig.setSslKey(sslKey);
         channelServiceConfig.setConnectionsStr(connectionsStr);
 
-        logger.debug(" ChannelServiceConfig: {}", channelServiceConfig);
+        if (logger.isDebugEnabled()) {
+            logger.debug(" ChannelServiceConfig: {}", channelServiceConfig);
+        }
 
         return channelServiceConfig;
     }
@@ -182,7 +184,9 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
             resourceList.add(resource);
         }
 
-        logger.debug("resources: {}", resourceList);
+        if (logger.isDebugEnabled()) {
+            logger.debug("resources: {}", resourceList);
+        }
 
         return resourceList;
     }
