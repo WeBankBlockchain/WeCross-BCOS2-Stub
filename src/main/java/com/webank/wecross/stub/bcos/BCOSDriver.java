@@ -16,7 +16,6 @@ import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
-import com.webank.wecross.stub.VerifiedTransaction;
 import com.webank.wecross.stub.bcos.abi.ABICodecJsonWrapper;
 import com.webank.wecross.stub.bcos.abi.ABIDefinition;
 import com.webank.wecross.stub.bcos.abi.ABIDefinitionFactory;
