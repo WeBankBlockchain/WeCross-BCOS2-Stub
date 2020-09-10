@@ -1,8 +1,8 @@
 package com.webank.wecross.stub.bcos.performance.hellowecross.proxy;
 
+import com.webank.wecross.stub.bcos.abi.ABIDefinition;
 import com.webank.wecross.stub.bcos.performance.PerformanceSuiteCallback;
 import org.bouncycastle.util.encoders.Hex;
-import org.fisco.bcos.web3j.abi.wrapper.ABIDefinition;
 import org.fisco.bcos.web3j.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

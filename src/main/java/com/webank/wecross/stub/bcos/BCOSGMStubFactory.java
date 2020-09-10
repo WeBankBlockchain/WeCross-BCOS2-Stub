@@ -15,9 +15,7 @@ import java.net.URL;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
-import java.security.SecureRandom;
 import java.security.Security;
-import java.security.spec.ECGenParameterSpec;
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemObject;
@@ -92,18 +90,17 @@ public class BCOSGMStubFactory implements StubFactory {
         try {
             // Write pem file
             Security.addProvider(new BouncyCastleProvider());
+            KeyPairGenerator keyPairGenerator =
+                    KeyPairGenerator.getInstance("EC", Security.getProvider("BC"));
 
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC", "BC");
-            ECGenParameterSpec ecGenParameterSpec = new ECGenParameterSpec("sm2p256v1");
-            SecureRandom secureRandom = new SecureRandom();
-            keyPairGenerator.initialize(ecGenParameterSpec, secureRandom);
-
+            keyPairGenerator.initialize(256);
             KeyPair keyPair = keyPairGenerator.generateKeyPair();
-            ECKeyPair ecKeyPair = ECKeyPair.create(keyPair);
-            Credentials credentials = GenCredential.create(ecKeyPair); // SM or normal
-            PrivateKey ecPrivateKey = keyPair.getPrivate();
 
+            PrivateKey ecPrivateKey = keyPair.getPrivate();
+            Credentials credentials =
+                    GenCredential.create(ECKeyPair.create(keyPair)); // GM or normal
             String accountAddress = credentials.getAddress();
+
             String keyFile = path + "/" + accountAddress + ".key";
             File file = new File(keyFile);
 

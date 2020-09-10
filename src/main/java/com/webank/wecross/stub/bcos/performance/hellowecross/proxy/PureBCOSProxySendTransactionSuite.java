@@ -1,12 +1,12 @@
 package com.webank.wecross.stub.bcos.performance.hellowecross.proxy;
 
+import com.webank.wecross.stub.bcos.abi.ABIDefinition;
+import com.webank.wecross.stub.bcos.abi.ABIObject;
+import com.webank.wecross.stub.bcos.abi.ABIObjectFactory;
 import com.webank.wecross.stub.bcos.performance.PerformanceSuiteCallback;
 import java.util.Arrays;
 import java.util.List;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
-import org.fisco.bcos.web3j.abi.wrapper.ABIDefinition;
-import org.fisco.bcos.web3j.abi.wrapper.ABIObject;
-import org.fisco.bcos.web3j.abi.wrapper.ABIObjectFactory;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.fisco.bcos.web3j.utils.Numeric;
 import org.slf4j.Logger;
