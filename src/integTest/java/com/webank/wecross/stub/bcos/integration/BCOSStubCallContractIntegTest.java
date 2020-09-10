@@ -33,6 +33,7 @@ import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.custom.CommandHandler;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import com.webank.wecross.stub.bcos.performance.hellowecross.HelloWeCross;
+import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.proxy.ProxyContract;
 import com.webank.wecross.stub.bcos.web3j.DefaultBlockHeaderManager;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
@@ -46,6 +47,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
+import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.fisco.bcos.web3j.tx.gas.StaticGasProvider;
 import org.fisco.bcos.web3j.utils.Numeric;
 import org.junit.Assert;

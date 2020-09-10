@@ -63,8 +63,8 @@ dependencies {
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'
     implementation 'com.google.guava:guava:28.1-jre'
-    implementation 'org.fisco-bcos:web3sdk:2.6.2-SNAPSHOT'
-    implementation 'org.fisco-bcos:solcJ:0.5.2.0'
+    implementation 'org.fisco-bcos:web3sdk:2.5.1'
+    implementation 'org.fisco-bcos:solcJ:0.5.2-rc1'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'

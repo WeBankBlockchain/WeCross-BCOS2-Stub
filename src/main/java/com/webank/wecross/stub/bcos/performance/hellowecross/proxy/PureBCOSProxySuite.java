@@ -1,14 +1,14 @@
 package com.webank.wecross.stub.bcos.performance.hellowecross.proxy;
 
+import com.webank.wecross.stub.bcos.abi.ABICodecJsonWrapper;
+import com.webank.wecross.stub.bcos.abi.ABIDefinitionFactory;
+import com.webank.wecross.stub.bcos.abi.ContractABIDefinition;
 import com.webank.wecross.stub.bcos.performance.hellowecross.HelloWeCross;
 import com.webank.wecross.stub.bcos.performance.hellowecross.PureBCOSSuite;
 import com.webank.wecross.stub.bcos.proxy.ProxyCNS;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 import java.math.BigInteger;
 import java.util.Objects;
-import org.fisco.bcos.web3j.abi.wrapper.ABICodecJsonWrapper;
-import org.fisco.bcos.web3j.abi.wrapper.ABIDefinitionFactory;
-import org.fisco.bcos.web3j.abi.wrapper.ContractABIDefinition;
 import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
 import org.fisco.bcos.web3j.tx.gas.StaticGasProvider;
 import org.slf4j.Logger;
