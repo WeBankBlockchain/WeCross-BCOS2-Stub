@@ -193,8 +193,8 @@ public class BCOSStubCallContractIntegTest {
         proxyContract.setAccount((BCOSAccount) account);
         proxyContract.setConnection((BCOSConnection)connection);
         CnsInfo cnsInfo = proxyContract.deployContractAndRegisterCNS(file, "WeCrossProxy", "WeCrossProxy", String.valueOf(System.currentTimeMillis()));
-        driver.getProperties(connection).put(BCOSConstant.BCOS_PROXY_NAME, cnsInfo.getAddress());
-        driver.getProperties(connection).put(BCOSConstant.BCOS_PROXY_ABI, cnsInfo.getAbi());
+        connection.getProperties().put(BCOSConstant.BCOS_PROXY_NAME, cnsInfo.getAddress());
+        connection.getProperties().put(BCOSConstant.BCOS_PROXY_ABI, cnsInfo.getAbi());
     }
 
     @Test

@@ -59,7 +59,7 @@ public class AsyncCnsService {
 
             /** WeCrossProxy ABI */
             if (BCOSConstant.BCOS_PROXY_NAME.equals(name)) {
-                String proxyABI = driver.getProperties(connection).get(BCOSConstant.BCOS_PROXY_ABI);
+                String proxyABI = connection.getProperties().get(BCOSConstant.BCOS_PROXY_ABI);
                 if (logger.isTraceEnabled()) {
                     logger.trace("ProxyABI: {}", proxyABI);
                 }

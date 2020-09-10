@@ -40,7 +40,6 @@ import java.math.BigInteger;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -249,16 +248,6 @@ public class BCOSDriver implements Driver {
         return new ArrayList<>();
     }
 
-    @Override
-    public Map<String, String> getProperties(Connection connection) {
-        if (connection instanceof BCOSConnection) {
-            return ((BCOSConnection) connection).getProperties();
-        }
-
-        logger.error(" Not BCOS connection, connection name: {}", connection.getClass().getName());
-        return new HashMap<>();
-    }
-
     /**
      * @param context
      * @param request
@@ -309,7 +298,7 @@ public class BCOSDriver implements Driver {
         TransactionResponse transactionResponse = new TransactionResponse();
 
         try {
-            Map<String, String> properties = getProperties(connection);
+            Map<String, String> properties = connection.getProperties();
 
             // input validationx
             checkProperties(properties);
@@ -526,7 +515,7 @@ public class BCOSDriver implements Driver {
         TransactionResponse transactionResponse = new TransactionResponse();
 
         try {
-            Map<String, String> properties = getProperties(connection);
+            Map<String, String> properties = connection.getProperties();
 
             // input validation
             checkRequest(context, request);
@@ -651,7 +640,7 @@ public class BCOSDriver implements Driver {
         TransactionResponse transactionResponse = new TransactionResponse();
 
         try {
-            Map<String, String> properties = getProperties(connection);
+            Map<String, String> properties = connection.getProperties();
 
             // input validation
             checkRequest(context, request);
@@ -892,7 +881,7 @@ public class BCOSDriver implements Driver {
         TransactionResponse transactionResponse = new TransactionResponse();
 
         try {
-            Map<String, String> properties = getProperties(connection);
+            Map<String, String> properties = connection.getProperties();
 
             // input validation
             checkRequest(context, request);

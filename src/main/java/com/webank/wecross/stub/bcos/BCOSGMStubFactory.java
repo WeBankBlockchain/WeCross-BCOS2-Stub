@@ -1,9 +1,7 @@
 package com.webank.wecross.stub.bcos;
 
 import com.webank.wecross.stub.Stub;
-import com.webank.wecross.stub.WeCrossContext;
 import org.fisco.bcos.web3j.crypto.EncryptType;
-import org.fisco.bcos.web3j.crypto.gm.GenCredential;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

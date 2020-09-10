@@ -133,6 +133,7 @@ public class BCOSConnection implements Connection {
         return resources;
     }
 
+    @Override
     public Map<String, String> getProperties() {
         return properties;
     }
