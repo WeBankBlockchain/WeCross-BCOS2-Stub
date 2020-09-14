@@ -1,7 +1,7 @@
 package com.webank.wecross.stub.bcos.custom;
 
 import com.webank.wecross.stub.Account;
-import com.webank.wecross.stub.BlockHeaderManager;
+import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Path;
@@ -13,7 +13,7 @@ public interface CommandHandler {
      * @param path rule id
      * @param args command args
      * @param account if needs to sign
-     * @param blockHeaderManager if needs to verify transaction
+     * @param blockManager if needs to verify transaction
      * @param connection chain connection
      * @param callback
      */
@@ -21,7 +21,7 @@ public interface CommandHandler {
             Path path,
             Object[] args,
             Account account,
-            BlockHeaderManager blockHeaderManager,
+            BlockManager blockManager,
             Connection connection,
             Driver.CustomCommandCallback callback);
 }

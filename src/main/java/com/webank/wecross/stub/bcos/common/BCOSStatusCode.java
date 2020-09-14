@@ -20,14 +20,14 @@ public class BCOSStatusCode {
     public static final int HandleSendTransactionFailed = 2021;
     public static final int HandleCallRequestFailed = 2022;
     public static final int HandleGetBlockNumberFailed = 2023;
-    public static final int HandleGetBlockHeaderFailed = 2024;
+    public static final int HandleGetBlockFailed = 2024;
     public static final int HandleGetTransactionProofFailed = 2025;
     public static final int RegisterContractFailed = 2027;
 
     public static final int CallNotSuccessStatus = 2030;
     public static final int SendTransactionNotSuccessStatus = 2031;
 
-    public static final int QueryAbiFailed = 2040;
+    public static final int ABINotExist = 2040;
     public static final int EncodeAbiFailed = 2041;
     public static final int MethodNotExist = 2042;
 

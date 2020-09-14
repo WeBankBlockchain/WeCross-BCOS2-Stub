@@ -27,7 +27,7 @@ public class BCOSConstantTest {
         assertEquals(BCOSRequestType.CALL, 1000);
         assertEquals(BCOSRequestType.SEND_TRANSACTION, 1001);
         assertEquals(BCOSRequestType.GET_BLOCK_NUMBER, 1002);
-        assertEquals(BCOSRequestType.GET_BLOCK_HEADER, 1003);
+        assertEquals(BCOSRequestType.GET_BLOCK_BY_NUMBER, 1003);
         assertEquals(BCOSRequestType.GET_TRANSACTION_PROOF, 1004);
     }
 }

@@ -3,22 +3,24 @@ package com.webank.wecross.stub.bcos.integration;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import com.webank.wecross.stub.Account;
 import com.webank.wecross.stub.BlockHeader;
-import com.webank.wecross.stub.BlockHeaderManager;
+import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.StubFactory;
+import com.webank.wecross.stub.Transaction;
 import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
-import com.webank.wecross.stub.VerifiedTransaction;
 import com.webank.wecross.stub.bcos.AsyncCnsService;
+import com.webank.wecross.stub.bcos.AsyncToSync;
 import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.BCOSConnectionFactory;
 import com.webank.wecross.stub.bcos.BCOSDriver;
@@ -27,23 +29,24 @@ import com.webank.wecross.stub.bcos.BCOSStubFactory;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
+import com.webank.wecross.stub.bcos.common.BCOSStubException;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
-import com.webank.wecross.stub.bcos.custom.CommandHandler;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import com.webank.wecross.stub.bcos.performance.hellowecross.HelloWeCross;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.proxy.ProxyContract;
-import com.webank.wecross.stub.bcos.web3j.DefaultBlockHeaderManager;
+import com.webank.wecross.stub.bcos.web3j.DefaultBlockManager;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.util.Base64;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
@@ -68,7 +71,7 @@ public class BCOSStubCallContractIntegTest {
     private Account account = null;
     private Connection connection = null;
     private ResourceInfo resourceInfo = null;
-    private BlockHeaderManager blockHeaderManager = null;
+    private BlockManager blockManager = null;
     private ConnectionEventHandlerImplMock connectionEventHandlerImplMock = new ConnectionEventHandlerImplMock();
 
     private AsyncCnsService asyncCnsService = null;
@@ -113,35 +116,22 @@ public class BCOSStubCallContractIntegTest {
         this.resourceInfo = resourceInfo;
     }
 
-    public BlockHeaderManager getBlockHeaderManager() {
-        return blockHeaderManager;
+    public BlockManager getBlockManager() {
+        return blockManager;
     }
 
-    public void setBlockHeaderManager(BlockHeaderManager blockHeaderManager) {
-        this.blockHeaderManager = blockHeaderManager;
+    public void setBlockManager(BlockManager blockManager) {
+        this.blockManager = blockManager;
     }
 
-    
-    public TransactionContext<TransactionRequest> createTransactionRequestContext(
+    public TransactionRequest createTransactionRequest(
             Path path, String method, String[] args) {
-        TransactionRequest transactionRequest =
-                new TransactionRequest(method, args);
-        transactionRequest.setOptions(new HashMap<>());
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                new TransactionContext<>(
-                        transactionRequest, account, path, resourceInfo, blockHeaderManager);
-        requestTransactionContext.setAccount(account);
-        requestTransactionContext.setBlockHeaderManager(blockHeaderManager);
-        requestTransactionContext.setData(transactionRequest);
-        requestTransactionContext.setResourceInfo(resourceInfo);
-        return requestTransactionContext;
+        return new TransactionRequest(method, args);
     }
 
-    public TransactionContext<TransactionRequest> createTransactionRequestContext(
-            Path path, String method, String[] args, String transactionId) {
-        TransactionContext<TransactionRequest> transactionRequestContext = createTransactionRequestContext(path, method, args);
-        transactionRequestContext.getData().getOptions().put(BCOSConstant.TRANSACTION_ID, transactionId);
-        return transactionRequestContext;
+    public TransactionContext createTransactionContext(
+            Path path) {
+                return new TransactionContext( account, path, resourceInfo, blockManager);
     }
 
     @Before
@@ -152,20 +142,20 @@ public class BCOSStubCallContractIntegTest {
                 new BCOSStubConfigParser("./chains/bcos/", "stub.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
         String type = bcosStubConfig.getType();
-        System.out.println(" === >> initial type: " + type);
+        logger.info(" === >> initial type:  {}", type);
 
         StubFactory stubFactory = type.startsWith("GM")? new BCOSGMStubFactory() : new BCOSStubFactory();
 
         driver = stubFactory.newDriver();
         account = stubFactory.newAccount("IntegBCOSAccount", "classpath:/accounts/bcos");
-        connection = BCOSConnectionFactory.build("./chains/bcos/", "stub.toml", null);
+        connection = BCOSConnectionFactory.build("./chains/bcos/", "stub.toml");
         connection.setConnectionEventHandler(connectionEventHandlerImplMock);
 
         Web3jWrapper web3jWrapper = ((BCOSConnection) connection).getWeb3jWrapper();
         Web3jWrapperImpl web3jWrapperImpl = (Web3jWrapperImpl) web3jWrapper;
 
         BCOSAccount bcosAccount = (BCOSAccount) account;
-        blockHeaderManager = new DefaultBlockHeaderManager((BCOSConnection) connection);
+        blockManager = new DefaultBlockManager(web3jWrapper);
         asyncCnsService = ((BCOSDriver) driver).getAsyncCnsService();
 
         helloWeCross =
@@ -208,6 +198,22 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
+    public void deployContractTxGetTest() throws InterruptedException {
+        Optional<TransactionReceipt> transactionReceipt = helloWeCross.getTransactionReceipt();
+        AsyncToSync asyncToSync = new AsyncToSync();
+
+        driver.asyncGetTransaction(transactionReceipt.get().getTransactionHash(), 1, blockManager, connection, (e, transaction) -> {
+            assertTrue(Objects.nonNull(transaction));
+            assertTrue(Objects.isNull(e));
+            assertFalse(transaction.isTransactionByProxy());
+            assertTrue(transaction.getReceiptBytes().length > 1);
+            assertTrue(transaction.getTxBytes().length > 1);
+            asyncToSync.getSemaphore().release();
+        });
+        asyncToSync.getSemaphore().acquire();
+    }
+
+    @Test
     public void deployContractByProxyTest() throws Exception {
         String[] params = new String[4] ;
 
@@ -217,12 +223,15 @@ public class BCOSStubCallContractIntegTest {
         params[3] = HelloWeCross.ABI;
 
         Path path = Path.decode("a.b.WeCrossProxy");
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path, "deployContractWithRegisterCNS", params);
+        TransactionRequest transactionRequest =
+                createTransactionRequest(path, "deployContractWithRegisterCNS", params);
+
+        TransactionContext transactionContext =createTransactionContext(path);
 
         AtomicReference<String> addr = new AtomicReference<>("");
         AsyncToSync asyncToSync = new AsyncToSync();
-        driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
+
+        driver.asyncSendTransaction(transactionContext, transactionRequest, true, connection, (exception, res) -> {
             assertTrue(Objects.nonNull(res));
             assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
             assertTrue(res.getResult().length == 1);
@@ -235,11 +244,11 @@ public class BCOSStubCallContractIntegTest {
 
         String[] params0 = new String[1] ;
         params0[0] = "HelloWeCross";
-        TransactionContext<TransactionRequest> requestTransactionContext0 =
-                createTransactionRequestContext(path, "getAddressByNameByCache", params0);
+        TransactionRequest transactionRequest1 =
+                createTransactionRequest(path, "getAddressByNameByCache", params0);
 
         AsyncToSync asyncToSync0 = new AsyncToSync();
-        driver.asyncSendTransactionByProxy(requestTransactionContext0, connection, (exception, res) -> {
+        driver.asyncSendTransaction(transactionContext, transactionRequest1, true, connection, (exception, res) -> {
             assertTrue(Objects.nonNull(res));
             assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
             assertTrue(res.getResult().length == 1);
@@ -266,10 +275,12 @@ public class BCOSStubCallContractIntegTest {
         driver.asyncGetBlockNumber(connection, (e1, blockNumber) -> {
             assertTrue(blockNumber > 0);
 
-            driver.asyncGetBlockHeader(blockNumber, connection, (e2, bytesBlockHeader) -> {
-                assertTrue(bytesBlockHeader.length > 0);
-
-                BlockHeader blockHeader = driver.decodeBlockHeader(bytesBlockHeader);
+            driver.asyncGetBlock(blockNumber, false, connection, (e2, block) -> {
+                assertNull(e2);
+                BlockHeader blockHeader = block.getBlockHeader();
+                List<String> transactionsHashes = block.getTransactionsHashes();
+                assertTrue(transactionsHashes.size() == 1);
+                assertTrue(block.getRawBytes().length > 1);
                 assertTrue(Objects.nonNull(blockHeader));
                 assertTrue(Objects.nonNull(blockHeader.getHash()));
                 assertTrue(Objects.nonNull(blockHeader.getReceiptRoot()));
@@ -289,7 +300,7 @@ public class BCOSStubCallContractIntegTest {
         driver.asyncGetBlockNumber(connection, (e1, blockNumber) -> {
             assertTrue(blockNumber > 0);
 
-            driver.asyncGetBlockHeader(blockNumber + 1, connection, (e2, bytesBlockHeader) -> {
+            driver.asyncGetBlock(blockNumber + 1, true, connection, (e2, bytesBlockHeader) -> {
                 assertTrue(Objects.isNull(bytesBlockHeader));
                 asyncToSync.getSemaphore().release();
             });
@@ -302,133 +313,152 @@ public class BCOSStubCallContractIntegTest {
     public void callIntegTest() throws Exception {
         String[] params = new String[]{};
         Path path = Path.decode("a.b.HelloWorld");
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path, "getVersion", params);
-        TransactionResponse transactionResponse =
-                null;
-        try {
-            transactionResponse = driver.call(requestTransactionContext, connection);
-        } catch (TransactionException e) {
-            // e.printStackTrace();
-        }
+        TransactionRequest transactionRequest =
+                createTransactionRequest(path, "getVersion", params);
 
-        assertTrue(Objects.nonNull(transactionResponse));
-        assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.Success);
-        assertTrue(transactionResponse.getResult().length != 0);
+        TransactionContext transactionContext = createTransactionContext(path);
+        AsyncToSync asyncToSync = new AsyncToSync();
+        driver.asyncCall(transactionContext, transactionRequest, false, connection, new Driver.Callback() {
+            @Override
+            public void onTransactionResponse(TransactionException transactionException, TransactionResponse transactionResponse) {
+                assertNull(transactionException);
+                assertNotNull(transactionResponse);
+                assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.Success);
+                assertTrue(transactionResponse.getResult().length != 0);
+                asyncToSync.getSemaphore().release();
+            }
+        });
+
+        asyncToSync.semaphore.acquire(1);
     }
 
     @Test
     public void callNotExistMethodIntegTest() throws Exception {
         Path path = Path.decode("a.b.HelloWorld");
         String[] params = new String[]{"a.b.1", "a.b.2"};
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path, "addPaths", params);
-        TransactionResponse transactionResponse =
-                null;
-        try {
-            transactionResponse = driver.call(requestTransactionContext, connection);
-        } catch (TransactionException e) {
-            assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.HandleCallRequestFailed);
-        }
+        TransactionRequest transactionRequest =
+                createTransactionRequest(path, "addPaths", params);
+        TransactionContext transactionContext = createTransactionContext(path);
+        AsyncToSync asyncToSync = new AsyncToSync();
+        driver.asyncCall(transactionContext, transactionRequest, false, connection, new Driver.Callback() {
+                @Override
+                public void onTransactionResponse(TransactionException transactionException, TransactionResponse transactionResponse) {
+                    assertTrue(Objects.nonNull(transactionException));
+                    assertTrue(Objects.isNull(transactionResponse));
+                    asyncToSync.getSemaphore().release();
+                }
+            });
 
-        assertTrue(Objects.isNull(transactionResponse));
+        asyncToSync.semaphore.acquire(1);
     }
 
     @Test
     public void sendTransactionIntegTest() throws Exception {
         Path path = Path.decode("a.b.HelloWorld");
         String[] params = new String[]{"a.b.c"};
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path, "addPath", params);
-        TransactionResponse transactionResponse =
-                null;
-        try {
-            transactionResponse = driver.sendTransaction(requestTransactionContext, connection);
-        } catch (TransactionException e) {
-        }
+        TransactionRequest transactionRequest =
+                createTransactionRequest(path, "addPath", params);
+        TransactionContext transactionContext = createTransactionContext(path);
 
-        assertTrue(Objects.nonNull(transactionResponse));
-        assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.Success);
-        assertTrue(transactionResponse.getBlockNumber() > 0);
-//        assertTrue(transactionResponse.getResult().length == 0);
-//        for (int i=0;i<transactionResponse.getResult().length;++i) {
-//            assertEquals(transactionResponse.getResult()[i], params[i]);
-//        }
+        AsyncToSync asyncToSync = new AsyncToSync();
+        final String[] hash = {""};
+        driver.asyncSendTransaction(transactionContext, transactionRequest, false, connection, new Driver.Callback() {
+            @Override
+            public void onTransactionResponse(TransactionException transactionException, TransactionResponse transactionResponse) {
+                assertNotNull(transactionResponse);
+                assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.Success);
+                assertTrue(transactionResponse.getBlockNumber() > 0);
+                hash[0] = transactionResponse.getHash();
+                asyncToSync.getSemaphore().release();
+            }
+        });
 
-        TransactionContext<TransactionRequest> requestTransactionContext0 =
-                createTransactionRequestContext(path, "getPaths", new String[]{});
-        TransactionResponse transactionResponse0 =
-                null;
-        try {
-            transactionResponse0 = driver.call(requestTransactionContext0, connection);
-        } catch (TransactionException e) {
-        }
+        asyncToSync.getSemaphore().acquire();
 
-        assertTrue(Objects.nonNull(transactionResponse0));
-        assertTrue(transactionResponse0.getErrorCode() == BCOSStatusCode.Success);
-        assertTrue(transactionResponse0.getResult().length == params.length);
+        AsyncToSync asyncToSync3 = new AsyncToSync();
+        driver.asyncGetTransaction(hash[0], 1, blockManager, connection, (e, transaction) -> {
+            assertTrue(Objects.nonNull(transaction));
+            assertTrue(Objects.isNull(e));
+            assertFalse(transaction.isTransactionByProxy());
+            assertTrue(transaction.getReceiptBytes().length > 1);
+            assertTrue(transaction.getTxBytes().length > 1);
+            asyncToSync3.getSemaphore().release();
+        });
+        asyncToSync3.getSemaphore().acquire();
 
-        TransactionContext<TransactionRequest> getRequestTransactionContext =
-                createTransactionRequestContext(path, "getPaths", new String[]{});
-        TransactionResponse getTransactionResponse =
-                null;
-        try {
-            getTransactionResponse = driver.call(getRequestTransactionContext, connection);
-        } catch (TransactionException e) {
-            //
-        }
+        TransactionRequest transactionRequest1 =
+                createTransactionRequest(path, "getPaths", new String[]{});
 
-        assertTrue(Objects.nonNull(getTransactionResponse));
-        assertTrue(getTransactionResponse.getErrorCode() == BCOSStatusCode.Success);
-        assertTrue(getTransactionResponse.getResult().length == params.length);
-        for (int i = 0; i < getTransactionResponse.getResult().length; ++i) {
-            assertEquals(getTransactionResponse.getResult()[i], params[i]);
-        }
+        AsyncToSync asyncToSync1 = new AsyncToSync();
+        driver.asyncCall(transactionContext, transactionRequest1, false, connection, new Driver.Callback() {
+            @Override
+            public void onTransactionResponse(TransactionException transactionException, TransactionResponse transactionResponse) {
+                assertNull(transactionException);
+                assertNotNull(transactionResponse);
+                assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.Success);
+                assertTrue(transactionResponse.getResult().length == params.length);
+                asyncToSync1.getSemaphore().release();
+            }
+        });
+        asyncToSync1.getSemaphore().acquire();
+
+
+        TransactionRequest transactionRequest2 =
+                createTransactionRequest(path, "getPaths", new String[]{});
+        AsyncToSync asyncToSync2 = new AsyncToSync();
+        driver.asyncCall(transactionContext, transactionRequest2, false, connection, new Driver.Callback() {
+            @Override
+            public void onTransactionResponse(TransactionException transactionException, TransactionResponse transactionResponse) {
+                assertNotNull(transactionResponse);
+                assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.Success);
+                assertTrue(transactionResponse.getResult().length == params.length);
+                for (int i = 0; i < transactionResponse.getResult().length; ++i) {
+                    assertEquals(transactionResponse.getResult()[i], params[i]);
+                }
+                asyncToSync2.getSemaphore().release();
+            }
+        });
+        asyncToSync2.getSemaphore().acquire();
     }
-    
 
     @Test
     public void sendTransactionNotExistIntegTest() throws Exception {
         Path path = Path.decode("a.b.HelloWorld");
         String[] params = new String[]{"aa", "bb", "cc", "dd"};
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path, "setNotExist", params);
-        TransactionResponse transactionResponse =
-                null;
-        try {
-            transactionResponse = driver.sendTransaction(requestTransactionContext, connection);
-        } catch (TransactionException e) {
-            // assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.SendTransactionNotSuccessStatus);
-        }
+        TransactionRequest transactionRequest =
+                createTransactionRequest(path, "setNotExist", params);
 
-        assertTrue(Objects.nonNull(transactionResponse));
-        assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.SendTransactionNotSuccessStatus);
+        TransactionContext transactionContext = createTransactionContext(path);
+        AsyncToSync asyncToSync = new AsyncToSync();
+        final String[] hash = {""};
+        driver.asyncSendTransaction(transactionContext, transactionRequest, false, connection, new Driver.Callback() {
+            @Override
+            public void onTransactionResponse(TransactionException transactionException, TransactionResponse transactionResponse) {
+                assertNotNull(transactionResponse);
+                assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.SendTransactionNotSuccessStatus);
+                asyncToSync.getSemaphore().release();
+                hash[0] = transactionResponse.getHash();
+            }
+        });
+        asyncToSync.getSemaphore().acquire();
+
+
+        AsyncToSync asyncToSync1 = new AsyncToSync();
+        driver.asyncGetTransaction(hash[0], 1, blockManager, connection, (e, transaction) -> {
+            assertTrue(Objects.isNull(transaction));
+            assertTrue(Objects.nonNull(e));
+            BCOSStubException e1 = (BCOSStubException)e;
+            assertTrue(e1.getErrorCode() == BCOSStatusCode.TransactionReceiptProofNotExist);
+            asyncToSync1.getSemaphore().release();
+        });
+        asyncToSync1.getSemaphore().acquire();
     }
-
-//    @Test
-//    public void getTransactionReceiptTest() throws Exception {
-//        Path path = Path.decode("a.b.HelloWorld");
-//        TransactionContext<TransactionRequest> requestTransactionContext =
-//                createTransactionRequestContext(path, "addPath", new String[]{"a.b.c"});
-//        TransactionResponse transactionResponse =
-//                driver.sendTransaction(requestTransactionContext, connection);
-//        assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.Success);
-//        assertTrue(Objects.nonNull(transactionResponse.getHash()));
-//
-//        TransactionProof transactionProof = ((BCOSDriver) driver).requestTransactionProof(transactionResponse.getHash(), connection);
-//        TransactionReceipt transactionReceipt = transactionProof.getReceiptAndProof().getTransactionReceipt();
-//
-//        assertEquals(transactionReceipt.getTransactionHash(), transactionResponse.getHash());
-//        assertEquals(transactionReceipt.getBlockNumber().longValue(), transactionResponse.getBlockNumber());
-//
-//    }
 
     @Test
     public void getVerifiedTransactionNotExistTest() throws Exception {
-        Path path = Path.decode("a.b.HelloWorld");
         AsyncToSync asyncToSync = new AsyncToSync();
         String transactionHash = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
-        driver.asyncGetVerifiedTransaction(path, transactionHash, 1, blockHeaderManager, connection, (e, verifiedTransaction) -> {
+        driver.asyncGetTransaction(transactionHash, 1, blockManager, connection, (e, verifiedTransaction) -> {
             assertTrue(Objects.isNull(verifiedTransaction));
             asyncToSync.getSemaphore().release();
         });
@@ -460,11 +490,13 @@ public class BCOSStubCallContractIntegTest {
 
         AsyncToSync asyncToSync = new AsyncToSync();
 
-        CommandHandler commandHandler = new DeployContractHandler(asyncCnsService);
+        DeployContractHandler commandHandler = new DeployContractHandler();
+        commandHandler.setAsyncCnsService(asyncCnsService);
+
         commandHandler.handle(Path.decode("a.b.HelloWorld"),
                 args,
                 account,
-                blockHeaderManager,
+                blockManager,
                 connection,
                 (error, response) -> {
             assertNull(error);
@@ -500,8 +532,10 @@ public class BCOSStubCallContractIntegTest {
 
         AsyncToSync asyncToSync = new AsyncToSync();
 
-        CommandHandler commandHandler = new DeployContractHandler(asyncCnsService);
-        commandHandler.handle(Path.decode("a.b.TupleTest"), args, account, blockHeaderManager, connection, (error, response) -> {
+        DeployContractHandler commandHandler = new DeployContractHandler();
+        commandHandler.setAsyncCnsService(asyncCnsService);
+
+        commandHandler.handle(Path.decode("a.b.TupleTest"), args, account, blockManager, connection, (error, response) -> {
             assertNull(error);
             assertNotNull(response);
             assertTrue(((String)response).length() == 42);
@@ -513,7 +547,7 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
-    public void CnsServiceTest() throws InterruptedException {
+    public void cnsServiceTest() throws InterruptedException {
         AsyncToSync asyncToSync = new AsyncToSync();
         asyncCnsService.selectByName(BCOSConstant.BCOS_PROXY_NAME, connection, driver, (exception, infoList) -> {
             Assert.assertTrue(Objects.isNull(exception));
@@ -525,7 +559,7 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
-    public void CnsServiceLoopTest() throws Exception {
+    public void cnsServiceLoopTest() throws Exception {
         PathMatchingResourcePatternResolver resolver =
                 new PathMatchingResourcePatternResolver();
         String path =
@@ -537,7 +571,9 @@ public class BCOSStubCallContractIntegTest {
         byte[] contractBytes;
         contractBytes = Files.readAllBytes(file.toPath());
 
-        CommandHandler commandHandler = new DeployContractHandler(asyncCnsService);
+        DeployContractHandler commandHandler = new DeployContractHandler();
+        commandHandler.setAsyncCnsService(asyncCnsService);
+
         for (int i = 0; i < 3; i++) {
             String constructorParams = "constructor params";
             String baseName = "HelloWorld";
@@ -554,7 +590,7 @@ public class BCOSStubCallContractIntegTest {
             commandHandler.handle(Path.decode("a.b." + baseName + i),
                     args,
                     account,
-                    blockHeaderManager,
+                    blockManager,
                     connection,
                     (error, response) -> {
                         assertNull(error);
@@ -568,14 +604,16 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
-    public void CallByProxyTest() throws Exception {
+    public void callByProxyTest() throws Exception {
         String[] params = new String[]{"hello", "world"};
         Path path = Path.decode("a.b.HelloWorld");
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path, "get2", params);
+        TransactionRequest transactionRequest =
+                createTransactionRequest(path, "get2", params);
+
+        TransactionContext transactionContext = createTransactionContext(path);
 
         AsyncToSync asyncToSync = new AsyncToSync();
-        driver.asyncCallByProxy(requestTransactionContext, connection, (exception, res) -> {
+        driver.asyncCall(transactionContext,  transactionRequest, true, connection, (exception, res) -> {
             assertTrue(Objects.nonNull(res));
             assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
             assertTrue(res.getResult().length == 1);
@@ -590,12 +628,14 @@ public class BCOSStubCallContractIntegTest {
     public void sendTransactionGet1ByProxyTest() throws Exception {
         String[] params = new String[]{"hello world"};
         Path path = Path.decode("a.b.HelloWorld");
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path, "get1", params);
+        TransactionRequest transactionRequest =
+                createTransactionRequest(path, "get1", params);
+
+        TransactionContext transactionContext = createTransactionContext(path);
 
         AtomicReference<String> hash = new AtomicReference<>("");
         AsyncToSync asyncToSync = new AsyncToSync();
-        driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
+        driver.asyncSendTransaction(transactionContext, transactionRequest, true, connection, (exception, res) -> {
             assertTrue(Objects.nonNull(res));
             assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
             hash.set(res.getHash());
@@ -604,69 +644,116 @@ public class BCOSStubCallContractIntegTest {
 
         asyncToSync.semaphore.acquire(1);
 
-        AsyncToSync asyncToSync0 = new AsyncToSync();
-        driver.asyncGetVerifiedTransaction(path, hash.get(), 1, blockHeaderManager, connection, new Driver.GetVerifiedTransactionCallback() {
-                    @Override
-                    public void onResponse(Exception e, VerifiedTransaction verifiedTransaction) {
-                        assertTrue(Objects.isNull(e));
-                        assertTrue(verifiedTransaction.getPath().equals(path));
-                        assertTrue(verifiedTransaction.getTransactionRequest().getMethod().equals("get1"));
-                        assertTrue(verifiedTransaction.getTransactionRequest().getArgs()[0].equals(params[0]));
-                        assertTrue(verifiedTransaction.getTransactionResponse().getResult()[0].equals(params[0]));
-                        asyncToSync0.getSemaphore().release();
-                    }
-                }
-        );
+        AsyncToSync asyncToSync1 = new AsyncToSync();
+        driver.asyncGetTransaction(hash.get(), 1, blockManager, connection, new Driver.GetTransactionCallback() {
+            @Override
+            public void onResponse(Exception e, Transaction transaction) {
+                assertTrue(Objects.isNull(e));
+                assertTrue(transaction.getTransactionHash().equals(hash.get()));
+                assertTrue(transaction.isTransactionByProxy());
+                assertNull(transaction.getTransactionID());
+                assertEquals(transaction.getResource(), path.getResource());
+                assertTrue(transaction.getSeq().equals("0"));
+                assertTrue(transaction.getTransactionRequest().getMethod().equals("get1"));
+                assertEquals(transaction.getTransactionRequest().getArgs()[0], params[0]);
+                assertEquals(transaction.getTransactionResponse().getErrorCode().intValue(), 0);
+                assertEquals(transaction.getTransactionResponse().getResult()[0], params[0]);
+                asyncToSync1.getSemaphore().release();
+            }
+        });
 
-        asyncToSync0.semaphore.acquire(1);
+        asyncToSync1.semaphore.acquire(1);
     }
 
     @Test
     public void sendTransactionGet2ByProxyTest() throws Exception {
         String[] params = new String[]{"hello", "world"};
         Path path = Path.decode("a.b.HelloWorld");
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path, "get2", params);
+        TransactionRequest transactionRequest =
+                createTransactionRequest(path, "get2", params);
+
+        TransactionContext transactionContext = createTransactionContext(path);
 
         AsyncToSync asyncToSync = new AsyncToSync();
-        driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
+        AtomicReference<String> hash = new AtomicReference<>("");
+        driver.asyncSendTransaction(transactionContext, transactionRequest, true, connection, (exception, res) -> {
             assertTrue(Objects.nonNull(res));
             assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
             assertTrue(res.getResult().length == 1);
             assertTrue(res.getResult()[0].equals(params[0] + params[1]));
+            hash.set(res.getHash());
             asyncToSync.getSemaphore().release();
         });
 
         asyncToSync.semaphore.acquire(1);
+
+        AsyncToSync asyncToSync1 = new AsyncToSync();
+        driver.asyncGetTransaction(hash.get(), 1, blockManager, connection, (exception, res) -> {
+            assertTrue(Objects.isNull(exception));
+            assertTrue(res.getTransactionHash().equals(hash.get()));
+            assertTrue(res.isTransactionByProxy());
+            assertNull(res.getTransactionID());
+            assertEquals(res.getResource(), path.getResource());
+            assertTrue(res.getSeq().equals("0"));
+            assertTrue(res.getTransactionRequest().getMethod().equals("get2"));
+            assertEquals(res.getTransactionRequest().getArgs()[0], params[0]);
+            assertEquals(res.getTransactionRequest().getArgs()[1], params[1]);
+            assertEquals(res.getTransactionResponse().getErrorCode().intValue(), 0);
+            assertEquals(res.getTransactionResponse().getResult()[0], params[0] + params[1]);
+            asyncToSync1.getSemaphore().release();
+        });
+
+        asyncToSync1.semaphore.acquire(1);
     }
 
     @Test
     public void sendTransactionSetByProxyTest() throws Exception {
         String[] params = new String[]{"hello"};
         Path path = Path.decode("a.b.HelloWorld");
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path, "set", params);
+        TransactionRequest transactionRequest =
+                createTransactionRequest(path, "set", params);
 
+        TransactionContext transactionContext = createTransactionContext(path);
+
+        AtomicReference<String> hash = new AtomicReference<>("");
         AsyncToSync asyncToSync = new AsyncToSync();
-        driver.asyncSendTransactionByProxy(requestTransactionContext, connection, (exception, res) -> {
+        driver.asyncSendTransaction(transactionContext, transactionRequest, true, connection, (exception, res) -> {
             assertTrue(Objects.nonNull(res));
             assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
             assertTrue(res.getResult().length == 0);
+            hash.set(res.getHash());
             asyncToSync.getSemaphore().release();
         });
 
         asyncToSync.semaphore.acquire(1);
+
+        AsyncToSync asyncToSync1 = new AsyncToSync();
+        driver.asyncGetTransaction(hash.get(), 1, blockManager, connection, (exception, transaction) -> {
+            assertTrue(Objects.isNull(exception));
+            assertTrue(transaction.getTransactionHash().equals(hash.get()));
+            assertTrue(transaction.isTransactionByProxy());
+            assertNull(transaction.getTransactionID());
+            assertEquals(transaction.getResource(), path.getResource());
+            assertTrue(transaction.getSeq().equals("0"));
+            assertTrue(transaction.getTransactionRequest().getMethod().equals("set"));
+            assertEquals(transaction.getTransactionRequest().getArgs()[0], params[0]);
+            assertEquals(transaction.getTransactionResponse().getErrorCode().intValue(), 0);
+            asyncToSync1.getSemaphore().release();
+        });
+
+        asyncToSync1.semaphore.acquire(1);
     }
 
     @Test
     public void callByProxyOnTupleTest() throws Exception {
         String[] params = new String[]{};
         Path path = Path.decode("a.b.TupleTest");
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path, "get1", params);
+        TransactionRequest transactionRequest =
+                createTransactionRequest(path, "get1", params);
+        TransactionContext transactionContext = createTransactionContext(path);
 
         AsyncToSync asyncToSync = new AsyncToSync();
-        driver.asyncCallByProxy(requestTransactionContext, connection, (exception, res) -> {
+        driver.asyncCall(transactionContext, transactionRequest, true, connection, (exception, res) -> {
             assertTrue(Objects.nonNull(res));
             assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
             assertTrue(res.getResult().length == 3);
@@ -683,11 +770,13 @@ public class BCOSStubCallContractIntegTest {
     public void callByProxyOnTupleTestGetAndSet() throws Exception {
         String[] params = new String[]{"1111", "[ 22222, 33333, 44444 ]", "55555"};
         Path path = Path.decode("a.b.TupleTest");
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path, "getAndSet1", params);
+        TransactionRequest transactionRequest =
+                createTransactionRequest(path, "getAndSet1", params);
+
+        TransactionContext transactionContext = createTransactionContext(path);
 
         AsyncToSync asyncToSync = new AsyncToSync();
-        driver.asyncCallByProxy(requestTransactionContext, connection, (exception, res) -> {
+        driver.asyncCall(transactionContext, transactionRequest, true, connection, (exception, res) -> {
             assertTrue(Objects.nonNull(res));
             assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
             assertTrue(res.getResult().length == 3);
@@ -704,11 +793,13 @@ public class BCOSStubCallContractIntegTest {
     public void callByProxyOnTupleTestGetSampleTupleValue() throws Exception {
         String[] params = new String[]{};
         Path path = Path.decode("a.b.TupleTest");
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                createTransactionRequestContext(path, "getSampleTupleValue", params);
+        TransactionRequest transactionRequest =
+                createTransactionRequest(path, "getSampleTupleValue", params);
+
+        TransactionContext transactionContext = createTransactionContext(path);
 
         AsyncToSync asyncToSync = new AsyncToSync();
-        driver.asyncCallByProxy(requestTransactionContext, connection, (exception, res) -> {
+        driver.asyncCall(transactionContext, transactionRequest, true, connection, (exception, res) -> {
             assertTrue(Objects.nonNull(res));
             assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
             assertTrue(res.getResult().length == 3);

@@ -17,7 +17,7 @@ import org.fisco.bcos.web3j.crypto.Credentials;
 import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.junit.Test;
 
-public class BCSOAccountFactoryTest {
+public class BCOSAccountFactoryTest {
     @Test
     public void loadPemTest()
             throws IOException, CertificateException, UnrecoverableKeyException,
