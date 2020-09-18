@@ -1,10 +1,8 @@
 package com.webank.wecross.stub.bcos.proxy;
 
-import com.webank.wecross.stub.StubFactory;
+import com.webank.wecross.stub.bcos.BCOSBaseStubFactory;
 import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.BCOSConnectionFactory;
-import com.webank.wecross.stub.bcos.BCOSGMStubFactory;
-import com.webank.wecross.stub.bcos.BCOSStubFactory;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
@@ -46,25 +44,28 @@ public class ProxyContract {
             throws Exception {
         this.proxyContractFile = proxyContractFile;
         this.chainPath = chainPath;
-
         BCOSStubConfigParser bcosStubConfigParser =
                 new BCOSStubConfigParser(chainPath, "stub.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
 
-        StubFactory bcosStubFactory =
-                bcosStubConfig.getType().toLowerCase().contains("gm")
-                        ? new BCOSGMStubFactory()
-                        : new BCOSStubFactory();
+        boolean isSM = bcosStubConfig.getType().toLowerCase().contains("gm");
+        EncryptType encryptType =
+                isSM
+                        ? new EncryptType(EncryptType.SM2_TYPE)
+                        : new EncryptType(EncryptType.ECDSA_TYPE);
+
+        BCOSBaseStubFactory bcosBaseStubFactory =
+                isSM
+                        ? new BCOSBaseStubFactory(EncryptType.SM2_TYPE, "sm2p256v1", "GM_BCOS2.0")
+                        : new BCOSBaseStubFactory(EncryptType.ECDSA_TYPE, "secp256k1", "BCOS2.0");
 
         Web3j web3j = Web3jUtility.initWeb3j(bcosStubConfig.getChannelService());
         Web3jWrapper web3jWrapper = new Web3jWrapperImpl(web3j);
-
         account =
                 (BCOSAccount)
-                        bcosStubFactory.newAccount(
+                        bcosBaseStubFactory.newAccount(
                                 accountName, "classpath:accounts" + File.separator + accountName);
         connection = BCOSConnectionFactory.build(bcosStubConfig, web3jWrapper);
-
         if (account == null) {
             throw new Exception("Account " + accountName + " not found");
         }

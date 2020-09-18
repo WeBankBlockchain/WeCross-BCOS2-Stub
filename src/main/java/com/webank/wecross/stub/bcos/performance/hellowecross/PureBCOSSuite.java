@@ -1,6 +1,6 @@
 package com.webank.wecross.stub.bcos.performance.hellowecross;
 
-import com.webank.wecross.stub.StubFactory;
+import com.webank.wecross.stub.bcos.BCOSBaseStubFactory;
 import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.BCOSGMStubFactory;
 import com.webank.wecross.stub.bcos.BCOSStubFactory;
@@ -39,7 +39,7 @@ public abstract class PureBCOSSuite implements PerformanceSuite {
 
         logger.info(" chain: {}, account: {}, enableGM: {}", chainName, accountName, sm);
 
-        StubFactory stubFactory = (sm ? new BCOSGMStubFactory() : new BCOSStubFactory());
+        BCOSBaseStubFactory stubFactory = (sm ? new BCOSGMStubFactory() : new BCOSStubFactory());
         BCOSConnection connection =
                 (BCOSConnection) stubFactory.newConnection("classpath:/" + chainName);
 
