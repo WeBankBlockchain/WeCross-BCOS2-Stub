@@ -84,7 +84,13 @@ public class BCOSAccountFactory {
         try {
             logger.info("New account: {} type:{}", username, type);
             Credentials credentials = buildPemPrivateKey(secKey);
-            return new BCOSAccount(username, type, credentials);
+            BCOSAccount account = new BCOSAccount(username, type, credentials);
+
+            if (!account.getCredentials().getAddress().equals(address)) {
+                throw new Exception("Given address is not belongs to the secKey of " + username);
+            }
+
+            return account;
 
         } catch (Exception e) {
             logger.error("BCOSAccount exception: " + e.getMessage());
