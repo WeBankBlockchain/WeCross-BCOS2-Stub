@@ -21,6 +21,7 @@ import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
 import com.webank.wecross.stub.bcos.AsyncCnsService;
 import com.webank.wecross.stub.bcos.AsyncToSync;
+import com.webank.wecross.stub.bcos.BCOSBaseStubFactory;
 import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.BCOSConnectionFactory;
 import com.webank.wecross.stub.bcos.BCOSDriver;
@@ -144,7 +145,7 @@ public class BCOSStubCallContractIntegTest {
         String type = bcosStubConfig.getType();
         logger.info(" === >> initial type:  {}", type);
 
-        StubFactory stubFactory = type.startsWith("GM")? new BCOSGMStubFactory() : new BCOSStubFactory();
+        BCOSBaseStubFactory stubFactory = type.startsWith("GM")? new BCOSGMStubFactory() : new BCOSStubFactory();
 
         driver = stubFactory.newDriver();
         account = stubFactory.newAccount("IntegBCOSAccount", "classpath:/accounts/bcos");

@@ -20,6 +20,7 @@ import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.spec.ECGenParameterSpec;
+import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemObject;
@@ -31,8 +32,18 @@ import org.fisco.bcos.web3j.crypto.gm.GenCredential;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class BCOSBaseStubFactory implements StubFactory {
+public class BCOSBaseStubFactory implements StubFactory {
     private Logger logger = LoggerFactory.getLogger(BCOSBaseStubFactory.class);
+
+    private String alg = null;
+    private String stubType = null;
+
+    public BCOSBaseStubFactory(int encyptType, String alg, String stubType) {
+        EncryptType encryptType = new EncryptType(encyptType);
+        this.alg = alg;
+        this.stubType = stubType;
+        logger.info(" EncryptType: {}", encryptType.getEncryptType());
+    }
 
     @Override
     public void init(WeCrossContext context) {}
@@ -42,14 +53,18 @@ public abstract class BCOSBaseStubFactory implements StubFactory {
      *
      * @return
      */
-    public abstract String getAlg();
+    public String getAlg() {
+        return alg;
+    }
 
     /**
      * The stub type, BCOS2.0 or GM_BCOS2.0
      *
      * @return
      */
-    public abstract String getStubType();
+    public String getStubType() {
+        return stubType;
+    }
 
     @Override
     public Driver newDriver() {
@@ -106,6 +121,11 @@ public abstract class BCOSBaseStubFactory implements StubFactory {
     }
 
     @Override
+    public Account newAccount(Map<String, Object> properties) {
+
+        return BCOSAccountFactory.build(properties);
+    }
+
     public Account newAccount(String name, String path) {
         try {
             logger.info("New account: {} type:{}", name, EncryptType.encryptType);

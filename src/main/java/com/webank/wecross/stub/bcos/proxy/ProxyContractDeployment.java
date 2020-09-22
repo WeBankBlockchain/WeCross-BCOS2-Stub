@@ -52,21 +52,18 @@ public class ProxyContractDeployment {
     }
 
     public static void main(String[] args) throws Exception {
-        try {
-            switch (args.length) {
-                case 2:
-                    handle2Args(args);
-                    break;
-                case 3:
-                    handle3Args(args);
-                    break;
-                default:
-                    usage();
-            }
-        } catch (Exception e) {
-            System.out.println(e);
-        } finally {
-            exit();
+        switch (args.length) {
+            case 2:
+                handle2Args(args);
+                exit();
+                break;
+            case 3:
+                handle3Args(args);
+                exit();
+                break;
+            default:
+                usage();
+                exit();
         }
     }
 
