@@ -38,11 +38,11 @@ public class BCOSBaseStubFactory implements StubFactory {
     private String alg = null;
     private String stubType = null;
 
-    public BCOSBaseStubFactory(int encyptType, String alg, String stubType) {
-        EncryptType encryptType = new EncryptType(encyptType);
+    public BCOSBaseStubFactory(int encryptType, String alg, String stubType) {
+        EncryptType.setEncryptType(encryptType);
         this.alg = alg;
         this.stubType = stubType;
-        logger.info(" EncryptType: {}", encryptType.getEncryptType());
+        logger.info(" EncryptType: {}", EncryptType.getEncryptType());
     }
 
     @Override
