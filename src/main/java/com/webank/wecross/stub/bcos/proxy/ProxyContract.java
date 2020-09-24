@@ -49,11 +49,6 @@ public class ProxyContract {
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
 
         boolean isSM = bcosStubConfig.getType().toLowerCase().contains("gm");
-        EncryptType encryptType =
-                isSM
-                        ? new EncryptType(EncryptType.SM2_TYPE)
-                        : new EncryptType(EncryptType.ECDSA_TYPE);
-
         BCOSBaseStubFactory bcosBaseStubFactory =
                 isSM
                         ? new BCOSBaseStubFactory(EncryptType.SM2_TYPE, "sm2p256v1", "GM_BCOS2.0")
