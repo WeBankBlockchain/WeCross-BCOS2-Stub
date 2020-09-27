@@ -6,8 +6,10 @@ import java.math.BigInteger;
 import java.security.InvalidParameterException;
 import org.bouncycastle.util.encoders.Hex;
 import org.fisco.bcos.web3j.crypto.ECDSASign;
+import org.fisco.bcos.web3j.crypto.ECDSASignature;
 import org.fisco.bcos.web3j.crypto.ECKeyPair;
 import org.fisco.bcos.web3j.crypto.EncryptType;
+import org.fisco.bcos.web3j.crypto.Keys;
 import org.fisco.bcos.web3j.crypto.SHA3Digest;
 import org.fisco.bcos.web3j.crypto.Sign;
 import org.fisco.bcos.web3j.crypto.gm.sm2.crypto.asymmetric.SM2Algorithm;
@@ -49,7 +51,7 @@ public interface Signer {
         }
 
         @Override
-        public boolean verify(byte[] signData, byte[] srcData, String hexPub) {
+        public boolean verify(byte[] signData, byte[] srcData, String address) {
 
             byte[] r = new byte[ECDSA_PRIVATE_KEY_SIZE];
             byte[] s = new byte[ECDSA_PRIVATE_KEY_SIZE];
@@ -62,8 +64,15 @@ public interface Signer {
             SHA3Digest sha3Digest = new SHA3Digest();
             byte[] hash = sha3Digest.hash(srcData);
 
-            BigInteger pub = new BigInteger(hexPub, 16);
-            return ecdsaSign.secp256Verify(hash, pub, new Sign.SignatureData(v, r, s));
+            Sign.SignatureData signatureData = new Sign.SignatureData(v, r, s);
+
+            ECDSASignature sig =
+                    new ECDSASignature(
+                            Numeric.toBigInt(signatureData.getR()),
+                            Numeric.toBigInt(signatureData.getS()));
+
+            BigInteger k = Sign.recoverFromSignature(signatureData.getV(), sig, hash);
+            return Keys.getAddress(k).equals(Numeric.cleanHexPrefix(address));
         }
     }
 
@@ -85,7 +94,7 @@ public interface Signer {
         }
 
         @Override
-        public boolean verify(byte[] signData, byte[] srcData, String hexPub) {
+        public boolean verify(byte[] signData, byte[] srcData, String address) {
 
             if (signData.length < SM2_PUBLIC_KEY_SIZE) {
                 throw new InvalidParameterException(
@@ -100,7 +109,12 @@ public interface Signer {
 
             try {
                 return SM2Algorithm.verify(
-                        srcData, sign, Hex.toHexString(pub, 0, 32), Hex.toHexString(pub, 32, 32));
+                                srcData,
+                                sign,
+                                Hex.toHexString(pub, 0, 32),
+                                Hex.toHexString(pub, 32, 32))
+                        && Keys.getAddress(Numeric.toHexStringNoPrefix(pub))
+                                .equals(Numeric.cleanHexPrefix(address));
             } catch (IOException e) {
                 logger.error("e: ", e);
                 throw new RuntimeException(e.getCause());
