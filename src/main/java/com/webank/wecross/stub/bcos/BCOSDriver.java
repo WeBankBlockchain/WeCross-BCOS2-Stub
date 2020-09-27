@@ -32,6 +32,7 @@ import com.webank.wecross.stub.bcos.custom.CommandHandler;
 import com.webank.wecross.stub.bcos.custom.CommandHandlerDispatcher;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
+import com.webank.wecross.stub.bcos.uaproof.Signer;
 import com.webank.wecross.stub.bcos.verify.BlockHeaderValidation;
 import com.webank.wecross.stub.bcos.verify.MerkleValidation;
 import java.math.BigInteger;
@@ -46,6 +47,7 @@ import org.bouncycastle.util.encoders.Hex;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
 import org.fisco.bcos.web3j.crypto.Credentials;
+import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.fisco.bcos.web3j.crypto.ExtendedRawTransaction;
 import org.fisco.bcos.web3j.crypto.ExtendedTransactionDecoder;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
@@ -67,6 +69,8 @@ public class BCOSDriver implements Driver {
     private static final Logger logger = LoggerFactory.getLogger(BCOSDriver.class);
 
     private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
+
+    private Signer signer = Signer.newSigner(EncryptType.encryptType);
 
     private CommandHandlerDispatcher commandHandlerDispatcher;
 
@@ -1273,7 +1277,7 @@ public class BCOSDriver implements Driver {
                 Request.newRequest(
                         BCOSRequestType.GET_BLOCK_BY_NUMBER,
                         BigInteger.valueOf(blockNumber).toByteArray());
-
+        String sealerString = connection.getProperties().get(BCOSConstant.BCOS_SEALER_MAP);
         connection.asyncSend(
                 request,
                 response -> {
@@ -1289,7 +1293,7 @@ public class BCOSDriver implements Driver {
                             Block block =
                                     BlockUtility.convertToBlock(response.getData(), onlyHeader);
                             BCOSBlockHeader bcosBlockHeader = (BCOSBlockHeader) block.blockHeader;
-                            BlockHeaderValidation.verifyBlockHeader(bcosBlockHeader);
+                            BlockHeaderValidation.verifyBlockHeader(sealerString, bcosBlockHeader);
                             if (logger.isDebugEnabled()) {
                                 logger.debug(
                                         " blockNumber: {}, blockHeader: {}, txs: {}",
@@ -1661,6 +1665,22 @@ public class BCOSDriver implements Driver {
                                 });
                     }
                 });
+    }
+
+    @Override
+    public byte[] accountSign(Account account, byte[] message) {
+        if (!(account instanceof BCOSAccount)) {
+            throw new UnsupportedOperationException(
+                    "Not BCOSAccount, account name: " + account.getClass().getName());
+        }
+
+        Credentials credentials = ((BCOSAccount) account).getCredentials();
+        return signer.sign(credentials.getEcKeyPair(), message);
+    }
+
+    @Override
+    public boolean accountVerify(String identity, byte[] signBytes, byte[] message) {
+        return signer.verify(signBytes, message, identity);
     }
 
     /**

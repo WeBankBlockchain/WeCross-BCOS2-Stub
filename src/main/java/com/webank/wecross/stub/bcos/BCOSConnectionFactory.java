@@ -10,6 +10,7 @@ import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 import java.util.Objects;
 import org.fisco.bcos.fisco.EnumNodeVersion;
 import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
+import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.core.methods.response.NodeVersion;
 import org.slf4j.Logger;
@@ -33,6 +34,10 @@ public class BCOSConnectionFactory {
                 BCOSConstant.BCOS_CHAIN_ID, String.valueOf(bcosStubConfig.getChain().getChainID()));
         bcosConnection.addProperty(
                 BCOSConstant.BCOS_STUB_TYPE, String.valueOf(bcosStubConfig.getType()));
+        String sealerString =
+                ObjectMapperFactory.getObjectMapper()
+                        .writeValueAsString(bcosStubConfig.getSealers().getSealersMap());
+        bcosConnection.addProperty(BCOSConstant.BCOS_SEALER_MAP, sealerString);
 
         CnsInfo cnsInfo = ProxyCNS.queryProxyCnsInfo(web3jWrapper);
         if (Objects.nonNull(cnsInfo)) {

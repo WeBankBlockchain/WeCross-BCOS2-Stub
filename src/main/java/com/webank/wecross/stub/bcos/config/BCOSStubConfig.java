@@ -20,7 +20,7 @@ public class BCOSStubConfig {
     /** BCOS resource list */
     private List<Resource> resources;
 
-    private Map<String, String> peersMap;
+    private Sealers sealers;
 
     public static class Chain {
         private int groupID;
@@ -153,6 +153,7 @@ public class BCOSStubConfig {
         private String type;
         private String value;
         private Chain chain;
+        private Sealers sealers;
 
         public String getName() {
             return name;
@@ -186,6 +187,14 @@ public class BCOSStubConfig {
             this.chain = chain;
         }
 
+        public Sealers getSealers() {
+            return sealers;
+        }
+
+        public void setSealers(Sealers sealers) {
+            this.sealers = sealers;
+        }
+
         @Override
         public String toString() {
             return "BCOSResourceConfig{"
@@ -202,29 +211,24 @@ public class BCOSStubConfig {
         }
     }
 
-    public static class Peer {
-        private String id;
-        private String pubKey;
+    public static class Sealers {
+        private Map<String, String> sealersMap;
 
-        public String getId() {
-            return id;
+        public Sealers(Map<String, String> sealersMap) {
+            this.sealersMap = sealersMap;
         }
 
-        public void setId(String id) {
-            this.id = id;
+        public Map<String, String> getSealersMap() {
+            return sealersMap;
         }
 
-        public String getPubKey() {
-            return pubKey;
-        }
-
-        public void setPubKey(String pubKey) {
-            this.pubKey = pubKey;
+        public void setSealersMap(Map<String, String> sealersMap) {
+            this.sealersMap = sealersMap;
         }
 
         @Override
         public String toString() {
-            return "Peer{" + "id='" + id + '\'' + ", pubKey='" + pubKey + '\'' + '}';
+            return "Sealers{" + "sealersMap=" + sealersMap + '}';
         }
     }
 
@@ -260,12 +264,12 @@ public class BCOSStubConfig {
         this.chain = chain;
     }
 
-    public Map<String, String> getPeersMap() {
-        return peersMap;
+    public Sealers getSealers() {
+        return sealers;
     }
 
-    public void setPeersMap(Map<String, String> peersMap) {
-        this.peersMap = peersMap;
+    public void setSealers(Sealers sealers) {
+        this.sealers = sealers;
     }
 
     @Override

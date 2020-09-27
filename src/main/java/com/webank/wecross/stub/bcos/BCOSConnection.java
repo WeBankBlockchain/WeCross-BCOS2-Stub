@@ -410,9 +410,11 @@ public class BCOSConnection implements Connection {
 
             BcosBlockHeader.BlockHeader blockHeader =
                     web3jWrapper.getBlockHeaderByNumber(blockNumber.longValue());
+
             List<String> headerData = new ArrayList<>();
             headerData.add(objectMapper.writeValueAsString(blockHeader));
             block.setExtraData(headerData);
+
             response.setErrorCode(BCOSStatusCode.Success);
             response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
             response.setData(objectMapper.writeValueAsBytes(block));
