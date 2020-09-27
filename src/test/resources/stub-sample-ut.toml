@@ -16,6 +16,22 @@
     threadQueueCapacity = 5000
     # connectionsStr = ['127.0.0.1:20201']
 
+[[peers]]
+    id = "x01"
+    pubKey = "xxxx1"
+
+[[peers]]
+    id = "x02"
+    pubKey = "xxxx2"
+
+[[peers]]
+    id = "x03"
+    pubKey = "xxxx3"
+
+[[peers]]
+    id = "x04"
+    pubKey = "xxxx4"
+
 # resources is a list
 [[resources]]
     # name cannot be repeated

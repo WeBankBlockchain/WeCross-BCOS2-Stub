@@ -68,7 +68,7 @@ dependencies {
 
     implementation 'org.apache.commons:commons-lang3:3.11'
     implementation 'com.google.guava:guava:28.1-jre'
-    implementation ('org.fisco-bcos:web3sdk:2.5.1')  {
+    implementation ('org.fisco-bcos:web3sdk:2.6.0')  {
         exclude group: "org.ethereum"
     }
 
