@@ -34,7 +34,7 @@ public class SignerTest {
         String publicKey =
                 Numeric.toHexStringNoPrefixZeroPadded(
                         credentials.getEcKeyPair().getPublicKey(), 128);
-        boolean verify = signer.verify(sign, message.getBytes(), publicKey);
+        boolean verify = signer.verify(sign, message.getBytes(), credentials.getAddress());
         assertTrue(verify);
         EncryptType.setEncryptType(encryptType1);
     }
@@ -52,7 +52,7 @@ public class SignerTest {
         String publicKey =
                 Numeric.toHexStringNoPrefixZeroPadded(
                         credentials.getEcKeyPair().getPublicKey(), 128);
-        boolean verify = signer.verify(sign, message.getBytes(), publicKey);
+        boolean verify = signer.verify(sign, message.getBytes(), credentials.getAddress());
         assertTrue(verify);
         EncryptType.setEncryptType(encryptType1);
     }
