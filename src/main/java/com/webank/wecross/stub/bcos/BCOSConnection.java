@@ -32,11 +32,7 @@ import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.channel.StatusCode;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof;
+import org.fisco.bcos.web3j.protocol.core.methods.response.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -212,6 +208,8 @@ public class BCOSConnection implements Connection {
             asyncGetTransactionProof(request, callback);
         } else if (request.getType() == BCOSRequestType.CALL) {
             handleAsyncCallRequest(request, callback);
+        } else if (request.getType() == BCOSRequestType.GET_BLOCK_HEADER_BY_NUMBER) {
+            handleAsyncGetBlockHeaderRequest(request, callback);
         } else {
             // Does not support asynchronous operation, async to sync
             logger.warn(" unrecognized request type, type: {}", request.getType());
@@ -410,6 +408,11 @@ public class BCOSConnection implements Connection {
             BigInteger blockNumber = new BigInteger(request.getData());
             BcosBlock.Block block = web3jWrapper.getBlockByNumber(blockNumber.longValue());
 
+            BcosBlockHeader.BlockHeader blockHeader =
+                    web3jWrapper.getBlockHeaderByNumber(blockNumber.longValue());
+            List<String> headerData = new ArrayList<>();
+            headerData.add(objectMapper.writeValueAsString(blockHeader));
+            block.setExtraData(headerData);
             response.setErrorCode(BCOSStatusCode.Success);
             response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
             response.setData(objectMapper.writeValueAsBytes(block));
@@ -426,5 +429,29 @@ public class BCOSConnection implements Connection {
 
     public boolean hasProxyDeployed() {
         return getProperties().containsKey(BCOSConstant.BCOS_PROXY_NAME);
+    }
+
+    public void handleAsyncGetBlockHeaderRequest(Request request, Callback callback) {
+        Response response = new Response();
+        try {
+            BigInteger blockNumber = new BigInteger(request.getData());
+            BcosBlockHeader.BlockHeader blockHeader =
+                    web3jWrapper.getBlockHeaderByNumber(blockNumber.longValue());
+
+            response.setErrorCode(BCOSStatusCode.Success);
+            response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
+            response.setData(objectMapper.writeValueAsBytes(blockHeader));
+            if (logger.isDebugEnabled()) {
+                logger.debug(
+                        " getBlockHeaderByNumber, blockNumber: {}, blockHeader: {}",
+                        blockNumber,
+                        blockHeader);
+            }
+        } catch (Exception e) {
+            logger.warn(" Exception, e: ", e);
+            response.setErrorCode(BCOSStatusCode.HandleGetBlockFailed);
+            response.setErrorMessage(" errorMessage: " + e.getMessage());
+        }
+        callback.onResponse(response);
     }
 }

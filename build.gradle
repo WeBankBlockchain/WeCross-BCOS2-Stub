@@ -68,7 +68,7 @@ dependencies {
 
     implementation 'org.apache.commons:commons-lang3:3.11'
     implementation 'com.google.guava:guava:28.1-jre'
-    implementation 'org.fisco-bcos:web3sdk:2.5.1'
+    implementation 'org.fisco-bcos:web3sdk:2.6.0'
     implementation 'org.fisco-bcos:solcJ:0.5.2-rc1'
 
     // Use JUnit test framework

@@ -6,10 +6,7 @@ import com.webank.wecross.stub.bcos.common.BCOSToml;
 import com.webank.wecross.stub.bcos.web3j.Web3jDefaultConfig;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,18 +57,27 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         List<Map<String, String>> resourcesConfigValue =
                 (List<Map<String, String>>) stubConfig.get("resources");
 
+        List<Map<String, String>> peersConfigValue =
+                (List<Map<String, String>>) stubConfig.get("peers");
+
         if (resourcesConfigValue == null) {
             resourcesConfigValue = new ArrayList<>();
+        }
+        if (peersConfigValue == null) {
+            logger.error("loadConfig: Can't get peers in config file!");
+            throw new IOException("loadConfig: Can't get peers in config file!");
         }
 
         List<BCOSStubConfig.Resource> bcosResources =
                 getBCOSResourceConfig(getConfigPath(), chain, resourcesConfigValue);
+        Map<String, String> bcosPeerMap = getBCOSPeerConfig(getConfigPath(), peersConfigValue);
 
         BCOSStubConfig bcosStubConfig = new BCOSStubConfig();
         bcosStubConfig.setType(stubType);
         bcosStubConfig.setChannelService(channelServiceConfig);
         bcosStubConfig.setResources(bcosResources);
         bcosStubConfig.setChain(chain);
+        bcosStubConfig.setPeersMap(bcosPeerMap);
         channelServiceConfig.setChain(chain);
 
         return bcosStubConfig;
@@ -157,20 +163,20 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
             List<Map<String, String>> resourcesConfigValue) {
         List<BCOSStubConfig.Resource> resourceList = new ArrayList<>();
 
-        for (int i = 0; i < resourcesConfigValue.size(); ++i) {
-            String name = resourcesConfigValue.get(i).get("name");
+        for (Map<String, String> stringStringMap : resourcesConfigValue) {
+            String name = stringStringMap.get("name");
             requireFieldNotNull(name, "resources", "name", configFile);
 
-            String type = resourcesConfigValue.get(i).get("type");
-            requireFieldNotNull(name, "resources", "type", configFile);
+            String type = stringStringMap.get("type");
+            requireFieldNotNull(type, "resources", "type", configFile);
             // check type invalid
             if (!BCOSConstant.RESOURCE_TYPE_BCOS_CONTRACT.equals(type)) {
                 logger.error(" unrecognized bcos resource type, name: {}, type: {}", name, type);
                 continue;
             }
 
-            String address = resourcesConfigValue.get(i).get("contractAddress");
-            requireFieldNotNull(name, "resources", "contractAddress", configFile);
+            String address = stringStringMap.get("contractAddress");
+            requireFieldNotNull(address, "resources", "contractAddress", configFile);
 
             BCOSStubConfig.Resource resource = new BCOSStubConfig.Resource();
             resource.setName(name);
@@ -184,5 +190,24 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         logger.debug("resources: {}", resourceList);
 
         return resourceList;
+    }
+
+    public Map<String, String> getBCOSPeerConfig(
+            String configFile, List<Map<String, String>> peersConfigValue) {
+        Map<String, String> peerMap = new HashMap<>();
+
+        for (Map<String, String> stringStringMap : peersConfigValue) {
+            String id = stringStringMap.get("id");
+            requireFieldNotNull(id, "peers", "id", configFile);
+
+            String pubKey = stringStringMap.get("pubKey");
+            requireFieldNotNull(pubKey, "peers", "pubKey", configFile);
+
+            peerMap.put(id, pubKey);
+        }
+
+        logger.debug("getBCOSPeerConfig: peers:{}", peerMap);
+
+        return peerMap;
     }
 }

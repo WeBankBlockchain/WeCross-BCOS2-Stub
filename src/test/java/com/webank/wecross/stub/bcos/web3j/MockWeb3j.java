@@ -9,40 +9,7 @@ import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.core.DefaultBlockParameter;
 import org.fisco.bcos.web3j.protocol.core.Request;
 import org.fisco.bcos.web3j.protocol.core.methods.request.Transaction;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosFilter;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosLog;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosTransaction;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosTransactionReceipt;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BlockHash;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BlockNumber;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Code;
-import org.fisco.bcos.web3j.protocol.core.methods.response.ConsensusStatus;
-import org.fisco.bcos.web3j.protocol.core.methods.response.GenerateGroup;
-import org.fisco.bcos.web3j.protocol.core.methods.response.GroupList;
-import org.fisco.bcos.web3j.protocol.core.methods.response.GroupPeers;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Log;
-import org.fisco.bcos.web3j.protocol.core.methods.response.NodeIDList;
-import org.fisco.bcos.web3j.protocol.core.methods.response.NodeVersion;
-import org.fisco.bcos.web3j.protocol.core.methods.response.ObserverList;
-import org.fisco.bcos.web3j.protocol.core.methods.response.PbftView;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Peers;
-import org.fisco.bcos.web3j.protocol.core.methods.response.PendingTransactions;
-import org.fisco.bcos.web3j.protocol.core.methods.response.PendingTxSize;
-import org.fisco.bcos.web3j.protocol.core.methods.response.QueryGroupStatus;
-import org.fisco.bcos.web3j.protocol.core.methods.response.RecoverGroup;
-import org.fisco.bcos.web3j.protocol.core.methods.response.RemoveGroup;
-import org.fisco.bcos.web3j.protocol.core.methods.response.SealerList;
-import org.fisco.bcos.web3j.protocol.core.methods.response.SendTransaction;
-import org.fisco.bcos.web3j.protocol.core.methods.response.StartGroup;
-import org.fisco.bcos.web3j.protocol.core.methods.response.StopGroup;
-import org.fisco.bcos.web3j.protocol.core.methods.response.SyncStatus;
-import org.fisco.bcos.web3j.protocol.core.methods.response.SystemConfig;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TotalTransactionCount;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof;
-import org.fisco.bcos.web3j.protocol.core.methods.response.UninstallFilter;
+import org.fisco.bcos.web3j.protocol.core.methods.response.*;
 import org.fisco.bcos.web3j.protocol.websocket.events.LogNotification;
 import org.fisco.bcos.web3j.protocol.websocket.events.NewHeadsNotification;
 import org.junit.Assert;
@@ -68,6 +35,24 @@ public class MockWeb3j implements Web3j {
         }
 
         return request;
+    }
+
+    @Override
+    public Request<?, BcosBlockHeader> getBlockHeaderByHash(
+            String blockHash, boolean returnSealerList) {
+        return null;
+    }
+
+    @Override
+    public Request<?, BcosBlockHeader> getBlockHeaderByNumber(
+            BigInteger blockNumber, boolean returnSealerList) {
+        return null;
+    }
+
+    @Override
+    public Request<?, BcosBlock> getBlockByNumber(
+            BigInteger blockNumber, boolean returnFullTransactionObjects) {
+        return null;
     }
 
     @Override
