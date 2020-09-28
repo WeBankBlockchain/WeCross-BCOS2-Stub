@@ -163,7 +163,7 @@ public class BCOSDriverTest {
         TransactionRequest request = new TransactionRequest(func, params);
         Function function =
                 FunctionUtility.newSendTransactionProxyFunction(
-                        "1", 1, "a.b.Hello", "set(string)", encoded.encode());
+                        "1", "1", 1, "a.b.Hello", "set(string)", encoded.encode());
         String signTx =
                 SignTransaction.sign(
                         GenCredential.create(),
@@ -181,7 +181,7 @@ public class BCOSDriverTest {
         Pair<Boolean, TransactionRequest> booleanTransactionRequestPair =
                 driver.decodeTransactionRequest(
                         Request.newRequest(BCOSRequestType.SEND_TRANSACTION, data));
-        assertTrue(booleanTransactionRequestPair.getKey() == true);
+        assertTrue(booleanTransactionRequestPair.getKey());
         assertEquals(booleanTransactionRequestPair.getValue().getMethod(), func);
         assertEquals(booleanTransactionRequestPair.getValue().getArgs().length, params.length);
         assertEquals(booleanTransactionRequestPair.getValue().getArgs()[0], params[0]);

@@ -3,7 +3,7 @@ package com.webank.wecross.stub.bcos;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
-import com.webank.wecross.stub.bcos.proxy.ProxyCNS;
+import com.webank.wecross.stub.bcos.preparation.CnsService;
 import com.webank.wecross.stub.bcos.web3j.Web3jUtility;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
@@ -34,10 +34,15 @@ public class BCOSConnectionFactory {
         bcosConnection.addProperty(
                 BCOSConstant.BCOS_STUB_TYPE, String.valueOf(bcosStubConfig.getType()));
 
-        CnsInfo cnsInfo = ProxyCNS.queryProxyCnsInfo(web3jWrapper);
-        if (Objects.nonNull(cnsInfo)) {
-            bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_NAME, cnsInfo.getAddress());
-            bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_ABI, cnsInfo.getAbi());
+        CnsInfo proxyCnsInfo = CnsService.queryProxyCnsInfo(web3jWrapper);
+        if (Objects.nonNull(proxyCnsInfo)) {
+            bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_NAME, proxyCnsInfo.getAddress());
+            bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_ABI, proxyCnsInfo.getAbi());
+        }
+
+        CnsInfo hubCnsInfo = CnsService.queryHubCnsInfo(web3jWrapper);
+        if (Objects.nonNull(hubCnsInfo)) {
+            bcosConnection.addProperty(BCOSConstant.BCOS_HUB_NAME, hubCnsInfo.getAddress());
         }
         return bcosConnection;
     }

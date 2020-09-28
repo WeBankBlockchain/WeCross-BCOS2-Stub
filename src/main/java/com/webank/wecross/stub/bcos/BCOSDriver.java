@@ -3,19 +3,7 @@ package com.webank.wecross.stub.bcos;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.webank.wecross.stub.Account;
-import com.webank.wecross.stub.Block;
-import com.webank.wecross.stub.BlockManager;
-import com.webank.wecross.stub.Connection;
-import com.webank.wecross.stub.Driver;
-import com.webank.wecross.stub.Path;
-import com.webank.wecross.stub.Request;
-import com.webank.wecross.stub.ResourceInfo;
-import com.webank.wecross.stub.Transaction;
-import com.webank.wecross.stub.TransactionContext;
-import com.webank.wecross.stub.TransactionException;
-import com.webank.wecross.stub.TransactionRequest;
-import com.webank.wecross.stub.TransactionResponse;
+import com.webank.wecross.stub.*;
 import com.webank.wecross.stub.bcos.abi.ABICodecJsonWrapper;
 import com.webank.wecross.stub.bcos.abi.ABIDefinition;
 import com.webank.wecross.stub.bcos.abi.ABIDefinitionFactory;
@@ -39,11 +27,7 @@ import com.webank.wecross.stub.bcos.uaproof.Signer;
 import com.webank.wecross.stub.bcos.verify.MerkleValidation;
 import java.math.BigInteger;
 import java.security.InvalidParameterException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.bouncycastle.util.encoders.Hex;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
@@ -58,9 +42,7 @@ import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof;
-import org.fisco.bcos.web3j.tuples.generated.Tuple2;
-import org.fisco.bcos.web3j.tuples.generated.Tuple4;
-import org.fisco.bcos.web3j.tuples.generated.Tuple5;
+import org.fisco.bcos.web3j.tuples.generated.*;
 import org.fisco.bcos.web3j.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,22 +122,22 @@ public class BCOSDriver implements Driver {
                                             Numeric.cleanHexPrefix(
                                                     FunctionUtility
                                                             .ProxySendTransactionTXMethodId))) {
-                                Tuple5<String, BigInteger, String, String, byte[]>
+                                Tuple6<String, String, BigInteger, String, String, byte[]>
                                         sendTransactionProxyFunctionInput =
                                                 FunctionUtility
                                                         .getSendTransactionProxyFunctionInput(
                                                                 extendedRawTransaction.getData());
                                 abi =
                                         Hex.toHexString(
-                                                sendTransactionProxyFunctionInput.getValue5());
+                                                sendTransactionProxyFunctionInput.getValue6());
                             } else {
-                                Tuple2<String, byte[]> sendTransactionProxyFunctionInput =
+                                Tuple3<String, String, byte[]> sendTransactionProxyFunctionInput =
                                         FunctionUtility
                                                 .getSendTransactionProxyWithoutTxIdFunctionInput(
                                                         extendedRawTransaction.getData());
                                 abi =
                                         Hex.toHexString(
-                                                sendTransactionProxyFunctionInput.getValue2());
+                                                sendTransactionProxyFunctionInput.getValue3());
                                 abi = abi.substring(FunctionUtility.MethodIDLength);
                             }
                         } else {
@@ -170,9 +152,8 @@ public class BCOSDriver implements Driver {
                                 abi = Hex.toHexString(constantCallProxyFunctionInput.getValue4());
                             } else {
                                 Tuple2<String, byte[]> sendTransactionProxyFunctionInput =
-                                        FunctionUtility
-                                                .getSendTransactionProxyWithoutTxIdFunctionInput(
-                                                        transactionParams.getData());
+                                        FunctionUtility.getConstantCallFunctionInput(
+                                                transactionParams.getData());
                                 abi =
                                         Hex.toHexString(
                                                 sendTransactionProxyFunctionInput.getValue2());
@@ -354,10 +335,12 @@ public class BCOSDriver implements Driver {
                             }
 
                             String transactionID =
-                                    (String) request.getOptions().get(BCOSConstant.TRANSACTION_ID);
+                                    (String) request.getOptions().get(StubConstant.TRANSACTION_ID);
 
                             Function function = null;
-                            if (Objects.isNull(transactionID) || transactionID.isEmpty()) {
+                            if (Objects.isNull(transactionID)
+                                    || transactionID.isEmpty()
+                                    || "0".equals(transactionID)) {
                                 function =
                                         FunctionUtility.newConstantCallProxyFunction(
                                                 path.getResource(),
@@ -964,18 +947,31 @@ public class BCOSDriver implements Driver {
                                                     encodedArgs = encodedObj.encode();
                                                 }
 
+                                                String uniqueID =
+                                                        (String)
+                                                                request.getOptions()
+                                                                        .get(
+                                                                                StubConstant
+                                                                                        .TRANSACTION_UNIQUE_ID);
+                                                String uid =
+                                                        Objects.nonNull(uniqueID)
+                                                                ? uniqueID
+                                                                : UUID.randomUUID()
+                                                                        .toString()
+                                                                        .replaceAll("-", "");
+
                                                 String transactionID =
                                                         (String)
                                                                 request.getOptions()
                                                                         .get(
-                                                                                BCOSConstant
+                                                                                StubConstant
                                                                                         .TRANSACTION_ID);
 
                                                 String transactionSeq =
                                                         (String)
                                                                 request.getOptions()
                                                                         .get(
-                                                                                BCOSConstant
+                                                                                StubConstant
                                                                                         .TRANSACTION_SEQ);
                                                 int seq =
                                                         Objects.isNull(transactionSeq)
@@ -984,10 +980,12 @@ public class BCOSDriver implements Driver {
 
                                                 Function function = null;
                                                 if (Objects.isNull(transactionID)
-                                                        || transactionID.isEmpty()) {
+                                                        || transactionID.isEmpty()
+                                                        || "0".equals(transactionID)) {
                                                     function =
                                                             FunctionUtility
                                                                     .newSendTransactionProxyFunction(
+                                                                            uid,
                                                                             path.getResource(),
                                                                             functions
                                                                                     .get(0)
@@ -997,6 +995,7 @@ public class BCOSDriver implements Driver {
                                                     function =
                                                             FunctionUtility
                                                                     .newSendTransactionProxyFunction(
+                                                                            uid,
                                                                             transactionID,
                                                                             seq,
                                                                             path.toString(),
@@ -1032,6 +1031,15 @@ public class BCOSDriver implements Driver {
                                                                 objectMapper.writeValueAsBytes(
                                                                         transaction));
 
+                                                if (logger.isDebugEnabled()) {
+                                                    logger.debug(
+                                                            "asyncSendTransactionByProxy, uid: {}, tid: {}, seq: {}, path: {}, abi: {}",
+                                                            uid,
+                                                            transactionID,
+                                                            seq,
+                                                            path,
+                                                            abi);
+                                                }
                                                 connection.asyncSend(
                                                         req,
                                                         response -> {
@@ -1385,12 +1393,12 @@ public class BCOSDriver implements Driver {
                                     String proxyOutput = receipt.getOutput();
                                     if (proxyInput.startsWith(
                                             FunctionUtility.ProxySendTXMethodId)) {
-                                        Tuple2<String, byte[]> proxyResult =
+                                        Tuple3<String, String, byte[]> proxyResult =
                                                 FunctionUtility
                                                         .getSendTransactionProxyWithoutTxIdFunctionInput(
                                                                 proxyInput);
-                                        resource = proxyResult.getValue1();
-                                        input = Numeric.toHexString(proxyResult.getValue2());
+                                        resource = proxyResult.getValue2();
+                                        input = Numeric.toHexString(proxyResult.getValue3());
                                         methodId =
                                                 input.substring(
                                                         0,
@@ -1409,15 +1417,15 @@ public class BCOSDriver implements Driver {
                                         }
                                     } else if (proxyInput.startsWith(
                                             FunctionUtility.ProxySendTransactionTXMethodId)) {
-                                        Tuple5<String, BigInteger, String, String, byte[]>
+                                        Tuple6<String, String, BigInteger, String, String, byte[]>
                                                 proxyInputResult =
                                                         FunctionUtility
                                                                 .getSendTransactionProxyFunctionInput(
                                                                         proxyInput);
 
-                                        transactionID = proxyInputResult.getValue1();
-                                        seq = proxyInputResult.getValue2().toString(10);
-                                        path = proxyInputResult.getValue3();
+                                        transactionID = proxyInputResult.getValue2();
+                                        seq = proxyInputResult.getValue3().toString(10);
+                                        path = proxyInputResult.getValue4();
                                         try {
                                             resource = Path.decode(path).getResource();
                                         } catch (Exception e) {
@@ -1427,9 +1435,9 @@ public class BCOSDriver implements Driver {
                                                     path);
                                         }
 
-                                        String methodSig = proxyInputResult.getValue4();
+                                        String methodSig = proxyInputResult.getValue5();
 
-                                        input = Numeric.toHexString(proxyInputResult.getValue5());
+                                        input = Numeric.toHexString(proxyInputResult.getValue6());
                                         methodId = FunctionEncoder.buildMethodId(methodSig);
 
                                         if (logger.isDebugEnabled()) {

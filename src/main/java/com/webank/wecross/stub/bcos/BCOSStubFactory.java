@@ -12,9 +12,12 @@ public class BCOSStubFactory extends BCOSBaseStubFactory {
 
     public static void main(String[] args) throws Exception {
         System.out.println("This is BCOS2.0 Stub Plugin. Please copy this file to router/plugin/");
-        System.out.println("For deploy proxy contract:");
+        System.out.println("For deploy WeCrossProxy:");
         System.out.println(
-                "    java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.normal.proxy.ProxyContractDeployment");
+                "    java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.preparation.ProxyContractDeployment");
+        System.out.println("For deploy WeCrossHub:");
+        System.out.println(
+                "    java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.preparation.HubContractDeployment");
         System.out.println("For chain performance test, please run the command for more info:");
         System.out.println(
                 "    Pure:    java -cp conf/:lib/*:plugin/* "

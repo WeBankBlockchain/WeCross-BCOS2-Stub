@@ -17,9 +17,7 @@ import org.fisco.bcos.web3j.abi.datatypes.Type;
 import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
 import org.fisco.bcos.web3j.abi.datatypes.generated.Uint256;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.fisco.bcos.web3j.tuples.generated.Tuple2;
-import org.fisco.bcos.web3j.tuples.generated.Tuple4;
-import org.fisco.bcos.web3j.tuples.generated.Tuple5;
+import org.fisco.bcos.web3j.tuples.generated.*;
 import org.fisco.bcos.web3j.utils.Numeric;
 
 /**
@@ -39,13 +37,17 @@ public class FunctionUtility {
     public static final int MethodIDWithHexPrefixLength = MethodIDLength + 2;
 
     public static final String ProxySendTXMethodId =
-            FunctionEncoder.buildMethodId("sendTransaction(string,bytes)");
+            FunctionEncoder.buildMethodId("sendTransaction(string,string,bytes)");
 
     public static final String ProxySendTransactionTXMethodId =
-            FunctionEncoder.buildMethodId("sendTransaction(string,uint256,string,string,bytes)");
+            FunctionEncoder.buildMethodId(
+                    "sendTransaction(string,string,uint256,string,string,bytes)");
 
     public static final String ProxyCallWithTransactionIdMethodId =
             FunctionEncoder.buildMethodId("constantCall(string,string,string,bytes)");
+
+    public static final String ProxyCallMethodId =
+            FunctionEncoder.buildMethodId("constantCall(string,bytes)");
 
     public static final List<TypeReference<?>> abiTypeReferenceOutputs =
             Collections.singletonList(new TypeReference<DynamicArray<Utf8String>>() {});
@@ -130,7 +132,8 @@ public class FunctionUtility {
      * uint256 _seq, string memory _path, string memory _func, bytes memory _args) public
      * returns(bytes memory)
      *
-     * @param id
+     * @param uid
+     * @param tid
      * @param seq
      * @param path
      * @param methodSignature
@@ -138,12 +141,13 @@ public class FunctionUtility {
      * @return
      */
     public static Function newSendTransactionProxyFunction(
-            String id, int seq, String path, String methodSignature, String abi) {
+            String uid, String tid, int seq, String path, String methodSignature, String abi) {
         Function function =
                 new Function(
                         "sendTransaction",
                         Arrays.<Type>asList(
-                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(id),
+                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(uid),
+                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(tid),
                                 new Uint256(seq),
                                 new org.fisco.bcos.web3j.abi.datatypes.Utf8String(path),
                                 new org.fisco.bcos.web3j.abi.datatypes.Utf8String(methodSignature),
@@ -157,18 +161,20 @@ public class FunctionUtility {
      * WeCrossProxy sendTransaction function function sendTransaction(string memory _name, bytes
      * memory _argsWithMethodId) public returns(bytes memory)
      *
+     * @param uid
      * @param name
      * @param methodSignature
      * @param abi
      * @return
      */
     public static Function newSendTransactionProxyFunction(
-            String name, String methodSignature, String abi) {
+            String uid, String name, String methodSignature, String abi) {
         String methodId = FunctionEncoder.buildMethodId(methodSignature);
         Function function =
                 new Function(
                         "sendTransaction",
                         Arrays.<Type>asList(
+                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(uid),
                                 new org.fisco.bcos.web3j.abi.datatypes.Utf8String(name),
                                 new org.fisco.bcos.web3j.abi.datatypes.DynamicBytes(
                                         Numeric.hexStringToByteArray(methodId + abi))),
@@ -204,12 +210,33 @@ public class FunctionUtility {
     }
 
     /**
+     * decode WeCrossProxy constantCall input
+     *
+     * @param input
+     * @return
+     */
+    public static Tuple2<String, byte[]> getConstantCallFunctionInput(String input) {
+        String data = input.substring(Numeric.containsHexPrefix(input) ? 10 : 8);
+        final Function function =
+                new Function(
+                        "constantCall",
+                        Arrays.<Type>asList(),
+                        Arrays.<TypeReference<?>>asList(
+                                new TypeReference<Utf8String>() {},
+                                new TypeReference<DynamicBytes>() {}));
+        List<Type> results = FunctionReturnDecoder.decode(data, function.getOutputParameters());
+
+        return new Tuple2<String, byte[]>(
+                (String) results.get(0).getValue(), (byte[]) results.get(1).getValue());
+    }
+
+    /**
      * decode WeCrossProxy sendTransaction input
      *
      * @param input
      * @return
      */
-    public static Tuple5<String, BigInteger, String, String, byte[]>
+    public static Tuple6<String, String, BigInteger, String, String, byte[]>
             getSendTransactionProxyFunctionInput(String input) {
         String data = input.substring(Numeric.containsHexPrefix(input) ? 10 : 8);
 
@@ -219,18 +246,20 @@ public class FunctionUtility {
                         Arrays.<Type>asList(),
                         Arrays.<TypeReference<?>>asList(
                                 new TypeReference<Utf8String>() {},
+                                new TypeReference<Utf8String>() {},
                                 new TypeReference<Uint256>() {},
                                 new TypeReference<Utf8String>() {},
                                 new TypeReference<Utf8String>() {},
                                 new TypeReference<DynamicBytes>() {}));
         List<Type> results = FunctionReturnDecoder.decode(data, function.getOutputParameters());
 
-        return new Tuple5<String, BigInteger, String, String, byte[]>(
+        return new Tuple6<>(
                 (String) results.get(0).getValue(),
-                (BigInteger) results.get(1).getValue(),
-                (String) results.get(2).getValue(),
+                (String) results.get(1).getValue(),
+                (BigInteger) results.get(2).getValue(),
                 (String) results.get(3).getValue(),
-                (byte[]) results.get(4).getValue());
+                (String) results.get(4).getValue(),
+                (byte[]) results.get(5).getValue());
     }
 
     /**
@@ -239,7 +268,7 @@ public class FunctionUtility {
      * @param input
      * @return
      */
-    public static Tuple2<String, byte[]> getSendTransactionProxyWithoutTxIdFunctionInput(
+    public static Tuple3<String, String, byte[]> getSendTransactionProxyWithoutTxIdFunctionInput(
             String input) {
         String data = input.substring(Numeric.containsHexPrefix(input) ? 10 : 8);
 
@@ -249,10 +278,14 @@ public class FunctionUtility {
                         Arrays.<Type>asList(),
                         Arrays.<TypeReference<?>>asList(
                                 new TypeReference<Utf8String>() {},
+                                new TypeReference<Utf8String>() {},
                                 new TypeReference<DynamicBytes>() {}));
         List<Type> results = FunctionReturnDecoder.decode(data, function.getOutputParameters());
 
-        return new Tuple2<>((String) results.get(0).getValue(), (byte[]) results.get(1).getValue());
+        return new Tuple3<>(
+                (String) results.get(0).getValue(),
+                (String) results.get(1).getValue(),
+                (byte[]) results.get(2).getValue());
     }
 
     public static List<String> convertToStringList(List<Type> typeList) {

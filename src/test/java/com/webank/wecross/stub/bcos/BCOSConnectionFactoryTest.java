@@ -29,7 +29,7 @@ public class BCOSConnectionFactoryTest {
 
             Driver driver = new BCOSDriver();
             List<ResourceInfo> resources = driver.getResources(connection);
-            assertTrue(resources.size() == 3);
+            assertTrue(resources.size() == 4);
             ResourceInfo resourceInfo = resources.get(0);
             assertEquals(resourceInfo.getName(), "HelloWeCross");
             assertEquals(resourceInfo.getStubType(), "BCOS-UT");
