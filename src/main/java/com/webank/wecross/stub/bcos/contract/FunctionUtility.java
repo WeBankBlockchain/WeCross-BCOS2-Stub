@@ -46,6 +46,9 @@ public class FunctionUtility {
     public static final String ProxyCallWithTransactionIdMethodId =
             FunctionEncoder.buildMethodId("constantCall(string,string,string,bytes)");
 
+    public static final String ProxyCallMethodId =
+            FunctionEncoder.buildMethodId("constantCall(string,bytes)");
+
     public static final List<TypeReference<?>> abiTypeReferenceOutputs =
             Collections.singletonList(new TypeReference<DynamicArray<Utf8String>>() {});
 
@@ -204,6 +207,27 @@ public class FunctionUtility {
                 (String) results.get(1).getValue(),
                 (String) results.get(2).getValue(),
                 (byte[]) results.get(3).getValue());
+    }
+
+    /**
+     * decode WeCrossProxy constantCall input
+     *
+     * @param input
+     * @return
+     */
+    public static Tuple2<String, byte[]> getConstantCallFunctionInput(String input) {
+        String data = input.substring(Numeric.containsHexPrefix(input) ? 10 : 8);
+        final Function function =
+                new Function(
+                        "constantCall",
+                        Arrays.<Type>asList(),
+                        Arrays.<TypeReference<?>>asList(
+                                new TypeReference<Utf8String>() {},
+                                new TypeReference<DynamicBytes>() {}));
+        List<Type> results = FunctionReturnDecoder.decode(data, function.getOutputParameters());
+
+        return new Tuple2<String, byte[]>(
+                (String) results.get(0).getValue(), (byte[]) results.get(1).getValue());
     }
 
     /**

@@ -177,11 +177,13 @@ public class BCOSConnection implements Connection {
                 if (Objects.nonNull(paths) && paths.length != 0) {
                     Set<String> set = new HashSet<>(Arrays.asList(paths));
                     set.add("a.b." + BCOSConstant.BCOS_PROXY_NAME);
+                    set.add("a.b." + BCOSConstant.BCOS_HUB_NAME);
                     return set.toArray(new String[0]);
                 } else {
                     Set<String> set = new HashSet<>();
                     set.add("a.b." + BCOSConstant.BCOS_PROXY_NAME);
-                    logger.debug(" listPaths empty and add proxy ");
+                    set.add("a.b." + BCOSConstant.BCOS_HUB_NAME);
+                    logger.debug("No path found and add system resources");
                     return set.toArray(new String[0]);
                 }
             } else {

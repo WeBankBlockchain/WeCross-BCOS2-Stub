@@ -10,6 +10,7 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.custom.CommandHandlerDispatcher;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import com.webank.wecross.stub.bcos.custom.RegisterCnsHandler;
+import com.webank.wecross.stub.bcos.preparation.HubContractDeployment;
 import com.webank.wecross.stub.bcos.preparation.ProxyContractDeployment;
 import java.io.File;
 import java.io.FileWriter;
@@ -109,6 +110,16 @@ public class BCOSBaseStubFactory implements StubFactory {
                 String help =
                         "Please deploy WeCrossProxy contract by: "
                                 + ProxyContractDeployment.getUsage(path);
+                System.out.println(errorMsg + "\n" + help);
+                throw new Exception(errorMsg);
+            }
+
+            // check hub contract
+            if (!connection.hasHubDeployed()) {
+                String errorMsg = "WeCrossHub error: WeCrossHub contract has not been deployed!";
+                String help =
+                        "Please deploy WeCrossHub contract by: "
+                                + HubContractDeployment.getUsage(path);
                 System.out.println(errorMsg + "\n" + help);
                 throw new Exception(errorMsg);
             }
@@ -246,6 +257,7 @@ public class BCOSBaseStubFactory implements StubFactory {
             }
 
             generateProxyContract(path);
+            generateHubContract(path);
 
             System.out.println(
                     "SUCCESS: Chain \""
@@ -265,6 +277,17 @@ public class BCOSBaseStubFactory implements StubFactory {
             File dest =
                     new File(path + File.separator + "WeCrossProxy" + File.separator + proxyPath);
             FileUtils.copyURLToFile(proxyDir, dest);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    public void generateHubContract(String path) {
+        try {
+            String hubPath = "WeCrossHub.sol";
+            URL hubDir = getClass().getResource(File.separator + hubPath);
+            File dest = new File(path + File.separator + "WeCrossHub" + File.separator + hubPath);
+            FileUtils.copyURLToFile(hubDir, dest);
         } catch (Exception e) {
             System.out.println(e);
         }

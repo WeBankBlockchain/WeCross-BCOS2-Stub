@@ -151,13 +151,12 @@ public class BCOSDriver implements Driver {
                                                         transactionParams.getData());
                                 abi = Hex.toHexString(constantCallProxyFunctionInput.getValue4());
                             } else {
-                                Tuple3<String, String, byte[]> sendTransactionProxyFunctionInput =
-                                        FunctionUtility
-                                                .getSendTransactionProxyWithoutTxIdFunctionInput(
-                                                        transactionParams.getData());
+                                Tuple2<String, byte[]> sendTransactionProxyFunctionInput =
+                                        FunctionUtility.getConstantCallFunctionInput(
+                                                transactionParams.getData());
                                 abi =
                                         Hex.toHexString(
-                                                sendTransactionProxyFunctionInput.getValue3());
+                                                sendTransactionProxyFunctionInput.getValue2());
                                 abi = abi.substring(FunctionUtility.MethodIDLength);
                             }
                         }
@@ -339,7 +338,9 @@ public class BCOSDriver implements Driver {
                                     (String) request.getOptions().get(StubConstant.TRANSACTION_ID);
 
                             Function function = null;
-                            if (Objects.isNull(transactionID) || transactionID.isEmpty()) {
+                            if (Objects.isNull(transactionID)
+                                    || transactionID.isEmpty()
+                                    || "0".equals(transactionID)) {
                                 function =
                                         FunctionUtility.newConstantCallProxyFunction(
                                                 path.getResource(),
@@ -979,7 +980,8 @@ public class BCOSDriver implements Driver {
 
                                                 Function function = null;
                                                 if (Objects.isNull(transactionID)
-                                                        || transactionID.isEmpty()) {
+                                                        || transactionID.isEmpty()
+                                                        || "0".equals(transactionID)) {
                                                     function =
                                                             FunctionUtility
                                                                     .newSendTransactionProxyFunction(
@@ -1029,6 +1031,15 @@ public class BCOSDriver implements Driver {
                                                                 objectMapper.writeValueAsBytes(
                                                                         transaction));
 
+                                                if (logger.isDebugEnabled()) {
+                                                    logger.debug(
+                                                            "asyncSendTransactionByProxy, uid: {}, tid: {}, seq: {}, path: {}, abi: {}",
+                                                            uid,
+                                                            transactionID,
+                                                            seq,
+                                                            path,
+                                                            abi);
+                                                }
                                                 connection.asyncSend(
                                                         req,
                                                         response -> {
