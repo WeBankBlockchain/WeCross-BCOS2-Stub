@@ -34,6 +34,7 @@ public class SM2Algorithm {
 
     /**
      * SM2 Encrypt
+     *
      * @param pbk pubKey
      * @param data data to encrypt
      * @return byte[] encrypted data
@@ -47,6 +48,7 @@ public class SM2Algorithm {
 
     /**
      * SM2 decrypt
+     *
      * @param pvk secret key
      * @param cipher data to decrypt
      * @return byte[] decrypted data
@@ -58,6 +60,7 @@ public class SM2Algorithm {
 
     /**
      * SM2 Encrypt
+     *
      * @param pbkX pubKey X(hexadecimal)
      * @param pbkY pubKey Y(hexadecimal)
      * @param data data to encrypt
@@ -89,6 +92,7 @@ public class SM2Algorithm {
 
     /**
      * SM2 decrypt
+     *
      * @param pvk secret key
      * @param data data to decrypt
      * @return byte[] decrypted data
@@ -139,6 +143,7 @@ public class SM2Algorithm {
 
     /**
      * step 1 :random k∈[1, n-1]
+     *
      * @param length random length
      * @return BigInteger random number
      */
@@ -156,25 +161,17 @@ public class SM2Algorithm {
         return k;
     }
 
-    /**
-     * step 2: calculate the point in curve
-     * C1=[k]G=(x1,y1)
-     */
+    /** step 2: calculate the point in curve C1=[k]G=(x1,y1) */
     private static ECPoint calculateC1(BigInteger k) {
         return sm2Point.multiply(k);
     }
 
-    /**
-     * step 3 : calculate the point in curve
-     * S=[k]Pb (Pb is pubKey)
-     */
+    /** step 3 : calculate the point in curve S=[k]Pb (Pb is pubKey) */
     private static ECPoint calculateS(BigInteger x1, BigInteger y1, BigInteger k) {
         return sm2Curve.createPoint(x1, y1).multiply(k);
     }
 
-    /**
-     * step 4 : calculate [k]Pb=(x2,y2)
-     */
+    /** step 4 : calculate [k]Pb=(x2,y2) */
     private static BigInteger calculateX2(ECPoint s) {
         ECPoint ecPoint = s.normalize();
         return ecPoint.getAffineXCoord().toBigInteger();
@@ -185,9 +182,7 @@ public class SM2Algorithm {
         return ecPoint.getAffineYCoord().toBigInteger();
     }
 
-    /**
-     * step 5 : calculate t = KDF(x2, y2, keyLen)
-     */
+    /** step 5 : calculate t = KDF(x2, y2, keyLen) */
     private static byte[] kdf(BigInteger x2, BigInteger y2, int keyLen) {
         byte[] t = new byte[keyLen];
 
@@ -226,9 +221,7 @@ public class SM2Algorithm {
         return t;
     }
 
-    /**
-     * step 6 : calculate C2 = M xor t
-     */
+    /** step 6 : calculate C2 = M xor t */
     private static byte[] calculateC2(byte[] m, byte[] t) {
         if (m == null || m.length != t.length) {
             return null;
@@ -240,10 +233,7 @@ public class SM2Algorithm {
         return bufOut;
     }
 
-    /**
-     * step 7 : calculate
-     * C3 = Hash(X2 || M || Y2)
-     */
+    /** step 7 : calculate C3 = Hash(X2 || M || Y2) */
     private static byte[] calculateC3(BigInteger x2, byte[] m, BigInteger y2) {
         SM3Digest sm3 = new SM3Digest();
         byte[] c3 = new byte[32];
@@ -258,9 +248,10 @@ public class SM2Algorithm {
 
     /**
      * step 8 : output the cipher C = C1||C3||C2
-     * @param c1  pubKey part
-     * @param c2  encrypt part
-     * @param c3  message digest part
+     *
+     * @param c1 pubKey part
+     * @param c2 encrypt part
+     * @param c3 message digest part
      */
     private static byte[] getC(ECPoint c1, byte[] c3, byte[] c2) {
         byte[] c = new byte[64 + c3.length + c2.length];
@@ -375,8 +366,8 @@ public class SM2Algorithm {
      *
      * @param msg raw data
      * @param signData signature
-     * @param biX   pubKeyX
-     * @param biY   pubKeyY
+     * @param biX pubKeyX
+     * @param biY pubKeyY
      * @return result
      * @author fisco-bcos
      */
