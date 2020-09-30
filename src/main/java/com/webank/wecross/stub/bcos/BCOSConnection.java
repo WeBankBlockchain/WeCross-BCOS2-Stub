@@ -214,8 +214,6 @@ public class BCOSConnection implements Connection {
             asyncGetTransactionProof(request, callback);
         } else if (request.getType() == BCOSRequestType.CALL) {
             handleAsyncCallRequest(request, callback);
-        } else if (request.getType() == BCOSRequestType.GET_BLOCK_HEADER_BY_NUMBER) {
-            handleAsyncGetBlockHeaderRequest(request, callback);
         } else {
             // Does not support asynchronous operation, async to sync
             logger.warn(" unrecognized request type, type: {}", request.getType());
@@ -419,6 +417,7 @@ public class BCOSConnection implements Connection {
             List<String> headerData = new ArrayList<>();
             headerData.add(objectMapper.writeValueAsString(blockHeader));
             block.setExtraData(headerData);
+            logger.debug("handleAsyncGetBlockRequest: block.Ext: {}", headerData);
             response.setErrorCode(BCOSStatusCode.Success);
             response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
             response.setData(block.getBytes(StandardCharsets.UTF_8));
@@ -444,6 +443,7 @@ public class BCOSConnection implements Connection {
     public String getHubAddress() {
         return getProperties().get(BCOSConstant.BCOS_HUB_NAME);
     }
+
     public void handleAsyncGetBlockHeaderRequest(Request request, Callback callback) {
         Response response = new Response();
         try {

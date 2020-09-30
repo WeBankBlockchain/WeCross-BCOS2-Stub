@@ -10,7 +10,7 @@ echo " Not SM ============>>>> "
 echo " Not SM ============>>>> "
 
 # download build_chain.sh to build fisco-bcos block chain
-curl -LO https://github.com/FISCO-BCOS/FISCO-BCOS/releases/download/v2.5.0/build_chain.sh && chmod u+x build_chain.sh
+curl -LO https://github.com/FISCO-BCOS/FISCO-BCOS/releases/download/v2.6.0/build_chain.sh && chmod u+x build_chain.sh
 echo "127.0.0.1:4 agency1 1,2,3" > ipconf
 bash build_chain.sh -f ipconf
 ./nodes/127.0.0.1/fisco-bcos -v
@@ -26,6 +26,14 @@ cp -r src/test/resources/contract src/integTest/resources/
 mkdir -p src/integTest/resources/solidity
 cp src/main/resources/* src/integTest/resources/solidity
 cp src/test/resources/contract/* src/integTest/resources/solidity
+
+echo -e "\n[sealers]" >> src/integTest/resources/chains/bcos/stub.toml
+echo "    pubKey = [" >> src/integTest/resources/chains/bcos/stub.toml
+cat nodes/127.0.0.1/node0/conf/group.1.genesis | grep "node\."| sed  -e 's/=/ /g; s/node.//g' | awk '{print $2}' | while read line ; do
+    echo "    \"${line}\"," >> src/integTest/resources/chains/bcos/stub.toml
+done
+echo "    ]" >> src/integTest/resources/chains/bcos/stub.toml
+
 bash gradlew integTest
 bash gradlew jacocoTestReport
 
@@ -53,6 +61,14 @@ mkdir -p src/integTest/resources/chains/bcos
 cp -r nodes/127.0.0.1/sdk/* src/integTest/resources/chains/bcos
 cp src/test/resources/stub.toml src/integTest/resources/chains/bcos/
 sed -i.bak 's/BCOS2/GM_BCOS2/g' src/integTest/resources/chains/bcos/stub.toml
+
+echo -e "\n[sealers]" >> src/integTest/resources/chains/bcos/stub.toml
+echo "    pubKey = [" >> src/integTest/resources/chains/bcos/stub.toml
+cat nodes/127.0.0.1/node0/conf/group.1.genesis | grep "node\."| sed  -e 's/=/ /g; s/node.//g' | awk '{print $2}' | while read line ; do
+    echo "    \"${line}\"," >> src/integTest/resources/chains/bcos/stub.toml
+done
+echo "    ]" >> src/integTest/resources/chains/bcos/stub.toml
+
 cat src/integTest/resources/chains/bcos/stub.toml
 mkdir -p src/integTest/resources/accounts
 cp -r src/test/resources/accounts/bcos src/integTest/resources/accounts

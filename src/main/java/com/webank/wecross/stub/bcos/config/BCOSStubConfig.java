@@ -5,6 +5,7 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -202,29 +203,24 @@ public class BCOSStubConfig {
         }
     }
 
-    public static class Peer {
-        private String id;
-        private String pubKey;
+    public static class Sealers {
+        private List<String> sealers;
 
-        public String getId() {
-            return id;
+        public Sealers(List<String> sealers) {
+            this.sealers = sealers;
         }
 
-        public void setId(String id) {
-            this.id = id;
+        public List<String> getSealers() {
+            return sealers;
         }
 
-        public String getPubKey() {
-            return pubKey;
-        }
-
-        public void setPubKey(String pubKey) {
-            this.pubKey = pubKey;
+        public void setSealers(List<String> sealers) {
+            this.sealers = sealers;
         }
 
         @Override
         public String toString() {
-            return "Peer{" + "id='" + id + '\'' + ", pubKey='" + pubKey + '\'' + '}';
+            return "Sealers{" + "sealers=" + sealers + '}';
         }
     }
 

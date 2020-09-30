@@ -2,42 +2,64 @@ package com.webank.wecross.stub.bcos.verify;
 
 import com.webank.wecross.exception.WeCrossException;
 import com.webank.wecross.stub.bcos.common.BCOSBlockHeader;
-import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
-import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.uaproof.Signer;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.fisco.bcos.web3j.crypto.EncryptType;
+import org.fisco.bcos.web3j.crypto.Keys;
+import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlockHeader;
+import org.fisco.bcos.web3j.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BlockHeaderValidation {
     private static final Logger logger = LoggerFactory.getLogger(BlockHeaderValidation.class);
 
-    public static void verifyBlockHeader(BCOSBlockHeader bcosBlockHeader)
+    public static void verifyBlockHeader(String sealerListString, BCOSBlockHeader bcosBlockHeader)
             throws IOException, WeCrossException {
-        BCOSStubConfigParser bcosStubConfigParser =
-                new BCOSStubConfigParser("classpath:/", "stub.toml");
-        BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
-
         List<String> sealerList = bcosBlockHeader.getSealerList();
         List<BcosBlockHeader.Signature> signatureList = bcosBlockHeader.getSignatureList();
 
+        if (!isSignUnique(signatureList)) {
+            logger.error(
+                    "Some signature in SignList is not unique, signatureList is {}", signatureList);
+            throw new WeCrossException(
+                    WeCrossException.ErrorCode.INTERNAL_ERROR,
+                    "verifyBlockHeader fail, caused by sign is not unique.");
+        }
         String blockHash = bcosBlockHeader.getHash();
         Signer signer = Signer.newSigner(EncryptType.encryptType);
-        boolean verifyFlag = true;
+        boolean verifyFlag = false;
+        boolean finalizeFlag = true;
         for (BcosBlockHeader.Signature signature : signatureList) {
-            String pubKey = bcosStubConfig.getPeersMap().get(signature.getIndex());
-            verifyFlag =
-                    signer.verify(
-                            signature.getSignature().getBytes(), blockHash.getBytes(), pubKey);
-            if (!verifyFlag) break;
+            for (String sealer : sealerList) {
+                String address = Keys.getAddress(sealer);
+                byte[] signData = Numeric.hexStringToByteArray(signature.getSignature());
+                byte[] hashData = Numeric.hexStringToByteArray(blockHash);
+                verifyFlag = signer.verifyByHashData(signData, hashData, address);
+                if (verifyFlag) break;
+            }
+            finalizeFlag = finalizeFlag && verifyFlag;
+
         }
-        if (!verifyFlag) {
+        if (!finalizeFlag) {
             logger.error("VerifyBlockHeader fail!, signatureList is {}", signatureList);
             throw new WeCrossException(
-                    WeCrossException.ErrorCode.INTERNAL_ERROR, "verifyBlockHeader fail!");
+                    WeCrossException.ErrorCode.INTERNAL_ERROR,
+                    "verifyBlockHeader fail, caused by verify fail.");
         }
+    }
+
+    private static boolean isSignUnique(List<BcosBlockHeader.Signature> signatureList) {
+        Set<String> testSet = new HashSet<>();
+        boolean testFlag = false;
+        for (BcosBlockHeader.Signature signature : signatureList) {
+            testFlag = testSet.add(signature.getSignature());
+            if (!testFlag) break;
+        }
+        return testFlag;
     }
 }

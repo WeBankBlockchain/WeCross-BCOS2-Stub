@@ -1288,7 +1288,6 @@ public class BCOSDriver implements Driver {
                 Request.newRequest(
                         BCOSRequestType.GET_BLOCK_BY_NUMBER,
                         BigInteger.valueOf(blockNumber).toByteArray());
-
         connection.asyncSend(
                 request,
                 response -> {
@@ -1302,7 +1301,7 @@ public class BCOSDriver implements Driver {
                     } else {
                         try {
                             Block block =
-                                    BlockUtility.convertToBlock(response.getData(), onlyHeader);
+                                    BlockUtility.convertToBlock(response.getData(), false);
                             BCOSBlockHeader bcosBlockHeader = (BCOSBlockHeader) block.blockHeader;
                             BlockHeaderValidation.verifyBlockHeader(bcosBlockHeader);
                             if (logger.isDebugEnabled()) {
@@ -1670,7 +1669,7 @@ public class BCOSDriver implements Driver {
 
     @Override
     public boolean accountVerify(String identity, byte[] signBytes, byte[] message) {
-        return signer.verify(signBytes, message, identity);
+        return signer.verifyBySrcData(signBytes, message, identity);
     }
 
     /**
