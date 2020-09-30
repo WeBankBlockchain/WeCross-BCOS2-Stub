@@ -15,7 +15,7 @@ import org.fisco.bcos.web3j.utils.Numeric;
 
 public class SM2Algorithm {
 
-    // SM2算法推荐曲线参数
+    // SM2 recommended curves
     public static final BigInteger p =
             new BigInteger("FFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000FFFFFFFFFFFFFFFF", 16);
     public static final BigInteger a =
@@ -32,11 +32,11 @@ public class SM2Algorithm {
     public static final ECCurve sm2Curve = new ECCurve.Fp(p, a, b);
     public static final ECPoint sm2Point = sm2Curve.createPoint(gx, gy);
 
-    /*
-     * SM2加密
-     * @param pbk 公钥
-     * @param data 待加密的数据
-     * @return byte[] 加密后的数据
+    /**
+     * SM2 Encrypt
+     * @param pbk pubKey
+     * @param data data to encrypt
+     * @return byte[] encrypted data
      */
     public static byte[] encrypt(SM2PublicKey pbk, byte[] data) {
         String buf = KeyUtils.bcdhex_to_aschex(pbk.getEncoded());
@@ -45,23 +45,23 @@ public class SM2Algorithm {
         return encrypt(pbX, pbY, data);
     }
 
-    /*
-     * SM2解密
-     * @param pvk 私钥
-     * @param cipher 待解密的数据
-     * @return byte[] 解密后的数据
+    /**
+     * SM2 decrypt
+     * @param pvk secret key
+     * @param cipher data to decrypt
+     * @return byte[] decrypted data
      */
     public static byte[] decrypt(SM2PrivateKey pvk, byte[] cipher) {
         String buf = KeyUtils.bcdhex_to_aschex(pvk.getEncoded());
         return decrypt(buf, cipher);
     }
 
-    /*
-     * SM2加密
-     * @param pbX 公钥X成份(16进制格式)
-     * @param pbY 公钥Y成份(16进制格式)
-     * @param data 待加密的数据
-     * @return byte[] 加密后的数据
+    /**
+     * SM2 Encrypt
+     * @param pbkX pubKey X(hexadecimal)
+     * @param pbkY pubKey Y(hexadecimal)
+     * @param data data to encrypt
+     * @return byte[] encrypted data
      */
     public static byte[] encrypt(String pbkX, String pbkY, byte[] data) {
         byte[] t = null;
@@ -83,29 +83,20 @@ public class SM2Algorithm {
         byte[] c2 = calculateC2(data, t);
         byte[] c3 = calculateC3(x2, data, y2);
 
-        //		// 调试用(旧标准)
-        //		byte[] c = getC(c1, c2, c3);
-
         byte[] c = getC(c1, c3, c2);
         return c;
     }
 
-    /*
-     * SM2解密
-     * @param pk 私钥(16进制格式)
-     * @param cipher 待解密的数据
-     * @param byte[] 解密后的数据
+    /**
+     * SM2 decrypt
+     * @param pvk secret key
+     * @param data data to decrypt
+     * @return byte[] decrypted data
      */
     public static byte[] decrypt(String pvk, byte[] data) {
         String hexCipher = KeyUtils.bcdhex_to_aschex(data);
         String pbX = hexCipher.substring(0, 64);
         String pbY = hexCipher.substring(64, 128);
-
-        //		// 调试用(旧标准)
-        //		byte[] c2 = KeyUtils.aschex_to_bcdhex(hexCipher.substring(128, hexCipher.length() -
-        // 64));
-        //		byte[] c3 = KeyUtils.aschex_to_bcdhex(hexCipher.substring(hexCipher.length() - 64,
-        // hexCipher.length()));
 
         byte[] c3 = KeyUtils.aschex_to_bcdhex(hexCipher.substring(128, 192));
         byte[] c2 = KeyUtils.aschex_to_bcdhex(hexCipher.substring(192, hexCipher.length()));
@@ -139,7 +130,6 @@ public class SM2Algorithm {
             }
         }
 
-        //		if(Arrays.equals(c3, cc3)) {  // JAVA可判断两个数组的值是否相等，android不行 - -
         if (sign) {
             return m;
         } else {
@@ -147,10 +137,10 @@ public class SM2Algorithm {
         }
     }
 
-    /*
-     * 第1步:生成随机数 k∈[1, n-1]
-     * @param length 需要生成随机数的长度
-     * @return BigInteger 生成的随机数
+    /**
+     * step 1 :random k∈[1, n-1]
+     * @param length random length
+     * @return BigInteger random number
      */
     private static BigInteger generateRand(int length) {
         if (length > 32) {
@@ -160,28 +150,30 @@ public class SM2Algorithm {
         SecureRandom secureRandom = new SecureRandom();
         byte[] buf = new byte[length];
         while (k.compareTo(BigInteger.ZERO) <= 0 || k.compareTo(n) >= 0) {
-            secureRandom.nextBytes(buf); // 生成随机数
-            k = new BigInteger(1, buf); // 正数(无符号格式)
+            secureRandom.nextBytes(buf);
+            k = new BigInteger(1, buf);
         }
         return k;
     }
 
-    /*
-     * 第2步:计算椭圆曲线点 C1=[k]G=(x1,y1)
+    /**
+     * step 2: calculate the point in curve
+     * C1=[k]G=(x1,y1)
      */
     private static ECPoint calculateC1(BigInteger k) {
         return sm2Point.multiply(k);
     }
 
-    /*
-     * 第3步:计算椭圆曲线点 S=[k]Pb(Pb为公钥)
+    /**
+     * step 3 : calculate the point in curve
+     * S=[k]Pb (Pb is pubKey)
      */
     private static ECPoint calculateS(BigInteger x1, BigInteger y1, BigInteger k) {
         return sm2Curve.createPoint(x1, y1).multiply(k);
     }
 
-    /*
-     * 第4步:计算 [k]Pb=(x2,y2)
+    /**
+     * step 4 : calculate [k]Pb=(x2,y2)
      */
     private static BigInteger calculateX2(ECPoint s) {
         ECPoint ecPoint = s.normalize();
@@ -193,8 +185,8 @@ public class SM2Algorithm {
         return ecPoint.getAffineYCoord().toBigInteger();
     }
 
-    /*
-     * 第5步:计算 t = KDF(x2, y2, keyLen)
+    /**
+     * step 5 : calculate t = KDF(x2, y2, keyLen)
      */
     private static byte[] kdf(BigInteger x2, BigInteger y2, int keyLen) {
         byte[] t = new byte[keyLen];
@@ -234,8 +226,8 @@ public class SM2Algorithm {
         return t;
     }
 
-    /*
-     * 第6步:计算 C2 = M xor t
+    /**
+     * step 6 : calculate C2 = M xor t
      */
     private static byte[] calculateC2(byte[] m, byte[] t) {
         if (m == null || m.length != t.length) {
@@ -248,8 +240,9 @@ public class SM2Algorithm {
         return bufOut;
     }
 
-    /*
-     * 第7步:计算 C3 = Hash(X2 || M || Y2)
+    /**
+     * step 7 : calculate
+     * C3 = Hash(X2 || M || Y2)
      */
     private static byte[] calculateC3(BigInteger x2, byte[] m, BigInteger y2) {
         SM3Digest sm3 = new SM3Digest();
@@ -263,11 +256,11 @@ public class SM2Algorithm {
         return c3;
     }
 
-    /*
-     * 第8步:输出密文 C = C1||C3||C2
-     * @param c1  公钥部分
-     * @param c2  算法加密部分
-     * @param c3 消息摘要部分(校验)
+    /**
+     * step 8 : output the cipher C = C1||C3||C2
+     * @param c1  pubKey part
+     * @param c2  encrypt part
+     * @param c3  message digest part
      */
     private static byte[] getC(ECPoint c1, byte[] c3, byte[] c2) {
         byte[] c = new byte[64 + c3.length + c2.length];
@@ -294,9 +287,6 @@ public class SM2Algorithm {
         return true;
     }
 
-    /*
-     * 填充数据
-     */
     private static byte[] padding(byte[] bi) {
         if (bi.length == 32) {
             return bi;
@@ -314,29 +304,25 @@ public class SM2Algorithm {
         }
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////
-
     public static byte[] USER_ID = KeyUtils.hex2byte("31323334353637383132333435363738");
     private static int mFieldSizeInBytes;
     public static ECCurve curve256;
     public static ECPoint g256;
 
-    // 初始化曲线G
+    // init curve G
     static {
         curve256 = new ECCurve.Fp(p, a, b);
-        // 这里算出椭圆曲线
         g256 = curve256.createPoint(gx, gy);
         mFieldSizeInBytes = (p.bitLength() + 7 >> 3);
     }
 
     /**
-     * SM2私钥签名
+     * SM2 sign with secKey
      *
-     * @param md 待签名数据
-     * @param privateKeyS
-     * @return
+     * @param md raw data to sign
+     * @param privateKeyS secKey
+     * @return Signature
+     * @date 2015.12.03
      * @author fisco-bcos
      */
     private static BigInteger[] Sign(byte[] md, BigInteger privateKeyS) {
@@ -351,22 +337,21 @@ public class SM2Algorithm {
     }
 
     /**
-     * SM2私钥签名
+     * SM2 sign with secKey
      *
-     * @param hash 32字节hash
-     * @param privateKeyS
-     * @return
-     * @date 2015年12月3日
+     * @param hash 32bytes hash
+     * @param privateKeyS secKey
+     * @return Signature_sm3
+     * @date 2015.12.03
      * @author fisco-bcos
      */
     private static BigInteger[] SignSm3(byte[] hash, BigInteger privateKeyS) {
         byte[] hashData = ByteUtils.copyBytes(hash);
         BigInteger e = new BigInteger(1, hashData);
-        BigInteger k = null;
-        ECPoint kp = null;
-        BigInteger r = null;
-        BigInteger s = null;
-        BigInteger userD = privateKeyS;
+        BigInteger k;
+        ECPoint kp;
+        BigInteger r;
+        BigInteger s;
         do {
             do {
                 k = createRandom();
@@ -375,8 +360,8 @@ public class SM2Algorithm {
                 r = e.add(ecPoint.getAffineXCoord().toBigInteger());
                 r = r.mod(n);
             } while (r.equals(BigInteger.ZERO) || r.add(k).equals(n));
-            BigInteger da_1 = userD.add(BigInteger.ONE).modInverse(n);
-            s = r.multiply(userD);
+            BigInteger da_1 = privateKeyS.add(BigInteger.ONE).modInverse(n);
+            s = r.multiply(privateKeyS);
             s = k.subtract(s);
             s = s.multiply(da_1);
             s = s.mod(n);
@@ -386,13 +371,13 @@ public class SM2Algorithm {
     }
 
     /**
-     * SM2公钥验签
+     * SM2 verify sign with pubKey
      *
-     * @param msg
-     * @param signData
-     * @param biX
-     * @param biY
-     * @return
+     * @param msg raw data
+     * @param signData signature
+     * @param biX   pubKeyX
+     * @param biY   pubKeyY
+     * @return result
      * @author fisco-bcos
      */
     private static boolean verify(byte[] msg, byte[] signData, BigInteger biX, BigInteger biY) {
@@ -401,10 +386,10 @@ public class SM2Algorithm {
         byte[] btR = ByteUtils.subByteArray(btRS, 0, btRS.length / 2);
         byte[] btS = ByteUtils.subByteArray(btRS, btR.length, btRS.length - btR.length);
         BigInteger r = new BigInteger(1, btR);
-        // 检验 r ′ ∈[1, n-1]是否成立，若不成立则验证不通过；
+        // check r ′ ∈[1, n-1]
         if (!checkValidateK(r)) return false;
         BigInteger s = new BigInteger(1, btS);
-        // 检验 s ′ ∈[1, n-1]是否成立，若不成立则验证不通过；
+        // check s ′ ∈[1, n-1]
         if (!checkValidateK(s)) return false;
 
         byte[] hashData = new byte[32];
@@ -425,7 +410,7 @@ public class SM2Algorithm {
         return r.equals(R);
     }
 
-    /** * 用随机数发生器产生随机数k ∈[1,n-1] */
+    /** * random get k ∈[1,n-1] */
     private static BigInteger createRandom() {
         SecureRandom random = new SecureRandom();
         byte[] r = new byte[32];
@@ -437,7 +422,8 @@ public class SM2Algorithm {
         return k;
     }
 
-    private static boolean checkValidateK(BigInteger k) { // k ∈[1,n-1]
+    private static boolean checkValidateK(BigInteger k) {
+        // k ∈[1,n-1]
         if (k.compareTo(new BigInteger("0")) > 0 && k.compareTo(n) < 0) {
             return true;
         }
@@ -445,12 +431,12 @@ public class SM2Algorithm {
     }
 
     /**
-     * 计算Za
+     * calculate Za
      *
-     * @param userId
-     * @param publicKey
-     * @return
-     * @date 2015年12月4日
+     * @param userId ID
+     * @param publicKey pubKey
+     * @return Z
+     * @date 2015.12.04
      * @author fisco-bcos
      */
     private static byte[] sm2GetZ(byte[] userId, ECPoint publicKey) {
@@ -495,9 +481,6 @@ public class SM2Algorithm {
         return bytes;
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////
     public static byte[] sign(byte[] data, SM2PrivateKey pvk) throws IOException {
         return sign(data, pvk.getD());
     }
