@@ -1,4 +1,4 @@
-package com.webank.wecross.stub.bcos.proxy;
+package com.webank.wecross.stub.bcos.preparation;
 
 import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.Driver;

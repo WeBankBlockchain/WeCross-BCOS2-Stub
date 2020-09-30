@@ -1,4 +1,4 @@
-package com.webank.wecross.stub.bcos.proxy;
+package com.webank.wecross.stub.bcos.preparation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
@@ -19,17 +19,25 @@ import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ProxyCNS {
+public class CnsService {
 
-    private static final Logger logger = LoggerFactory.getLogger(ProxyCNS.class);
+    private static final Logger logger = LoggerFactory.getLogger(CnsService.class);
 
-    /** query cns to get address,abi of proxy contract */
     public static CnsInfo queryProxyCnsInfo(Web3jWrapper web3jWrapper) {
+        return queryCnsInfo(web3jWrapper, BCOSConstant.BCOS_PROXY_NAME);
+    }
+
+    public static CnsInfo queryHubCnsInfo(Web3jWrapper web3jWrapper) {
+        return queryCnsInfo(web3jWrapper, BCOSConstant.BCOS_HUB_NAME);
+    }
+
+    /** query cns to get address,abi of hub contract */
+    private static CnsInfo queryCnsInfo(Web3jWrapper web3jWrapper, String name) {
         /** function selectByName(string memory cnsName) public returns(string memory) */
         Function function =
                 new Function(
                         BCOSConstant.CNS_METHOD_SELECTBYNAME,
-                        Arrays.<Type>asList(new Utf8String(BCOSConstant.BCOS_PROXY_NAME)),
+                        Arrays.<Type>asList(new Utf8String(name)),
                         Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}));
         try {
             Call.CallOutput callOutput =
@@ -60,28 +68,30 @@ public class ProxyCNS {
                                         .constructCollectionType(List.class, CnsInfo.class));
 
                 if (Objects.isNull(infoList) || infoList.isEmpty()) {
-                    logger.warn(" cns info empty.");
+                    logger.warn("Cns info empty.");
                     return null;
                 } else {
                     int size = infoList.size();
-                    CnsInfo proxyCnsInfo = infoList.get(size - 1);
+                    CnsInfo hubCnsInfo = infoList.get(size - 1);
                     logger.info(
-                            " WeCrossProxy cns info, name: {}, version: {}, address: {}, abi: {}",
-                            proxyCnsInfo.getName(),
-                            proxyCnsInfo.getVersion(),
-                            proxyCnsInfo.getAddress(),
-                            proxyCnsInfo.getAbi());
-                    return proxyCnsInfo;
+                            "{} cns info, name: {}, version: {}, address: {}, abi: {}",
+                            name,
+                            hubCnsInfo.getName(),
+                            hubCnsInfo.getVersion(),
+                            hubCnsInfo.getAddress(),
+                            hubCnsInfo.getAbi());
+                    return hubCnsInfo;
                 }
             } else {
                 logger.error(
-                        " unable query proxy cns info, status: {}, message: {}",
+                        "Unable query {} cns info, status: {}, message: {}",
+                        name,
                         callOutput.getStatus(),
                         StatusCode.getStatusMessage(callOutput.getStatus()));
                 return null;
             }
         } catch (Exception e) {
-            logger.error(" query proxy cns info e: ", e);
+            logger.error("Query {} cns info e: ", name, e);
             return null;
         }
     }

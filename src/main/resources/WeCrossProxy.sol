@@ -9,7 +9,7 @@ pragma experimental ABIEncoderV2;
 
 contract WeCrossProxy {
 
-    string constant version = "v1.0.0-rc4";
+    string constant version = "v1.0.0";
 
     // per step of transaction
     struct TransactionStep {
@@ -37,6 +37,8 @@ contract WeCrossProxy {
         bool locked;     // isolation control, read-committed
         string transactionID;
     }
+
+    mapping(string => bool) uniqueIDs;
 
     mapping(address => ContractInfo) lockedContracts;
 
@@ -218,10 +220,6 @@ contract WeCrossProxy {
     {
         address addr = getAddressByPath(_path);
 
-        if(sameString(_transactionID, "0")) {
-            return callContract(addr, _func, _args);
-        }
-
         if(!isExistedTransaction(_transactionID)) {
             revert("transaction not found");
         }
@@ -237,7 +235,11 @@ contract WeCrossProxy {
         return callContract(_addr, _argsWithMethodId);
     }
 
-    function sendTransaction(string memory _name, bytes memory _argsWithMethodId) public returns(bytes memory) {
+    function sendTransaction(string memory _uid, string memory _name, bytes memory _argsWithMethodId) public returns(bytes memory) {
+        if(uniqueIDs[_uid]) {
+            revert("transaction unique id is repeated");
+        }
+
         // find address from abi cache first
         address addr = nameAddress[_name];
         if(addr == address(0x0)) {
@@ -248,6 +250,8 @@ contract WeCrossProxy {
         if(lockedContracts[addr].locked) {
             revert(string(abi.encodePacked(_name, " is locked by unfinished transaction: ", lockedContracts[addr].transactionID)));
         }
+
+        uniqueIDs[_uid] = true;
         return callContract(addr, _argsWithMethodId);
     }
 
@@ -265,17 +269,14 @@ contract WeCrossProxy {
     }
 
     // non-constant call
-    function sendTransaction(string memory _transactionID, uint256 _seq, string memory _path, string memory _func, bytes memory _args) public
+    function sendTransaction(string memory _uid, string memory _transactionID, uint256 _seq, string memory _path, string memory _func, bytes memory _args) public
     returns(bytes memory)
     {
-        address addr = getAddressByPath(_path);
+        if(uniqueIDs[_uid]) {
+            revert("transaction unique id is repeated");
+        }
 
-//        if(sameString(_transactionID, "0")) {
-//            if(lockedContracts[addr].locked) {
-//                revert(string(abi.encodePacked(_path, " is locked by unfinished transaction: ", lockedContracts[addr].transactionID)));
-//            }
-//            return callContract(addr, _func, _args);
-//        }
+        address addr = getAddressByPath(_path);
 
         if(!isExistedTransaction(_transactionID)) {
             revert("transaction not found");
@@ -311,6 +312,7 @@ contract WeCrossProxy {
         transactions[_transactionID].seqs[num] = _seq;
         transactions[_transactionID].stepNum = num + 1;
 
+        uniqueIDs[_uid] = true;
         return callContract(addr, _func, _args);
     }
 
@@ -581,6 +583,24 @@ contract WeCrossProxy {
         } else {
             return transactionQueue[uint256(head)];
         }
+    }
+
+    function getTransactionState(string[] memory _args) public view
+    returns (string[] memory)
+    {
+        string[] memory result = new string[](1);
+
+        address addr = getAddressByPath(_args[0]);
+        if(!lockedContracts[addr].locked) {
+            result[0] = nullFlag;
+        } else {
+            string memory transactionID = lockedContracts[addr].transactionID;
+            uint256 index = transactions[transactionID].stepNum;
+            uint256 seq = index == 0 ? 0 : transactions[transactionID].seqs[index-1];
+            result[0] = string(abi.encodePacked(transactionID, " ", uint256ToString(seq)));
+        }
+
+        return result;
     }
 
     function addTransaction(string memory _transactionID) internal
