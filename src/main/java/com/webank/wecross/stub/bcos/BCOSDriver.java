@@ -1277,7 +1277,7 @@ public class BCOSDriver implements Driver {
                 Request.newRequest(
                         BCOSRequestType.GET_BLOCK_BY_NUMBER,
                         BigInteger.valueOf(blockNumber).toByteArray());
-        String sealerString = connection.getProperties().get(BCOSConstant.BCOS_SEALER_MAP);
+        String sealerString = connection.getProperties().get(BCOSConstant.BCOS_SEALER_LIST);
         connection.asyncSend(
                 request,
                 response -> {
@@ -1680,7 +1680,7 @@ public class BCOSDriver implements Driver {
 
     @Override
     public boolean accountVerify(String identity, byte[] signBytes, byte[] message) {
-        return signer.verify(signBytes, message, identity);
+        return signer.verifyBySrcData(signBytes, message, identity);
     }
 
     /**

@@ -4,7 +4,6 @@ import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -212,23 +211,23 @@ public class BCOSStubConfig {
     }
 
     public static class Sealers {
-        private Map<String, String> sealersMap;
+        private List<String> sealers;
 
-        public Sealers(Map<String, String> sealersMap) {
-            this.sealersMap = sealersMap;
+        public Sealers(List<String> sealers) {
+            this.sealers = sealers;
         }
 
-        public Map<String, String> getSealersMap() {
-            return sealersMap;
+        public List<String> getSealers() {
+            return sealers;
         }
 
-        public void setSealersMap(Map<String, String> sealersMap) {
-            this.sealersMap = sealersMap;
+        public void setSealers(List<String> sealers) {
+            this.sealers = sealers;
         }
 
         @Override
         public String toString() {
-            return "Sealers{" + "sealersMap=" + sealersMap + '}';
+            return "Sealers{" + "sealers=" + sealers + '}';
         }
     }
 

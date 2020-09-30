@@ -9,15 +9,23 @@ import java.util.List;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlockHeader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BlockUtility {
+
+    private static final Logger logger = LoggerFactory.getLogger(BlockUtility.class);
     /**
      * convert Block to BlockHeader
      *
      * @param block
      * @return
      */
-    public static BlockHeader convertToBlockHeader(BcosBlock.Block block) {
+    public static BlockHeader convertToBlockHeader(BcosBlock.Block block) throws IOException {
+        List<String> headerExtraData = block.getExtraData();
+        if (!headerExtraData.isEmpty()) {
+            return convertToBlockHeaderWithSignature(block);
+        }
         BlockHeader blockHeader = new BlockHeader();
         blockHeader.setHash(block.getHash());
         blockHeader.setPrevHash(block.getParentHash());
@@ -36,10 +44,10 @@ public class BlockUtility {
      */
     public static BlockHeader convertToBlockHeaderWithSignature(BcosBlock.Block block)
             throws IOException {
-        List<String> headerData = block.getExtraData();
+        List<String> headerExtraData = block.getExtraData();
         BcosBlockHeader.BlockHeader bcosHeader =
                 ObjectMapperFactory.getObjectMapper()
-                        .readValue(headerData.get(0), BcosBlockHeader.BlockHeader.class);
+                        .readValue(headerExtraData.get(0), BcosBlockHeader.BlockHeader.class);
 
         BCOSBlockHeader stubBlockHeader = new BCOSBlockHeader();
         stubBlockHeader.setHash(bcosHeader.getHash());
@@ -62,7 +70,7 @@ public class BlockUtility {
         Block stubBlock = new Block();
 
         /** BlockHeader */
-        BlockHeader blockHeader = convertToBlockHeaderWithSignature(block);
+        BlockHeader blockHeader = convertToBlockHeader(block);
         stubBlock.setBlockHeader(blockHeader);
 
         /** tx list */
@@ -86,6 +94,7 @@ public class BlockUtility {
     public static Block convertToBlock(byte[] blockBytes, boolean onlyHeader) throws IOException {
         BcosBlock.Block block =
                 ObjectMapperFactory.getObjectMapper().readValue(blockBytes, BcosBlock.Block.class);
+        logger.debug("BcosBlock: {}", block.getExtraData().size());
         Block stubBlock = convertToBlock(block, onlyHeader);
         stubBlock.setRawBytes(blockBytes);
         return stubBlock;

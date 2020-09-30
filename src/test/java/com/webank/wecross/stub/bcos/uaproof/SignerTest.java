@@ -4,6 +4,7 @@ import static junit.framework.TestCase.assertTrue;
 
 import org.fisco.bcos.web3j.crypto.Credentials;
 import org.fisco.bcos.web3j.crypto.EncryptType;
+import org.fisco.bcos.web3j.crypto.Keys;
 import org.fisco.bcos.web3j.crypto.gm.GenCredential;
 import org.fisco.bcos.web3j.utils.Numeric;
 import org.junit.Test;
@@ -34,7 +35,26 @@ public class SignerTest {
         String publicKey =
                 Numeric.toHexStringNoPrefixZeroPadded(
                         credentials.getEcKeyPair().getPublicKey(), 128);
-        boolean verify = signer.verify(sign, message.getBytes(), publicKey);
+        boolean verify = signer.verifyBySrcData(sign, message.getBytes(), credentials.getAddress());
+        assertTrue(verify);
+        EncryptType.setEncryptType(encryptType1);
+    }
+
+    @Test
+    public void ECDSATest() {
+        int encryptType1 = EncryptType.encryptType;
+        Signer signer = Signer.newSigner(EncryptType.ECDSA_TYPE);
+
+        String message = "39aeeacf66784ba18836280dcb56e454fe59eecde42812503e6a0d2c0a11937f";
+        byte[] sign =
+                Numeric.hexStringToByteArray(
+                        "b2ef97867ca3b1030c2f14be1bfeeeabddf3354ae6e57c86a02ebc1383f8ef6c7713d7f12fcfd5da457f58eeeb9aa77eddedf69b7bd1a46adb5faf072e62892601");
+
+        String publicKey =
+                "15a264e29489f69fb74608a8a26600eb8f5c572d5829531aaab3246f7411492e2c4d3c329b6f4e5fc479908a2944688da39071467035f8eb046625259a6bfd06";
+        boolean verify =
+                signer.verifyByHashData(
+                        sign, Numeric.hexStringToByteArray(message), Keys.getAddress(publicKey));
         assertTrue(verify);
         EncryptType.setEncryptType(encryptType1);
     }
@@ -52,7 +72,28 @@ public class SignerTest {
         String publicKey =
                 Numeric.toHexStringNoPrefixZeroPadded(
                         credentials.getEcKeyPair().getPublicKey(), 128);
-        boolean verify = signer.verify(sign, message.getBytes(), publicKey);
+        boolean verify =
+                signer.verifyBySrcData(sign, message.getBytes(), Keys.getAddress(publicKey));
+        assertTrue(verify);
+        EncryptType.setEncryptType(encryptType1);
+    }
+
+    @Test
+    public void SM2Test() {
+        int encryptType1 = EncryptType.encryptType;
+        Signer signer = Signer.newSigner(EncryptType.SM2_TYPE);
+
+        String message = "0a5fb1021730931b390ed3f282daf1304f86eafe4a4b74398c258e2437dcb353";
+        byte[] sign =
+                Numeric.hexStringToByteArray(
+                        "b10e39d7b9d4318f664b18e0f3c1360342d3ce56d3e0cd72969a37fd332d522e283a89f6d36fbc942a1ed77737c399092639ad0b353aea3c14cf2c0d2a92a33d"
+                                + "e3bb34b225d90ecd5b162e51ba2a962ec412454682eaf1cf2feb16e134bde5196fd6d22d66a41a45bbf1ab12c6613bfd32e40ee4ebadc6a6de73da02f3efb3f1");
+        String publicKey =
+                "e3bb34b225d90ecd5b162e51ba2a962ec412454682eaf1cf2feb16e134bde5196fd6d22d66a41a45bbf1ab12c6613bfd32e40ee4ebadc6a6de73da02f3efb3f1";
+
+        boolean verify =
+                signer.verifyBySrcData(
+                        sign, Numeric.hexStringToByteArray(message), Keys.getAddress(publicKey));
         assertTrue(verify);
         EncryptType.setEncryptType(encryptType1);
     }

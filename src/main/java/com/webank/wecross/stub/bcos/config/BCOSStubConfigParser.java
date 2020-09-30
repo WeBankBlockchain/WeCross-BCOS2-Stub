@@ -57,8 +57,8 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         List<Map<String, String>> resourcesConfigValue =
                 (List<Map<String, String>>) stubConfig.get("resources");
 
-        List<Map<String, String>> sealersConfigValue =
-                (List<Map<String, String>>) stubConfig.get("sealers");
+        HashMap<String, List<String>> sealersConfigValue =
+                (HashMap<String, List<String>>) stubConfig.get("sealers");
 
         if (resourcesConfigValue == null) {
             resourcesConfigValue = new ArrayList<>();
@@ -194,21 +194,13 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
     }
 
     public BCOSStubConfig.Sealers getBCOSSealersConfig(
-            String configFile, List<Map<String, String>> peersConfigValue) {
-        Map<String, String> sealerMap = new HashMap<>();
+            String configFile, HashMap<String, List<String>> sealersConfigValue) {
 
-        for (Map<String, String> peerConfigValue : peersConfigValue) {
-            String id = peerConfigValue.get("id");
-            requireFieldNotNull(id, "sealers", "id", configFile);
+        requireFieldNotNull(sealersConfigValue, "sealers", "", configFile);
+        List<String> sealerList = sealersConfigValue.get("pubKey");
+        requireFieldNotNull(sealerList, "sealers", "pubKey", configFile);
+        logger.debug("getBCOSSealersConfig: sealers:{}", sealersConfigValue);
 
-            String pubKey = peerConfigValue.get("pubKey");
-            requireFieldNotNull(pubKey, "sealers", "pubKey", configFile);
-
-            sealerMap.put(id, pubKey);
-        }
-
-        logger.debug("getBCOSPeerConfig: peers:{}", sealerMap);
-
-        return new BCOSStubConfig.Sealers(sealerMap);
+        return new BCOSStubConfig.Sealers(sealerList);
     }
 }
