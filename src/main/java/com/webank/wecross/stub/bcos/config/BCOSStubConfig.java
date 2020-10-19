@@ -211,23 +211,23 @@ public class BCOSStubConfig {
     }
 
     public static class Sealers {
-        private List<String> sealers;
+        private List<String> sealerList;
 
-        public Sealers(List<String> sealers) {
-            this.sealers = sealers;
+        public Sealers(List<String> sealerList) {
+            this.sealerList = sealerList;
         }
 
-        public List<String> getSealers() {
-            return sealers;
+        public List<String> getSealerList() {
+            return sealerList;
         }
 
-        public void setSealers(List<String> sealers) {
-            this.sealers = sealers;
+        public void setSealerList(List<String> sealerList) {
+            this.sealerList = sealerList;
         }
 
         @Override
         public String toString() {
-            return "Sealers{" + "sealers=" + sealers + '}';
+            return "Sealers{" + "sealers=" + sealerList + '}';
         }
     }
 

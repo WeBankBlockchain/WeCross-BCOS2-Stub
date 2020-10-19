@@ -36,7 +36,7 @@ public class BCOSConnectionFactory {
                 BCOSConstant.BCOS_STUB_TYPE, String.valueOf(bcosStubConfig.getType()));
         String sealerString =
                 ObjectMapperFactory.getObjectMapper()
-                        .writeValueAsString(bcosStubConfig.getSealers().getSealers());
+                        .writeValueAsString(bcosStubConfig.getSealers().getSealerList());
         bcosConnection.addProperty(BCOSConstant.BCOS_SEALER_LIST, sealerString);
 
         CnsInfo proxyCnsInfo = CnsService.queryProxyCnsInfo(web3jWrapper);
