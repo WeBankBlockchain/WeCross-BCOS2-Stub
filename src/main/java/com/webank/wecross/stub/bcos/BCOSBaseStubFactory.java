@@ -241,7 +241,8 @@ public class BCOSBaseStubFactory implements StubFactory {
                             + "    sslKey = 'sdk.key'\n"
                             + "    timeout = 300000  # ms, default 60000ms\n"
                             + "    connectionsStr = ['127.0.0.1:20200']\n"
-                            + "\n";
+                            + "\n"
+                            + "[sealer]\n";
             String confFilePath = path + "/stub.toml";
             File confFile = new File(confFilePath);
             if (!confFile.createNewFile()) {
