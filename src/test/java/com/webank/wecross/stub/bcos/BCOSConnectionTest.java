@@ -26,6 +26,7 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
 import org.fisco.bcos.web3j.crypto.gm.GenCredential;
@@ -35,6 +36,7 @@ import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.junit.Test;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 public class BCOSConnectionTest {
     @Test
@@ -46,7 +48,6 @@ public class BCOSConnectionTest {
 
         BcosBlock.Block block = objectMapper.readValue(blockJson, BcosBlock.Block.class);
 
-        BCOSConnection connection = new BCOSConnection(null);
         BlockHeader blockHeader = BlockUtility.convertToBlockHeader(block);
 
         assertEquals(blockHeader.getHash(), block.getHash());
@@ -78,7 +79,11 @@ public class BCOSConnectionTest {
     @Test
     public void handleUnknownTypeTest() throws IOException, InterruptedException {
         Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
-        BCOSConnection connection = new BCOSConnection(web3jWrapper);
+        BCOSConnection connection =
+                new BCOSConnection(
+                        web3jWrapper,
+                        new ScheduledThreadPoolExecutor(
+                                1, new CustomizableThreadFactory(this.getClass().getName())));
         Request request = new Request();
         request.setType(2000);
         connection.asyncSend(
@@ -95,7 +100,11 @@ public class BCOSConnectionTest {
     @Test
     public void handleGetBlockNumberTest() {
         Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
-        BCOSConnection connection = new BCOSConnection(web3jWrapper);
+        BCOSConnection connection =
+                new BCOSConnection(
+                        web3jWrapper,
+                        new ScheduledThreadPoolExecutor(
+                                1, new CustomizableThreadFactory(this.getClass().getName())));
         Request request = new Request();
         request.setType(BCOSRequestType.GET_BLOCK_NUMBER);
         connection.asyncSend(
@@ -110,7 +119,11 @@ public class BCOSConnectionTest {
     @Test
     public void handleFailedGetBlockNumberTest() {
         Web3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
-        BCOSConnection connection = new BCOSConnection(web3jWrapper);
+        BCOSConnection connection =
+                new BCOSConnection(
+                        web3jWrapper,
+                        new ScheduledThreadPoolExecutor(
+                                1, new CustomizableThreadFactory(this.getClass().getName())));
         Request request = new Request();
         request.setType(BCOSRequestType.GET_BLOCK_NUMBER);
         connection.asyncSend(
@@ -125,7 +138,11 @@ public class BCOSConnectionTest {
     public void handleGetBlockTest() throws IOException {
 
         Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
-        BCOSConnection connection = new BCOSConnection(web3jWrapper);
+        BCOSConnection connection =
+                new BCOSConnection(
+                        web3jWrapper,
+                        new ScheduledThreadPoolExecutor(
+                                1, new CustomizableThreadFactory(this.getClass().getName())));
         Request request = new Request();
         request.setType(BCOSRequestType.GET_BLOCK_BY_NUMBER);
 
@@ -167,7 +184,11 @@ public class BCOSConnectionTest {
     @Test
     public void handleFailedGetBlockTest() throws IOException {
         Web3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
-        BCOSConnection connection = new BCOSConnection(web3jWrapper);
+        BCOSConnection connection =
+                new BCOSConnection(
+                        web3jWrapper,
+                        new ScheduledThreadPoolExecutor(
+                                1, new CustomizableThreadFactory(this.getClass().getName())));
         Request request = new Request();
         request.setType(BCOSRequestType.GET_BLOCK_BY_NUMBER);
 
@@ -184,7 +205,11 @@ public class BCOSConnectionTest {
     public void handleCallTest() throws IOException {
 
         Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
-        BCOSConnection connection = new BCOSConnection(web3jWrapper);
+        BCOSConnection connection =
+                new BCOSConnection(
+                        web3jWrapper,
+                        new ScheduledThreadPoolExecutor(
+                                1, new CustomizableThreadFactory(this.getClass().getName())));
 
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
@@ -235,7 +260,11 @@ public class BCOSConnectionTest {
     public void handleFailedCallTest() throws IOException {
 
         Web3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
-        BCOSConnection connection = new BCOSConnection(web3jWrapper);
+        BCOSConnection connection =
+                new BCOSConnection(
+                        web3jWrapper,
+                        new ScheduledThreadPoolExecutor(
+                                1, new CustomizableThreadFactory(this.getClass().getName())));
 
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
@@ -268,7 +297,11 @@ public class BCOSConnectionTest {
     public void handleFailedCallTest0() throws IOException {
 
         Web3jWrapper web3jWrapper = new Web3jWrapperCallNotSucStatus();
-        BCOSConnection connection = new BCOSConnection(web3jWrapper);
+        BCOSConnection connection =
+                new BCOSConnection(
+                        web3jWrapper,
+                        new ScheduledThreadPoolExecutor(
+                                1, new CustomizableThreadFactory(this.getClass().getName())));
 
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
@@ -300,7 +333,11 @@ public class BCOSConnectionTest {
     public void handleSendTransactionTest() throws IOException {
 
         Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
-        BCOSConnection connection = new BCOSConnection(web3jWrapper);
+        BCOSConnection connection =
+                new BCOSConnection(
+                        web3jWrapper,
+                        new ScheduledThreadPoolExecutor(
+                                1, new CustomizableThreadFactory(this.getClass().getName())));
         Request request = new Request();
         request.setType(BCOSRequestType.SEND_TRANSACTION);
 
@@ -359,7 +396,11 @@ public class BCOSConnectionTest {
     public void handleFailedSendTransactionTest() throws IOException, InterruptedException {
 
         Web3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
-        BCOSConnection connection = new BCOSConnection(web3jWrapper);
+        BCOSConnection connection =
+                new BCOSConnection(
+                        web3jWrapper,
+                        new ScheduledThreadPoolExecutor(
+                                1, new CustomizableThreadFactory(this.getClass().getName())));
         Request request = new Request();
         request.setType(BCOSRequestType.SEND_TRANSACTION);
 
@@ -407,7 +448,11 @@ public class BCOSConnectionTest {
     public void handleFailedSendTransactionTest0() throws IOException, InterruptedException {
 
         Web3jWrapper web3jWrapper = new Web3jWrapperWithNullMock();
-        BCOSConnection connection = new BCOSConnection(web3jWrapper);
+        BCOSConnection connection =
+                new BCOSConnection(
+                        web3jWrapper,
+                        new ScheduledThreadPoolExecutor(
+                                1, new CustomizableThreadFactory(this.getClass().getName())));
         Request request = new Request();
         request.setType(BCOSRequestType.SEND_TRANSACTION);
 
@@ -458,7 +503,11 @@ public class BCOSConnectionTest {
         request.setData(hash.getBytes(StandardCharsets.UTF_8));
 
         Web3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
-        BCOSConnection connection = new BCOSConnection(web3jWrapper);
+        BCOSConnection connection =
+                new BCOSConnection(
+                        web3jWrapper,
+                        new ScheduledThreadPoolExecutor(
+                                1, new CustomizableThreadFactory(this.getClass().getName())));
 
         connection.asyncSend(
                 request,

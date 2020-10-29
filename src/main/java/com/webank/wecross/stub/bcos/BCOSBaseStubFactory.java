@@ -22,6 +22,8 @@ import java.security.SecureRandom;
 import java.security.Security;
 import java.security.spec.ECGenParameterSpec;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemObject;
@@ -32,12 +34,16 @@ import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.fisco.bcos.web3j.crypto.gm.GenCredential;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 public class BCOSBaseStubFactory implements StubFactory {
     private Logger logger = LoggerFactory.getLogger(BCOSBaseStubFactory.class);
 
     private String alg = null;
     private String stubType = null;
+
+    private ScheduledExecutorService connectionScheduledExecutorService =
+            new ScheduledThreadPoolExecutor(16, new CustomizableThreadFactory("BCOSConnection-"));
 
     public BCOSBaseStubFactory(int encryptType, String alg, String stubType) {
         EncryptType.setEncryptType(encryptType);

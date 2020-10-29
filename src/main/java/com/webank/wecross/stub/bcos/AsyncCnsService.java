@@ -22,6 +22,7 @@ import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 public class AsyncCnsService {
     private static final Logger logger = LoggerFactory.getLogger(AsyncCnsService.class);
@@ -30,7 +31,7 @@ public class AsyncCnsService {
 
     private LRUCache<String, String> abiCache = new LRUCache<>(32);
     private ScheduledExecutorService scheduledExecutorService =
-            new ScheduledThreadPoolExecutor(1024);
+            new ScheduledThreadPoolExecutor(1, new CustomizableThreadFactory("AsyncCnsService-"));
     private static final long CLEAR_EXPIRES = 30L * 60L; // 30 min
     private Semaphore queryABISemaphore = new Semaphore(1, true);
 
