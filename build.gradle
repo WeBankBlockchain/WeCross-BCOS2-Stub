@@ -23,7 +23,7 @@ targetCompatibility = 1.8
 repositories {
     // Use jcenter for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
-    jcenter()
+    // jcenter()
     maven { url "https://maven.aliyun.com/nexus/content/groups/public/" }
     maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
 }
@@ -68,8 +68,11 @@ dependencies {
 
     implementation 'org.apache.commons:commons-lang3:3.11'
     implementation 'com.google.guava:guava:28.1-jre'
-    implementation 'org.fisco-bcos:web3sdk:2.5.1'
-    implementation 'org.fisco-bcos:solcJ:0.5.2-rc1'
+    implementation ('org.fisco-bcos:web3sdk:2.5.1')  {
+        exclude group: "org.ethereum"
+    }
+
+    implementation 'org.fisco-bcos:solcJ:0.5.2.0'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'

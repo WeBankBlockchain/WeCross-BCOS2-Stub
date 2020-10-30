@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
@@ -55,12 +54,14 @@ public class BCOSConnection implements Connection {
 
     private final Web3jWrapper web3jWrapper;
 
-    private ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(32);
+    private ScheduledExecutorService scheduledExecutorService;
 
     private Map<String, String> properties = new HashMap<>();
 
-    public BCOSConnection(Web3jWrapper web3jWrapper) {
+    public BCOSConnection(
+            Web3jWrapper web3jWrapper, ScheduledExecutorService scheduledExecutorService) {
         this.web3jWrapper = web3jWrapper;
+        this.scheduledExecutorService = scheduledExecutorService;
         this.objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
 
         this.scheduledExecutorService.scheduleAtFixedRate(

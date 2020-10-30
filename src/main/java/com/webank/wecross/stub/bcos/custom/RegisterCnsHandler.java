@@ -78,7 +78,7 @@ public class RegisterCnsHandler implements CommandHandler {
 
         try {
             if (!address.startsWith("0x") || address.length() < 6) {
-                throw new IllegalArgumentException(" Invalid address. ");
+                throw new IllegalArgumentException("Invalid address: " + address);
             }
 
             address =
@@ -115,7 +115,7 @@ public class RegisterCnsHandler implements CommandHandler {
 
                 if (res.isFailed()) {
                     callback.onResponse(
-                            new Exception("compiling contract failed, " + res.getErrors()),
+                            new Exception("Compile contract failed, error: " + res.getErrors()),
                             res.getErrors());
                     return;
                 }
@@ -124,8 +124,10 @@ public class RegisterCnsHandler implements CommandHandler {
                 metadata = result.getContract(cnsName);
                 abi = metadata.abi;
             } catch (Exception e) {
-                logger.error("compiling contract failed, e: ", e);
-                callback.onResponse(new Exception("compiling contract failed"), null);
+                logger.error("e: ", e);
+                callback.onResponse(
+                        new Exception("Compile contract exception, error: " + e.getMessage()),
+                        null);
                 return;
             }
         }

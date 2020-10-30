@@ -8,23 +8,36 @@ import com.webank.wecross.stub.bcos.web3j.Web3jUtility;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 import java.util.Objects;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import org.fisco.bcos.fisco.EnumNodeVersion;
 import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
 import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.core.methods.response.NodeVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 public class BCOSConnectionFactory {
     private static final Logger logger = LoggerFactory.getLogger(BCOSConnectionFactory.class);
 
     public static BCOSConnection build(BCOSStubConfig bcosStubConfig, Web3jWrapper web3jWrapper)
             throws Exception {
+        ScheduledExecutorService scheduledExecutorService =
+                new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
+        return build(bcosStubConfig, web3jWrapper, scheduledExecutorService);
+    }
+
+    public static BCOSConnection build(
+            BCOSStubConfig bcosStubConfig,
+            Web3jWrapper web3jWrapper,
+            ScheduledExecutorService executorService)
+            throws Exception {
         /** load stub.toml config */
         logger.info(" stubConfigPath: {} ", bcosStubConfig);
         checkBCOSVersion(web3jWrapper);
 
-        BCOSConnection bcosConnection = new BCOSConnection(web3jWrapper);
+        BCOSConnection bcosConnection = new BCOSConnection(web3jWrapper, executorService);
         bcosConnection.setResourceInfoList(bcosStubConfig.convertToResourceInfos());
 
         bcosConnection.addProperty(
@@ -48,6 +61,14 @@ public class BCOSConnectionFactory {
     }
 
     public static BCOSConnection build(String stubConfigPath, String configName) throws Exception {
+        ScheduledExecutorService scheduledExecutorService =
+                new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
+        return build(stubConfigPath, configName, scheduledExecutorService);
+    }
+
+    public static BCOSConnection build(
+            String stubConfigPath, String configName, ScheduledExecutorService executorService)
+            throws Exception {
         /** load stub.toml config */
         logger.info(" stubConfigPath: {} ", stubConfigPath);
         BCOSStubConfigParser bcosStubConfigParser =
@@ -58,7 +79,7 @@ public class BCOSConnectionFactory {
         Web3jWrapper web3jWrapper = new Web3jWrapperImpl(web3j);
         logger.info(" web3j: {} ", web3j);
 
-        return build(bcosStubConfig, web3jWrapper);
+        return build(bcosStubConfig, web3jWrapper, executorService);
     }
 
     public static void checkBCOSVersion(Web3jWrapper web3jWrapper) throws Exception {
