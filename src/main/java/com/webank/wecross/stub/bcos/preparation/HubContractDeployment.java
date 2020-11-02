@@ -72,7 +72,8 @@ public class HubContractDeployment {
                     usage();
             }
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println("Failed, please check account or contract.");
+            logger.warn("Error: ", e);
         } finally {
             exit();
         }
