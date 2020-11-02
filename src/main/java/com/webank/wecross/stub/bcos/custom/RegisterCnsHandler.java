@@ -43,7 +43,7 @@ public class RegisterCnsHandler implements CommandHandler {
             BlockManager blockManager,
             Connection connection,
             Driver.CustomCommandCallback callback) {
-        if (Objects.isNull(args) || args.length < 5) {
+        if (Objects.isNull(args) || args.length < 6) {
             callback.onResponse(
                     new TransactionException(
                             BCOSStatusCode.RegisterContractFailed, "incomplete args"),
@@ -55,14 +55,16 @@ public class RegisterCnsHandler implements CommandHandler {
         String sourceType = (String) args[1];
         String sourceContent = (String) args[2];
         String address = (String) args[3];
-        String version = (String) args[4];
+        String contractName = (String) args[4];
+        String version = (String) args[5];
 
         if (logger.isDebugEnabled()) {
             logger.debug(
-                    " name: {}, sourceType: {}, address: {}, version:{} ",
+                    " cnsName: {}, sourceType: {}, address: {}, contractName: {}, version: {} ",
                     cnsName,
                     sourceType,
                     address,
+                    contractName,
                     version);
         }
 
@@ -97,7 +99,7 @@ public class RegisterCnsHandler implements CommandHandler {
                 CompilationResult.ContractMetadata metadata = null;
                 boolean sm = (EncryptType.encryptType == EncryptType.SM2_TYPE);
 
-                File sourceFile = File.createTempFile("BCOSContract-", "-" + cnsName + ".sol");
+                File sourceFile = File.createTempFile("BCOSContract-", "-" + contractName + ".sol");
                 try (OutputStream outputStream = new FileOutputStream(sourceFile)) {
                     outputStream.write(sourceContent.getBytes());
                 }
@@ -121,7 +123,7 @@ public class RegisterCnsHandler implements CommandHandler {
                 }
 
                 CompilationResult result = CompilationResult.parse(res.getOutput());
-                metadata = result.getContract(cnsName);
+                metadata = result.getContract(contractName);
                 abi = metadata.abi;
             } catch (Exception e) {
                 logger.error("e: ", e);
@@ -150,8 +152,9 @@ public class RegisterCnsHandler implements CommandHandler {
                     }
 
                     logger.info(
-                            " register cns successfully, name: {}, version: {}, address: {}, abi: {}",
+                            " register cns successfully, cnsName: {}, contractName: {}, version: {}, address: {}, abi: {}",
                             cnsName,
+                            contractName,
                             version,
                             finalAddress,
                             finalAbi);
