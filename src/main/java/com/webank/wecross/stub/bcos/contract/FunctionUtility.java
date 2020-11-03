@@ -141,7 +141,7 @@ public class FunctionUtility {
      * @return
      */
     public static Function newSendTransactionProxyFunction(
-            String uid, String tid, int seq, String path, String methodSignature, String abi) {
+            String uid, String tid, long seq, String path, String methodSignature, String abi) {
         Function function =
                 new Function(
                         "sendTransaction",

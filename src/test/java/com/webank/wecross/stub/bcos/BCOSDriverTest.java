@@ -436,10 +436,11 @@ public class BCOSDriverTest {
                 transactionHash,
                 blockNumber,
                 txVerifyBlockManager,
+                true,
                 txVerifyConnection,
                 (e, verifiedTransaction) -> {
                     assertEquals(verifiedTransaction.getBlockNumber(), blockNumber);
-                    assertEquals(verifiedTransaction.getTransactionHash(), transactionHash);
+                    assertEquals(verifiedTransaction.getTxHash(), transactionHash);
                 });
     }
 
@@ -452,6 +453,7 @@ public class BCOSDriverTest {
                 transactionHash,
                 blockNumber,
                 blockManager,
+                true,
                 exceptionConnection,
                 (e, verifiedTransaction) -> assertTrue(Objects.isNull(verifiedTransaction)));
     }
@@ -465,6 +467,7 @@ public class BCOSDriverTest {
                 transactionHash,
                 blockNumber,
                 blockManager,
+                true,
                 nonExistConnection,
                 (e, verifiedTransaction) -> assertTrue(Objects.isNull(verifiedTransaction)));
     }

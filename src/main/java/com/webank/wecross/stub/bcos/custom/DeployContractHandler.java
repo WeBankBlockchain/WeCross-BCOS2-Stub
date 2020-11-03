@@ -253,8 +253,8 @@ public class DeployContractHandler implements CommandHandler {
                         logger.error(
                                 " deployAndRegisterCNS, error: {}, message: {}",
                                 res.getErrorCode(),
-                                res.getErrorMessage());
-                        callback.onResponse(new Exception(res.getErrorMessage()), null);
+                                res.getMessage());
+                        callback.onResponse(new Exception(res.getMessage()), null);
                         return;
                     }
 

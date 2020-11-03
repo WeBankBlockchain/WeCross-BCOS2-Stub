@@ -169,7 +169,7 @@ public class AsyncCnsService {
 
                         if (connectionResponse.getErrorCode() != BCOSStatusCode.Success) {
                             callback.onResponse(
-                                    new Exception(connectionResponse.getErrorMessage()), null);
+                                    new Exception(connectionResponse.getMessage()), null);
                             return;
                         }
 
@@ -230,8 +230,8 @@ public class AsyncCnsService {
                         logger.error(
                                 " deployAndRegisterCNS, error: {}, message: {}",
                                 res.getErrorCode(),
-                                res.getErrorMessage());
-                        callback.onResponse(new Exception(res.getErrorMessage()));
+                                res.getMessage());
+                        callback.onResponse(new Exception(res.getMessage()));
                         return;
                     }
 
