@@ -6,7 +6,7 @@ name: ci check
 on: pull_request
 
 jobs:
-  ubuntu-20.04-jdk1.8:
+  ubuntu-20_04-jdk8:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -18,3 +18,37 @@ jobs:
         run: bash .ci/ci_check.sh
       - name: upload coverage
         run: bash <(curl -s https://codecov.io/bash)
+
+  ubuntu-20_04-jdk11:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: run ci_check.sh
+        run: bash .ci/ci_check.sh
+
+  ubuntu-16_04-jdk8:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: run ci_check.sh
+        run: bash .ci/ci_check.sh
+
+  ubuntu-16_04-jdk11:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: run ci_check.sh
+        run: bash .ci/ci_check.sh
+
