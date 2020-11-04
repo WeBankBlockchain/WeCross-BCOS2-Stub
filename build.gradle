@@ -200,7 +200,7 @@ test {
 integTest {
     testLogging {
         showStandardStreams = true
-        events 'passed', 'skipped', 'failed'
+        //events 'passed', 'skipped', 'failed'
     }
 
 }
