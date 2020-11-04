@@ -6,8 +6,8 @@ name: ci check
 on: pull_request
 
 jobs:
-  ubuntu20_04-jdk8:
-    runs-on: ubuntu-20.04
+  build:
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 1.8
