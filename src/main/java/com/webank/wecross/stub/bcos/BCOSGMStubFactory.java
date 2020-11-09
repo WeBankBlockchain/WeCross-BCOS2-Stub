@@ -15,10 +15,10 @@ public class BCOSGMStubFactory extends BCOSBaseStubFactory {
                 "This is BCOS2.0 Guomi Stub Plugin. Please copy this file to router/plugin/");
         System.out.println("For deploy WeCrossProxy:");
         System.out.println(
-                "    java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.preparation.ProxyContractDeployment");
+                "    java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.guomi.preparation.ProxyContractDeployment");
         System.out.println("For deploy WeCrossHub:");
         System.out.println(
-                "    java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.preparation.HubContractDeployment");
+                "    java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.guomi.preparation.HubContractDeployment");
         System.out.println("For chain performance test, please run the command for more info:");
         System.out.println(
                 "    Pure:    java -cp conf/:lib/*:plugin/* "
