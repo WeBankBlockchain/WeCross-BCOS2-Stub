@@ -463,13 +463,15 @@ contract WeCrossProxy {
         	"xaTransactionID": "001",
     		"accountIdentity": "0x11",
     		"status": "processing",
-    		"timestamp": 123
+    		"timestamp": 123,
+    		"paths": ["a.b.1","a.b.2"]
     	},
     	{
         	"xaTransactionID": "002",
     		"accountIdentity": "0x11",
     		"status": "committed",
-    		"timestamp": 123
+    		"timestamp": 123,
+    		"paths": ["a.b.1","a.b.2"]
     	}
     ]
     */
@@ -493,6 +495,7 @@ contract WeCrossProxy {
             jsonStr = string(abi.encodePacked(jsonStr, '{"xaTransactionID":"', xaTransactionID, '",',
                 '"accountIdentity":"', xaTransactions[xaTransactionID].accountIdentity, '",',
                 '"status":"', xaTransactions[xaTransactionID].status, '",',
+                '"paths":', pathsToJson(xaTransactionID), ',',
                 '"timestamp":', uint256ToString(xaTransactions[xaTransactionID].startTimestamp), '},')
             );
         }
@@ -502,6 +505,7 @@ contract WeCrossProxy {
         jsonStr = string(abi.encodePacked(jsonStr, '{"xaTransactionID":"', xaTransactionID, '",',
             '"accountIdentity":"', xaTransactions[xaTransactionID].accountIdentity, '",',
             '"status":"', xaTransactions[xaTransactionID].status, '",',
+            '"paths":', pathsToJson(xaTransactionID), ',',
             '"timestamp":', uint256ToString(xaTransactions[xaTransactionID].startTimestamp), '}]')
         );
 
@@ -555,18 +559,10 @@ contract WeCrossProxy {
             revert("xa transaction not found");
         }
 
-        uint256 len = xaTransactions[xaTransactionID].paths.length;
-        string memory paths = string(abi.encodePacked('["', xaTransactions[xaTransactionID].paths[0], '"'));
-        for(uint256 i = 1; i < len; i++) {
-            paths = string(abi.encodePacked(paths, ',"', xaTransactions[xaTransactionID].paths[i], '"'));
-        }
-        paths = string(abi.encodePacked(paths, ']'));
-
-
         res[0] = string(abi.encodePacked('{"xaTransactionID":"', xaTransactionID, '",',
             '"accountIdentity":"', xaTransactions[xaTransactionID].accountIdentity, '",',
             '"status":"', xaTransactions[xaTransactionID].status, '",',
-            '"paths":', paths, ',',
+            '"paths":', pathsToJson(xaTransactionID), ',',
             '"startTimestamp":', uint256ToString(xaTransactions[xaTransactionID].startTimestamp), ',',
             '"commitTimestamp":', uint256ToString(xaTransactions[xaTransactionID].commitTimestamp), ',',
             '"rollbackTimestamp":', uint256ToString(xaTransactions[xaTransactionID].rollbackTimestamp), ',',
@@ -744,6 +740,20 @@ contract WeCrossProxy {
         }
 
         return string(name);
+    }
+
+    /*
+        ["a.b.c1", "a.b.c2"]
+    */
+    function pathsToJson(string memory _transactionID) internal view
+    returns(string memory)
+    {
+        uint256 len = xaTransactions[_transactionID].paths.length;
+        string memory paths = string(abi.encodePacked('["', xaTransactions[_transactionID].paths[0], '"'));
+        for(uint256 i = 1; i < len; i++) {
+            paths = string(abi.encodePacked(paths, ',"', xaTransactions[_transactionID].paths[i], '"'));
+        }
+        return string(abi.encodePacked(paths, ']'));
     }
 
     /*
