@@ -67,3 +67,5 @@ bash nodes/127.0.0.1/stop_all.sh
 bash nodes/127.0.0.1/stop_all.sh
 bash nodes/127.0.0.1/stop_all.sh
 rm -rf nodes
+
+bash <(curl -s https://codecov.io/bash)
