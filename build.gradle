@@ -177,9 +177,6 @@ task integTest(type: Test) {
     mustRunAfter test
 }
 
-check.dependsOn integTest
-check.dependsOn.remove(integTest)
-
 // clean dist and log dir
 task cleanDistAndLogDir(type: Delete) {
     delete 'dist'
