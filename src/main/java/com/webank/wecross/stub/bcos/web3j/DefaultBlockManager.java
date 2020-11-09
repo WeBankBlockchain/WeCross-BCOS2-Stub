@@ -25,7 +25,7 @@ public class DefaultBlockManager implements BlockManager {
 
     public Block getBlock(long l) throws IOException {
         BcosBlock.Block block = web3jWrapper.getBlockByNumber(l);
-        return BlockUtility.convertToBlock(block, true);
+        return BlockUtility.convertToBlock(block, false);
     }
 
     @Override

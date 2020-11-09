@@ -156,10 +156,12 @@ public class BCOSConnectionTest {
 
                     Block block = null;
                     try {
-                        block = BlockUtility.convertToBlock(response.getData(), true);
+                        block = BlockUtility.convertToBlock(response.getData(), false);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+
+                    assertTrue(!block.transactionsHashes.isEmpty());
 
                     BlockHeader blockHeader = block.getBlockHeader();
                     assertEquals(

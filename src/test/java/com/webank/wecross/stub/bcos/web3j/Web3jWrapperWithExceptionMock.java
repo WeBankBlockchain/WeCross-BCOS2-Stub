@@ -17,6 +17,11 @@ public class Web3jWrapperWithExceptionMock implements Web3jWrapper {
     }
 
     @Override
+    public String getRawBlockByNumber(long blockNumber) throws IOException {
+        throw new IOException(" IOException");
+    }
+
+    @Override
     public BigInteger getBlockNumber() throws IOException {
         throw new IOException(" IOException");
     }

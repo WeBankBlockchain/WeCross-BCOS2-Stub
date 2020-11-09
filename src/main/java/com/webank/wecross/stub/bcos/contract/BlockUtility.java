@@ -41,9 +41,9 @@ public class BlockUtility {
         List<String> txs = new ArrayList<>();
         if (!onlyHeader) {
             for (int i = 0; i < block.getTransactions().size(); i++) {
-                BcosBlock.TransactionObject transactionObject =
-                        (BcosBlock.TransactionObject) block.getTransactions().get(i);
-                txs.add(transactionObject.getHash());
+                BcosBlock.TransactionHash transactionObject =
+                        (BcosBlock.TransactionHash) block.getTransactions().get(i);
+                txs.add(transactionObject.get());
             }
         }
         stubBlock.setTransactionsHashes(txs);
