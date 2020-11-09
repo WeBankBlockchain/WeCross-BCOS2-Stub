@@ -130,7 +130,7 @@ task makeJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar, d
 
     manifest {
         attributes(
-                'Main-Class': 'com.webank.wecross.stub.bcos.BCOSStubFactory',
+                'Main-Class': 'com.webank.wecross.stub.bcos.normal.BCOSStubFactory',
                 'version': project.version,
         )
     }
