@@ -10,10 +10,8 @@ import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import org.fisco.bcos.fisco.EnumNodeVersion;
 import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
 import org.fisco.bcos.web3j.protocol.Web3j;
-import org.fisco.bcos.web3j.protocol.core.methods.response.NodeVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
@@ -35,7 +33,6 @@ public class BCOSConnectionFactory {
             throws Exception {
         /** load stub.toml config */
         logger.info(" stubConfigPath: {} ", bcosStubConfig);
-        checkBCOSVersion(web3jWrapper);
 
         BCOSConnection bcosConnection = new BCOSConnection(web3jWrapper, executorService);
         bcosConnection.setResourceInfoList(bcosStubConfig.convertToResourceInfos());
@@ -75,38 +72,10 @@ public class BCOSConnectionFactory {
                 new BCOSStubConfigParser(stubConfigPath, configName);
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
 
-        Web3j web3j = Web3jUtility.initWeb3j(bcosStubConfig.getChannelService());
+        Web3j web3j = Web3jUtility.initWeb3j(bcosStubConfig);
         Web3jWrapper web3jWrapper = new Web3jWrapperImpl(web3j);
         logger.info(" web3j: {} ", web3j);
 
         return build(bcosStubConfig, web3jWrapper, executorService);
-    }
-
-    public static void checkBCOSVersion(Web3jWrapper web3jWrapper) throws Exception {
-        NodeVersion.Version respondNodeVersion =
-                web3jWrapper.getWeb3j().getNodeVersion().send().getNodeVersion();
-
-        String supportedVersionStr = respondNodeVersion.getSupportedVersion();
-        String nodeVersionStr = respondNodeVersion.getVersion();
-        EnumNodeVersion.Version supportedVersion =
-                EnumNodeVersion.getClassVersion(supportedVersionStr);
-
-        /*2.4.0 gm or 2.4.0*/
-        String[] strings = nodeVersionStr.split(" ");
-        EnumNodeVersion.Version nodeVersion = EnumNodeVersion.getClassVersion(strings[0]);
-
-        // must not below than 2.4.0
-        if (!(supportedVersion.getMajor() == 2 && supportedVersion.getMinor() >= 4)) {
-            throw new Exception(
-                    "FISCO BCOS supported version is not supported, version must not below than 2.4.0, but current is "
-                            + supportedVersionStr);
-        }
-
-        // must not below than 2.4.0
-        if (!(nodeVersion.getMajor() == 2 && nodeVersion.getMinor() >= 4)) {
-            throw new Exception(
-                    "FISCO BCOS version is not supported, version must not below than 2.4.0, but current is "
-                            + nodeVersionStr);
-        }
     }
 }
