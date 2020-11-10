@@ -68,6 +68,15 @@ public class ProxyContract {
         if (connection == null) {
             throw new Exception("Init connection exception, please check log");
         }
+
+        if (!bcosStubConfig.getType().equals(account.getType())) {
+            throw new Exception(
+                    "Account type "
+                            + account.getType()
+                            + " and chain type "
+                            + bcosStubConfig.getType()
+                            + " are not the same.");
+        }
     }
 
     public ProxyContract() {}

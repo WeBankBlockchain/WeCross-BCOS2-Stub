@@ -64,7 +64,7 @@ public class ProxyContractDeployment {
                     usage();
             }
         } catch (Exception e) {
-            System.out.println("Failed, please check account or contract.");
+            System.out.println("Failed, please check account or contract. " + e);
             logger.warn("Error: ", e);
         } finally {
             exit();

@@ -23,7 +23,7 @@ targetCompatibility = 1.8
 repositories {
     // Use jcenter for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
-    // jcenter()
+    jcenter()
     maven { url "https://maven.aliyun.com/nexus/content/groups/public/" }
     maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
 }
@@ -130,7 +130,7 @@ task makeJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar, d
 
     manifest {
         attributes(
-                'Main-Class': 'com.webank.wecross.stub.bcos.BCOSStubFactory',
+                'Main-Class': 'com.webank.wecross.stub.bcos.normal.BCOSStubFactory',
                 'version': project.version,
         )
     }
@@ -177,9 +177,6 @@ task integTest(type: Test) {
     mustRunAfter test
 }
 
-check.dependsOn integTest
-check.dependsOn.remove(integTest)
-
 // clean dist and log dir
 task cleanDistAndLogDir(type: Delete) {
     delete 'dist'
@@ -200,7 +197,7 @@ test {
 integTest {
     testLogging {
         showStandardStreams = true
-        //events 'passed', 'skipped', 'failed'
+        events 'passed', 'skipped', 'failed'
     }
 
 }

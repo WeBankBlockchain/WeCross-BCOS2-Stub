@@ -280,6 +280,7 @@ public class BCOSStubCallContractIntegTest {
                 BlockHeader blockHeader = block.getBlockHeader();
                 List<String> transactionsHashes = block.getTransactionsHashes();
                 assertTrue(transactionsHashes.size() == 1);
+                assertTrue(Objects.nonNull(transactionsHashes.get(0)));
                 assertTrue(block.getRawBytes().length > 1);
                 assertTrue(Objects.nonNull(blockHeader));
                 assertTrue(Objects.nonNull(blockHeader.getHash()));

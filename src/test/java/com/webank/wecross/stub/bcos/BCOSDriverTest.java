@@ -249,13 +249,13 @@ public class BCOSDriverTest {
 
         driver.asyncGetBlock(
                 1111,
-                true,
+                false,
                 connection,
                 (e, block) -> {
                     assertTrue(Objects.isNull(e));
                     assertTrue(Objects.nonNull(block));
                     assertTrue(block.getRawBytes().length > 1);
-                    assertTrue(block.getTransactionsHashes().isEmpty());
+                    assertTrue(!block.getTransactionsHashes().isEmpty());
 
                     BlockHeader blockHeader = block.getBlockHeader();
                     assertEquals(
@@ -295,6 +295,7 @@ public class BCOSDriverTest {
                     assertTrue(!block.getTransactionsHashes().isEmpty());
 
                     BlockHeader blockHeader = block.getBlockHeader();
+                    assertTrue(!block.transactionsHashes.isEmpty());
                     assertEquals(
                             blockHeader.getHash(),
                             "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0");

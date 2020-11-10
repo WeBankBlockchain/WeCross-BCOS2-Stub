@@ -13,6 +13,8 @@ import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof.
 public interface Web3jWrapper {
     BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException;
 
+    String getRawBlockByNumber(long blockNumber) throws IOException;
+
     BigInteger getBlockNumber() throws IOException;
 
     void sendTransactionAndGetProof(String signedTransactionData, TransactionSucCallback callback)
