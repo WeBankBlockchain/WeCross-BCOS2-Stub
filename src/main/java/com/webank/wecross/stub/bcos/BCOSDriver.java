@@ -1301,8 +1301,7 @@ public class BCOSDriver implements Driver {
                         callback.onResponse(new Exception(response.getErrorMessage()), null);
                     } else {
                         try {
-                            Block block =
-                                    BlockUtility.convertToBlock(response.getData(), onlyHeader);
+                            Block block = BlockUtility.convertToBlock(response.getData(), false);
                             if (logger.isDebugEnabled()) {
                                 logger.debug(
                                         " blockNumber: {}, blockHeader: {}, txs: {}",

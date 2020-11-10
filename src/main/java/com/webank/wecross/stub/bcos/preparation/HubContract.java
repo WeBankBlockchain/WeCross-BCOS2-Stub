@@ -58,7 +58,7 @@ public class HubContract {
                         ? new BCOSBaseStubFactory(EncryptType.SM2_TYPE, "sm2p256v1", "GM_BCOS2.0")
                         : new BCOSBaseStubFactory(EncryptType.ECDSA_TYPE, "secp256k1", "BCOS2.0");
 
-        Web3j web3j = Web3jUtility.initWeb3j(bcosStubConfig.getChannelService());
+        Web3j web3j = Web3jUtility.initWeb3j(bcosStubConfig);
         Web3jWrapper web3jWrapper = new Web3jWrapperImpl(web3j);
 
         account =

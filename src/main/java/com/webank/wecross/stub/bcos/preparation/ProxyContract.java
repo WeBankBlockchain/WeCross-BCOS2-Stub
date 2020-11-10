@@ -48,14 +48,15 @@ public class ProxyContract {
                 new BCOSStubConfigParser(chainPath, "stub.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
 
-        boolean isSM = bcosStubConfig.getType().toLowerCase().contains("gm");
+        boolean isGM = bcosStubConfig.getType().toLowerCase().contains("gm");
+
+        Web3j web3j = Web3jUtility.initWeb3j(bcosStubConfig);
+        Web3jWrapper web3jWrapper = new Web3jWrapperImpl(web3j);
         BCOSBaseStubFactory bcosBaseStubFactory =
-                isSM
+                isGM
                         ? new BCOSBaseStubFactory(EncryptType.SM2_TYPE, "sm2p256v1", "GM_BCOS2.0")
                         : new BCOSBaseStubFactory(EncryptType.ECDSA_TYPE, "secp256k1", "BCOS2.0");
 
-        Web3j web3j = Web3jUtility.initWeb3j(bcosStubConfig.getChannelService());
-        Web3jWrapper web3jWrapper = new Web3jWrapperImpl(web3j);
         account =
                 (BCOSAccount)
                         bcosBaseStubFactory.newAccount(
