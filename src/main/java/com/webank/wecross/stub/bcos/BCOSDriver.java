@@ -320,7 +320,8 @@ public class BCOSDriver implements Driver {
                                     contractABIDefinition.getFunctions().get(method);
                             if (Objects.isNull(functions) || functions.isEmpty()) {
                                 throw new BCOSStubException(
-                                        BCOSStatusCode.MethodNotExist, "method not found in abi");
+                                        BCOSStatusCode.MethodNotExist,
+                                        "method not found in abi, method: " + method);
                             }
 
                             // Overloading is not supported ???
@@ -933,7 +934,8 @@ public class BCOSDriver implements Driver {
                                                         || functions.isEmpty()) {
                                                     throw new BCOSStubException(
                                                             BCOSStatusCode.MethodNotExist,
-                                                            "method not found in abi");
+                                                            "method not found in abi, method: "
+                                                                    + method);
                                                 }
 
                                                 ABIObject inputObj =
