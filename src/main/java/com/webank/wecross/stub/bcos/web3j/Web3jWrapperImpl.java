@@ -36,8 +36,8 @@ public class Web3jWrapperImpl implements Web3jWrapper {
     public String getRawBlockByNumber(long blockNumber) throws IOException {
         String bcosBlock =
                 web3j.getBlockByNumber(
-                        DefaultBlockParameter.valueOf(BigInteger.valueOf(blockNumber)),
-                        false)
+                                DefaultBlockParameter.valueOf(BigInteger.valueOf(blockNumber)),
+                                false)
                         .sendForReturnString();
         return bcosBlock;
     }

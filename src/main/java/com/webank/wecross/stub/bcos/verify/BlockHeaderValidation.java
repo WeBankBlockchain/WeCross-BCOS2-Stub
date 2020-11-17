@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Set;
 import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.fisco.bcos.web3j.crypto.Keys;
-import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlockHeader;
 import org.fisco.bcos.web3j.utils.Numeric;
 import org.slf4j.Logger;
@@ -43,7 +42,6 @@ public class BlockHeaderValidation {
                 if (verifyFlag) break;
             }
             finalizeFlag = finalizeFlag && verifyFlag;
-
         }
         if (!finalizeFlag) {
             logger.error("VerifyBlockHeader fail!, signatureList is {}", signatureList);

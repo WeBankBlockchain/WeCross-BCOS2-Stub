@@ -31,6 +31,7 @@ import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.channel.StatusCode;
+import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlockHeader;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -410,7 +411,7 @@ public class BCOSConnection implements Connection {
         Response response = new Response();
         try {
             BigInteger blockNumber = new BigInteger(request.getData());
-            String block = web3jWrapper.getRawBlockByNumber(blockNumber.longValue());
+            BcosBlock.Block block = web3jWrapper.getBlockByNumber(blockNumber.longValue());
 
             BcosBlockHeader.BlockHeader blockHeader =
                     web3jWrapper.getBlockHeaderByNumber(blockNumber.longValue());
@@ -420,7 +421,7 @@ public class BCOSConnection implements Connection {
             logger.debug("handleAsyncGetBlockRequest: block.Ext: {}", headerData);
             response.setErrorCode(BCOSStatusCode.Success);
             response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
-            response.setData(block.getBytes(StandardCharsets.UTF_8));
+            response.setData(ObjectMapperFactory.getObjectMapper().writeValueAsBytes(block));
             if (logger.isDebugEnabled()) {
                 logger.debug(" getBlockByNumber, blockNumber: {}, block: {}", blockNumber, block);
             }

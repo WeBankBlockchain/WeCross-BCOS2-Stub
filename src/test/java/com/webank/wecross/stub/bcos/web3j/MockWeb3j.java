@@ -170,6 +170,30 @@ public class MockWeb3j implements Web3j {
     }
 
     @Override
+    public Request<?, BlockTransactionReceipts> getBlockTransactionReceipts(
+            BigInteger blockNumber) {
+        return null;
+    }
+
+    @Override
+    public Request<?, BlockTransactionReceipts> getBlockTransactionReceipts(
+            BigInteger blockNumber, BigInteger offset, BigInteger count) {
+        return null;
+    }
+
+    @Override
+    public Request<?, BlockTransactionReceipts> getBlockTransactionReceiptsByHash(
+            String blockHash) {
+        return null;
+    }
+
+    @Override
+    public Request<?, BlockTransactionReceipts> getBlockTransactionReceiptsByHash(
+            String blockHash, BigInteger offset, BigInteger count) {
+        return null;
+    }
+
+    @Override
     public Request<?, TransactionReceiptWithProof> getTransactionReceiptByHashWithProof(
             String transactionHash) {
         return null;

@@ -4,8 +4,6 @@ import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +19,7 @@ public class BCOSStubConfig {
     /** BCOS resource list */
     private List<Resource> resources;
 
-    private Map<String, String> peersMap;
+    private Sealers sealers;
 
     public static class Chain {
         private int groupID;
@@ -256,12 +254,12 @@ public class BCOSStubConfig {
         this.chain = chain;
     }
 
-    public Map<String, String> getPeersMap() {
-        return peersMap;
+    public Sealers getSealers() {
+        return sealers;
     }
 
-    public void setPeersMap(Map<String, String> peersMap) {
-        this.peersMap = peersMap;
+    public void setSealers(Sealers sealers) {
+        this.sealers = sealers;
     }
 
     @Override

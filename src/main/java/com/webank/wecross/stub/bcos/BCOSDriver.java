@@ -1288,6 +1288,7 @@ public class BCOSDriver implements Driver {
                 Request.newRequest(
                         BCOSRequestType.GET_BLOCK_BY_NUMBER,
                         BigInteger.valueOf(blockNumber).toByteArray());
+        String sealerString = connection.getProperties().get(BCOSConstant.BCOS_SEALER_LIST);
         connection.asyncSend(
                 request,
                 response -> {
@@ -1300,10 +1301,9 @@ public class BCOSDriver implements Driver {
                         callback.onResponse(new Exception(response.getErrorMessage()), null);
                     } else {
                         try {
-                            Block block =
-                                    BlockUtility.convertToBlock(response.getData(), false);
+                            Block block = BlockUtility.convertToBlock(response.getData(), false);
                             BCOSBlockHeader bcosBlockHeader = (BCOSBlockHeader) block.blockHeader;
-                            BlockHeaderValidation.verifyBlockHeader(bcosBlockHeader);
+                            BlockHeaderValidation.verifyBlockHeader(sealerString, bcosBlockHeader);
                             if (logger.isDebugEnabled()) {
                                 logger.debug(
                                         " blockNumber: {}, blockHeader: {}, txs: {}",
