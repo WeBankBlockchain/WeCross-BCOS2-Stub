@@ -3,7 +3,6 @@ package com.webank.wecross.stub.bcos.verify;
 import com.webank.wecross.exception.WeCrossException;
 import com.webank.wecross.stub.bcos.common.BCOSBlockHeader;
 import com.webank.wecross.stub.bcos.uaproof.Signer;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,8 +16,7 @@ import org.slf4j.LoggerFactory;
 public class BlockHeaderValidation {
     private static final Logger logger = LoggerFactory.getLogger(BlockHeaderValidation.class);
 
-    public static void verifyBlockHeader(String sealerListString, BCOSBlockHeader bcosBlockHeader)
-            throws IOException, WeCrossException {
+    public static void verifyBlockHeader(BCOSBlockHeader bcosBlockHeader) throws WeCrossException {
         List<String> sealerList = bcosBlockHeader.getSealerList();
         List<BcosBlockHeader.Signature> signatureList = bcosBlockHeader.getSignatureList();
 

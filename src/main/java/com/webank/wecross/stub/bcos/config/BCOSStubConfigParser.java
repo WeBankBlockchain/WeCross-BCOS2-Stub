@@ -63,22 +63,22 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         if (resourcesConfigValue == null) {
             resourcesConfigValue = new ArrayList<>();
         }
-        if (sealersConfigValue == null) {
-            logger.error("loadConfig: Can't get peers in config file!");
-            throw new IOException("loadConfig: Can't get peers in config file!");
-        }
 
         List<BCOSStubConfig.Resource> bcosResources =
                 getBCOSResourceConfig(getConfigPath(), chain, resourcesConfigValue);
 
-        BCOSStubConfig.Sealers sealers = getBCOSSealersConfig(getConfigPath(), sealersConfigValue);
-
         BCOSStubConfig bcosStubConfig = new BCOSStubConfig();
+        if (sealersConfigValue == null) {
+            logger.warn("loadConfig: Can't get sealers in config file!");
+        } else {
+            BCOSStubConfig.Sealers sealers =
+                    getBCOSSealersConfig(getConfigPath(), sealersConfigValue);
+            bcosStubConfig.setSealers(sealers);
+        }
         bcosStubConfig.setType(stubType);
         bcosStubConfig.setChannelService(channelServiceConfig);
         bcosStubConfig.setResources(bcosResources);
         bcosStubConfig.setChain(chain);
-        bcosStubConfig.setSealers(sealers);
         channelServiceConfig.setChain(chain);
 
         return bcosStubConfig;
