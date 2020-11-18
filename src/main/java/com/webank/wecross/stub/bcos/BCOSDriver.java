@@ -1302,8 +1302,9 @@ public class BCOSDriver implements Driver {
                     } else {
                         try {
                             Block block = BlockUtility.convertToBlock(response.getData(), false);
-                            BCOSBlockHeader bcosBlockHeader = (BCOSBlockHeader) block.blockHeader;
                             if (sealerString != null) {
+                                BCOSBlockHeader bcosBlockHeader =
+                                        (BCOSBlockHeader) block.blockHeader;
                                 BlockHeaderValidation.verifyBlockHeader(bcosBlockHeader);
                             }
                             if (logger.isDebugEnabled()) {
