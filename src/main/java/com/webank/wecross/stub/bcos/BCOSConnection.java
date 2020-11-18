@@ -31,6 +31,8 @@ import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.channel.StatusCode;
+import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
+import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlockHeader;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof;
@@ -409,11 +411,17 @@ public class BCOSConnection implements Connection {
         Response response = new Response();
         try {
             BigInteger blockNumber = new BigInteger(request.getData());
-            String block = web3jWrapper.getRawBlockByNumber(blockNumber.longValue());
+            BcosBlock.Block block = web3jWrapper.getBlockByNumber(blockNumber.longValue());
 
+            BcosBlockHeader.BlockHeader blockHeader =
+                    web3jWrapper.getBlockHeaderByNumber(blockNumber.longValue());
+            List<String> headerData = new ArrayList<>();
+            headerData.add(objectMapper.writeValueAsString(blockHeader));
+            block.setExtraData(headerData);
+            logger.debug("handleAsyncGetBlockRequest: block.Ext: {}", headerData);
             response.setErrorCode(BCOSStatusCode.Success);
             response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
-            response.setData(block.getBytes(StandardCharsets.UTF_8));
+            response.setData(ObjectMapperFactory.getObjectMapper().writeValueAsBytes(block));
             if (logger.isDebugEnabled()) {
                 logger.debug(" getBlockByNumber, blockNumber: {}, block: {}", blockNumber, block);
             }
@@ -435,5 +443,29 @@ public class BCOSConnection implements Connection {
 
     public String getHubAddress() {
         return getProperties().get(BCOSConstant.BCOS_HUB_NAME);
+    }
+
+    public void handleAsyncGetBlockHeaderRequest(Request request, Callback callback) {
+        Response response = new Response();
+        try {
+            BigInteger blockNumber = new BigInteger(request.getData());
+            BcosBlockHeader.BlockHeader blockHeader =
+                    web3jWrapper.getBlockHeaderByNumber(blockNumber.longValue());
+
+            response.setErrorCode(BCOSStatusCode.Success);
+            response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
+            response.setData(objectMapper.writeValueAsBytes(blockHeader));
+            if (logger.isDebugEnabled()) {
+                logger.debug(
+                        " getBlockHeaderByNumber, blockNumber: {}, blockHeader: {}",
+                        blockNumber,
+                        blockHeader);
+            }
+        } catch (Exception e) {
+            logger.warn(" Exception, e: ", e);
+            response.setErrorCode(BCOSStatusCode.HandleGetBlockFailed);
+            response.setErrorMessage(" errorMessage: " + e.getMessage());
+        }
+        callback.onResponse(response);
     }
 }

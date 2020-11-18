@@ -1,8 +1,7 @@
 package com.webank.wecross.stub.bcos;
 
 import static junit.framework.Assert.assertNotNull;
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
+import static junit.framework.TestCase.*;
 
 import com.webank.wecross.stub.Account;
 import com.webank.wecross.stub.BlockHeader;
@@ -260,20 +259,19 @@ public class BCOSDriverTest {
                     BlockHeader blockHeader = block.getBlockHeader();
                     assertEquals(
                             blockHeader.getHash(),
-                            "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0");
+                            "0x99576e7567d258bd6426ddaf953ec0c953778b2f09a078423103c6555aa4362d");
                     assertEquals(
                             blockHeader.getPrevHash(),
-                            "0xed0ef6826277efbc9601dedc1b6ea20067eed219e415e1038f111155b8fc1e24");
+                            "0x64ba7bf5c6b5a83854774475bf8511d5e9bb38d8a962a859b52aa9c9fba0c685");
                     assertEquals(
                             blockHeader.getReceiptRoot(),
-                            "0x2a4433b7611c4b1fae16b873ced1dec9a65b82416e448f58fded002c05a10082");
+                            "0x049389563053748a0fd2b256260b9e8c76a427b543bee18f3a221d80d1553da8");
                     assertEquals(
                             blockHeader.getStateRoot(),
                             "0xce8a92c9311e9e0b77842c86adf8fcf91cbab8fb5daefc85b21f501ca8b1f682");
-                    assertEquals(blockHeader.getNumber(), 331);
                     assertEquals(
                             blockHeader.getTransactionRoot(),
-                            "0x07009a9d655cee91e95dcd1c53d5917a58f80e6e6ac689bae24bd911d75c471c");
+                            "0xb563f70188512a085b5607cac0c35480336a566de736c83410a062c9acc785ad");
                 });
     }
 
@@ -292,26 +290,25 @@ public class BCOSDriverTest {
                     assertTrue(Objects.isNull(e));
                     assertTrue(Objects.nonNull(block));
                     assertTrue(block.getRawBytes().length > 1);
-                    assertTrue(!block.getTransactionsHashes().isEmpty());
+                    assertFalse(block.getTransactionsHashes().isEmpty());
 
                     BlockHeader blockHeader = block.getBlockHeader();
                     assertTrue(!block.transactionsHashes.isEmpty());
                     assertEquals(
                             blockHeader.getHash(),
-                            "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0");
+                            "0x99576e7567d258bd6426ddaf953ec0c953778b2f09a078423103c6555aa4362d");
                     assertEquals(
                             blockHeader.getPrevHash(),
-                            "0xed0ef6826277efbc9601dedc1b6ea20067eed219e415e1038f111155b8fc1e24");
+                            "0x64ba7bf5c6b5a83854774475bf8511d5e9bb38d8a962a859b52aa9c9fba0c685");
                     assertEquals(
                             blockHeader.getReceiptRoot(),
-                            "0x2a4433b7611c4b1fae16b873ced1dec9a65b82416e448f58fded002c05a10082");
+                            "0x049389563053748a0fd2b256260b9e8c76a427b543bee18f3a221d80d1553da8");
                     assertEquals(
                             blockHeader.getStateRoot(),
                             "0xce8a92c9311e9e0b77842c86adf8fcf91cbab8fb5daefc85b21f501ca8b1f682");
-                    assertEquals(blockHeader.getNumber(), 331);
                     assertEquals(
                             blockHeader.getTransactionRoot(),
-                            "0x07009a9d655cee91e95dcd1c53d5917a58f80e6e6ac689bae24bd911d75c471c");
+                            "0xb563f70188512a085b5607cac0c35480336a566de736c83410a062c9acc785ad");
                 });
     }
 

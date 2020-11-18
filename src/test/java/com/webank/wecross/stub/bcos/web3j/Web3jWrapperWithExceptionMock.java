@@ -4,10 +4,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.protocol.Web3j;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof;
+import org.fisco.bcos.web3j.protocol.core.methods.response.*;
 
 public class Web3jWrapperWithExceptionMock implements Web3jWrapper {
 
@@ -18,6 +15,10 @@ public class Web3jWrapperWithExceptionMock implements Web3jWrapper {
 
     @Override
     public String getRawBlockByNumber(long blockNumber) throws IOException {
+        throw new IOException(" IOException");
+    }
+
+    public BcosBlockHeader.BlockHeader getBlockHeaderByNumber(long blockNumber) throws IOException {
         throw new IOException(" IOException");
     }
 

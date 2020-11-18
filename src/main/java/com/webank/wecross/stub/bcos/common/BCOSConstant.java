@@ -14,6 +14,9 @@ public interface BCOSConstant {
     String BCOS_GROUP_ID = "BCOS_PROPERTY_GROUP_ID";
     String BCOS_CHAIN_ID = "BCOS_PROPERTY_CHAIN_ID";
     String BCOS_STUB_TYPE = "BCOS_PROPERTY_STUB_TYPE";
+
+    String BCOS_SEALER_LIST = "BCOS_PROPERTY_SEALER_LIST";
+
     String BCOS_PROXY_ABI = "WeCrossProxyABI";
     String BCOS_PROXY_NAME = StubConstant.PROXY_NAME;
     String BCOS_HUB_NAME = StubConstant.HUB_NAME;

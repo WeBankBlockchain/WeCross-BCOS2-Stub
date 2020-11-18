@@ -6,12 +6,8 @@ import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.core.DefaultBlockParameter;
 import org.fisco.bcos.web3j.protocol.core.methods.request.Transaction;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BlockNumber;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof;
+import org.fisco.bcos.web3j.protocol.core.methods.response.*;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof.ReceiptAndProof;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof;
 
 public class Web3jWrapperImpl implements Web3jWrapper {
 
@@ -32,11 +28,7 @@ public class Web3jWrapperImpl implements Web3jWrapper {
 
     @Override
     public BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException {
-        BcosBlock bcosBlock =
-                web3j.getBlockByNumber(
-                                DefaultBlockParameter.valueOf(BigInteger.valueOf(blockNumber)),
-                                false)
-                        .send();
+        BcosBlock bcosBlock = web3j.getBlockByNumber(BigInteger.valueOf(blockNumber), false).send();
         return bcosBlock.getResult();
     }
 
@@ -48,6 +40,12 @@ public class Web3jWrapperImpl implements Web3jWrapper {
                                 false)
                         .sendForReturnString();
         return bcosBlock;
+    }
+
+    public BcosBlockHeader.BlockHeader getBlockHeaderByNumber(long blockNumber) throws IOException {
+        BcosBlockHeader bcosBlockHeader =
+                web3j.getBlockHeaderByNumber(BigInteger.valueOf(blockNumber), true).send();
+        return bcosBlockHeader.getBlockHeader();
     }
 
     @Override

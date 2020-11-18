@@ -11,10 +11,7 @@ import com.webank.wecross.stub.bcos.abi.ABIObject;
 import com.webank.wecross.stub.bcos.abi.ABIObjectFactory;
 import com.webank.wecross.stub.bcos.abi.ContractABIDefinition;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
-import com.webank.wecross.stub.bcos.common.BCOSConstant;
-import com.webank.wecross.stub.bcos.common.BCOSRequestType;
-import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
-import com.webank.wecross.stub.bcos.common.BCOSStubException;
+import com.webank.wecross.stub.bcos.common.*;
 import com.webank.wecross.stub.bcos.contract.BlockUtility;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.RevertMessage;
@@ -24,6 +21,7 @@ import com.webank.wecross.stub.bcos.custom.CommandHandlerDispatcher;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.uaproof.Signer;
+import com.webank.wecross.stub.bcos.verify.BlockHeaderValidation;
 import com.webank.wecross.stub.bcos.verify.MerkleValidation;
 import java.math.BigInteger;
 import java.security.InvalidParameterException;
@@ -1290,7 +1288,7 @@ public class BCOSDriver implements Driver {
                 Request.newRequest(
                         BCOSRequestType.GET_BLOCK_BY_NUMBER,
                         BigInteger.valueOf(blockNumber).toByteArray());
-
+        String sealerString = connection.getProperties().get(BCOSConstant.BCOS_SEALER_LIST);
         connection.asyncSend(
                 request,
                 response -> {
@@ -1304,6 +1302,8 @@ public class BCOSDriver implements Driver {
                     } else {
                         try {
                             Block block = BlockUtility.convertToBlock(response.getData(), false);
+                            BCOSBlockHeader bcosBlockHeader = (BCOSBlockHeader) block.blockHeader;
+                            BlockHeaderValidation.verifyBlockHeader(sealerString, bcosBlockHeader);
                             if (logger.isDebugEnabled()) {
                                 logger.debug(
                                         " blockNumber: {}, blockHeader: {}, txs: {}",
@@ -1669,7 +1669,7 @@ public class BCOSDriver implements Driver {
 
     @Override
     public boolean accountVerify(String identity, byte[] signBytes, byte[] message) {
-        return signer.verify(signBytes, message, identity);
+        return signer.verifyBySrcData(signBytes, message, identity);
     }
 
     /**
