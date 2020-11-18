@@ -136,6 +136,8 @@ public class BCOSStubCallContractIntegTest {
     @Before
     public void initializer() throws Exception {
 
+        System.setProperty("jdk.tls.namedGroups", "secp256k1");
+
         /** load stub.toml config */
         BCOSStubConfigParser bcosStubConfigParser =
                 new BCOSStubConfigParser("./chains/bcos/", "stub.toml");
