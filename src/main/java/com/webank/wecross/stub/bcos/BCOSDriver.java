@@ -1303,7 +1303,9 @@ public class BCOSDriver implements Driver {
                         try {
                             Block block = BlockUtility.convertToBlock(response.getData(), false);
                             BCOSBlockHeader bcosBlockHeader = (BCOSBlockHeader) block.blockHeader;
-                            BlockHeaderValidation.verifyBlockHeader(sealerString, bcosBlockHeader);
+                            if (sealerString != null) {
+                                BlockHeaderValidation.verifyBlockHeader(bcosBlockHeader);
+                            }
                             if (logger.isDebugEnabled()) {
                                 logger.debug(
                                         " blockNumber: {}, blockHeader: {}, txs: {}",
