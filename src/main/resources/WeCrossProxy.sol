@@ -1,5 +1,5 @@
 /*
-*   v1.0.0-rc4
+*   v1.0.0
 *   proxy contract for WeCross
 *   main entrance of all contract call
 */
@@ -458,40 +458,44 @@ contract WeCrossProxy {
     }
 
     /*
-    [
-        {
-        	"xaTransactionID": "001",
-    		"accountIdentity": "0x11",
-    		"status": "processing",
-    		"timestamp": 123,
-    		"paths": ["a.b.1","a.b.2"]
-    	},
-    	{
-        	"xaTransactionID": "002",
-    		"accountIdentity": "0x11",
-    		"status": "committed",
-    		"timestamp": 123,
-    		"paths": ["a.b.1","a.b.2"]
-    	}
-    ]
+    // traverse in reverse order, inputs: index size
+    // outputs:
+    {
+        "total": 100,
+        "xaTransactions":
+        [
+            {
+            	"xaTransactionID": "001",
+        		"accountIdentity": "0x11",
+        		"status": "processing",
+        		"timestamp": 123,
+        		"paths": ["a.b.1","a.b.2"]
+        	},
+        	{
+            	"xaTransactionID": "002",
+        		"accountIdentity": "0x11",
+        		"status": "committed",
+        		"timestamp": 123,
+        		"paths": ["a.b.1","a.b.2"]
+        	}
+        ]
+    }
     */
     function listXATransactions(string[] memory _args) public view
     returns (string[] memory)
     {
-        uint256 reverseOffset = stringToUint256(_args[0]);
-        uint256 size = stringToUint256(_args[1]);
-
-        string[] memory result = new string[](1);
         uint256 len = xaTransactionIDs.length;
-        if(len == 0 || len <= reverseOffset) {
-            result[0] = '[]';
+        uint256 index = sameString("-1", _args[0]) ? (len - 1) :  stringToUint256(_args[0]);
+        uint256 size = stringToUint256(_args[1]);
+        string[] memory result = new string[](1);
+        if(len == 0 || len <= index) {
+            result[0] = '{"total":0,"xaTransactions":[]}';
             return result;
         }
 
-        uint256 index = len - reverseOffset;
         string memory jsonStr = '[';
-        for(uint256 i = 0; i < (size - 1) && (index - i) > 1; i++) {
-            string memory xaTransactionID = xaTransactionIDs[index-i-1];
+        for(uint256 i = 0; i < (size - 1) && (index - i) > 0; i++) {
+            string memory xaTransactionID = xaTransactionIDs[index-i];
             jsonStr = string(abi.encodePacked(jsonStr, '{"xaTransactionID":"', xaTransactionID, '",',
                 '"accountIdentity":"', xaTransactions[xaTransactionID].accountIdentity, '",',
                 '"status":"', xaTransactions[xaTransactionID].status, '",',
@@ -500,7 +504,7 @@ contract WeCrossProxy {
             );
         }
 
-        uint256 lastIndex = index >= size ? (index - size) : 0;
+        uint256 lastIndex = (index + 1) >= size ? (index + 1 - size) : 0;
         string memory xaTransactionID = xaTransactionIDs[lastIndex];
         jsonStr = string(abi.encodePacked(jsonStr, '{"xaTransactionID":"', xaTransactionID, '",',
             '"accountIdentity":"', xaTransactions[xaTransactionID].accountIdentity, '",',
@@ -509,7 +513,7 @@ contract WeCrossProxy {
             '"timestamp":', uint256ToString(xaTransactions[xaTransactionID].startTimestamp), '}]')
         );
 
-        result[0] = jsonStr;
+        result[0] = string(abi.encodePacked('{"total":', uint256ToString(len),',"xaTransactions":', jsonStr, '}'));
         return result;
     }
 
