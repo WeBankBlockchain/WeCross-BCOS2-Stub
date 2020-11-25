@@ -97,9 +97,9 @@ contract WeCrossHub {
     }
 
     // _result is json form of arrays
-    function registerCallbackResult(string memory _uid, string memory _tid, string memory _seq, string memory _errorCode, string memory _errorMsg, string memory _result) public
+    function registerCallbackResult(string memory _uid, string memory _tid, string memory _seq, string memory _errorCode, string memory _errorMsg, string[] memory _result) public
     {
-        string[5] memory result = [_tid, _seq, _errorCode, _errorMsg, _result];
+        string[5] memory result = [_tid, _seq, _errorCode, _errorMsg, serializeStringArray(_result)];
         callbackResults[_uid] = result;
     }
 

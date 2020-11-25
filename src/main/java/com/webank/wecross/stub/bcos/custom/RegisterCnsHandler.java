@@ -137,7 +137,7 @@ public class RegisterCnsHandler implements CommandHandler {
         String finalAbi = abi;
         String finalAddress = address;
         asyncCnsService.registerCNSByProxy(
-                cnsName,
+                path,
                 address,
                 version,
                 abi,

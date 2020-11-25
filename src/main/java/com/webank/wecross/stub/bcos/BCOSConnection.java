@@ -16,14 +16,7 @@ import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
@@ -155,8 +148,7 @@ public class BCOSConnection implements Connection {
     /** list paths stored in proxy contract */
     public String[] listPaths() {
         Function function =
-                FunctionUtility.newDefaultFunction(
-                        BCOSConstant.PROXY_METHOD_GETPATHS, new String[] {});
+                FunctionUtility.newDefaultFunction(BCOSConstant.PROXY_METHOD_GETPATHS, null);
         String address = properties.get(BCOSConstant.BCOS_PROXY_NAME);
         try {
             Call.CallOutput callOutput =
@@ -176,12 +168,15 @@ public class BCOSConnection implements Connection {
             if (StatusCode.Success.equals(callOutput.getStatus())) {
                 String[] paths = FunctionUtility.decodeDefaultOutput(callOutput.getOutput());
                 if (Objects.nonNull(paths) && paths.length != 0) {
-                    Set<String> set = new HashSet<>(Arrays.asList(paths));
+                    Set<String> set = new LinkedHashSet<>();
+                    for (int i = paths.length - 1; i >= 0; i--) {
+                        set.add(paths[i]);
+                    }
                     set.add("a.b." + BCOSConstant.BCOS_PROXY_NAME);
                     set.add("a.b." + BCOSConstant.BCOS_HUB_NAME);
                     return set.toArray(new String[0]);
                 } else {
-                    Set<String> set = new HashSet<>();
+                    Set<String> set = new LinkedHashSet<>();
                     set.add("a.b." + BCOSConstant.BCOS_PROXY_NAME);
                     set.add("a.b." + BCOSConstant.BCOS_HUB_NAME);
                     logger.debug("No path found and add system resources");
@@ -313,10 +308,14 @@ public class BCOSConnection implements Connection {
 
                             // trigger resources sync after cns updated
                             if (transaction.getTransactionRequest() != null
-                                    && transaction
-                                            .getTransactionRequest()
-                                            .getMethod()
-                                            .equals(BCOSConstant.PROXY_METHOD_ADDPATH)) {
+                                    && (transaction
+                                                    .getTransactionRequest()
+                                                    .getMethod()
+                                                    .equals(BCOSConstant.PROXY_METHOD_DEPLOY)
+                                            || transaction
+                                                    .getTransactionRequest()
+                                                    .getMethod()
+                                                    .equals(BCOSConstant.PPROXY_METHOD_REGISTER))) {
 
                                 scheduledExecutorService.schedule(
                                         () -> noteOnResourcesChange(), 1, TimeUnit.MILLISECONDS);

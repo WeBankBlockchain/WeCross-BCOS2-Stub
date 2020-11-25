@@ -189,7 +189,7 @@ public class DeployContractHandler implements CommandHandler {
         }
 
         deployContractAndRegisterCNS(
-                cnsName,
+                path,
                 version,
                 metadata.bin + paramsABI,
                 metadata.abi,
@@ -213,7 +213,7 @@ public class DeployContractHandler implements CommandHandler {
     }
 
     private void deployContractAndRegisterCNS(
-            String name,
+            Path path,
             String version,
             String bin,
             String abi,
@@ -223,19 +223,20 @@ public class DeployContractHandler implements CommandHandler {
             BlockManager blockManager,
             DeployContractCallback callback) {
 
-        Path path = new Path();
-        path.setResource(BCOSConstant.BCOS_PROXY_NAME);
+        Path proxyPath = new Path();
+        proxyPath.setResource(BCOSConstant.BCOS_PROXY_NAME);
 
         /* Binary data needs to be base64 encoded */
         String base64Bin = Base64.getEncoder().encodeToString(Numeric.hexStringToByteArray(bin));
 
         TransactionRequest transactionRequest =
                 new TransactionRequest(
-                        "deployContractWithRegisterCNS",
-                        Arrays.asList(name, version, base64Bin, abi).toArray(new String[0]));
+                        BCOSConstant.PROXY_METHOD_DEPLOY,
+                        Arrays.asList(path.toString(), version, base64Bin, abi)
+                                .toArray(new String[0]));
 
         TransactionContext transactionContext =
-                new TransactionContext(account, path, new ResourceInfo(), blockManager);
+                new TransactionContext(account, proxyPath, new ResourceInfo(), blockManager);
 
         driver.asyncSendTransaction(
                 transactionContext,
@@ -260,11 +261,11 @@ public class DeployContractHandler implements CommandHandler {
 
                     logger.info(
                             " deployAndRegisterCNS successfully, name: {}, version: {}, res: {} ",
-                            name,
+                            path.getResource(),
                             version,
                             res);
 
-                    asyncCnsService.addAbiToCache(name, abi);
+                    asyncCnsService.addAbiToCache(path.getResource(), abi);
                     callback.onResponse(null, res.getResult()[0]);
                 });
     }
