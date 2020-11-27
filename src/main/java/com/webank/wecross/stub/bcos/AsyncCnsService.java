@@ -194,7 +194,7 @@ public class AsyncCnsService {
     }
 
     public void registerCNSByProxy(
-            String name,
+            Path path,
             String address,
             String version,
             String abi,
@@ -203,16 +203,17 @@ public class AsyncCnsService {
             Connection connection,
             InsertCallback callback) {
 
-        Path path = new Path();
-        path.setResource(BCOSConstant.BCOS_PROXY_NAME);
+        Path proxyPath = new Path();
+        proxyPath.setResource(BCOSConstant.BCOS_PROXY_NAME);
 
         TransactionRequest transactionRequest =
                 new TransactionRequest(
-                        "registerCNS",
-                        Arrays.asList(name, version, address, abi).toArray(new String[0]));
+                        BCOSConstant.PPROXY_METHOD_REGISTER,
+                        Arrays.asList(path.toString(), version, address, abi)
+                                .toArray(new String[0]));
 
         TransactionContext requestTransactionContext =
-                new TransactionContext(account, path, null, blockManager);
+                new TransactionContext(account, proxyPath, null, blockManager);
 
         bcosDriver.asyncSendTransaction(
                 requestTransactionContext,
@@ -235,11 +236,11 @@ public class AsyncCnsService {
                         return;
                     }
 
-                    addAbiToCache(name, abi);
+                    addAbiToCache(path.getResource(), abi);
 
                     logger.info(
                             " registerCNS successfully, name: {}, version: {}, address: {} ",
-                            name,
+                            path.getResource(),
                             version,
                             address);
 

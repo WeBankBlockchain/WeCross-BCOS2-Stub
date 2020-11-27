@@ -1,6 +1,5 @@
 package com.webank.wecross.stub.bcos;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.webank.wecross.stub.Account;
@@ -247,7 +246,7 @@ public class BCOSDriver implements Driver {
     /**
      * @param context
      * @param request
-     * @param byProxy
+     * @param byProxy unused, all calls are by proxy
      * @param connection
      * @param callback
      */
@@ -258,13 +257,16 @@ public class BCOSDriver implements Driver {
             boolean byProxy,
             Connection connection,
             Callback callback) {
-        if (byProxy) {
-            asyncCallByProxy(context, request, connection, callback);
-        } else {
-            asyncCall(context, request, connection, callback);
-        }
+        asyncCallByProxy(context, request, connection, callback);
     }
 
+    /**
+     * @param context
+     * @param request
+     * @param byProxy unused, all calls are by proxy
+     * @param connection
+     * @param callback
+     */
     @Override
     public void asyncSendTransaction(
             TransactionContext context,
@@ -272,11 +274,7 @@ public class BCOSDriver implements Driver {
             boolean byProxy,
             Connection connection,
             Callback callback) {
-        if (byProxy) {
-            asyncSendTransactionByProxy(context, request, connection, callback);
-        } else {
-            asyncSendTransaction(context, request, connection, callback);
-        }
+        asyncSendTransactionByProxy(context, request, connection, callback);
     }
 
     /**
@@ -493,372 +491,6 @@ public class BCOSDriver implements Driver {
                                     null);
                         }
                     });
-
-        } catch (BCOSStubException e) {
-            logger.warn(" e: ", e);
-            callback.onTransactionResponse(
-                    new TransactionException(e.getErrorCode(), e.getMessage()), null);
-        }
-    }
-
-    /**
-     * @param context
-     * @param request
-     * @param connection
-     * @param callback
-     */
-    private void asyncCall(
-            TransactionContext context,
-            TransactionRequest request,
-            Connection connection,
-            Callback callback) {
-
-        TransactionResponse transactionResponse = new TransactionResponse();
-
-        try {
-            Map<String, String> properties = connection.getProperties();
-
-            // input validation
-            checkRequest(context, request);
-            checkProperties(properties);
-
-            String contractAddress = properties.get(BCOSConstant.BCOS_PROXY_NAME);
-
-            // Function object
-            Function function =
-                    FunctionUtility.newDefaultFunction(request.getMethod(), request.getArgs());
-
-            // BCOSAccount to get credentials to sign the transaction
-            BCOSAccount bcosAccount = (BCOSAccount) context.getAccount();
-            Credentials credentials = bcosAccount.getCredentials();
-
-            if (logger.isDebugEnabled()) {
-                logger.debug(
-                        " name:{}, address: {}, method: {}, args: {}",
-                        BCOSConstant.BCOS_PROXY_NAME,
-                        contractAddress,
-                        request.getMethod(),
-                        request.getArgs());
-            }
-
-            TransactionParams transaction =
-                    new TransactionParams(
-                            request,
-                            FunctionEncoder.encode(function),
-                            TransactionParams.SUB_TYPE.CALL);
-
-            transaction.setFrom(credentials.getAddress());
-            transaction.setTo(contractAddress);
-            Request req =
-                    Request.newRequest(
-                            BCOSRequestType.CALL, objectMapper.writeValueAsBytes(transaction));
-
-            connection.asyncSend(
-                    req,
-                    connectionResponse -> {
-                        try {
-                            if (connectionResponse.getErrorCode() != BCOSStatusCode.Success) {
-                                throw new BCOSStubException(
-                                        connectionResponse.getErrorCode(),
-                                        connectionResponse.getErrorMessage());
-                            }
-
-                            Call.CallOutput callOutput =
-                                    objectMapper.readValue(
-                                            connectionResponse.getData(), Call.CallOutput.class);
-
-                            if (logger.isDebugEnabled()) {
-                                logger.debug(
-                                        " call result, status: {}, blk: {}",
-                                        callOutput.getStatus(),
-                                        callOutput.getCurrentBlockNumber());
-                            }
-
-                            if (StatusCode.Success.equals(callOutput.getStatus())) {
-                                transactionResponse.setErrorCode(BCOSStatusCode.Success);
-                                transactionResponse.setMessage(
-                                        BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
-                                transactionResponse.setResult(
-                                        FunctionUtility.decodeDefaultOutput(
-                                                callOutput.getOutput()));
-                            } else {
-                                transactionResponse.setErrorCode(
-                                        BCOSStatusCode.CallNotSuccessStatus);
-
-                                Tuple2<Boolean, String> booleanStringTuple2 =
-                                        RevertMessage.tryParserRevertMessage(
-                                                callOutput.getStatus(), callOutput.getOutput());
-                                if (booleanStringTuple2.getValue1().booleanValue()) {
-                                    transactionResponse.setMessage(booleanStringTuple2.getValue2());
-                                } else {
-                                    transactionResponse.setMessage(
-                                            StatusCode.getStatusMessage(callOutput.getStatus()));
-                                }
-                            }
-
-                            callback.onTransactionResponse(null, transactionResponse);
-
-                        } catch (BCOSStubException e) {
-                            logger.warn(" e: ", e);
-                            callback.onTransactionResponse(
-                                    new TransactionException(e.getErrorCode(), e.getMessage()),
-                                    null);
-                        } catch (Exception e) {
-                            logger.warn(" e: ", e);
-                            callback.onTransactionResponse(
-                                    new TransactionException(
-                                            BCOSStatusCode.UnclassifiedError,
-                                            " errorMessage: " + e.getMessage()),
-                                    null);
-                        }
-                    });
-        } catch (BCOSStubException e) {
-            logger.warn(" e: ", e);
-            callback.onTransactionResponse(
-                    new TransactionException(e.getErrorCode(), e.getMessage()), null);
-        } catch (Exception e) {
-            logger.warn(" e: ", e);
-            callback.onTransactionResponse(
-                    new TransactionException(
-                            BCOSStatusCode.UnclassifiedError, " errorMessage: " + e.getMessage()),
-                    null);
-        }
-    }
-
-    /**
-     * @param context
-     * @param request
-     * @param connection
-     * @param callback
-     */
-    private void asyncSendTransaction(
-            TransactionContext context,
-            TransactionRequest request,
-            Connection connection,
-            Callback callback) {
-
-        TransactionResponse transactionResponse = new TransactionResponse();
-
-        try {
-            Map<String, String> properties = connection.getProperties();
-
-            // input validation
-            checkRequest(context, request);
-            checkProperties(properties);
-
-            // contractAddress
-            String contractAddress = properties.get(BCOSConstant.BCOS_PROXY_NAME);
-            // groupId
-            int groupId = Integer.parseInt(properties.get(BCOSConstant.BCOS_GROUP_ID));
-            // chainId
-            int chainId = Integer.parseInt(properties.get(BCOSConstant.BCOS_CHAIN_ID));
-
-            context.getBlockManager()
-                    .asyncGetBlockNumber(
-                            (blockNumberException, blockNumber) -> {
-                                if (Objects.nonNull(blockNumberException)) {
-                                    callback.onTransactionResponse(
-                                            new TransactionException(
-                                                    BCOSStatusCode.HandleGetBlockNumberFailed,
-                                                    blockNumberException.getMessage()),
-                                            null);
-                                    return;
-                                }
-                                // BCOSAccount to get credentials to sign the transaction
-                                BCOSAccount bcosAccount = (BCOSAccount) context.getAccount();
-                                Credentials credentials = bcosAccount.getCredentials();
-
-                                // Function object
-                                Function function =
-                                        FunctionUtility.newDefaultFunction(
-                                                request.getMethod(), request.getArgs());
-
-                                if (logger.isDebugEnabled()) {
-                                    logger.debug(
-                                            "asyncSendTransaction contractAddress: {}, blockNumber: {}, method: {}, args: {}",
-                                            contractAddress,
-                                            blockNumber,
-                                            request.getMethod(),
-                                            request.getArgs());
-                                }
-
-                                // get signed transaction hex string
-                                String signTx =
-                                        SignTransaction.sign(
-                                                credentials,
-                                                contractAddress,
-                                                BigInteger.valueOf(groupId),
-                                                BigInteger.valueOf(chainId),
-                                                BigInteger.valueOf(blockNumber),
-                                                FunctionEncoder.encode(function));
-
-                                TransactionParams transaction =
-                                        new TransactionParams(
-                                                request,
-                                                signTx,
-                                                TransactionParams.SUB_TYPE.SEND_TX);
-
-                                Request req;
-                                try {
-                                    req =
-                                            Request.newRequest(
-                                                    BCOSRequestType.SEND_TRANSACTION,
-                                                    objectMapper.writeValueAsBytes(transaction));
-                                } catch (JsonProcessingException e) {
-                                    callback.onTransactionResponse(
-                                            new TransactionException(
-                                                    BCOSStatusCode.UnclassifiedError,
-                                                    " errorMessage: " + e.getMessage()),
-                                            null);
-                                    return;
-                                }
-
-                                connection.asyncSend(
-                                        req,
-                                        response -> {
-                                            try {
-                                                if (response.getErrorCode()
-                                                        != BCOSStatusCode.Success) {
-                                                    throw new BCOSStubException(
-                                                            response.getErrorCode(),
-                                                            response.getErrorMessage());
-                                                }
-
-                                                TransactionReceipt receipt =
-                                                        objectMapper.readValue(
-                                                                response.getData(),
-                                                                TransactionReceipt.class);
-
-                                                if (receipt.isStatusOK()) {
-                                                    context.getBlockManager()
-                                                            .asyncGetBlock(
-                                                                    receipt.getBlockNumber()
-                                                                            .longValue(),
-                                                                    (blockException, block) -> {
-                                                                        try {
-                                                                            if (Objects.nonNull(
-                                                                                    blockException)) {
-                                                                                callback
-                                                                                        .onTransactionResponse(
-                                                                                                new TransactionException(
-                                                                                                        BCOSStatusCode
-                                                                                                                .HandleGetBlockNumberFailed,
-                                                                                                        blockException
-                                                                                                                .getMessage()),
-                                                                                                null);
-                                                                                return;
-                                                                            }
-                                                                            MerkleValidation
-                                                                                    merkleValidation =
-                                                                                            new MerkleValidation();
-                                                                            merkleValidation
-                                                                                    .verifyTransactionReceiptProof(
-                                                                                            receipt
-                                                                                                    .getTransactionHash(),
-                                                                                            block
-                                                                                                    .getBlockHeader(),
-                                                                                            receipt);
-
-                                                                            transactionResponse
-                                                                                    .setBlockNumber(
-                                                                                            receipt.getBlockNumber()
-                                                                                                    .longValue());
-                                                                            transactionResponse
-                                                                                    .setHash(
-                                                                                            receipt
-                                                                                                    .getTransactionHash());
-                                                                            transactionResponse
-                                                                                    .setResult(
-                                                                                            FunctionUtility
-                                                                                                    .decodeDefaultOutput(
-                                                                                                            receipt));
-                                                                            transactionResponse
-                                                                                    .setErrorCode(
-                                                                                            BCOSStatusCode
-                                                                                                    .Success);
-                                                                            transactionResponse
-                                                                                    .setMessage(
-                                                                                            BCOSStatusCode
-                                                                                                    .getStatusMessage(
-                                                                                                            BCOSStatusCode
-                                                                                                                    .Success));
-                                                                            callback
-                                                                                    .onTransactionResponse(
-                                                                                            null,
-                                                                                            transactionResponse);
-                                                                            if (logger
-                                                                                    .isDebugEnabled()) {
-                                                                                logger.debug(
-                                                                                        " hash: {}, response: {}",
-                                                                                        receipt
-                                                                                                .getTransactionHash(),
-                                                                                        transactionResponse);
-                                                                            }
-                                                                        } catch (
-                                                                                BCOSStubException
-                                                                                        e) {
-                                                                            logger.warn(" e: ", e);
-                                                                            callback
-                                                                                    .onTransactionResponse(
-                                                                                            new TransactionException(
-                                                                                                    e
-                                                                                                            .getErrorCode(),
-                                                                                                    e
-                                                                                                            .getMessage()),
-                                                                                            null);
-                                                                        }
-                                                                    });
-
-                                                } else {
-                                                    transactionResponse.setErrorCode(
-                                                            BCOSStatusCode
-                                                                    .SendTransactionNotSuccessStatus);
-                                                    if (StatusCode.RevertInstruction.equals(
-                                                            receipt.getStatus())) {
-                                                        Tuple2<Boolean, String>
-                                                                booleanStringTuple2 =
-                                                                        RevertMessage
-                                                                                .tryParserRevertMessage(
-                                                                                        receipt
-                                                                                                .getStatus(),
-                                                                                        receipt
-                                                                                                .getOutput());
-                                                        if (booleanStringTuple2
-                                                                .getValue1()
-                                                                .booleanValue()) {
-                                                            transactionResponse.setMessage(
-                                                                    booleanStringTuple2
-                                                                            .getValue2());
-                                                        } else {
-                                                            // return revert message
-                                                            transactionResponse.setMessage(
-                                                                    StatusCode.getStatusMessage(
-                                                                            receipt.getStatus()));
-                                                        }
-                                                    } else {
-                                                        transactionResponse.setMessage(
-                                                                StatusCode.getStatusMessage(
-                                                                        receipt.getStatus()));
-                                                    }
-                                                    callback.onTransactionResponse(
-                                                            null, transactionResponse);
-                                                }
-                                            } catch (BCOSStubException e) {
-                                                logger.warn(" e: ", e);
-                                                callback.onTransactionResponse(
-                                                        new TransactionException(
-                                                                e.getErrorCode(), e.getMessage()),
-                                                        null);
-                                            } catch (Exception e) {
-                                                logger.warn(" e: ", e);
-                                                callback.onTransactionResponse(
-                                                        new TransactionException(
-                                                                BCOSStatusCode.UnclassifiedError,
-                                                                " errorMessage: " + e.getMessage()),
-                                                        null);
-                                            }
-                                        });
-                            });
 
         } catch (BCOSStubException e) {
             logger.warn(" e: ", e);
@@ -1355,32 +987,35 @@ public class BCOSDriver implements Driver {
                         callback.onResponse(exception, null);
                         return;
                     }
-                    try {
-                        TransactionReceiptWithProof.ReceiptAndProof receiptAndProof =
-                                proof.getReceiptAndProof();
-                        TransactionReceipt receipt = receiptAndProof.getTransactionReceipt();
 
-                        if (isVerified) {
-                            MerkleValidation merkleValidation = new MerkleValidation();
-                            merkleValidation.verifyTransactionProof(
-                                    receipt.getBlockNumber().longValue(),
-                                    transactionHash,
-                                    blockManager,
-                                    proof,
-                                    verifyException -> {
-                                        if (Objects.nonNull(verifyException)) {
-                                            callback.onResponse(verifyException, null);
-                                            return;
-                                        }
-                                        assembleTransaction(
-                                                transactionHash, proof, connection, callback);
-                                    });
-                        } else {
-                            assembleTransaction(transactionHash, proof, connection, callback);
-                        }
-                    } catch (Exception e) {
-                        logger.warn("transactionHash: {} exception: ", transactionHash, e);
-                        callback.onResponse(e, null);
+                    if (blockNumber
+                            != proof.getReceiptAndProof()
+                                    .getTransactionReceipt()
+                                    .getBlockNumber()
+                                    .longValue()) {
+                        callback.onResponse(
+                                new Exception("Transaction hash does not match the block number"),
+                                null);
+                        return;
+                    }
+
+                    if (isVerified) {
+                        MerkleValidation merkleValidation = new MerkleValidation();
+                        merkleValidation.verifyTransactionProof(
+                                blockNumber,
+                                transactionHash,
+                                blockManager,
+                                proof,
+                                verifyException -> {
+                                    if (Objects.nonNull(verifyException)) {
+                                        callback.onResponse(verifyException, null);
+                                        return;
+                                    }
+                                    assembleTransaction(
+                                            transactionHash, proof, connection, callback);
+                                });
+                    } else {
+                        assembleTransaction(transactionHash, proof, connection, callback);
                     }
                 });
     }
@@ -1395,33 +1030,28 @@ public class BCOSDriver implements Driver {
         TransactionReceipt receipt = receiptAndProof.getTransactionReceipt();
 
         try {
-            byte[] txBytes = new byte[0];
-            byte[] receiptBytes = new byte[0];
-            try {
-                txBytes =
-                        ObjectMapperFactory.getObjectMapper()
-                                .writeValueAsBytes(transAndProof.getTransaction());
-                receiptBytes = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(receipt);
-            } catch (JsonProcessingException e) {
-                logger.warn("e: ", e);
-            }
+            byte[] txBytes =
+                    ObjectMapperFactory.getObjectMapper()
+                            .writeValueAsBytes(transAndProof.getTransaction());
+            byte[] receiptBytes = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(receipt);
 
             String methodId;
             String input;
             String xaTransactionID = "0";
             long xaTransactionSeq = 0;
             String path;
-            String resource = "";
+            String resource;
 
-            Transaction transaction =
-                    new Transaction(
-                            receipt.getBlockNumber().longValue(), transactionHash, null, null);
+            Transaction transaction = new Transaction();
             transaction.setReceiptBytes(receiptBytes);
             transaction.setTxBytes(txBytes);
             transaction.setAccountIdentity(receipt.getFrom());
             transaction.setTransactionByProxy(true);
-            transaction.setTxHash(transactionHash);
-            transaction.setBlockNumber(receipt.getBlockNumber().longValue());
+
+            transaction.getTransactionResponse().setHash(transactionHash);
+            transaction
+                    .getTransactionResponse()
+                    .setBlockNumber(receipt.getBlockNumber().longValue());
 
             String proxyInput = receipt.getInput();
             String proxyOutput = receipt.getOutput();
@@ -1443,17 +1073,8 @@ public class BCOSDriver implements Driver {
                 xaTransactionID = proxyInputResult.getValue2();
                 xaTransactionSeq = proxyInputResult.getValue3().longValue();
                 path = proxyInputResult.getValue4();
-                try {
-                    resource = Path.decode(path).getResource();
-                } catch (Exception e) {
-                    logger.warn(
-                            " invalid path format, transactionHash: {}, path: {}",
-                            transactionHash,
-                            path);
-                }
-
+                resource = Path.decode(path).getResource();
                 String methodSig = proxyInputResult.getValue5();
-
                 input = Numeric.toHexString(proxyInputResult.getValue6());
                 methodId = FunctionEncoder.buildMethodId(methodSig);
 
@@ -1486,14 +1107,10 @@ public class BCOSDriver implements Driver {
                     (queryABIException, abi) -> {
                         if (Objects.nonNull(queryABIException)) {
                             logger.error(
-                                    " transactionHash: {}, e: ",
+                                    "Query abi failed, transactionHash: {}, e: ",
                                     transactionHash,
                                     queryABIException);
-                            callback.onResponse(
-                                    new TransactionException(
-                                            BCOSStatusCode.ABINotExist,
-                                            queryABIException.getMessage()),
-                                    null);
+                            callback.onResponse(null, transaction);
                             return;
                         }
 
@@ -1503,11 +1120,11 @@ public class BCOSDriver implements Driver {
                                         .get(finalMethodId);
 
                         if (Objects.isNull(function)) {
-                            callback.onResponse(
-                                    new TransactionException(
-                                            BCOSStatusCode.MethodNotExist,
-                                            "method not exist, methodId: " + finalMethodId),
-                                    null);
+                            logger.warn(
+                                    "Maybe abi is upgraded, Load function failed, methodId: {}",
+                                    finalMethodId);
+
+                            callback.onResponse(null, transaction);
                             return;
                         }
 
@@ -1516,18 +1133,16 @@ public class BCOSDriver implements Driver {
                         List<String> inputParams =
                                 abiCodecJsonWrapper.decode(inputObject, finalInput);
 
-                        TransactionRequest transactionRequest = new TransactionRequest();
-                        transactionRequest.setMethod(function.getName());
+                        transaction.getTransactionRequest().setMethod(function.getName());
                         /** decode input args from input */
-                        transactionRequest.setArgs(inputParams.toArray(new String[0]));
-
-                        TransactionResponse transactionResponse = new TransactionResponse();
-                        transactionResponse.setHash(transactionHash);
-                        transactionResponse.setBlockNumber(receipt.getBlockNumber().longValue());
+                        transaction
+                                .getTransactionRequest()
+                                .setArgs(inputParams.toArray(new String[0]));
 
                         /** set error code and error message info */
-                        transactionResponse.setMessage(
-                                StatusCode.getStatusMessage(receipt.getStatus()));
+                        transaction
+                                .getTransactionResponse()
+                                .setMessage(StatusCode.getStatusMessage(receipt.getStatus()));
 
                         if (StatusCode.Success.equals(receipt.getStatus())) {
                             ABIObject outputObject = ABIObjectFactory.createOutputObject(function);
@@ -1535,22 +1150,27 @@ public class BCOSDriver implements Driver {
                                     abiCodecJsonWrapper.decode(
                                             outputObject, proxyOutput.substring(130));
                             /** decode output from output */
-                            transactionResponse.setResult(outputParams.toArray(new String[0]));
+                            transaction
+                                    .getTransactionResponse()
+                                    .setResult(outputParams.toArray(new String[0]));
                         }
 
                         BigInteger statusCode =
                                 new BigInteger(Numeric.cleanHexPrefix(receipt.getStatus()), 16);
-                        transactionResponse.setErrorCode(statusCode.intValue());
-
-                        transaction.setXaTransactionID(finalTid);
-                        transaction.setXaTransactionSeq(finalSeq);
+                        transaction.getTransactionResponse().setErrorCode(statusCode.intValue());
+                        transaction
+                                .getTransactionRequest()
+                                .getOptions()
+                                .put(StubConstant.XA_TRANSACTION_ID, finalTid);
+                        transaction
+                                .getTransactionRequest()
+                                .getOptions()
+                                .put(StubConstant.XA_TRANSACTION_SEQ, finalSeq);
                         transaction.setResource(finalResource);
-                        transaction.setTransactionRequest(transactionRequest);
-                        transaction.setTransactionResponse(transactionResponse);
 
                         if (logger.isTraceEnabled()) {
                             logger.trace(
-                                    " transactionHash: {}, transaction: {}",
+                                    "transactionHash: {}, transaction: {}",
                                     transactionHash,
                                     transaction);
                         }
@@ -1626,50 +1246,7 @@ public class BCOSDriver implements Driver {
             callback.onResponse(new Exception("command not found, command: " + command), null);
             return;
         }
-
-        commandHandler.handle(
-                path,
-                args,
-                account,
-                blockManager,
-                connection,
-                (error, response) -> {
-                    callback.onResponse(error, response);
-
-                    if (Objects.isNull(error)
-                            && (BCOSConstant.CUSTOM_COMMAND_DEPLOY.equals(command)
-                                    || BCOSConstant.CUSTOM_COMMAND_REGISTER.equals(command))) {
-                        // add path into proxy contract
-                        TransactionRequest request =
-                                new TransactionRequest(
-                                        BCOSConstant.PROXY_METHOD_ADDPATH,
-                                        new String[] {path.toString()});
-
-                        TransactionContext context =
-                                new TransactionContext(
-                                        account, path, new ResourceInfo(), blockManager);
-
-                        asyncSendTransaction(
-                                context,
-                                request,
-                                false,
-                                connection,
-                                (transactionException, transactionResponse) -> {
-                                    if (transactionException != null) {
-                                        logger.warn(
-                                                "setting path into proxy contract failed,",
-                                                transactionException);
-                                        return;
-                                    }
-
-                                    if (transactionResponse.getErrorCode() != 0) {
-                                        logger.warn(
-                                                "setting path into proxy contract failed: {}",
-                                                transactionResponse.getMessage());
-                                    }
-                                });
-                    }
-                });
+        commandHandler.handle(path, args, account, blockManager, connection, callback);
     }
 
     @Override

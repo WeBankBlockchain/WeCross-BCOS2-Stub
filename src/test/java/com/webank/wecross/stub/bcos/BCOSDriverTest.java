@@ -3,19 +3,8 @@ package com.webank.wecross.stub.bcos;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.TestCase.*;
 
-import com.webank.wecross.stub.Account;
-import com.webank.wecross.stub.BlockHeader;
-import com.webank.wecross.stub.BlockManager;
-import com.webank.wecross.stub.Connection;
-import com.webank.wecross.stub.Driver;
-import com.webank.wecross.stub.Request;
-import com.webank.wecross.stub.ResourceInfo;
-import com.webank.wecross.stub.TransactionContext;
-import com.webank.wecross.stub.TransactionException;
-import com.webank.wecross.stub.TransactionRequest;
-import com.webank.wecross.stub.TransactionResponse;
+import com.webank.wecross.stub.*;
 import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
-import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.BCOSStubException;
@@ -71,6 +60,7 @@ public class BCOSDriverTest {
     public void initializer() throws Exception {
 
         BCOSStubFactory bcosSubFactory = new BCOSStubFactory();
+        Path path = Path.decode("a.b.c");
         driver = bcosSubFactory.newDriver();
         account = BCOSAccountFactory.build("bcos", "classpath:/accounts/bcos");
 
@@ -92,7 +82,7 @@ public class BCOSDriverTest {
         txVerifyBlockManager = new BlockManagerImplMock(new Web3jWrapperTxVerifyMock());
         resourceInfo = ((BCOSConnection) connection).getResourceInfoList().get(0);
 
-        transactionContext = new TransactionContext(account, null, resourceInfo, blockManager);
+        transactionContext = new TransactionContext(account, path, resourceInfo, blockManager);
     }
 
     @Test
@@ -324,42 +314,6 @@ public class BCOSDriverTest {
     }
 
     @Test
-    public void callTest() throws Exception {
-
-        Request request = new Request();
-        request.setType(BCOSRequestType.CALL);
-
-        String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
-        String funName = "funcName";
-        String[] params = new String[] {"abc", "def", "hig", "xxxxx"};
-        BCOSConnection bcosConnection = (BCOSConnection) connection;
-        bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_NAME, address);
-
-        TransactionRequest transactionRequest = createTransactionRequest(funName, params);
-        AsyncToSync asyncToSync = new AsyncToSync();
-        driver.asyncCall(
-                transactionContext,
-                transactionRequest,
-                false,
-                connection,
-                new Driver.Callback() {
-                    @Override
-                    public void onTransactionResponse(
-                            TransactionException transactionException,
-                            TransactionResponse transactionResponse) {
-                        assertTrue(transactionResponse.getErrorCode() == BCOSStatusCode.Success);
-                        assertTrue(transactionResponse.getResult().length == params.length);
-
-                        for (int i = 0; i < params.length; ++i) {
-                            assertEquals(params[i], transactionResponse.getResult()[i]);
-                        }
-                        asyncToSync.getSemaphore().release();
-                    }
-                });
-        asyncToSync.getSemaphore().acquire();
-    }
-
-    @Test
     public void callFailedTest() throws InterruptedException {
 
         Request request = new Request();
@@ -392,40 +346,6 @@ public class BCOSDriverTest {
     }
 
     @Test
-    public void callFailedTest0() throws Exception {
-
-        Request request = new Request();
-        request.setType(BCOSRequestType.CALL);
-
-        String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
-        String funName = "funcName";
-        String[] params = new String[] {"abc", "def", "hig", "xxxxx"};
-        BCOSConnection bcosConnection = (BCOSConnection) callNotOkStatusConnection;
-        bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_NAME, "0x0");
-
-        TransactionRequest transactionRequest = createTransactionRequest(funName, params);
-        AsyncToSync asyncToSync = new AsyncToSync();
-
-        driver.asyncCall(
-                transactionContext,
-                transactionRequest,
-                false,
-                callNotOkStatusConnection,
-                new Driver.Callback() {
-                    @Override
-                    public void onTransactionResponse(
-                            TransactionException transactionException,
-                            TransactionResponse transactionResponse) {
-                        assertEquals(
-                                transactionResponse.getErrorCode().intValue(),
-                                BCOSStatusCode.CallNotSuccessStatus);
-                        asyncToSync.getSemaphore().release();
-                    }
-                });
-        asyncToSync.getSemaphore().acquire();
-    }
-
-    @Test
     public void getVerifyTransactionTest() throws Exception {
         String transactionHash =
                 "0x8b3946912d1133f9fb0722a7b607db2456d468386c2e86b035e81ef91d94eb90";
@@ -437,8 +357,12 @@ public class BCOSDriverTest {
                 true,
                 txVerifyConnection,
                 (e, verifiedTransaction) -> {
-                    assertEquals(verifiedTransaction.getBlockNumber(), blockNumber);
-                    assertEquals(verifiedTransaction.getTxHash(), transactionHash);
+                    assertEquals(
+                            verifiedTransaction.getTransactionResponse().getBlockNumber(),
+                            blockNumber);
+                    assertEquals(
+                            verifiedTransaction.getTransactionResponse().getHash(),
+                            transactionHash);
                 });
     }
 
