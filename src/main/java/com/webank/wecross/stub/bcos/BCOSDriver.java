@@ -439,6 +439,13 @@ public class BCOSDriver implements Driver {
                                                         abiCodecJsonWrapper
                                                                 .decode(outputObj, output)
                                                                 .toArray(new String[0]));
+                                            } else if (String.valueOf(
+                                                            BCOSStatusCode.CallNotSuccessStatus)
+                                                    .equals(callOutput.getStatus())) {
+                                                transactionResponse.setErrorCode(
+                                                        BCOSStatusCode.CallNotSuccessStatus);
+                                                transactionResponse.setMessage(
+                                                        callOutput.getOutput());
                                             } else {
                                                 transactionResponse.setErrorCode(
                                                         BCOSStatusCode.CallNotSuccessStatus);
@@ -473,7 +480,7 @@ public class BCOSDriver implements Driver {
                                             callback.onTransactionResponse(
                                                     new TransactionException(
                                                             BCOSStatusCode.UnclassifiedError,
-                                                            " errorMessage: " + e.getMessage()),
+                                                            e.getMessage()),
                                                     null);
                                         }
                                     });
@@ -1094,12 +1101,19 @@ public class BCOSDriver implements Driver {
                 return;
             }
 
+            transaction
+                    .getTransactionRequest()
+                    .getOptions()
+                    .put(StubConstant.XA_TRANSACTION_ID, xaTransactionID);
+            transaction
+                    .getTransactionRequest()
+                    .getOptions()
+                    .put(StubConstant.XA_TRANSACTION_SEQ, xaTransactionSeq);
+            transaction.setResource(resource);
+
             // query ABI
             String finalMethodId = methodId;
             String finalInput = input;
-            String finalTid = xaTransactionID;
-            long finalSeq = xaTransactionSeq;
-            String finalResource = resource;
             asyncCnsService.queryABI(
                     resource,
                     this,
@@ -1158,16 +1172,6 @@ public class BCOSDriver implements Driver {
                         BigInteger statusCode =
                                 new BigInteger(Numeric.cleanHexPrefix(receipt.getStatus()), 16);
                         transaction.getTransactionResponse().setErrorCode(statusCode.intValue());
-                        transaction
-                                .getTransactionRequest()
-                                .getOptions()
-                                .put(StubConstant.XA_TRANSACTION_ID, finalTid);
-                        transaction
-                                .getTransactionRequest()
-                                .getOptions()
-                                .put(StubConstant.XA_TRANSACTION_SEQ, finalSeq);
-                        transaction.setResource(finalResource);
-
                         if (logger.isTraceEnabled()) {
                             logger.trace(
                                     "transactionHash: {}, transaction: {}",
