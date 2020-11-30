@@ -30,6 +30,7 @@ import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof;
+import org.fisco.bcos.web3j.tx.exceptions.ContractCallException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -247,12 +248,23 @@ public class BCOSConnection implements Connection {
             response.setErrorCode(BCOSStatusCode.Success);
             response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
             response.setData(objectMapper.writeValueAsBytes(callOutput));
+        } catch (ContractCallException e) {
+            Call.CallOutput callOutput = new Call.CallOutput();
+            callOutput.setStatus(String.valueOf(BCOSStatusCode.CallNotSuccessStatus));
+            callOutput.setOutput(e.getMessage());
+            try {
+                response.setErrorCode(BCOSStatusCode.Success);
+                response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
+                response.setData(objectMapper.writeValueAsBytes(callOutput));
+            } catch (JsonProcessingException jsonProcessingException) {
+                response.setErrorCode(BCOSStatusCode.HandleCallRequestFailed);
+                response.setErrorMessage(e.getMessage());
+            }
         } catch (Exception e) {
-            logger.warn(" handleCallRequest Exception, e:", e);
+            logger.warn("handleCallRequest Exception:", e);
             response.setErrorCode(BCOSStatusCode.HandleCallRequestFailed);
-            response.setErrorMessage(" errorMessage: " + e.getMessage());
+            response.setErrorMessage(e.getMessage());
         }
-
         callback.onResponse(response);
     }
 
@@ -300,7 +312,7 @@ public class BCOSConnection implements Connection {
                                     logger.error(" e:", e);
                                     response.setErrorCode(
                                             BCOSStatusCode.HandleSendTransactionFailed);
-                                    response.setErrorMessage(" errorMessage: " + e.getMessage());
+                                    response.setErrorMessage(e.getMessage());
                                 }
                             }
 
@@ -323,9 +335,9 @@ public class BCOSConnection implements Connection {
                         }
                     });
         } catch (Exception e) {
-            logger.error(" e: ", e);
+            logger.error("handleAsyncTransaction exception:", e);
             response.setErrorCode(BCOSStatusCode.HandleSendTransactionFailed);
-            response.setErrorMessage(" errorMessage: " + e.getMessage());
+            response.setErrorMessage(e.getMessage());
             callback.onResponse(response);
         }
     }
@@ -343,7 +355,7 @@ public class BCOSConnection implements Connection {
         } catch (Exception e) {
             logger.warn(" handleGetBlockNumberRequest Exception, e: ", e);
             response.setErrorCode(BCOSStatusCode.HandleGetBlockNumberFailed);
-            response.setErrorMessage(" errorMessage: " + e.getMessage());
+            response.setErrorMessage(e.getMessage());
         }
         callback.onResponse(response);
     }
@@ -427,7 +439,7 @@ public class BCOSConnection implements Connection {
         } catch (Exception e) {
             logger.warn(" Exception, e: ", e);
             response.setErrorCode(BCOSStatusCode.HandleGetBlockFailed);
-            response.setErrorMessage(" errorMessage: " + e.getMessage());
+            response.setErrorMessage(e.getMessage());
         }
         callback.onResponse(response);
     }
@@ -463,7 +475,7 @@ public class BCOSConnection implements Connection {
         } catch (Exception e) {
             logger.warn(" Exception, e: ", e);
             response.setErrorCode(BCOSStatusCode.HandleGetBlockFailed);
-            response.setErrorMessage(" errorMessage: " + e.getMessage());
+            response.setErrorMessage(e.getMessage());
         }
         callback.onResponse(response);
     }
