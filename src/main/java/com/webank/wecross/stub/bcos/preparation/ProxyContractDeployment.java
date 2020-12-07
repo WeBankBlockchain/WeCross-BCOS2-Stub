@@ -22,10 +22,10 @@ public class ProxyContractDeployment {
                 + " check [chainName]\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + ProxyContractDeployment.class.getName()
-                + " deploy [chainName] [accountName]\n"
+                + " deploy [chainName] [accountName(optional)]\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + ProxyContractDeployment.class.getName()
-                + " upgrade [chainName] [accountName]\n"
+                + " upgrade [chainName] [accountName(optional)]\n"
                 + "Example:\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + ProxyContractDeployment.class.getName()
@@ -36,7 +36,17 @@ public class ProxyContractDeployment {
                 + ProxyContractDeployment.class.getName()
                 + " deploy "
                 + pureChainPath
+                + " \n"
+                + "         java -cp 'conf/:lib/*:plugin/*' "
+                + ProxyContractDeployment.class.getName()
+                + " deploy "
+                + pureChainPath
                 + " bcos_user1\n"
+                + "         java -cp 'conf/:lib/*:plugin/*' "
+                + ProxyContractDeployment.class.getName()
+                + " upgrade "
+                + pureChainPath
+                + " \n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + ProxyContractDeployment.class.getName()
                 + " upgrade "
