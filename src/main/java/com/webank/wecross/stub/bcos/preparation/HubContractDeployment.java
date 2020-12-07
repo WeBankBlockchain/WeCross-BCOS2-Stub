@@ -1,5 +1,6 @@
 package com.webank.wecross.stub.bcos.preparation;
 
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,6 +87,7 @@ public class HubContractDeployment {
 
         String cmd = args[0];
         String chainPath = args[1];
+        String accountName = BCOSConstant.ADMIN_ACCOUNT;
 
         switch (cmd) {
             case "check":
@@ -93,6 +95,12 @@ public class HubContractDeployment {
                 break;
             case "getAddress":
                 getAddress(chainPath);
+                break;
+            case "deploy":
+                deploy(chainPath, accountName);
+                break;
+            case "upgrade":
+                upgrade(chainPath, accountName);
                 break;
             default:
                 usage();
