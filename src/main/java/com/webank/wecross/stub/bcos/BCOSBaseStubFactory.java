@@ -149,7 +149,7 @@ public class BCOSBaseStubFactory implements StubFactory {
             return BCOSAccountFactory.build(
                     name, path.startsWith("classpath") ? path : "file:" + path);
         } catch (Exception e) {
-            logger.error(" newAccount, e: ", e);
+            logger.warn(" newAccount, e: ", e);
             return null;
         }
     }
