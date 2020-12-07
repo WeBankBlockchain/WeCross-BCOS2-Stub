@@ -4,6 +4,8 @@ import com.webank.wecross.stub.StubConstant;
 
 /** The definition of the resource type in BCOS */
 public interface BCOSConstant {
+    String ADMIN_ACCOUNT = "admin";
+
     /** BCOS contract resource */
     String RESOURCE_TYPE_BCOS_CONTRACT = "BCOS_CONTRACT";
     /** */

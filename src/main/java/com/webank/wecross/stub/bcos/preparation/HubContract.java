@@ -64,7 +64,15 @@ public class HubContract {
         account =
                 (BCOSAccount)
                         bcosBaseStubFactory.newAccount(
-                                accountName, "classpath:accounts" + File.separator + accountName);
+                                accountName,
+                                "classpath:" + chainPath + File.separator + accountName);
+        if (account == null) {
+            account =
+                    (BCOSAccount)
+                            bcosBaseStubFactory.newAccount(
+                                    accountName,
+                                    "classpath:accounts" + File.separator + accountName);
+        }
         connection = BCOSConnectionFactory.build(bcosStubConfig, web3jWrapper);
 
         if (account == null) {

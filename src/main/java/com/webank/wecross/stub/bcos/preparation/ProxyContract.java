@@ -60,7 +60,16 @@ public class ProxyContract {
         account =
                 (BCOSAccount)
                         bcosBaseStubFactory.newAccount(
-                                accountName, "classpath:accounts" + File.separator + accountName);
+                                accountName,
+                                "classpath:" + chainPath + File.separator + accountName);
+        if (account == null) {
+            System.out.println("Not f");
+            account =
+                    (BCOSAccount)
+                            bcosBaseStubFactory.newAccount(
+                                    accountName,
+                                    "classpath:accounts" + File.separator + accountName);
+        }
         connection = BCOSConnectionFactory.build(bcosStubConfig, web3jWrapper);
         if (account == null) {
             throw new Exception("Account " + accountName + " not found");
