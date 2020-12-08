@@ -104,7 +104,7 @@ public class HubContractDeployment {
                 check(chainPath);
                 break;
             case "getAddress":
-                getAddress(chainPath);
+                getAddress(chainPath, accountName);
                 break;
             case "deploy":
                 deploy(chainPath, accountName);
@@ -142,8 +142,16 @@ public class HubContractDeployment {
         HubContract.check(chainPath);
     }
 
-    public static void getAddress(String chainPath) {
-        HubContract.getHubAddress(chainPath);
+    public static void getAddress(String chainPath, String accountName) {
+        try {
+            String hubContractFile =
+                    chainPath + File.separator + "WeCrossHub" + File.separator + "WeCrossHub.sol";
+            HubContract hubContract = new HubContract(hubContractFile, chainPath, accountName);
+            hubContract.getHubAddress();
+        } catch (Exception e) {
+            logger.error("e: ", e);
+            System.out.println(e);
+        }
     }
 
     public static void deploy(String chainPath, String accountName) {

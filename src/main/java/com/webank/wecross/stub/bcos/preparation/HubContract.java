@@ -241,10 +241,8 @@ public class HubContract {
         }
     }
 
-    public static void getHubAddress(String chainPath) {
+    public void getHubAddress() {
         try {
-            BCOSConnection connection = BCOSConnectionFactory.build(chainPath, "stub.toml");
-
             if (!connection.hasHubDeployed()) {
                 System.out.println("WeCrossHub has not been deployed");
             } else {
