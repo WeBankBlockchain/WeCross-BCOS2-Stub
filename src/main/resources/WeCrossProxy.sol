@@ -68,7 +68,6 @@ contract WeCrossProxy {
     uint256 constant MAX_SETP = 1024;
 
     string[] pathCache;
-    mapping(string => address) addressCache; // key: contract name
 
     struct Transaction {
         bool existed;
@@ -104,11 +103,6 @@ contract WeCrossProxy {
         pathCache.length = 0;
     }
 
-    // fetch the address by the name of the path
-    function getAddressByNameByCache(string memory _name) public view returns(address) {
-        return addressCache[_name];
-    }
-
     /*
     * deploy contract by contract binary code
     */
@@ -140,7 +134,6 @@ contract WeCrossProxy {
         if(1 != ret) {
             revert(string(abi.encodePacked(name, ":", _version, " unable register to cns, error: ", uint256ToString(uint256(ret > 0? ret : -ret)))));
         }
-        addressCache[name] = deploy_addr;
         pathCache.push(_path);
         return deploy_addr;
     }
@@ -160,8 +153,6 @@ contract WeCrossProxy {
         if(1 != ret) {
             revert(string(abi.encodePacked(name, ":", _version, " unable register to cns, error: ", uint256ToString(uint256(ret > 0 ? ret : - ret)))));
         }
-        // add address to map
-        addressCache[name] = bytesToAddress(bytes(_addr));
         pathCache.push(_path);
     }
 
@@ -201,10 +192,7 @@ contract WeCrossProxy {
     returns(bytes memory)
     {
         // find address from abi cache first
-        address addr = addressCache[_name];
-        if(addr == address(0x0)) {
-            addr = getAddressByName(_name, true);
-        }
+        address addr = getAddressByName(_name, true);
 
         if(lockedContracts[addr].locked) {
             revert(string(abi.encodePacked("resource is locked by unfinished xa transaction: ", lockedContracts[addr].xaTransactionID)));
@@ -272,11 +260,7 @@ contract WeCrossProxy {
         }
 
         // find address from abi cache first
-        address addr = addressCache[_name];
-        if(addr == address(0x0)) {
-            addr = getAddressByName(_name, true);
-            addressCache[_name] = addr;
-        }
+        address addr = getAddressByName(_name, true);
 
         if(lockedContracts[addr].locked) {
             revert(string(abi.encodePacked(_name, " is locked by unfinished xa transaction: ", lockedContracts[addr].xaTransactionID)));

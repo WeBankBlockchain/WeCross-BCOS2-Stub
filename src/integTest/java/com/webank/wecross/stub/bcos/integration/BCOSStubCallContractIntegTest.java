@@ -232,23 +232,6 @@ public class BCOSStubCallContractIntegTest {
         });
 
         asyncToSync.semaphore.acquire(1);
-
-        String[] params0 = new String[1] ;
-        params0[0] = "HelloWeCross";
-        TransactionRequest transactionRequest1 =
-                createTransactionRequest(path, "getAddressByNameByCache", params0);
-
-        AsyncToSync asyncToSync0 = new AsyncToSync();
-        driver.asyncSendTransaction(transactionContext, transactionRequest1, true, connection, (exception, res) -> {
-            assertTrue(Objects.nonNull(res));
-            assertTrue(res.getErrorCode() == BCOSStatusCode.Success);
-            assertTrue(res.getResult().length == 1);
-            assertTrue(res.getResult()[0].length() == 42);
-            assertTrue(res.getResult()[0].equals(addr.get()));
-            asyncToSync0.getSemaphore().release();
-        });
-
-        asyncToSync0.semaphore.acquire(1);
     }
 
     @Test
