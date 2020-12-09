@@ -957,10 +957,11 @@ public class BCOSDriver implements Driver {
                             if (sealerString != null) {
                                 BCOSBlockHeader bcosBlockHeader =
                                         (BCOSBlockHeader) block.blockHeader;
-                                BlockHeaderValidation.verifyBlockHeader(bcosBlockHeader);
+                                BlockHeaderValidation.verifyBlockHeader(
+                                        bcosBlockHeader, sealerString);
                             }
                             if (logger.isDebugEnabled()) {
-                                logger.debug(
+                                logger.trace(
                                         " blockNumber: {}, blockHeader: {}, txs: {}",
                                         blockNumber,
                                         block.getBlockHeader(),

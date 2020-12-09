@@ -68,11 +68,10 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
                 getBCOSResourceConfig(getConfigPath(), chain, resourcesConfigValue);
 
         BCOSStubConfig bcosStubConfig = new BCOSStubConfig();
-        if (sealersConfigValue == null) {
-            logger.warn("loadConfig: Can't get sealers in config file!");
+        if (Objects.isNull(sealersConfigValue)) {
+            logger.info("Not config [sealers], do not verify bcos block header.");
         } else {
-            BCOSStubConfig.Sealers sealers =
-                    getBCOSSealersConfig(getConfigPath(), sealersConfigValue);
+            BCOSStubConfig.Sealers sealers = getBCOSSealersConfig(sealersConfigValue);
             bcosStubConfig.setSealers(sealers);
         }
         bcosStubConfig.setType(stubType);
@@ -194,11 +193,14 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
     }
 
     public BCOSStubConfig.Sealers getBCOSSealersConfig(
-            String configFile, HashMap<String, List<String>> sealersConfigValue) {
-
-        requireFieldNotNull(sealersConfigValue, "sealers", "", configFile);
+            HashMap<String, List<String>> sealersConfigValue) {
         List<String> sealerList = sealersConfigValue.get("pubKey");
-        requireFieldNotNull(sealerList, "sealers", "pubKey", configFile);
+        // Config [sealers] but not config pubKey
+        if (Objects.isNull(sealerList)) {
+            logger.info(
+                    "Config [sealers], but not config pubKeys, do not verify bcos block header.");
+            return null;
+        }
         logger.debug("getBCOSSealersConfig: sealers:{}", sealersConfigValue);
 
         return new BCOSStubConfig.Sealers(sealerList);
