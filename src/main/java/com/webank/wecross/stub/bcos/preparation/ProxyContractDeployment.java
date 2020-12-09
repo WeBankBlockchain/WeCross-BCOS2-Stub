@@ -143,8 +143,9 @@ public class ProxyContractDeployment {
                     new ProxyContract(proxyContractFile, chainPath, accountName);
             proxyContract.deploy();
         } catch (Exception e) {
-            logger.error("e: ", e);
-            System.out.println(e);
+            logger.error("deploy, e: ", e);
+            System.out.println("Failed, exception details:");
+            e.printStackTrace();
         }
     }
 
@@ -160,8 +161,9 @@ public class ProxyContractDeployment {
                     new ProxyContract(proxyContractFile, chainPath, accountName);
             proxyContract.upgrade();
         } catch (Exception e) {
-            logger.error("e: ", e);
-            System.out.println(e);
+            logger.error("upgrade, e: ", e);
+            System.out.println("Failed, exception details:");
+            e.printStackTrace();
         }
     }
 }

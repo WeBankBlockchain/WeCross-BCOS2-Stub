@@ -149,8 +149,9 @@ public class HubContractDeployment {
             HubContract hubContract = new HubContract(hubContractFile, chainPath, accountName);
             hubContract.getHubAddress();
         } catch (Exception e) {
-            logger.error("e: ", e);
-            System.out.println(e);
+            logger.error("getAddress, e: ", e);
+            System.out.println("Failed, exception details:");
+            e.printStackTrace();
         }
     }
 
@@ -161,8 +162,9 @@ public class HubContractDeployment {
             HubContract hubContract = new HubContract(hubContractFile, chainPath, accountName);
             hubContract.deploy();
         } catch (Exception e) {
-            logger.error("e: ", e);
-            System.out.println(e);
+            logger.error("deploy, e: ", e);
+            System.out.println("Failed, exception details:");
+            e.printStackTrace();
         }
     }
 
@@ -173,8 +175,9 @@ public class HubContractDeployment {
             HubContract hubContract = new HubContract(hubContractFile, chainPath, accountName);
             hubContract.upgrade();
         } catch (Exception e) {
-            logger.error("e: ", e);
-            System.out.println(e);
+            logger.error("upgrade, e: ", e);
+            System.out.println("Failed, exception details:");
+            e.printStackTrace();
         }
     }
 }
