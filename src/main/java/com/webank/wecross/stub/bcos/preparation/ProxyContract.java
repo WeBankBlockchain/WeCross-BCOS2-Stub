@@ -13,6 +13,7 @@ import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 import java.io.File;
 import java.math.BigInteger;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
@@ -185,6 +186,10 @@ public class ProxyContract {
                 });
 
         String contractAddress = completableFuture.get(10, TimeUnit.SECONDS);
+        if (Objects.isNull(contractAddress)) {
+            throw new Exception("Failed to deploy proxy contract.");
+        }
+
         CnsService cnsService = new CnsService(web3jWrapper.getWeb3j(), account.getCredentials());
         String result = cnsService.registerCns(cnsName, cnsVersion, contractAddress, metadata.abi);
 
