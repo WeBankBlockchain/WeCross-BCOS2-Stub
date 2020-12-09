@@ -40,6 +40,11 @@ public class BlockHeaderValidation {
             }
             finalizeFlag = finalizeFlag && verifyFlag;
         }
+        if (logger.isDebugEnabled()) {
+            logger.debug(
+                    "Verify BCOS BlockHeader enabled, the final verification result is {}",
+                    finalizeFlag);
+        }
         if (!finalizeFlag) {
             logger.error("VerifyBlockHeader fail!, signatureList is {}", signatureList);
             throw new WeCrossException(

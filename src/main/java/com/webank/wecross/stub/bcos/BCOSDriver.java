@@ -941,7 +941,6 @@ public class BCOSDriver implements Driver {
                         BCOSRequestType.GET_BLOCK_BY_NUMBER,
                         BigInteger.valueOf(blockNumber).toByteArray());
         String sealerString = connection.getProperties().get(BCOSConstant.BCOS_SEALER_LIST);
-        logger.info("XXXXX: sealerString: " + sealerString);
         connection.asyncSend(
                 request,
                 response -> {
