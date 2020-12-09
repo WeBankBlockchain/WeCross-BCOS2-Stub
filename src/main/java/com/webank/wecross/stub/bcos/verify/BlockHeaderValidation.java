@@ -3,9 +3,7 @@ package com.webank.wecross.stub.bcos.verify;
 import com.webank.wecross.exception.WeCrossException;
 import com.webank.wecross.stub.bcos.common.BCOSBlockHeader;
 import com.webank.wecross.stub.bcos.uaproof.Signer;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.fisco.bcos.web3j.crypto.Keys;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlockHeader;
@@ -16,11 +14,12 @@ import org.slf4j.LoggerFactory;
 public class BlockHeaderValidation {
     private static final Logger logger = LoggerFactory.getLogger(BlockHeaderValidation.class);
 
-    public static void verifyBlockHeader(BCOSBlockHeader bcosBlockHeader) throws WeCrossException {
-        List<String> sealerList = bcosBlockHeader.getSealerList();
+    public static void verifyBlockHeader(BCOSBlockHeader bcosBlockHeader, String sealerString)
+            throws WeCrossException {
+        String[] sealerList = sealerString.split(",");
         List<BcosBlockHeader.Signature> signatureList = bcosBlockHeader.getSignatureList();
 
-        if (!isSignUnique(signatureList)) {
+        if (bcosBlockHeader.getNumber() != 0 && !isSignUnique(signatureList)) {
             logger.error(
                     "Some signature in SignList is not unique, signatureList is {}", signatureList);
             throw new WeCrossException(

@@ -11,7 +11,6 @@ import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
-import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.Web3j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,10 +45,10 @@ public class BCOSConnectionFactory {
                 BCOSConstant.BCOS_STUB_TYPE, String.valueOf(bcosStubConfig.getType()));
 
         if (bcosStubConfig.getSealers() != null) {
-            String sealerString =
-                    ObjectMapperFactory.getObjectMapper()
-                            .writeValueAsString(bcosStubConfig.getSealers().getSealerList());
+            String sealerString = String.join(",", bcosStubConfig.getSealers().getSealerList());
             bcosConnection.addProperty(BCOSConstant.BCOS_SEALER_LIST, sealerString);
+        } else {
+            bcosConnection.addProperty(BCOSConstant.BCOS_SEALER_LIST, null);
         }
         CnsInfo proxyCnsInfo = CnsService.queryProxyCnsInfo(web3jWrapper);
         if (Objects.nonNull(proxyCnsInfo)) {
