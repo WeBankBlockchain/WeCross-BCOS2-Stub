@@ -234,18 +234,4 @@ public class ProxyContract {
         System.out.println(
                 "SUCCESS: WeCrossProxy:" + version + " has been upgraded! chain: " + chainPath);
     }
-
-    public static void check(String chainPath) {
-        try {
-            BCOSConnection connection = BCOSConnectionFactory.build(chainPath, "stub.toml");
-
-            if (!connection.hasProxyDeployed()) {
-                System.out.println("WeCrossProxy has not been deployed");
-            } else {
-                System.out.println("WeCrossProxy has been deployed.");
-            }
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }
 }

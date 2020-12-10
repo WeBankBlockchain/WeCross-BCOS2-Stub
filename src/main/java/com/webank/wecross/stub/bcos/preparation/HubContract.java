@@ -231,20 +231,6 @@ public class HubContract {
                 "SUCCESS: WeCrossHub:" + version + " has been upgraded! chain: " + chainPath);
     }
 
-    public static void check(String chainPath) {
-        try {
-            BCOSConnection connection = BCOSConnectionFactory.build(chainPath, "stub.toml");
-
-            if (!connection.hasHubDeployed()) {
-                System.out.println("WeCrossHub has not been deployed");
-            } else {
-                System.out.println("WeCrossHub has been deployed.");
-            }
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }
-
     public void getHubAddress() {
         try {
             if (!connection.hasHubDeployed()) {

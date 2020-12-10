@@ -19,9 +19,6 @@ public class ProxyContractDeployment {
         return "Usage:\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + ProxyContractDeployment.class.getName()
-                + " check [chainName]\n"
-                + "         java -cp 'conf/:lib/*:plugin/*' "
-                + ProxyContractDeployment.class.getName()
                 + " deploy [chainName] [accountName(optional)]\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + ProxyContractDeployment.class.getName()
@@ -29,11 +26,6 @@ public class ProxyContractDeployment {
                 + "Example:\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + ProxyContractDeployment.class.getName()
-                + " check "
-                + pureChainPath
-                + "\n"
-                + "         java -cp 'conf/:lib/*:plugin/*' "
-                + ProxyContractDeployment.class.getName()
                 + " deploy "
                 + pureChainPath
                 + " \n"
@@ -41,7 +33,7 @@ public class ProxyContractDeployment {
                 + ProxyContractDeployment.class.getName()
                 + " deploy "
                 + pureChainPath
-                + " bcos_user1\n"
+                + " admin\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + ProxyContractDeployment.class.getName()
                 + " upgrade "
@@ -51,7 +43,7 @@ public class ProxyContractDeployment {
                 + ProxyContractDeployment.class.getName()
                 + " upgrade "
                 + pureChainPath
-                + " bcos_user1";
+                + " admin";
     }
 
     private static void exit() {
@@ -92,9 +84,6 @@ public class ProxyContractDeployment {
         String accountName = BCOSConstant.ADMIN_ACCOUNT;
 
         switch (cmd) {
-            case "check":
-                check(chainPath);
-                break;
             case "deploy":
                 deploy(chainPath, accountName);
                 break;
@@ -127,10 +116,6 @@ public class ProxyContractDeployment {
         }
     }
 
-    public static void check(String chainPath) {
-        ProxyContract.check(chainPath);
-    }
-
     public static void deploy(String chainPath, String accountName) {
         try {
             String proxyContractFile =
@@ -144,7 +129,7 @@ public class ProxyContractDeployment {
             proxyContract.deploy();
         } catch (Exception e) {
             logger.error("deploy, e: ", e);
-            System.out.println("Failed, exception details:");
+            System.out.println("Failed, please check contract or account. Exception details:");
             e.printStackTrace();
         }
     }
@@ -162,7 +147,7 @@ public class ProxyContractDeployment {
             proxyContract.upgrade();
         } catch (Exception e) {
             logger.error("upgrade, e: ", e);
-            System.out.println("Failed, exception details:");
+            System.out.println("Failed, please check contract or account. Exception details:");
             e.printStackTrace();
         }
     }
