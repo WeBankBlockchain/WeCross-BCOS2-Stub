@@ -19,9 +19,6 @@ public class HubContractDeployment {
         return "Usage:\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + HubContractDeployment.class.getName()
-                + " check [chainName]\n"
-                + "         java -cp 'conf/:lib/*:plugin/*' "
-                + HubContractDeployment.class.getName()
                 + " deploy [chainName] [accountName(optional)]\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + HubContractDeployment.class.getName()
@@ -32,11 +29,6 @@ public class HubContractDeployment {
                 + "Example:\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + HubContractDeployment.class.getName()
-                + " check "
-                + pureChainPath
-                + "\n"
-                + "         java -cp 'conf/:lib/*:plugin/*' "
-                + HubContractDeployment.class.getName()
                 + " deploy "
                 + pureChainPath
                 + " \n"
@@ -44,7 +36,7 @@ public class HubContractDeployment {
                 + HubContractDeployment.class.getName()
                 + " deploy "
                 + pureChainPath
-                + " bcos_user1\n"
+                + " admin\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + HubContractDeployment.class.getName()
                 + " upgrade "
@@ -54,7 +46,7 @@ public class HubContractDeployment {
                 + HubContractDeployment.class.getName()
                 + " upgrade "
                 + pureChainPath
-                + " bcos_user1\n"
+                + " admin\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + HubContractDeployment.class.getName()
                 + " getAddress "
@@ -100,9 +92,6 @@ public class HubContractDeployment {
         String accountName = BCOSConstant.ADMIN_ACCOUNT;
 
         switch (cmd) {
-            case "check":
-                check(chainPath);
-                break;
             case "getAddress":
                 getAddress(chainPath, accountName);
                 break;
@@ -138,10 +127,6 @@ public class HubContractDeployment {
         }
     }
 
-    public static void check(String chainPath) {
-        HubContract.check(chainPath);
-    }
-
     public static void getAddress(String chainPath, String accountName) {
         try {
             String hubContractFile =
@@ -150,7 +135,7 @@ public class HubContractDeployment {
             hubContract.getHubAddress();
         } catch (Exception e) {
             logger.error("getAddress, e: ", e);
-            System.out.println("Failed, exception details:");
+            System.out.println("Failed, please check contract or account. Exception details:");
             e.printStackTrace();
         }
     }
@@ -163,7 +148,7 @@ public class HubContractDeployment {
             hubContract.deploy();
         } catch (Exception e) {
             logger.error("deploy, e: ", e);
-            System.out.println("Failed, exception details:");
+            System.out.println("Failed, please check contract or account. Exception details:");
             e.printStackTrace();
         }
     }
@@ -176,7 +161,7 @@ public class HubContractDeployment {
             hubContract.upgrade();
         } catch (Exception e) {
             logger.error("upgrade, e: ", e);
-            System.out.println("Failed, exception details:");
+            System.out.println("Failed, please check contract or account. Exception details:");
             e.printStackTrace();
         }
     }
