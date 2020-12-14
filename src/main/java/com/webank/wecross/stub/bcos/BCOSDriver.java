@@ -330,7 +330,7 @@ public class BCOSDriver implements Driver {
                             if (Objects.isNull(functions) || functions.isEmpty()) {
                                 throw new BCOSStubException(
                                         BCOSStatusCode.MethodNotExist,
-                                        "method not found in abi, method: " + method);
+                                        "Method not found in abi, method: " + method);
                             }
 
                             // Overloading is not supported ???
@@ -584,7 +584,7 @@ public class BCOSDriver implements Driver {
                                                         || functions.isEmpty()) {
                                                     throw new BCOSStubException(
                                                             BCOSStatusCode.MethodNotExist,
-                                                            "method not found in abi, method: "
+                                                            "Method not found in abi, method: "
                                                                     + method);
                                                 }
 
@@ -1248,7 +1248,7 @@ public class BCOSDriver implements Driver {
             CustomCommandCallback callback) {
         CommandHandler commandHandler = commandHandlerDispatcher.matchCommandHandler(command);
         if (Objects.isNull(commandHandler)) {
-            callback.onResponse(new Exception("command not found, command: " + command), null);
+            callback.onResponse(new Exception("Command not found, command: " + command), null);
             return;
         }
         commandHandler.handle(path, args, account, blockManager, connection, callback);
@@ -1278,19 +1278,19 @@ public class BCOSDriver implements Driver {
         if (!properties.containsKey(BCOSConstant.BCOS_PROXY_NAME)) {
             throw new BCOSStubException(
                     BCOSStatusCode.InvalidParameter,
-                    " Not found proxy contract address. resource: " + BCOSConstant.BCOS_PROXY_NAME);
+                    "Proxy contract address not found, resource: " + BCOSConstant.BCOS_PROXY_NAME);
         }
 
         if (!properties.containsKey(BCOSConstant.BCOS_GROUP_ID)) {
             throw new BCOSStubException(
                     BCOSStatusCode.InvalidParameter,
-                    " Not found groupId, resource: " + BCOSConstant.BCOS_GROUP_ID);
+                    "Group id not found, resource: " + BCOSConstant.BCOS_GROUP_ID);
         }
 
         if (!properties.containsKey(BCOSConstant.BCOS_CHAIN_ID)) {
             throw new BCOSStubException(
                     BCOSStatusCode.InvalidParameter,
-                    " Not found chainId, resource: " + BCOSConstant.BCOS_CHAIN_ID);
+                    "Chain id not found, resource: " + BCOSConstant.BCOS_CHAIN_ID);
         }
     }
 

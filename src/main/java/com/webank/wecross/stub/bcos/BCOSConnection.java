@@ -382,7 +382,7 @@ public class BCOSConnection implements Connection {
                             .equals(
                                     "0x0000000000000000000000000000000000000000000000000000000000000000")) {
                 response.setErrorCode(BCOSStatusCode.TransactionReceiptProofNotExist);
-                response.setErrorMessage(" Not found transaction proof, tx hash: " + txHash);
+                response.setErrorMessage("Transaction proof not found, tx hash: " + txHash);
                 callback.onResponse(response);
                 return;
             }
@@ -394,7 +394,7 @@ public class BCOSConnection implements Connection {
                     || Objects.isNull(
                             receiptAndProof.getTransactionReceipt().getTransactionHash())) {
                 response.setErrorCode(BCOSStatusCode.TransactionReceiptProofNotExist);
-                response.setErrorMessage(" Not found transaction proof, tx hash: " + txHash);
+                response.setErrorMessage("Transaction proof not found, tx hash: " + txHash);
                 callback.onResponse(response);
                 return;
             }
