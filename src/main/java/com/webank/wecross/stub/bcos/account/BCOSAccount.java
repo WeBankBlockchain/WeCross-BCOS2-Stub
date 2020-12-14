@@ -15,12 +15,16 @@ public class BCOSAccount implements Account {
     private final String publicKey;
     private final Credentials credentials;
 
+    private int keyID;
+
+    private boolean isDefault;
+
     public BCOSAccount(String name, String type, Credentials credentials) {
         this.name = name;
         this.type = type;
         this.credentials = credentials;
         this.publicKey =
-                Numeric.toHexStringWithPrefixZeroPadded(
+                Numeric.toHexStringNoPrefixZeroPadded(
                         credentials.getEcKeyPair().getPublicKey(), 128);
         logger.info(" name: {}, type: {}, publicKey: {}", name, type, publicKey);
     }
@@ -41,6 +45,28 @@ public class BCOSAccount implements Account {
 
     @Override
     public String getIdentity() {
+        return credentials.getAddress();
+    }
+
+    @Override
+    public int getKeyID() {
+        return keyID;
+    }
+
+    @Override
+    public boolean isDefault() {
+        return isDefault;
+    }
+
+    public void setKeyID(int keyID) {
+        this.keyID = keyID;
+    }
+
+    public void setDefault(boolean aDefault) {
+        isDefault = aDefault;
+    }
+
+    public String getPub() {
         return publicKey;
     }
 }

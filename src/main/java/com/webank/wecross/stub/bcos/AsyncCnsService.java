@@ -2,7 +2,7 @@ package com.webank.wecross.stub.bcos;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.stub.Account;
-import com.webank.wecross.stub.BlockHeaderManager;
+import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Path;
@@ -22,6 +22,7 @@ import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 public class AsyncCnsService {
     private static final Logger logger = LoggerFactory.getLogger(AsyncCnsService.class);
@@ -30,21 +31,23 @@ public class AsyncCnsService {
 
     private LRUCache<String, String> abiCache = new LRUCache<>(32);
     private ScheduledExecutorService scheduledExecutorService =
-            new ScheduledThreadPoolExecutor(1024);
-    private static final long CLEAR_EXPIRES = 30 * 60; // 30 min
+            new ScheduledThreadPoolExecutor(1, new CustomizableThreadFactory("AsyncCnsService-"));
+    private static final long CLEAR_EXPIRES = 30L * 60L; // 30 min
     private Semaphore queryABISemaphore = new Semaphore(1, true);
+
+    private BCOSDriver bcosDriver = null;
+
+    public BCOSDriver getBcosDriver() {
+        return bcosDriver;
+    }
+
+    public void setBcosDriver(BCOSDriver bcosDriver) {
+        this.bcosDriver = bcosDriver;
+    }
 
     public AsyncCnsService() {
         this.scheduledExecutorService.scheduleAtFixedRate(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        abiCache.clear();
-                    }
-                },
-                CLEAR_EXPIRES,
-                CLEAR_EXPIRES,
-                TimeUnit.SECONDS);
+                () -> abiCache.clear(), CLEAR_EXPIRES, CLEAR_EXPIRES, TimeUnit.SECONDS);
     }
 
     public interface QueryCallback {
@@ -149,11 +152,12 @@ public class AsyncCnsService {
         Path path = new Path();
         path.setResource(BCOSConstant.BCOS_PROXY_NAME);
 
-        TransactionContext<TransactionRequest> request =
-                new TransactionContext<>(transactionRequest, null, path, null, null);
+        TransactionContext transactionContext = new TransactionContext(null, path, null, null);
 
-        driver.asyncCallByProxy(
-                request,
+        driver.asyncCall(
+                transactionContext,
+                transactionRequest,
+                true,
                 connection,
                 (transactionException, connectionResponse) -> {
                     try {
@@ -165,7 +169,7 @@ public class AsyncCnsService {
 
                         if (connectionResponse.getErrorCode() != BCOSStatusCode.Success) {
                             callback.onResponse(
-                                    new Exception(connectionResponse.getErrorMessage()), null);
+                                    new Exception(connectionResponse.getMessage()), null);
                             return;
                         }
 
@@ -190,30 +194,31 @@ public class AsyncCnsService {
     }
 
     public void registerCNSByProxy(
-            String name,
+            Path path,
             String address,
             String version,
             String abi,
             Account account,
-            BlockHeaderManager blockHeaderManager,
+            BlockManager blockManager,
             Connection connection,
-            Driver driver,
             InsertCallback callback) {
 
-        Path path = new Path();
-        path.setResource(BCOSConstant.BCOS_PROXY_NAME);
+        Path proxyPath = new Path();
+        proxyPath.setResource(BCOSConstant.BCOS_PROXY_NAME);
 
         TransactionRequest transactionRequest =
                 new TransactionRequest(
-                        "registerCNS",
-                        Arrays.asList(name, version, address, abi).toArray(new String[0]));
+                        BCOSConstant.PPROXY_METHOD_REGISTER,
+                        Arrays.asList(path.toString(), version, address, abi)
+                                .toArray(new String[0]));
 
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                new TransactionContext<>(
-                        transactionRequest, account, path, null, blockHeaderManager);
+        TransactionContext requestTransactionContext =
+                new TransactionContext(account, proxyPath, null, blockManager);
 
-        driver.asyncSendTransactionByProxy(
+        bcosDriver.asyncSendTransaction(
                 requestTransactionContext,
+                transactionRequest,
+                true,
                 connection,
                 (exception, res) -> {
                     if (Objects.nonNull(exception)) {
@@ -226,16 +231,16 @@ public class AsyncCnsService {
                         logger.error(
                                 " deployAndRegisterCNS, error: {}, message: {}",
                                 res.getErrorCode(),
-                                res.getErrorMessage());
-                        callback.onResponse(new Exception(res.getErrorMessage()));
+                                res.getMessage());
+                        callback.onResponse(new Exception(res.getMessage()));
                         return;
                     }
 
-                    addAbiToCache(name, abi);
+                    addAbiToCache(path.getResource(), abi);
 
                     logger.info(
                             " registerCNS successfully, name: {}, version: {}, address: {} ",
-                            name,
+                            path.getResource(),
                             version,
                             address);
 
@@ -252,7 +257,6 @@ public class AsyncCnsService {
     }
 
     public void addAbiToCache(String name, String abi) {
-        // logger.info(" add abi cache, name: {}, abi: {}", name, abi);
         this.abiCache.put(name, abi);
     }
 }

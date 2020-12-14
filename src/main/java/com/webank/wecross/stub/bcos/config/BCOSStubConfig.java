@@ -19,6 +19,8 @@ public class BCOSStubConfig {
     /** BCOS resource list */
     private List<Resource> resources;
 
+    private Sealers sealers;
+
     public static class Chain {
         private int groupID;
         private int chainID;
@@ -199,6 +201,27 @@ public class BCOSStubConfig {
         }
     }
 
+    public static class Sealers {
+        private List<String> sealerList;
+
+        public Sealers(List<String> sealerList) {
+            this.sealerList = sealerList;
+        }
+
+        public List<String> getSealerList() {
+            return sealerList;
+        }
+
+        public void setSealerList(List<String> sealerList) {
+            this.sealerList = sealerList;
+        }
+
+        @Override
+        public String toString() {
+            return "Sealers{" + "sealers=" + sealerList + '}';
+        }
+    }
+
     public String getType() {
         return type;
     }
@@ -229,6 +252,14 @@ public class BCOSStubConfig {
 
     public void setChain(Chain chain) {
         this.chain = chain;
+    }
+
+    public Sealers getSealers() {
+        return sealers;
+    }
+
+    public void setSealers(Sealers sealers) {
+        this.sealers = sealers;
     }
 
     @Override

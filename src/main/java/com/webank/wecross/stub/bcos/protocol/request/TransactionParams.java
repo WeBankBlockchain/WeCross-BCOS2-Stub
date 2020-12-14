@@ -7,17 +7,17 @@ public class TransactionParams {
     public TransactionParams() {}
 
     /** */
-    public enum TP_YPE {
+    public enum SUB_TYPE {
         SEND_TX_BY_PROXY,
         CALL_BY_PROXY,
         SEND_TX,
         CALL
-    };
+    }
 
-    public TransactionParams(TransactionRequest transactionRequest, String data, TP_YPE tp_ype) {
+    public TransactionParams(TransactionRequest transactionRequest, String data, SUB_TYPE type) {
         this.transactionRequest = transactionRequest;
         this.data = data;
-        this.tp_ype = tp_ype;
+        this.subType = type;
     }
 
     private TransactionRequest transactionRequest;
@@ -25,7 +25,7 @@ public class TransactionParams {
     private String from;
     private String to;
     private String abi;
-    private TP_YPE tp_ype;
+    private SUB_TYPE subType;
 
     public TransactionRequest getTransactionRequest() {
         return transactionRequest;
@@ -67,12 +67,12 @@ public class TransactionParams {
         this.abi = abi;
     }
 
-    public TP_YPE getTp_ype() {
-        return tp_ype;
+    public SUB_TYPE getSubType() {
+        return subType;
     }
 
-    public void setTp_ype(TP_YPE tp_ype) {
-        this.tp_ype = tp_ype;
+    public void setSubType(SUB_TYPE subType) {
+        this.subType = subType;
     }
 
     @Override
@@ -92,8 +92,8 @@ public class TransactionParams {
                 + ", abi='"
                 + abi
                 + '\''
-                + ", tp_ype="
-                + tp_ype
+                + ", subType="
+                + subType
                 + '}';
     }
 }

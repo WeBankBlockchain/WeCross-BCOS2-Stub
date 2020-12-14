@@ -1,7 +1,11 @@
 package com.webank.wecross.stub.bcos.common;
 
+import com.webank.wecross.stub.StubConstant;
+
 /** The definition of the resource type in BCOS */
 public interface BCOSConstant {
+    String ADMIN_ACCOUNT = "admin";
+
     /** BCOS contract resource */
     String RESOURCE_TYPE_BCOS_CONTRACT = "BCOS_CONTRACT";
     /** */
@@ -12,16 +16,19 @@ public interface BCOSConstant {
     String BCOS_GROUP_ID = "BCOS_PROPERTY_GROUP_ID";
     String BCOS_CHAIN_ID = "BCOS_PROPERTY_CHAIN_ID";
     String BCOS_STUB_TYPE = "BCOS_PROPERTY_STUB_TYPE";
-    String BCOS_PROXY_NAME = "WeCrossProxy";
+
+    String BCOS_SEALER_LIST = "BCOS_PROPERTY_SEALER_LIST";
+
     String BCOS_PROXY_ABI = "WeCrossProxyABI";
-    String TRANSACTION_ID = "TRANSACTION_ID";
-    String TRANSACTION_SEQ = "TRANSACTION_SEQ";
+    String BCOS_PROXY_NAME = StubConstant.PROXY_NAME;
+    String BCOS_HUB_NAME = StubConstant.HUB_NAME;
 
     String CUSTOM_COMMAND_DEPLOY = "deploy";
     String CUSTOM_COMMAND_REGISTER = "register";
     String CNS_PRECOMPILED_ADDRESS = "0x0000000000000000000000000000000000001004";
     String DEFAULT_ADDRESS = "0x1111111111111111111111111111111111111111";
     String CNS_METHOD_SELECTBYNAME = "selectByName";
-    String PROXY_METHOD_ADDPATH = "addPath";
+    String PROXY_METHOD_DEPLOY = "deployContractWithRegisterCNS";
+    String PPROXY_METHOD_REGISTER = "registerCNS";
     String PROXY_METHOD_GETPATHS = "getPaths";
 }

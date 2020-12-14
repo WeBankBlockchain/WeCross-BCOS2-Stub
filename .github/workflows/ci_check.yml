@@ -1,0 +1,26 @@
+# This workflow will build a Java project with Gradle
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
+
+name: actions check
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, ubuntu-16.04, macos-latest]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 5
+      - name: install macOS dependencies
+        if: runner.os == 'macOS'
+        run: brew install openssl@1.1 openjdk
+      - name: install Ubuntu dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt install -y git curl libssl-dev default-jdk build-essential
+      - name: run integration testing
+        run: /bin/bash .ci/ci_check.sh

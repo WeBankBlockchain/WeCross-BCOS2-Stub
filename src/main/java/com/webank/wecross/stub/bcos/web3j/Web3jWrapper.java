@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
+import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlockHeader;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof.ReceiptAndProof;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof.TransAndProof;
@@ -12,6 +13,10 @@ import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof.
 /** Wapper interface for JavaSDK */
 public interface Web3jWrapper {
     BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException;
+
+    String getRawBlockByNumber(long blockNumber) throws IOException;
+
+    BcosBlockHeader.BlockHeader getBlockHeaderByNumber(long blockNumber) throws IOException;
 
     BigInteger getBlockNumber() throws IOException;
 

@@ -3,7 +3,6 @@ package com.webank.wecross.stub.bcos;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.ResourceInfo;
@@ -11,24 +10,14 @@ import com.webank.wecross.stub.Response;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
-import com.webank.wecross.stub.bcos.common.BCOSStubException;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
@@ -36,10 +25,12 @@ import org.fisco.bcos.web3j.abi.datatypes.Function;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.channel.StatusCode;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
+import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlockHeader;
 import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof;
+import org.fisco.bcos.web3j.tx.exceptions.ContractCallException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,14 +49,15 @@ public class BCOSConnection implements Connection {
 
     private final Web3jWrapper web3jWrapper;
 
-    private ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(32);
+    private ScheduledExecutorService scheduledExecutorService;
 
     private Map<String, String> properties = new HashMap<>();
 
-    public BCOSConnection(Web3jWrapper web3jWrapper) {
+    public BCOSConnection(
+            Web3jWrapper web3jWrapper, ScheduledExecutorService scheduledExecutorService) {
         this.web3jWrapper = web3jWrapper;
+        this.scheduledExecutorService = scheduledExecutorService;
         this.objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-
         this.scheduledExecutorService.scheduleAtFixedRate(
                 () -> {
                     if (Objects.nonNull(eventHandler)) {
@@ -110,7 +102,6 @@ public class BCOSConnection implements Connection {
         this.resourcesCache = resourcesCache;
     }
 
-    @Override
     public List<ResourceInfo> getResources() {
         List<ResourceInfo> resources =
                 new ArrayList<ResourceInfo>() {
@@ -158,8 +149,7 @@ public class BCOSConnection implements Connection {
     /** list paths stored in proxy contract */
     public String[] listPaths() {
         Function function =
-                FunctionUtility.newDefaultFunction(
-                        BCOSConstant.PROXY_METHOD_GETPATHS, new String[] {});
+                FunctionUtility.newDefaultFunction(BCOSConstant.PROXY_METHOD_GETPATHS, null);
         String address = properties.get(BCOSConstant.BCOS_PROXY_NAME);
         try {
             Call.CallOutput callOutput =
@@ -179,13 +169,18 @@ public class BCOSConnection implements Connection {
             if (StatusCode.Success.equals(callOutput.getStatus())) {
                 String[] paths = FunctionUtility.decodeDefaultOutput(callOutput.getOutput());
                 if (Objects.nonNull(paths) && paths.length != 0) {
-                    Set<String> set = new HashSet<>(Arrays.asList(paths));
+                    Set<String> set = new LinkedHashSet<>();
+                    for (int i = paths.length - 1; i >= 0; i--) {
+                        set.add(paths[i]);
+                    }
                     set.add("a.b." + BCOSConstant.BCOS_PROXY_NAME);
+                    set.add("a.b." + BCOSConstant.BCOS_HUB_NAME);
                     return set.toArray(new String[0]);
                 } else {
-                    Set<String> set = new HashSet<>();
+                    Set<String> set = new LinkedHashSet<>();
                     set.add("a.b." + BCOSConstant.BCOS_PROXY_NAME);
-                    logger.debug(" listPaths empty and add proxy ");
+                    set.add("a.b." + BCOSConstant.BCOS_HUB_NAME);
+                    logger.debug("No path found and add system resources");
                     return set.toArray(new String[0]);
                 }
             } else {
@@ -199,31 +194,6 @@ public class BCOSConnection implements Connection {
     }
 
     /**
-     * sync operations
-     *
-     * @param request
-     * @return
-     */
-    @Override
-    public Response send(Request request) {
-        switch (request.getType()) {
-            case BCOSRequestType.CALL:
-                return handleCallRequest(request);
-            case BCOSRequestType.SEND_TRANSACTION:
-                return handleTransactionRequest(request);
-            default:
-                logger.warn(" unrecognized request type, type: {}", request.getType());
-                Response response = new Response();
-                response.setErrorCode(BCOSStatusCode.UnrecognizedRequestType);
-                response.setErrorMessage(
-                        BCOSStatusCode.getStatusMessage(BCOSStatusCode.UnrecognizedRequestType)
-                                + " ,type: "
-                                + request.getType());
-                return response;
-        }
-    }
-
-    /**
      * async operations
      *
      * @param request
@@ -233,19 +203,28 @@ public class BCOSConnection implements Connection {
     public void asyncSend(Request request, Callback callback) {
         if (request.getType() == BCOSRequestType.SEND_TRANSACTION) {
             handleAsyncTransactionRequest(request, callback);
-        } else if (request.getType() == BCOSRequestType.GET_BLOCK_HEADER) {
-            handleAsyncGetBlockHeaderRequest(request, callback);
+        } else if (request.getType() == BCOSRequestType.GET_BLOCK_BY_NUMBER) {
+            handleAsyncGetBlockRequest(request, callback);
         } else if (request.getType() == BCOSRequestType.GET_BLOCK_NUMBER) {
             handleAsyncGetBlockNumberRequest(callback);
         } else if (request.getType() == BCOSRequestType.GET_TRANSACTION_PROOF) {
-            handleAsyncGetTransactionProof(request, callback);
+            asyncGetTransactionProof(request, callback);
+        } else if (request.getType() == BCOSRequestType.CALL) {
+            handleAsyncCallRequest(request, callback);
         } else {
             // Does not support asynchronous operation, async to sync
-            callback.onResponse(send(request));
+            logger.warn(" unrecognized request type, type: {}", request.getType());
+            Response response = new Response();
+            response.setErrorCode(BCOSStatusCode.UnrecognizedRequestType);
+            response.setErrorMessage(
+                    BCOSStatusCode.getStatusMessage(BCOSStatusCode.UnrecognizedRequestType)
+                            + " ,type: "
+                            + request.getType());
+            callback.onResponse(response);
         }
     }
 
-    public Response handleCallRequest(Request request) {
+    public void handleAsyncCallRequest(Request request, Callback callback) {
         Response response = new Response();
         try {
             TransactionParams transaction =
@@ -269,12 +248,24 @@ public class BCOSConnection implements Connection {
             response.setErrorCode(BCOSStatusCode.Success);
             response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
             response.setData(objectMapper.writeValueAsBytes(callOutput));
+        } catch (ContractCallException e) {
+            Call.CallOutput callOutput = new Call.CallOutput();
+            callOutput.setStatus(String.valueOf(BCOSStatusCode.CallNotSuccessStatus));
+            callOutput.setOutput(e.getMessage());
+            try {
+                response.setErrorCode(BCOSStatusCode.Success);
+                response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
+                response.setData(objectMapper.writeValueAsBytes(callOutput));
+            } catch (JsonProcessingException jsonProcessingException) {
+                response.setErrorCode(BCOSStatusCode.HandleCallRequestFailed);
+                response.setErrorMessage(e.getMessage());
+            }
         } catch (Exception e) {
-            logger.warn(" handleCallRequest Exception, e: {}", e);
+            logger.warn("handleCallRequest Exception:", e);
             response.setErrorCode(BCOSStatusCode.HandleCallRequestFailed);
-            response.setErrorMessage(" errorMessage: " + e.getMessage());
+            response.setErrorMessage(e.getMessage());
         }
-        return response;
+        callback.onResponse(response);
     }
 
     public void handleAsyncTransactionRequest(Request request, Callback callback) {
@@ -318,10 +309,10 @@ public class BCOSConnection implements Connection {
                                                     BCOSStatusCode.Success));
                                     response.setData(objectMapper.writeValueAsBytes(receipt));
                                 } catch (JsonProcessingException e) {
-                                    logger.error(" e: {} ", e);
+                                    logger.error(" e:", e);
                                     response.setErrorCode(
                                             BCOSStatusCode.HandleSendTransactionFailed);
-                                    response.setErrorMessage(" errorMessage: " + e.getMessage());
+                                    response.setErrorMessage(e.getMessage());
                                 }
                             }
 
@@ -329,70 +320,26 @@ public class BCOSConnection implements Connection {
 
                             // trigger resources sync after cns updated
                             if (transaction.getTransactionRequest() != null
-                                    && transaction
-                                            .getTransactionRequest()
-                                            .getMethod()
-                                            .equals(BCOSConstant.PROXY_METHOD_ADDPATH)) {
+                                    && (transaction
+                                                    .getTransactionRequest()
+                                                    .getMethod()
+                                                    .equals(BCOSConstant.PROXY_METHOD_DEPLOY)
+                                            || transaction
+                                                    .getTransactionRequest()
+                                                    .getMethod()
+                                                    .equals(BCOSConstant.PPROXY_METHOD_REGISTER))) {
 
                                 scheduledExecutorService.schedule(
-                                        new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                noteOnResourcesChange();
-                                            }
-                                        },
-                                        1,
-                                        TimeUnit.MILLISECONDS);
+                                        () -> noteOnResourcesChange(), 1, TimeUnit.MILLISECONDS);
                             }
                         }
                     });
         } catch (Exception e) {
-            logger.error(" e: {} ", e);
+            logger.error("handleAsyncTransaction exception:", e);
             response.setErrorCode(BCOSStatusCode.HandleSendTransactionFailed);
-            response.setErrorMessage(" errorMessage: " + e.getMessage());
+            response.setErrorMessage(e.getMessage());
             callback.onResponse(response);
         }
-    }
-
-    public Response handleTransactionRequest(Request request) {
-
-        class SendTransactionResponseCallback implements Callback {
-            private Response response;
-            private Semaphore semaphore = new Semaphore(1, true);
-
-            public SendTransactionResponseCallback() {
-                try {
-                    this.semaphore.acquire();
-                } catch (InterruptedException e) {
-                    logger.error(" e: {}", e);
-                    Thread.currentThread().interrupt();
-                }
-            }
-
-            public Response getResponse() {
-                return response;
-            }
-
-            public Semaphore getSemaphore() {
-                return semaphore;
-            }
-
-            @Override
-            public void onResponse(Response response) {
-                this.response = response;
-                this.getSemaphore().release();
-            }
-        }
-
-        SendTransactionResponseCallback sendTxResponse = new SendTransactionResponseCallback();
-        handleAsyncTransactionRequest(request, sendTxResponse);
-        try {
-            sendTxResponse.getSemaphore().acquire(1);
-        } catch (InterruptedException e) {
-            logger.error(" e: {}", e);
-            Thread.currentThread().interrupt();
-        }
-        return sendTxResponse.getResponse();
     }
 
     public void handleAsyncGetBlockNumberRequest(Callback callback) {
@@ -406,23 +353,21 @@ public class BCOSConnection implements Connection {
             response.setData(blockNumber.toByteArray());
             logger.debug(" blockNumber: {}", blockNumber);
         } catch (Exception e) {
-            logger.warn(" handleGetBlockNumberRequest Exception, e: {}", e);
+            logger.warn(" handleGetBlockNumberRequest Exception, e: ", e);
             response.setErrorCode(BCOSStatusCode.HandleGetBlockNumberFailed);
-            response.setErrorMessage(" errorMessage: " + e.getMessage());
+            response.setErrorMessage(e.getMessage());
         }
         callback.onResponse(response);
-    }
-
-    private interface GetTransactionProofCallback {
-        void onResponse(BCOSStubException e, TransactionProof proof);
     }
 
     /**
      * get TransAndProof and ReceiptAndProof by transaction hash
      *
-     * @param txHash
+     * @param request
      */
-    private void asyncGetTransactionProof(String txHash, GetTransactionProofCallback callback) {
+    private void asyncGetTransactionProof(Request request, Callback callback) {
+        String txHash = new String(request.getData(), StandardCharsets.UTF_8);
+        Response response = new Response();
         try {
             // get transaction and transaction merkle proof
             TransactionWithProof.TransAndProof transAndProof =
@@ -430,12 +375,15 @@ public class BCOSConnection implements Connection {
 
             if (Objects.isNull(transAndProof)
                     || Objects.isNull(transAndProof.getTransaction())
-                    || Objects.isNull(transAndProof.getTransaction().getHash())) {
-                callback.onResponse(
-                        new BCOSStubException(
-                                BCOSStatusCode.TransactionProofNotExist,
-                                " Not found transaction proof, tx hash: " + txHash),
-                        null);
+                    || Objects.isNull(transAndProof.getTransaction().getHash())
+                    || transAndProof
+                            .getTransaction()
+                            .getHash()
+                            .equals(
+                                    "0x0000000000000000000000000000000000000000000000000000000000000000")) {
+                response.setErrorCode(BCOSStatusCode.TransactionReceiptProofNotExist);
+                response.setErrorMessage("Transaction proof not found, tx hash: " + txHash);
+                callback.onResponse(response);
                 return;
             }
 
@@ -445,85 +393,90 @@ public class BCOSConnection implements Connection {
                     || Objects.isNull(receiptAndProof.getTransactionReceipt())
                     || Objects.isNull(
                             receiptAndProof.getTransactionReceipt().getTransactionHash())) {
-                callback.onResponse(
-                        new BCOSStubException(
-                                BCOSStatusCode.TransactionReceiptProofNotExist,
-                                " Not found transaction receipt proof, tx hash: " + txHash),
-                        null);
+                response.setErrorCode(BCOSStatusCode.TransactionReceiptProofNotExist);
+                response.setErrorMessage("Transaction proof not found, tx hash: " + txHash);
+                callback.onResponse(response);
                 return;
             }
 
-            callback.onResponse(null, new TransactionProof(transAndProof, receiptAndProof));
+            TransactionProof transactionProof =
+                    new TransactionProof(transAndProof, receiptAndProof);
+
+            response.setErrorCode(BCOSStatusCode.Success);
+            response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
+            response.setData(objectMapper.writeValueAsBytes(transactionProof));
+            logger.debug(
+                    " getTransactionProof, tx hash: {}, transAndProof: {}, receiptAndProof: {}",
+                    txHash,
+                    transactionProof.getTransAndProof(),
+                    transactionProof.getReceiptAndProof());
+            callback.onResponse(response);
         } catch (Exception e) {
-            callback.onResponse(
-                    new BCOSStubException(
-                            BCOSStatusCode.UnclassifiedError,
-                            " Not found proof, tx hash: " + txHash),
-                    null);
+            response.setErrorMessage(e.getMessage());
+            response.setErrorCode(BCOSStatusCode.UnclassifiedError);
+            callback.onResponse(response);
         }
     }
 
-    private void handleAsyncGetTransactionProof(Request request, Callback callback) {
-        String txHash = new String(request.getData(), StandardCharsets.UTF_8);
-        asyncGetTransactionProof(
-                txHash,
-                (exception, transactionProof) -> {
-                    Response response = new Response();
-                    try {
-                        response.setErrorCode(BCOSStatusCode.Success);
-                        response.setErrorMessage(
-                                BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
-                        response.setData(objectMapper.writeValueAsBytes(transactionProof));
-                        logger.debug(
-                                " getTransactionProof, tx hash: {}, transAndProof: {}, receiptAndProof: {}",
-                                txHash,
-                                transactionProof.getTransAndProof(),
-                                transactionProof.getReceiptAndProof());
-                    } catch (Exception e) {
-                        logger.warn(" handleGetTransactionProof Exception,", e);
-                        response.setErrorCode(BCOSStatusCode.HandleGetTransactionProofFailed);
-                        response.setErrorMessage(" errorMessage: " + e.getMessage());
-                    }
-                    callback.onResponse(response);
-                });
-    }
-
-    /**
-     * convert Block to BlockHeader
-     *
-     * @param block
-     * @return
-     */
-    public BlockHeader convertToBlockHeader(BcosBlock.Block block) {
-        BlockHeader blockHeader = new BlockHeader();
-        blockHeader.setHash(block.getHash());
-        blockHeader.setPrevHash(block.getParentHash());
-        blockHeader.setNumber(block.getNumber().longValue());
-        blockHeader.setReceiptRoot(block.getReceiptsRoot());
-        blockHeader.setStateRoot(block.getStateRoot());
-        blockHeader.setTransactionRoot(block.getTransactionsRoot());
-        return blockHeader;
-    }
-
-    public void handleAsyncGetBlockHeaderRequest(Request request, Callback callback) {
+    public void handleAsyncGetBlockRequest(Request request, Callback callback) {
         Response response = new Response();
         try {
             BigInteger blockNumber = new BigInteger(request.getData());
             BcosBlock.Block block = web3jWrapper.getBlockByNumber(blockNumber.longValue());
 
+            BcosBlockHeader.BlockHeader blockHeader =
+                    web3jWrapper.getBlockHeaderByNumber(blockNumber.longValue());
+            List<String> headerData = new ArrayList<>();
+            headerData.add(objectMapper.writeValueAsString(blockHeader));
+            block.setExtraData(headerData);
+            logger.debug("handleAsyncGetBlockRequest: block.Ext: {}", headerData);
             response.setErrorCode(BCOSStatusCode.Success);
             response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
-            response.setData(objectMapper.writeValueAsBytes(convertToBlockHeader(block)));
-            logger.debug(" getBlockByNumber, blockNumber: {}, block: {}", blockNumber, block);
+            response.setData(ObjectMapperFactory.getObjectMapper().writeValueAsBytes(block));
+            if (logger.isDebugEnabled()) {
+                logger.debug(" getBlockByNumber, blockNumber: {}, block: {}", blockNumber, block);
+            }
         } catch (Exception e) {
-            logger.warn(" Exception, e: {}", e);
-            response.setErrorCode(BCOSStatusCode.HandleGetBlockHeaderFailed);
-            response.setErrorMessage(" errorMessage: " + e.getMessage());
+            logger.warn(" Exception, e: ", e);
+            response.setErrorCode(BCOSStatusCode.HandleGetBlockFailed);
+            response.setErrorMessage(e.getMessage());
         }
         callback.onResponse(response);
     }
 
     public boolean hasProxyDeployed() {
         return getProperties().containsKey(BCOSConstant.BCOS_PROXY_NAME);
+    }
+
+    public boolean hasHubDeployed() {
+        return getProperties().containsKey(BCOSConstant.BCOS_HUB_NAME);
+    }
+
+    public String getHubAddress() {
+        return getProperties().get(BCOSConstant.BCOS_HUB_NAME);
+    }
+
+    public void handleAsyncGetBlockHeaderRequest(Request request, Callback callback) {
+        Response response = new Response();
+        try {
+            BigInteger blockNumber = new BigInteger(request.getData());
+            BcosBlockHeader.BlockHeader blockHeader =
+                    web3jWrapper.getBlockHeaderByNumber(blockNumber.longValue());
+
+            response.setErrorCode(BCOSStatusCode.Success);
+            response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
+            response.setData(objectMapper.writeValueAsBytes(blockHeader));
+            if (logger.isDebugEnabled()) {
+                logger.debug(
+                        " getBlockHeaderByNumber, blockNumber: {}, blockHeader: {}",
+                        blockNumber,
+                        blockHeader);
+            }
+        } catch (Exception e) {
+            logger.warn(" Exception, e: ", e);
+            response.setErrorCode(BCOSStatusCode.HandleGetBlockFailed);
+            response.setErrorMessage(e.getMessage());
+        }
+        callback.onResponse(response);
     }
 }

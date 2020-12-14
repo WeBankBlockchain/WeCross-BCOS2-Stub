@@ -1,7 +1,7 @@
 package com.webank.wecross.stub.bcos.custom;
 
 import com.webank.wecross.stub.Account;
-import com.webank.wecross.stub.BlockHeaderManager;
+import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Path;
@@ -9,13 +9,6 @@ import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.bcos.AsyncCnsService;
-import com.webank.wecross.stub.bcos.BCOSDriver;
-import com.webank.wecross.stub.bcos.abi.ABICodecJsonWrapper;
-import com.webank.wecross.stub.bcos.abi.ABIDefinition;
-import com.webank.wecross.stub.bcos.abi.ABIDefinitionFactory;
-import com.webank.wecross.stub.bcos.abi.ABIObject;
-import com.webank.wecross.stub.bcos.abi.ABIObjectFactory;
-import com.webank.wecross.stub.bcos.abi.ContractABIDefinition;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import java.io.File;
@@ -26,6 +19,12 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
+import org.fisco.bcos.web3j.abi.wrapper.ABICodecJsonWrapper;
+import org.fisco.bcos.web3j.abi.wrapper.ABIDefinition;
+import org.fisco.bcos.web3j.abi.wrapper.ABIDefinitionFactory;
+import org.fisco.bcos.web3j.abi.wrapper.ABIObject;
+import org.fisco.bcos.web3j.abi.wrapper.ABIObjectFactory;
+import org.fisco.bcos.web3j.abi.wrapper.ContractABIDefinition;
 import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.fisco.bcos.web3j.precompile.cns.CnsService;
 import org.fisco.bcos.web3j.utils.Numeric;
@@ -41,10 +40,6 @@ public class DeployContractHandler implements CommandHandler {
 
     public AsyncCnsService asyncCnsService;
 
-    public DeployContractHandler(AsyncCnsService asyncCnsService) {
-        this.asyncCnsService = asyncCnsService;
-    }
-
     public AsyncCnsService getAsyncCnsService() {
         return asyncCnsService;
     }
@@ -53,13 +48,28 @@ public class DeployContractHandler implements CommandHandler {
         this.asyncCnsService = asyncCnsService;
     }
 
-    /** @param args contractBytes || version */
+    public ABICodecJsonWrapper getAbiCodecJsonWrapper() {
+        return abiCodecJsonWrapper;
+    }
+
+    public void setAbiCodecJsonWrapper(ABICodecJsonWrapper abiCodecJsonWrapper) {
+        this.abiCodecJsonWrapper = abiCodecJsonWrapper;
+    }
+
+    /**
+     * @param path rule id
+     * @param args command args
+     * @param account if needs to sign
+     * @param blockManager if needs to verify transaction
+     * @param connection chain connection
+     * @param callback
+     */
     @Override
     public void handle(
             Path path,
             Object[] args,
             Account account,
-            BlockHeaderManager blockHeaderManager,
+            BlockManager blockManager,
             Connection connection,
             Driver.CustomCommandCallback callback) {
 
@@ -81,8 +91,8 @@ public class DeployContractHandler implements CommandHandler {
             return;
         }
 
-        Driver driver = new BCOSDriver();
-        /** constructor params */
+        Driver driver = getAsyncCnsService().getBcosDriver();
+        /* constructor params */
         List<String> params = null;
         if (args.length > 4) {
             params = new ArrayList<>();
@@ -91,10 +101,10 @@ public class DeployContractHandler implements CommandHandler {
             }
         }
 
-        /** First compile the contract source code */
+        /* First compile the contract source code */
         CompilationResult.ContractMetadata metadata;
         try {
-            boolean sm = EncryptType.encryptType != 0;
+            boolean sm = (EncryptType.encryptType == EncryptType.SM2_TYPE);
 
             File sourceFile = File.createTempFile("BCOSContract-", "-" + cnsName + ".sol");
             try (OutputStream outputStream = new FileOutputStream(sourceFile)) {
@@ -130,7 +140,7 @@ public class DeployContractHandler implements CommandHandler {
         ContractABIDefinition contractABIDefinition = ABIDefinitionFactory.loadABI(metadata.abi);
         ABIDefinition constructor = contractABIDefinition.getConstructor();
 
-        /** check if solidity constructor needs arguments */
+        /* check if solidity constructor needs arguments */
         String paramsABI = "";
         if (!Objects.isNull(constructor)
                 && !Objects.isNull(constructor.getInputs())
@@ -179,14 +189,14 @@ public class DeployContractHandler implements CommandHandler {
         }
 
         deployContractAndRegisterCNS(
-                cnsName,
+                path,
                 version,
                 metadata.bin + paramsABI,
                 metadata.abi,
                 account,
                 connection,
                 driver,
-                blockHeaderManager,
+                blockManager,
                 (e, address) -> {
                     if (Objects.nonNull(e)) {
                         callback.onResponse(e, null);
@@ -203,33 +213,35 @@ public class DeployContractHandler implements CommandHandler {
     }
 
     private void deployContractAndRegisterCNS(
-            String name,
+            Path path,
             String version,
             String bin,
             String abi,
             Account account,
             Connection connection,
             Driver driver,
-            BlockHeaderManager blockHeaderManager,
+            BlockManager blockManager,
             DeployContractCallback callback) {
 
-        Path path = new Path();
-        path.setResource(BCOSConstant.BCOS_PROXY_NAME);
+        Path proxyPath = new Path();
+        proxyPath.setResource(BCOSConstant.BCOS_PROXY_NAME);
 
-        /** Binary data needs to be base64 encoded */
+        /* Binary data needs to be base64 encoded */
         String base64Bin = Base64.getEncoder().encodeToString(Numeric.hexStringToByteArray(bin));
 
         TransactionRequest transactionRequest =
                 new TransactionRequest(
-                        "deployContractWithRegisterCNS",
-                        Arrays.asList(name, version, base64Bin, abi).toArray(new String[0]));
+                        BCOSConstant.PROXY_METHOD_DEPLOY,
+                        Arrays.asList(path.toString(), version, base64Bin, abi)
+                                .toArray(new String[0]));
 
-        TransactionContext<TransactionRequest> requestTransactionContext =
-                new TransactionContext<>(
-                        transactionRequest, account, path, new ResourceInfo(), blockHeaderManager);
+        TransactionContext transactionContext =
+                new TransactionContext(account, proxyPath, new ResourceInfo(), blockManager);
 
-        driver.asyncSendTransactionByProxy(
-                requestTransactionContext,
+        driver.asyncSendTransaction(
+                transactionContext,
+                transactionRequest,
+                true,
                 connection,
                 (exception, res) -> {
                     if (Objects.nonNull(exception)) {
@@ -242,18 +254,18 @@ public class DeployContractHandler implements CommandHandler {
                         logger.error(
                                 " deployAndRegisterCNS, error: {}, message: {}",
                                 res.getErrorCode(),
-                                res.getErrorMessage());
-                        callback.onResponse(new Exception(res.getErrorMessage()), null);
+                                res.getMessage());
+                        callback.onResponse(new Exception(res.getMessage()), null);
                         return;
                     }
 
                     logger.info(
                             " deployAndRegisterCNS successfully, name: {}, version: {}, res: {} ",
-                            name,
+                            path.getResource(),
                             version,
                             res);
 
-                    asyncCnsService.addAbiToCache(name, abi);
+                    asyncCnsService.addAbiToCache(path.getResource(), abi);
                     callback.onResponse(null, res.getResult()[0]);
                 });
     }

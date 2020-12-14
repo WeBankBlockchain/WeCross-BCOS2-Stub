@@ -12,24 +12,25 @@ import org.junit.Test;
 
 public class BCOSStubFactoryTest {
 
-    private BCOSStubFactory stubFactory = new BCOSStubFactory();
+    private BCOSStubFactory bcosSubFactory = new BCOSStubFactory();
+    // private BCOSGMStubFactory bcosgmStubFactory = new BCOSGMStubFactory();
 
     @Test
     public void newDriverTest() {
-        Driver driver = stubFactory.newDriver();
+        Driver driver = bcosSubFactory.newDriver();
         assertTrue(Objects.nonNull(driver));
         assertTrue(driver instanceof BCOSDriver);
     }
 
     @Test
     public void newConnectionTest() {
-        Connection connection = stubFactory.newConnection("./");
+        Connection connection = bcosSubFactory.newConnection("./");
         assertTrue(Objects.isNull(connection));
     }
 
     @Test
     public void newAccountTest() {
-        Account account = stubFactory.newAccount("bcos", "classpath:/accounts/bcos");
+        Account account = bcosSubFactory.newAccount("bcos", "classpath:/accounts/bcos");
         assertTrue(Objects.nonNull(account));
         assertTrue(account instanceof BCOSAccount);
         BCOSAccount bcosAccount = (BCOSAccount) account;
@@ -42,7 +43,17 @@ public class BCOSStubFactoryTest {
 
     @Test
     public void newAccountFailedTest() {
-        Account account = stubFactory.newAccount("bcos_xxx", "classpath:/accounts/bcos_xxx");
+        Account account = bcosSubFactory.newAccount("bcos_xxx", "classpath:/accounts/bcos_xxx");
         assertTrue(Objects.isNull(account));
+    }
+
+    @Test
+    public void BCOSSubFactoryTypeTest() {
+        System.out.println(bcosSubFactory.getStubType());
+        assertTrue(bcosSubFactory.getStubType().equals("BCOS2.0"));
+        assertTrue(bcosSubFactory.getAlg().equals("secp256k1"));
+
+        // assertTrue(bcosgmStubFactory.getStubType().equals("GM_BCOS2.0"));
+        // assertTrue(bcosgmStubFactory.getAlg().equals("sm2p256v1"));
     }
 }

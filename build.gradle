@@ -14,7 +14,7 @@ plugins {
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'com.webank.wecross'
-version '1.0.0-rc4'
+version '1.0.0-1207'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -24,6 +24,7 @@ repositories {
     // Use jcenter for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
+    maven { url "https://maven.aliyun.com/nexus/content/groups/public/" }
     maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
 }
 
@@ -56,23 +57,31 @@ configurations {
     integTestTestImplementation.extendsFrom testImplementation
 }
 
+//configurations.all {
+//    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+//}
+
 dependencies {
-    // implementation 'com.webank:wecross-java-stub:1.0.0-rc2'
-    implementation 'com.webank:wecross-java-stub:1.0.0-rc4-07060-SNAPSHOT'
-    implementation 'org.slf4j:slf4j-api:1.7.30'
+    implementation 'com.webank:wecross-java-stub:1.0.0-1127-SNAPSHOT'
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'
+
+    implementation 'org.apache.commons:commons-lang3:3.11'
     implementation 'com.google.guava:guava:28.1-jre'
-    implementation 'org.fisco-bcos:web3sdk:2.5.1'
-    implementation 'org.fisco-bcos:solcJ:0.5.2-rc1'
+
+    implementation ('org.fisco-bcos:web3sdk:2.7.0.11190-SNAPSHOT')  {
+        exclude group: "org.ethereum"
+        exclude group: "org.fisco-bcos", module: "tcnative"
+    }
+    implementation 'org.fisco-bcos:solcJ:0.5.2.0'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
-    testImplementation 'org.slf4j:slf4j-log4j12:1.7.25'
+    testImplementation 'org.slf4j:slf4j-log4j12:1.7.30'
     testImplementation 'org.springframework.boot:spring-boot-starter-test:2.1.13.RELEASE'
 
     integTestImplementation 'junit:junit:4.12'
-    integTestImplementation 'org.slf4j:slf4j-log4j12:1.7.25'
+    integTestImplementation 'org.slf4j:slf4j-log4j12:1.7.30'
 }
 
 sourceSets {
@@ -86,6 +95,7 @@ sourceSets {
             exclude '**/*.crt'
             exclude '**/*.key'
             include 'WeCrossProxy.sol'
+            include 'WeCrossHub.sol'
         }
     }
 
@@ -168,9 +178,6 @@ task integTest(type: Test) {
     mustRunAfter test
 }
 
-check.dependsOn integTest
-check.dependsOn.remove(integTest)
-
 // clean dist and log dir
 task cleanDistAndLogDir(type: Delete) {
     delete 'dist'
@@ -204,6 +211,16 @@ jacocoTestReport {
     }
 }
 
+ext {
+    if (!project.hasProperty("NEXUS_USERNAME")) {
+        NEXUS_USERNAME="xxx"
+    }
+
+    if (!project.hasProperty("NEXUS_PASSWORD")) {
+        NEXUS_PASSWORD="xxx"
+    }
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -216,7 +233,7 @@ publishing {
             pom {
                 name = "WeCross-BCOS-Stub"
                 description = "Stub interface for WeCross"
-                url = "https://github.com/WeBankFinTech/WeCross"
+                url = "https://github.com/WeBankBlockchain/WeCross"
                 licenses {
                     license {
                         name = "The Apache License, Version 2.0"
@@ -231,9 +248,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection = "scm:git:git://github.com/WeBankFinTech/WeCross.git"
-                    developerConnection = "scm:git:ssh://github.com/WeBankFinTech/WeCross.git"
-                    url = "https://github.com/WeBankFinTech/WeCross"
+                    connection = "scm:git:git://github.com/WeBankBlockchain/WeCross.git"
+                    developerConnection = "scm:git:ssh://github.com/WeBankBlockchain/WeCross.git"
+                    url = "https://github.com/WeBankBlockchain/WeCross"
                 }
             }
         }
@@ -244,10 +261,6 @@ publishing {
             def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
             url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
 
-            //*
-            def NEXUS_USERNAME = ''
-            def NEXUS_PASSWORD = ''
-            //*/
             credentials {
                 username = NEXUS_USERNAME
                 password = NEXUS_PASSWORD

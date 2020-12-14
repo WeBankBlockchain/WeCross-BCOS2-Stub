@@ -1,13 +1,12 @@
 package com.webank.wecross.stub.bcos.custom;
 
 import com.webank.wecross.stub.Account;
-import com.webank.wecross.stub.BlockHeaderManager;
+import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.bcos.AsyncCnsService;
-import com.webank.wecross.stub.bcos.BCOSDriver;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -25,11 +24,7 @@ import org.slf4j.LoggerFactory;
 public class RegisterCnsHandler implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RegisterCnsHandler.class);
 
-    public AsyncCnsService asyncCnsService;
-
-    public RegisterCnsHandler(AsyncCnsService asyncCnsService) {
-        this.asyncCnsService = asyncCnsService;
-    }
+    private AsyncCnsService asyncCnsService;
 
     public AsyncCnsService getAsyncCnsService() {
         return asyncCnsService;
@@ -45,10 +40,10 @@ public class RegisterCnsHandler implements CommandHandler {
             Path path,
             Object[] args,
             Account account,
-            BlockHeaderManager blockHeaderManager,
+            BlockManager blockManager,
             Connection connection,
             Driver.CustomCommandCallback callback) {
-        if (Objects.isNull(args) || args.length < 5) {
+        if (Objects.isNull(args) || args.length < 6) {
             callback.onResponse(
                     new TransactionException(
                             BCOSStatusCode.RegisterContractFailed, "incomplete args"),
@@ -60,14 +55,16 @@ public class RegisterCnsHandler implements CommandHandler {
         String sourceType = (String) args[1];
         String sourceContent = (String) args[2];
         String address = (String) args[3];
-        String version = (String) args[4];
+        String contractName = (String) args[4];
+        String version = (String) args[5];
 
         if (logger.isDebugEnabled()) {
             logger.debug(
-                    " name: {}, sourceType: {}, address: {}, version:{} ",
+                    " cnsName: {}, sourceType: {}, address: {}, contractName: {}, version: {} ",
                     cnsName,
                     sourceType,
                     address,
+                    contractName,
                     version);
         }
 
@@ -83,7 +80,7 @@ public class RegisterCnsHandler implements CommandHandler {
 
         try {
             if (!address.startsWith("0x") || address.length() < 6) {
-                throw new IllegalArgumentException(" Invalid address. ");
+                throw new IllegalArgumentException("Invalid address: " + address);
             }
 
             address =
@@ -102,7 +99,7 @@ public class RegisterCnsHandler implements CommandHandler {
                 CompilationResult.ContractMetadata metadata = null;
                 boolean sm = (EncryptType.encryptType == EncryptType.SM2_TYPE);
 
-                File sourceFile = File.createTempFile("BCOSContract-", "-" + cnsName + ".sol");
+                File sourceFile = File.createTempFile("BCOSContract-", "-" + contractName + ".sol");
                 try (OutputStream outputStream = new FileOutputStream(sourceFile)) {
                     outputStream.write(sourceContent.getBytes());
                 }
@@ -120,34 +117,33 @@ public class RegisterCnsHandler implements CommandHandler {
 
                 if (res.isFailed()) {
                     callback.onResponse(
-                            new Exception("compiling contract failed, " + res.getErrors()),
+                            new Exception("Compile contract failed, error: " + res.getErrors()),
                             res.getErrors());
                     return;
                 }
 
                 CompilationResult result = CompilationResult.parse(res.getOutput());
-                metadata = result.getContract(cnsName);
+                metadata = result.getContract(contractName);
                 abi = metadata.abi;
             } catch (Exception e) {
-                logger.error("compiling contract failed, e: ", e);
-                callback.onResponse(new Exception("compiling contract failed"), null);
+                logger.error("e: ", e);
+                callback.onResponse(
+                        new Exception("Compile contract exception, error: " + e.getMessage()),
+                        null);
                 return;
             }
         }
 
-        Driver driver = new BCOSDriver();
-
         String finalAbi = abi;
         String finalAddress = address;
         asyncCnsService.registerCNSByProxy(
-                cnsName,
+                path,
                 address,
                 version,
                 abi,
                 account,
-                blockHeaderManager,
+                blockManager,
                 connection,
-                driver,
                 e -> {
                     if (Objects.nonNull(e)) {
                         logger.warn("registering abi failed", e);
@@ -156,8 +152,9 @@ public class RegisterCnsHandler implements CommandHandler {
                     }
 
                     logger.info(
-                            " register cns successfully, name: {}, version: {}, address: {}, abi: {}",
+                            " register cns successfully, cnsName: {}, contractName: {}, version: {}, address: {}, abi: {}",
                             cnsName,
+                            contractName,
                             version,
                             finalAddress,
                             finalAbi);

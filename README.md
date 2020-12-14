@@ -1,14 +1,16 @@
+![](./docs/images/menu_logo_wecross.png)
+
 # WeCross-BCOS2-Stub
 
-[![CodeFactor](https://www.codefactor.io/repository/github/webankfintech/WeCross-BCOS2-Stub/badge)](https://www.codefactor.io/repository/github/webankfintech/WeCross-BCOS2-Stub) [![Build Status](https://travis-ci.org/WeBankFinTech/WeCross-BCOS2-Stub.svg?branch=dev)](https://travis-ci.org/WeBankFinTech/WeCross-BCOS2-Stub) [![Latest release](https://img.shields.io/github/release/WeBankFinTech/WeCross-BCOS2-Stub.svg)](https://github.com/WeBankFinTech/WeCross-BCOS2-Stub/releases/latest)
-![](https://img.shields.io/github/license/WeBankFinTech/WeCross-Fabric1-Stub) 
+[![CodeFactor](https://www.codefactor.io/repository/github/webankblockchain/WeCross-BCOS2-Stub/badge)](https://www.codefactor.io/repository/github/webankblockchain/WeCross-BCOS2-Stub) [![Build Status](https://travis-ci.org/WeBankBlockchain/WeCross-BCOS2-Stub.svg?branch=dev)](https://travis-ci.org/WeBankBlockchain/WeCross-BCOS2-Stub) [![Latest release](https://img.shields.io/github/release/WeBankBlockchain/WeCross-BCOS2-Stub.svg)](https://github.com/WeBankBlockchain/WeCross-BCOS2-Stub/releases/latest)
+[![License](https://img.shields.io/github/license/WeBankBlockchain/WeCross-BCOS2-Stub)](https://www.apache.org/licenses/LICENSE-2.0) [![Language](https://img.shields.io/badge/Language-Java-blue.svg)](https://www.java.com)
 
-WeCross BCOS2 Stub是[WeCross](https://github.com/WeBankFinTech/WeCross)用于适配[FISCO BCOS 2.4](https://github.com/FISCO-BCOS/FISCO-BCOS)及以上版本的插件。
+WeCross BCOS2 Stub是[WeCross](https://github.com/WeBankBlockchain/WeCross)用于适配[FISCO BCOS 2.6](https://github.com/FISCO-BCOS/FISCO-BCOS)及以上版本的插件。
 
 ## 关键特性
 
 - FISCO BCOS配置加载
-- FISCO BCOS账户加载
+- FISCO BCOS账户生成
 - FISCO BCOS链上资源访问
 - FISCO BCOS交易签名与解析
 - FISCO BCOS交易默克尔验证
@@ -23,7 +25,7 @@ WeCross BCOS2 Stub是[WeCross](https://github.com/WeBankFinTech/WeCross)用于�
 **编译命令**:
 
 ```bash
-git clone https://github.com/WeBankFinTech/WeCross-BCOS2-Stub.git
+git clone https://github.com/WeBankBlockchain/WeCross-BCOS2-Stub.git
 cd WeCross-BCOS2-Stub
 ./gradlew assemble
 ```
@@ -37,9 +39,8 @@ cd WeCross-BCOS2-Stub
 
 欢迎参与WeCross社区的维护和建设：
 
-- 如项目对您有帮助，欢迎点亮我们的小星星(点击项目左上方Star按钮)。
-- 提交代码(Pull requests)，参考我们的[代码贡献流程](CONTRIBUTING.md)。
-- [提问和提交BUG](https://github.com/WeBankFinTech/WeCross-BCOS2-Stub/issues/new)。
+- 提交代码(Pull requests)，可参考[代码贡献流程](CONTRIBUTING.md)以及[wiki指南](https://github.com/WeBankBlockchain/WeCross/wiki/%E8%B4%A1%E7%8C%AE%E4%BB%A3%E7%A0%81)
+- [提问和提交BUG](https://github.com/WeBankBlockchain/WeCross-BCOS2-Stub/issues/new)
 
 希望在您的参与下，WeCross会越来越好！
 
@@ -48,6 +49,4 @@ cd WeCross-BCOS2-Stub
 
 ## License
 
-![license](http://img.shields.io/badge/license-Apache%20v2-blue.svg)
-
-WeCross BCOS2 Stub的开源协议为[Apache License 2.0](http://www.apache.org/licenses/). 详情参考[LICENSE](./LICENSE)。
+WeCross BCOS2 Stub的开源协议为Apache License 2.0，详情参考[LICENSE](./LICENSE)。

@@ -1,5 +1,7 @@
-package com.webank.wecross.stub.bcos.proxy;
+package com.webank.wecross.stub.bcos.preparation;
 
+import com.webank.wecross.stub.bcos.AsyncCnsService;
+import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import java.io.File;
 import java.nio.file.Files;
 import org.slf4j.Logger;
@@ -27,7 +29,7 @@ public class TwoPCContractDeployment {
                 + TwoPCContractDeployment.class.getName()
                 + " deploy "
                 + chainPath
-                + " bcos_user1 HelloWorld v1.1 conf/solidity/HelloWorld.sol 100 10 100\n";
+                + " admin HelloWorld v1.1 conf/solidity/HelloWorld.sol 100 10 100\n";
     }
 
     private static void exit() {
@@ -38,7 +40,7 @@ public class TwoPCContractDeployment {
         System.exit(sig);
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         if (args.length < 7) {
             usage();
         }
@@ -85,8 +87,6 @@ public class TwoPCContractDeployment {
                         + "  ,toIndex: "
                         + toIndex);
 
-        // check if WeCrossProxy deployed
-        check(chainName);
         deploy(
                 chainName,
                 accountName,
@@ -101,10 +101,6 @@ public class TwoPCContractDeployment {
         System.exit(0);
     }
 
-    public static void check(String chainPath) {
-        ProxyContract.check(chainPath);
-    }
-
     public static void deploy(
             String chainName,
             String accountName,
@@ -115,9 +111,14 @@ public class TwoPCContractDeployment {
             int fromIndex,
             int toIndex) {
         try {
+            AsyncCnsService asyncCnsService = new AsyncCnsService();
+            DeployContractHandler deployContractHandler = new DeployContractHandler();
+            deployContractHandler.setAsyncCnsService(asyncCnsService);
+
             ProxyContract proxyContract = new ProxyContract(null, chainName, accountName);
             TwoPCContract twoPCContract =
                     new TwoPCContract(proxyContract.getAccount(), proxyContract.getConnection());
+            twoPCContract.setDeployContractHandler(deployContractHandler);
 
             PathMatchingResourcePatternResolver resolver =
                     new PathMatchingResourcePatternResolver();
