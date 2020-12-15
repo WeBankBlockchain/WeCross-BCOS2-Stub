@@ -14,7 +14,7 @@ plugins {
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'com.webank.wecross'
-version '1.0.0-1207'
+version '1.0.0'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -62,7 +62,7 @@ configurations {
 //}
 
 dependencies {
-    implementation 'com.webank:wecross-java-stub:1.0.0-1127-SNAPSHOT'
+    implementation 'com.webank:wecross-java-stub:1.0.0'
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'
 
