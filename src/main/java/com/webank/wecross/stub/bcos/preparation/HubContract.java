@@ -11,6 +11,7 @@ import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
 import java.io.File;
 import java.math.BigInteger;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
@@ -64,7 +65,15 @@ public class HubContract {
         account =
                 (BCOSAccount)
                         bcosBaseStubFactory.newAccount(
-                                accountName, "classpath:accounts" + File.separator + accountName);
+                                accountName,
+                                "classpath:" + chainPath + File.separator + accountName);
+        if (account == null) {
+            account =
+                    (BCOSAccount)
+                            bcosBaseStubFactory.newAccount(
+                                    accountName,
+                                    "classpath:accounts" + File.separator + accountName);
+        }
         connection = BCOSConnectionFactory.build(bcosStubConfig, web3jWrapper);
 
         if (account == null) {
@@ -172,6 +181,9 @@ public class HubContract {
                 });
 
         String contractAddress = completableFuture.get(10, TimeUnit.SECONDS);
+        if (Objects.isNull(contractAddress)) {
+            throw new Exception("Failed to deploy hub contract.");
+        }
         CnsService cnsService = new CnsService(web3jWrapper.getWeb3j(), account.getCredentials());
         String result = cnsService.registerCns(cnsName, cnsVersion, contractAddress, metadata.abi);
 
@@ -219,24 +231,8 @@ public class HubContract {
                 "SUCCESS: WeCrossHub:" + version + " has been upgraded! chain: " + chainPath);
     }
 
-    public static void check(String chainPath) {
+    public void getHubAddress() {
         try {
-            BCOSConnection connection = BCOSConnectionFactory.build(chainPath, "stub.toml");
-
-            if (!connection.hasHubDeployed()) {
-                System.out.println("WeCrossHub has not been deployed");
-            } else {
-                System.out.println("WeCrossHub has been deployed.");
-            }
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }
-
-    public static void getHubAddress(String chainPath) {
-        try {
-            BCOSConnection connection = BCOSConnectionFactory.build(chainPath, "stub.toml");
-
             if (!connection.hasHubDeployed()) {
                 System.out.println("WeCrossHub has not been deployed");
             } else {

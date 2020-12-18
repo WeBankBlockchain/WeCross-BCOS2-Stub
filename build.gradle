@@ -14,7 +14,7 @@ plugins {
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'com.webank.wecross'
-version '1.0.0-rc5'
+version '1.0.0'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -62,16 +62,17 @@ configurations {
 //}
 
 dependencies {
-    implementation 'com.webank:wecross-java-stub:1.0.0-rc5-1029-SNAPSHOT'
+    implementation 'com.webank:wecross-java-stub:1.0.0'
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'
 
     implementation 'org.apache.commons:commons-lang3:3.11'
     implementation 'com.google.guava:guava:28.1-jre'
-    implementation ('org.fisco-bcos:web3sdk:2.5.1')  {
-        exclude group: "org.ethereum"
-    }
 
+    implementation ('org.fisco-bcos:web3sdk:2.7.0.11190-SNAPSHOT')  {
+        exclude group: "org.ethereum"
+        exclude group: "org.fisco-bcos", module: "tcnative"
+    }
     implementation 'org.fisco-bcos:solcJ:0.5.2.0'
 
     // Use JUnit test framework
@@ -232,7 +233,7 @@ publishing {
             pom {
                 name = "WeCross-BCOS-Stub"
                 description = "Stub interface for WeCross"
-                url = "https://github.com/WeBankFinTech/WeCross"
+                url = "https://github.com/WeBankBlockchain/WeCross"
                 licenses {
                     license {
                         name = "The Apache License, Version 2.0"
@@ -247,9 +248,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection = "scm:git:git://github.com/WeBankFinTech/WeCross.git"
-                    developerConnection = "scm:git:ssh://github.com/WeBankFinTech/WeCross.git"
-                    url = "https://github.com/WeBankFinTech/WeCross"
+                    connection = "scm:git:git://github.com/WeBankBlockchain/WeCross.git"
+                    developerConnection = "scm:git:ssh://github.com/WeBankBlockchain/WeCross.git"
+                    url = "https://github.com/WeBankBlockchain/WeCross"
                 }
             }
         }

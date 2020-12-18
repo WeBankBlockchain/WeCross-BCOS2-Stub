@@ -29,7 +29,7 @@ public class TwoPCContractDeployment {
                 + TwoPCContractDeployment.class.getName()
                 + " deploy "
                 + chainPath
-                + " bcos_user1 HelloWorld v1.1 conf/solidity/HelloWorld.sol 100 10 100\n";
+                + " admin HelloWorld v1.1 conf/solidity/HelloWorld.sol 100 10 100\n";
     }
 
     private static void exit() {
@@ -87,8 +87,6 @@ public class TwoPCContractDeployment {
                         + "  ,toIndex: "
                         + toIndex);
 
-        // check if WeCrossProxy deployed
-        check(chainName);
         deploy(
                 chainName,
                 accountName,
@@ -101,10 +99,6 @@ public class TwoPCContractDeployment {
 
         System.out.println(" ## 2PC contract deployment complete. ");
         System.exit(0);
-    }
-
-    public static void check(String chainPath) {
-        ProxyContract.check(chainPath);
     }
 
     public static void deploy(

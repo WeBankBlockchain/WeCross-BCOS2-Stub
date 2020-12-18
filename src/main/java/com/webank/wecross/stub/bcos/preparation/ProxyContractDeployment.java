@@ -1,5 +1,6 @@
 package com.webank.wecross.stub.bcos.preparation;
 
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,29 +19,31 @@ public class ProxyContractDeployment {
         return "Usage:\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + ProxyContractDeployment.class.getName()
-                + " check [chainName]\n"
+                + " deploy [chainName] [accountName(optional)]\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + ProxyContractDeployment.class.getName()
-                + " deploy [chainName] [accountName]\n"
-                + "         java -cp 'conf/:lib/*:plugin/*' "
-                + ProxyContractDeployment.class.getName()
-                + " upgrade [chainName] [accountName]\n"
+                + " upgrade [chainName] [accountName(optional)]\n"
                 + "Example:\n"
-                + "         java -cp 'conf/:lib/*:plugin/*' "
-                + ProxyContractDeployment.class.getName()
-                + " check "
-                + pureChainPath
-                + "\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + ProxyContractDeployment.class.getName()
                 + " deploy "
                 + pureChainPath
-                + " bcos_user1\n"
+                + " \n"
+                + "         java -cp 'conf/:lib/*:plugin/*' "
+                + ProxyContractDeployment.class.getName()
+                + " deploy "
+                + pureChainPath
+                + " admin\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + ProxyContractDeployment.class.getName()
                 + " upgrade "
                 + pureChainPath
-                + " bcos_user1";
+                + " \n"
+                + "         java -cp 'conf/:lib/*:plugin/*' "
+                + ProxyContractDeployment.class.getName()
+                + " upgrade "
+                + pureChainPath
+                + " admin";
     }
 
     private static void exit() {
@@ -78,10 +81,14 @@ public class ProxyContractDeployment {
 
         String cmd = args[0];
         String chainPath = args[1];
+        String accountName = BCOSConstant.ADMIN_ACCOUNT;
 
         switch (cmd) {
-            case "check":
-                check(chainPath);
+            case "deploy":
+                deploy(chainPath, accountName);
+                break;
+            case "upgrade":
+                upgrade(chainPath, accountName);
                 break;
             default:
                 usage();
@@ -109,10 +116,6 @@ public class ProxyContractDeployment {
         }
     }
 
-    public static void check(String chainPath) {
-        ProxyContract.check(chainPath);
-    }
-
     public static void deploy(String chainPath, String accountName) {
         try {
             String proxyContractFile =
@@ -125,8 +128,9 @@ public class ProxyContractDeployment {
                     new ProxyContract(proxyContractFile, chainPath, accountName);
             proxyContract.deploy();
         } catch (Exception e) {
-            logger.error("e: ", e);
-            System.out.println(e);
+            logger.error("deploy, e: ", e);
+            System.out.println("Failed, please check contract or account. Exception details:");
+            e.printStackTrace();
         }
     }
 
@@ -142,8 +146,9 @@ public class ProxyContractDeployment {
                     new ProxyContract(proxyContractFile, chainPath, accountName);
             proxyContract.upgrade();
         } catch (Exception e) {
-            logger.error("e: ", e);
-            System.out.println(e);
+            logger.error("upgrade, e: ", e);
+            System.out.println("Failed, please check contract or account. Exception details:");
+            e.printStackTrace();
         }
     }
 }

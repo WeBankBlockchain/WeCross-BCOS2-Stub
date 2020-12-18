@@ -9,12 +9,6 @@ import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.bcos.AsyncCnsService;
-import com.webank.wecross.stub.bcos.abi.ABICodecJsonWrapper;
-import com.webank.wecross.stub.bcos.abi.ABIDefinition;
-import com.webank.wecross.stub.bcos.abi.ABIDefinitionFactory;
-import com.webank.wecross.stub.bcos.abi.ABIObject;
-import com.webank.wecross.stub.bcos.abi.ABIObjectFactory;
-import com.webank.wecross.stub.bcos.abi.ContractABIDefinition;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import java.io.File;
@@ -25,6 +19,12 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
+import org.fisco.bcos.web3j.abi.wrapper.ABICodecJsonWrapper;
+import org.fisco.bcos.web3j.abi.wrapper.ABIDefinition;
+import org.fisco.bcos.web3j.abi.wrapper.ABIDefinitionFactory;
+import org.fisco.bcos.web3j.abi.wrapper.ABIObject;
+import org.fisco.bcos.web3j.abi.wrapper.ABIObjectFactory;
+import org.fisco.bcos.web3j.abi.wrapper.ContractABIDefinition;
 import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.fisco.bcos.web3j.precompile.cns.CnsService;
 import org.fisco.bcos.web3j.utils.Numeric;
@@ -189,7 +189,7 @@ public class DeployContractHandler implements CommandHandler {
         }
 
         deployContractAndRegisterCNS(
-                cnsName,
+                path,
                 version,
                 metadata.bin + paramsABI,
                 metadata.abi,
@@ -213,7 +213,7 @@ public class DeployContractHandler implements CommandHandler {
     }
 
     private void deployContractAndRegisterCNS(
-            String name,
+            Path path,
             String version,
             String bin,
             String abi,
@@ -223,19 +223,20 @@ public class DeployContractHandler implements CommandHandler {
             BlockManager blockManager,
             DeployContractCallback callback) {
 
-        Path path = new Path();
-        path.setResource(BCOSConstant.BCOS_PROXY_NAME);
+        Path proxyPath = new Path();
+        proxyPath.setResource(BCOSConstant.BCOS_PROXY_NAME);
 
         /* Binary data needs to be base64 encoded */
         String base64Bin = Base64.getEncoder().encodeToString(Numeric.hexStringToByteArray(bin));
 
         TransactionRequest transactionRequest =
                 new TransactionRequest(
-                        "deployContractWithRegisterCNS",
-                        Arrays.asList(name, version, base64Bin, abi).toArray(new String[0]));
+                        BCOSConstant.PROXY_METHOD_DEPLOY,
+                        Arrays.asList(path.toString(), version, base64Bin, abi)
+                                .toArray(new String[0]));
 
         TransactionContext transactionContext =
-                new TransactionContext(account, path, new ResourceInfo(), blockManager);
+                new TransactionContext(account, proxyPath, new ResourceInfo(), blockManager);
 
         driver.asyncSendTransaction(
                 transactionContext,
@@ -260,11 +261,11 @@ public class DeployContractHandler implements CommandHandler {
 
                     logger.info(
                             " deployAndRegisterCNS successfully, name: {}, version: {}, res: {} ",
-                            name,
+                            path.getResource(),
                             version,
                             res);
 
-                    asyncCnsService.addAbiToCache(name, abi);
+                    asyncCnsService.addAbiToCache(path.getResource(), abi);
                     callback.onResponse(null, res.getResult()[0]);
                 });
     }
