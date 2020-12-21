@@ -255,7 +255,7 @@ public class BCOSBaseStubFactory implements StubFactory {
                             + "    timeout = 300000  # ms, default 60000ms\n"
                             + "    connectionsStr = ['127.0.0.1:20200']\n"
                             + "\n"
-                            + "#verify sealer in block header"
+                            + "#verify sealer in block header\n"
                             + "#[sealers]\n"
                             + "       #pubKey = [] # null:disable, [empty array]: always verify false.\n";
             String confFilePath = path + "/stub.toml";
