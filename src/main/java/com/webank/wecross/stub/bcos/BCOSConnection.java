@@ -230,9 +230,20 @@ public class BCOSConnection implements Connection {
             TransactionParams transaction =
                     objectMapper.readValue(request.getData(), TransactionParams.class);
 
-            Call.CallOutput callOutput =
-                    web3jWrapper.call(
-                            transaction.getFrom(), transaction.getTo(), transaction.getData());
+            Call.CallOutput callOutput = null;
+
+            try {
+                callOutput =
+                        web3jWrapper.call(
+                                transaction.getFrom(), transaction.getTo(), transaction.getData());
+
+            } catch (ContractCallException e) {
+                if (e.getCallOutput() != null) {
+                    callOutput = e.getCallOutput();
+                } else {
+                    throw e;
+                }
+            }
 
             if (logger.isDebugEnabled()) {
                 logger.debug(
