@@ -57,9 +57,6 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         List<Map<String, String>> resourcesConfigValue =
                 (List<Map<String, String>>) stubConfig.get("resources");
 
-        HashMap<String, List<String>> sealersConfigValue =
-                (HashMap<String, List<String>>) stubConfig.get("sealers");
-
         if (resourcesConfigValue == null) {
             resourcesConfigValue = new ArrayList<>();
         }
@@ -68,12 +65,6 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
                 getBCOSResourceConfig(getConfigPath(), chain, resourcesConfigValue);
 
         BCOSStubConfig bcosStubConfig = new BCOSStubConfig();
-        if (Objects.isNull(sealersConfigValue)) {
-            logger.info("Not config [sealers], do not verify bcos block header.");
-        } else {
-            BCOSStubConfig.Sealers sealers = getBCOSSealersConfig(sealersConfigValue);
-            bcosStubConfig.setSealers(sealers);
-        }
         bcosStubConfig.setType(stubType);
         bcosStubConfig.setChannelService(channelServiceConfig);
         bcosStubConfig.setResources(bcosResources);
@@ -190,19 +181,5 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         logger.debug("resources: {}", resourceList);
 
         return resourceList;
-    }
-
-    public BCOSStubConfig.Sealers getBCOSSealersConfig(
-            HashMap<String, List<String>> sealersConfigValue) {
-        List<String> sealerList = sealersConfigValue.get("pubKey");
-        // Config [sealers] but not config pubKey
-        if (Objects.isNull(sealerList)) {
-            logger.info(
-                    "Config [sealers], but not config pubKeys, do not verify bcos block header.");
-            return null;
-        }
-        logger.debug("getBCOSSealersConfig: sealers:{}", sealersConfigValue);
-
-        return new BCOSStubConfig.Sealers(sealerList);
     }
 }

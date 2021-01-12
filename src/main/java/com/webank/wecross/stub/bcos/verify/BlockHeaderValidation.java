@@ -1,6 +1,10 @@
 package com.webank.wecross.stub.bcos.verify;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.exception.WeCrossException;
+import com.webank.wecross.stub.ObjectMapperFactory;
 import com.webank.wecross.stub.bcos.common.BCOSBlockHeader;
 import com.webank.wecross.stub.bcos.uaproof.Signer;
 import java.util.*;
@@ -14,9 +18,10 @@ import org.slf4j.LoggerFactory;
 public class BlockHeaderValidation {
     private static final Logger logger = LoggerFactory.getLogger(BlockHeaderValidation.class);
 
-    public static void verifyBlockHeader(BCOSBlockHeader bcosBlockHeader, String sealerString)
-            throws WeCrossException {
-        String[] sealerList = sealerString.split(",");
+    public static void verifyBlockHeader(
+            BCOSBlockHeader bcosBlockHeader, String blockVerifierString) throws WeCrossException {
+        List<String> sealerList = getPubKeyInBCOSVerifier(blockVerifierString);
+
         List<BcosBlockHeader.Signature> signatureList = bcosBlockHeader.getSignatureList();
 
         if (bcosBlockHeader.getNumber() != 0 && !isSignUnique(signatureList)) {
@@ -61,5 +66,30 @@ public class BlockHeaderValidation {
             if (!testFlag) break;
         }
         return testFlag;
+    }
+
+    private static List<String> getPubKeyInBCOSVerifier(String blockVerifierString)
+            throws WeCrossException {
+        ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
+        try {
+            Objects.requireNonNull(
+                    blockVerifierString,
+                    "'blockVerifierString' in getPubKeyInBCOSVerifier is null.");
+            Map<String, Object> bcosVerifierMapper =
+                    objectMapper.readValue(
+                            blockVerifierString, new TypeReference<Map<String, Object>>() {});
+            List<String> pubKey = (List<String>) bcosVerifierMapper.get("pubKey");
+            return pubKey;
+        } catch (JsonProcessingException e) {
+            throw new WeCrossException(
+                    WeCrossException.ErrorCode.UNEXPECTED_CONFIG,
+                    "Parse Json to BCOSVerifier Error, " + e.getMessage(),
+                    e.getCause());
+        } catch (Exception e) {
+            throw new WeCrossException(
+                    WeCrossException.ErrorCode.UNEXPECTED_CONFIG,
+                    "Read BCOSVerifier Json Error, " + e.getMessage(),
+                    e.getCause());
+        }
     }
 }
