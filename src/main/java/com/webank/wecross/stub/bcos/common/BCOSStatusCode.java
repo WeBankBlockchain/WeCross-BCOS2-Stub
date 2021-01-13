@@ -31,6 +31,7 @@ public class BCOSStatusCode {
     public static final int EncodeAbiFailed = 2041;
     public static final int MethodNotExist = 2042;
 
+    public static final int UnsupportedRPC = 2050;
     public static final int UnclassifiedError = 2100;
 
     public static String getStatusMessage(int status) {

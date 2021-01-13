@@ -94,7 +94,9 @@ public class BlockUtility {
     public static Block convertToBlock(byte[] blockBytes, boolean onlyHeader) throws IOException {
         BcosBlock.Block block =
                 ObjectMapperFactory.getObjectMapper().readValue(blockBytes, BcosBlock.Block.class);
-        logger.debug("BcosBlock: {}", block.getExtraData().size());
+        if (logger.isDebugEnabled()) {
+            logger.debug("blockNumber: {}, blockHash: {}", block.getNumber(), block.getHash());
+        }
         Block stubBlock = convertToBlock(block, onlyHeader);
         stubBlock.setRawBytes(blockBytes);
         return stubBlock;
