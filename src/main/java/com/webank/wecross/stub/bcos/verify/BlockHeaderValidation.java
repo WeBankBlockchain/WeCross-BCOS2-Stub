@@ -19,6 +19,13 @@ public class BlockHeaderValidation {
         String[] sealerList = sealerString.split(",");
         List<BcosBlockHeader.Signature> signatureList = bcosBlockHeader.getSignatureList();
 
+        if (signatureList == null) {
+            logger.error("signatureList is null");
+            throw new WeCrossException(
+                    WeCrossException.ErrorCode.INTERNAL_ERROR,
+                    "verifyBlockHeader fail, signatureList is null.");
+        }
+
         if (bcosBlockHeader.getNumber() != 0 && !isSignUnique(signatureList)) {
             logger.error(
                     "Some signature in SignList is not unique, signatureList is {}", signatureList);
@@ -60,6 +67,7 @@ public class BlockHeaderValidation {
             testFlag = testSet.add(signature.getSignature());
             if (!testFlag) break;
         }
+
         return testFlag;
     }
 }
