@@ -435,12 +435,14 @@ public class BCOSConnection implements Connection {
             BigInteger blockNumber = new BigInteger(request.getData());
             BcosBlock.Block block = web3jWrapper.getBlockByNumber(blockNumber.longValue());
 
-            BcosBlockHeader.BlockHeader blockHeader =
-                    web3jWrapper.getBlockHeaderByNumber(blockNumber.longValue());
-            List<String> headerData = new ArrayList<>();
-            headerData.add(objectMapper.writeValueAsString(blockHeader));
-            block.setExtraData(headerData);
-            logger.debug("handleAsyncGetBlockRequest: block.Ext: {}", headerData);
+            if (blockNumber.intValue() != 0) {
+                BcosBlockHeader.BlockHeader blockHeader =
+                        web3jWrapper.getBlockHeaderByNumber(blockNumber.longValue());
+                List<String> headerData = new ArrayList<>();
+                headerData.add(objectMapper.writeValueAsString(blockHeader));
+                block.setExtraData(headerData);
+                logger.debug("handleAsyncGetBlockRequest: block.Ext: {}", headerData);
+            }
             response.setErrorCode(BCOSStatusCode.Success);
             response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
             response.setData(ObjectMapperFactory.getObjectMapper().writeValueAsBytes(block));
