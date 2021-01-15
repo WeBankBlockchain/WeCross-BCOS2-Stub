@@ -47,3 +47,6 @@ gpg
 /.idea/
 /dist/
 out/
+.DS_Store
+.AppleDouble
+.LSOverride
