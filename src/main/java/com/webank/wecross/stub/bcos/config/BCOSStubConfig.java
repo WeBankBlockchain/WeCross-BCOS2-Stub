@@ -50,6 +50,12 @@ public class BCOSStubConfig {
         private String caCert;
         private String sslCert;
         private String sslKey;
+        private boolean gmConnect;
+        private String gmCaCert;
+        private String gmSslCert;
+        private String gmSslKey;
+        private String gmEnSslCert;
+        private String gmEnSslKey;
         private List<String> connectionsStr;
         private Chain chain;
         private int threadNum;
@@ -85,6 +91,54 @@ public class BCOSStubConfig {
 
         public void setSslKey(String sslKey) {
             this.sslKey = sslKey;
+        }
+
+        public boolean isGmConnect() {
+            return gmConnect;
+        }
+
+        public void setGmConnect(boolean gmConnect) {
+            this.gmConnect = gmConnect;
+        }
+
+        public String getGmCaCert() {
+            return gmCaCert;
+        }
+
+        public void setGmCaCert(String gmCaCert) {
+            this.gmCaCert = gmCaCert;
+        }
+
+        public String getGmSslCert() {
+            return gmSslCert;
+        }
+
+        public void setGmSslCert(String gmSslCert) {
+            this.gmSslCert = gmSslCert;
+        }
+
+        public String getGmSslKey() {
+            return gmSslKey;
+        }
+
+        public void setGmSslKey(String gmSslKey) {
+            this.gmSslKey = gmSslKey;
+        }
+
+        public String getGmEnSslCert() {
+            return gmEnSslCert;
+        }
+
+        public void setGmEnSslCert(String gmEnSslCert) {
+            this.gmEnSslCert = gmEnSslCert;
+        }
+
+        public String getGmEnSslKey() {
+            return gmEnSslKey;
+        }
+
+        public void setGmEnSslKey(String gmEnSslKey) {
+            this.gmEnSslKey = gmEnSslKey;
         }
 
         public List<String> getConnectionsStr() {

@@ -10,6 +10,12 @@
     caCert = 'ca.crt'
     sslCert = 'sdk.crt'
     sslKey = 'sdk.key'
+    gmConnect = false
+    gmCaCert = 'gm/gmca.crt'
+    gmSslCert = 'gm/gmsdk.crt'
+    gmSslKey = 'gm/gmsdk.key'
+    gmEnSslCert = 'gm/gmensdk.crt'
+    gmEnSslKey = 'gm/gmensdk.key'
     timeout = 300000  # ms, default 60000ms
     connectionsStr = ['127.0.0.1:20200']
     threadNum = 18

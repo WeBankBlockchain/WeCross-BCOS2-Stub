@@ -252,6 +252,12 @@ public class BCOSBaseStubFactory implements StubFactory {
                             + "    caCert = 'ca.crt'\n"
                             + "    sslCert = 'sdk.crt'\n"
                             + "    sslKey = 'sdk.key'\n"
+                            + "    gmConnect = false\n"
+                            + "    gmCaCert = 'gm/gmca.crt'\n"
+                            + "    gmSslCert = 'gm/gmsdk.crt'\n"
+                            + "    gmSslKey = 'gm/gmsdk.key'\n"
+                            + "    gmEnSslCert = 'gm/gmensdk.crt'\n"
+                            + "    gmEnSslKey = 'gm/gmensdk.key'\n"
                             + "    timeout = 300000  # ms, default 60000ms\n"
                             + "    connectionsStr = ['127.0.0.1:20200']\n"
                             + "\n";

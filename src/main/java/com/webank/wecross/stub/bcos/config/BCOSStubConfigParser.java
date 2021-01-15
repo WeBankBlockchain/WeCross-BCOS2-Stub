@@ -116,6 +116,10 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         String sslKey = stubDir + File.separator + (String) channelServiceConfigValue.get("sslKey");
         requireFieldNotNull(sslKey, "channelService", "sslKey", configFile);
 
+        boolean gmConnect =
+                channelServiceConfigValue.get("gmConnect") != null
+                        && (boolean) channelServiceConfigValue.get("gmConnect");
+
         // connectionsStr field
         @SuppressWarnings("unchecked")
         List<String> connectionsStr =
@@ -141,6 +145,37 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         channelServiceConfig.setCaCert(caCertPath);
         channelServiceConfig.setSslCert(sslCert);
         channelServiceConfig.setSslKey(sslKey);
+        channelServiceConfig.setGmConnect(gmConnect);
+
+        if (gmConnect) {
+            String gmCaCert =
+                    stubDir + File.separator + (String) channelServiceConfigValue.get("gmCaCert");
+            requireFieldNotNull(gmCaCert, "channelService", "gmCaCert", configFile);
+
+            String gmSslCert =
+                    stubDir + File.separator + (String) channelServiceConfigValue.get("gmSslCert");
+            requireFieldNotNull(gmSslCert, "channelService", "gmSslCert", configFile);
+
+            String gmSslKey =
+                    stubDir + File.separator + (String) channelServiceConfigValue.get("gmSslKey");
+            requireFieldNotNull(gmSslKey, "channelService", "gmSslKey", configFile);
+
+            String gmEnSslCert =
+                    stubDir
+                            + File.separator
+                            + (String) channelServiceConfigValue.get("gmEnSslCert");
+            requireFieldNotNull(gmEnSslCert, "channelService", "gmEnSslCert", configFile);
+
+            String gmEnSslKey =
+                    stubDir + File.separator + (String) channelServiceConfigValue.get("gmEnSslKey");
+            requireFieldNotNull(gmEnSslKey, "channelService", "gmEnSslKey", configFile);
+
+            channelServiceConfig.setGmCaCert(gmCaCert);
+            channelServiceConfig.setGmSslCert(gmSslCert);
+            channelServiceConfig.setGmSslKey(gmSslKey);
+            channelServiceConfig.setGmEnSslCert(gmEnSslCert);
+            channelServiceConfig.setGmEnSslKey(gmEnSslKey);
+        }
         channelServiceConfig.setConnectionsStr(connectionsStr);
 
         logger.debug(" ChannelServiceConfig: {}", channelServiceConfig);
