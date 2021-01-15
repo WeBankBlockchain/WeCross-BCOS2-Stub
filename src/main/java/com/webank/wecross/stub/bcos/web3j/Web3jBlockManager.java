@@ -7,10 +7,10 @@ import java.io.IOException;
 import java.math.BigInteger;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 
-public class DefaultBlockManager implements BlockManager {
+public class Web3jBlockManager implements BlockManager {
     private Web3jWrapper web3jWrapper;
 
-    public DefaultBlockManager(Web3jWrapper web3jWrapper) {
+    public Web3jBlockManager(Web3jWrapper web3jWrapper) {
         this.web3jWrapper = web3jWrapper;
     }
 

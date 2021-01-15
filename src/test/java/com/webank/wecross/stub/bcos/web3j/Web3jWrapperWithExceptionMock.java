@@ -6,15 +6,14 @@ import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.core.methods.response.*;
 
-public class Web3jWrapperWithExceptionMock implements Web3jWrapper {
+public class Web3jWrapperWithExceptionMock extends AbstractWeb3jWrapper {
 
-    @Override
-    public BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException {
-        throw new IOException(" IOException");
+    public Web3jWrapperWithExceptionMock() {
+        super(null);
     }
 
     @Override
-    public String getRawBlockByNumber(long blockNumber) throws IOException {
+    public BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException {
         throw new IOException(" IOException");
     }
 
@@ -28,8 +27,8 @@ public class Web3jWrapperWithExceptionMock implements Web3jWrapper {
     }
 
     @Override
-    public void sendTransactionAndGetProof(
-            String signedTransactionData, TransactionSucCallback callback) throws IOException {
+    public void sendTransaction(String signedTransactionData, TransactionSucCallback callback)
+            throws IOException {
         throw new IOException(" IOException");
     }
 

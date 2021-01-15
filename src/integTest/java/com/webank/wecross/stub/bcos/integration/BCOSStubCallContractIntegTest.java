@@ -25,9 +25,10 @@ import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import com.webank.wecross.stub.bcos.performance.hellowecross.HelloWeCross;
 import com.webank.wecross.stub.bcos.preparation.ProxyContract;
-import com.webank.wecross.stub.bcos.web3j.DefaultBlockManager;
+import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
+import com.webank.wecross.stub.bcos.web3j.Web3jBlockManager;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
+import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImplV26;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -134,24 +135,23 @@ public class BCOSStubCallContractIntegTest {
         String type = bcosStubConfig.getType();
         logger.info(" === >> initial type:  {}", type);
 
-        BCOSBaseStubFactory stubFactory = type.startsWith("GM")? new BCOSGMStubFactory() : new BCOSStubFactory();
+        BCOSBaseStubFactory stubFactory = type.toLowerCase().startsWith("gm")? new BCOSGMStubFactory() : new BCOSStubFactory();
 
         driver = stubFactory.newDriver();
         account = stubFactory.newAccount("IntegBCOSAccount", "classpath:/accounts/bcos");
         connection = BCOSConnectionFactory.build("./chains/bcos/", "stub.toml");
         connection.setConnectionEventHandler(connectionEventHandlerImplMock);
 
-        Web3jWrapper web3jWrapper = ((BCOSConnection) connection).getWeb3jWrapper();
-        Web3jWrapperImpl web3jWrapperImpl = (Web3jWrapperImpl) web3jWrapper;
+        AbstractWeb3jWrapper web3jWrapper = ((BCOSConnection) connection).getWeb3jWrapper();
 
         BCOSAccount bcosAccount = (BCOSAccount) account;
-        blockManager = new DefaultBlockManager(web3jWrapper);
+        blockManager = new Web3jBlockManager(web3jWrapper);
         asyncCnsService = ((BCOSDriver) driver).getAsyncCnsService();
 
         helloWeCross =
                 HelloWeCross
                         .deploy(
-                                web3jWrapperImpl.getWeb3j(),
+                                web3jWrapper.getWeb3j(),
                                 bcosAccount.getCredentials(),
                                 new StaticGasProvider(SignTransaction.gasPrice, SignTransaction.gasLimit))
                         .send();
@@ -424,7 +424,7 @@ public class BCOSStubCallContractIntegTest {
             assertTrue(Objects.isNull(transaction));
             assertTrue(Objects.nonNull(e));
             BCOSStubException e1 = (BCOSStubException)e;
-            assertTrue(e1.getErrorCode() == BCOSStatusCode.TransactionReceiptProofNotExist);
+            assertTrue(e1.getErrorCode() == BCOSStatusCode.TransactionReceiptProofNotExist || e1.getErrorCode() == BCOSStatusCode.TransactionNotExist);
             asyncToSync1.getSemaphore().release();
         });
         asyncToSync1.getSemaphore().acquire();
