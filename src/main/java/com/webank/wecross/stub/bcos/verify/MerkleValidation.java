@@ -16,7 +16,7 @@ public class MerkleValidation {
      * @param transactionReceipt
      * @throws BCOSStubException
      */
-    public void verifyTransactionReceiptProof(
+    public static void verifyTransactionReceiptProof(
             String hash, BlockHeader blockHeader, TransactionReceipt transactionReceipt)
             throws BCOSStubException {
 
@@ -58,7 +58,7 @@ public class MerkleValidation {
      * @param transactionProof proof of transaction
      * @param callback
      */
-    public void verifyTransactionProof(
+    public static void verifyTransactionProof(
             long blockNumber,
             String hash,
             BlockManager blockManager,

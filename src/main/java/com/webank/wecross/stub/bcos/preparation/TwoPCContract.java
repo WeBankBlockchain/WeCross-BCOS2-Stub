@@ -5,7 +5,7 @@ import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
-import com.webank.wecross.stub.bcos.web3j.DefaultBlockManager;
+import com.webank.wecross.stub.bcos.web3j.Web3jBlockManager;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import org.slf4j.Logger;
@@ -18,7 +18,7 @@ public class TwoPCContract {
     public TwoPCContract(BCOSAccount account, BCOSConnection connection) {
         this.account = account;
         this.connection = connection;
-        this.blockManager = new DefaultBlockManager(connection.getWeb3jWrapper());
+        this.blockManager = new Web3jBlockManager(connection.getWeb3jWrapper());
     }
 
     private BCOSAccount account;
