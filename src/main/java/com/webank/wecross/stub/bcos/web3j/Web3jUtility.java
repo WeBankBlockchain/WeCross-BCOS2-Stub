@@ -7,6 +7,7 @@ import org.fisco.bcos.channel.client.Service;
 import org.fisco.bcos.channel.handler.ChannelConnections;
 import org.fisco.bcos.channel.handler.GroupChannelConnectionsConfig;
 import org.fisco.bcos.fisco.EnumNodeVersion;
+import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.channel.ChannelEthereumService;
 import org.fisco.bcos.web3j.protocol.core.methods.response.NodeVersion;
@@ -148,6 +149,20 @@ public class Web3jUtility {
         groupChannelConnectionsConfig.setSslKey(
                 resolver.getResource(channelServiceConfig.getSslKey()));
         groupChannelConnectionsConfig.setAllChannelConnections(allChannelConnections);
+
+        if (channelServiceConfig.isGmConnect()) {
+            groupChannelConnectionsConfig.setGmCaCert(
+                    resolver.getResource(channelServiceConfig.getGmCaCert()));
+            groupChannelConnectionsConfig.setGmSslCert(
+                    resolver.getResource(channelServiceConfig.getGmSslCert()));
+            groupChannelConnectionsConfig.setGmSslKey(
+                    resolver.getResource(channelServiceConfig.getGmSslKey()));
+            groupChannelConnectionsConfig.setGmEnSslCert(
+                    resolver.getResource(channelServiceConfig.getGmEnSslCert()));
+            groupChannelConnectionsConfig.setGmEnSslKey(
+                    resolver.getResource(channelServiceConfig.getGmEnSslKey()));
+            EncryptType.setEncryptType(EncryptType.SM2_TYPE);
+        }
 
         Service service = new Service();
         service.setThreadPool(

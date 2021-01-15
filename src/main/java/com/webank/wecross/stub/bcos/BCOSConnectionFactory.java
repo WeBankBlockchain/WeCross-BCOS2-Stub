@@ -44,12 +44,6 @@ public class BCOSConnectionFactory {
         bcosConnection.addProperty(
                 BCOSConstant.BCOS_STUB_TYPE, String.valueOf(bcosStubConfig.getType()));
 
-        if (bcosStubConfig.getSealers() != null) {
-            String sealerString = String.join(",", bcosStubConfig.getSealers().getSealerList());
-            bcosConnection.addProperty(BCOSConstant.BCOS_SEALER_LIST, sealerString);
-        } else {
-            bcosConnection.addProperty(BCOSConstant.BCOS_SEALER_LIST, null);
-        }
         CnsInfo proxyCnsInfo = CnsService.queryProxyCnsInfo(web3jWrapper);
         if (Objects.nonNull(proxyCnsInfo)) {
             bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_NAME, proxyCnsInfo.getAddress());

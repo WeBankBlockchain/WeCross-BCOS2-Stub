@@ -940,7 +940,7 @@ public class BCOSDriver implements Driver {
                 Request.newRequest(
                         BCOSRequestType.GET_BLOCK_BY_NUMBER,
                         BigInteger.valueOf(blockNumber).toByteArray());
-        String sealerString = connection.getProperties().get(BCOSConstant.BCOS_SEALER_LIST);
+        String blockVerifierString = connection.getProperties().get(BCOSConstant.BCOS_SEALER_LIST);
         connection.asyncSend(
                 request,
                 response -> {
@@ -954,11 +954,11 @@ public class BCOSDriver implements Driver {
                     } else {
                         try {
                             Block block = BlockUtility.convertToBlock(response.getData(), false);
-                            if (sealerString != null) {
+                            if (blockVerifierString != null) {
                                 BCOSBlockHeader bcosBlockHeader =
                                         (BCOSBlockHeader) block.blockHeader;
                                 BlockHeaderValidation.verifyBlockHeader(
-                                        bcosBlockHeader, sealerString);
+                                        bcosBlockHeader, blockVerifierString);
                             }
                             if (logger.isDebugEnabled()) {
                                 logger.trace(

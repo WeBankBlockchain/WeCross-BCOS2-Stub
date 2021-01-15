@@ -57,9 +57,6 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         List<Map<String, String>> resourcesConfigValue =
                 (List<Map<String, String>>) stubConfig.get("resources");
 
-        HashMap<String, List<String>> sealersConfigValue =
-                (HashMap<String, List<String>>) stubConfig.get("sealers");
-
         if (resourcesConfigValue == null) {
             resourcesConfigValue = new ArrayList<>();
         }
@@ -68,12 +65,6 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
                 getBCOSResourceConfig(getConfigPath(), chain, resourcesConfigValue);
 
         BCOSStubConfig bcosStubConfig = new BCOSStubConfig();
-        if (Objects.isNull(sealersConfigValue)) {
-            logger.info("Not config [sealers], do not verify bcos block header.");
-        } else {
-            BCOSStubConfig.Sealers sealers = getBCOSSealersConfig(sealersConfigValue);
-            bcosStubConfig.setSealers(sealers);
-        }
         bcosStubConfig.setType(stubType);
         bcosStubConfig.setChannelService(channelServiceConfig);
         bcosStubConfig.setResources(bcosResources);
@@ -125,6 +116,10 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         String sslKey = stubDir + File.separator + (String) channelServiceConfigValue.get("sslKey");
         requireFieldNotNull(sslKey, "channelService", "sslKey", configFile);
 
+        boolean gmConnect =
+                channelServiceConfigValue.get("gmConnect") != null
+                        && (boolean) channelServiceConfigValue.get("gmConnect");
+
         // connectionsStr field
         @SuppressWarnings("unchecked")
         List<String> connectionsStr =
@@ -150,6 +145,37 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         channelServiceConfig.setCaCert(caCertPath);
         channelServiceConfig.setSslCert(sslCert);
         channelServiceConfig.setSslKey(sslKey);
+        channelServiceConfig.setGmConnect(gmConnect);
+
+        if (gmConnect) {
+            String gmCaCert =
+                    stubDir + File.separator + (String) channelServiceConfigValue.get("gmCaCert");
+            requireFieldNotNull(gmCaCert, "channelService", "gmCaCert", configFile);
+
+            String gmSslCert =
+                    stubDir + File.separator + (String) channelServiceConfigValue.get("gmSslCert");
+            requireFieldNotNull(gmSslCert, "channelService", "gmSslCert", configFile);
+
+            String gmSslKey =
+                    stubDir + File.separator + (String) channelServiceConfigValue.get("gmSslKey");
+            requireFieldNotNull(gmSslKey, "channelService", "gmSslKey", configFile);
+
+            String gmEnSslCert =
+                    stubDir
+                            + File.separator
+                            + (String) channelServiceConfigValue.get("gmEnSslCert");
+            requireFieldNotNull(gmEnSslCert, "channelService", "gmEnSslCert", configFile);
+
+            String gmEnSslKey =
+                    stubDir + File.separator + (String) channelServiceConfigValue.get("gmEnSslKey");
+            requireFieldNotNull(gmEnSslKey, "channelService", "gmEnSslKey", configFile);
+
+            channelServiceConfig.setGmCaCert(gmCaCert);
+            channelServiceConfig.setGmSslCert(gmSslCert);
+            channelServiceConfig.setGmSslKey(gmSslKey);
+            channelServiceConfig.setGmEnSslCert(gmEnSslCert);
+            channelServiceConfig.setGmEnSslKey(gmEnSslKey);
+        }
         channelServiceConfig.setConnectionsStr(connectionsStr);
 
         logger.debug(" ChannelServiceConfig: {}", channelServiceConfig);
@@ -190,19 +216,5 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         logger.debug("resources: {}", resourceList);
 
         return resourceList;
-    }
-
-    public BCOSStubConfig.Sealers getBCOSSealersConfig(
-            HashMap<String, List<String>> sealersConfigValue) {
-        List<String> sealerList = sealersConfigValue.get("pubKey");
-        // Config [sealers] but not config pubKey
-        if (Objects.isNull(sealerList)) {
-            logger.info(
-                    "Config [sealers], but not config pubKeys, do not verify bcos block header.");
-            return null;
-        }
-        logger.debug("getBCOSSealersConfig: sealers:{}", sealersConfigValue);
-
-        return new BCOSStubConfig.Sealers(sealerList);
     }
 }
