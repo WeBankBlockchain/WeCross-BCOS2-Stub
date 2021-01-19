@@ -988,7 +988,7 @@ public class BCOSDriver implements Driver {
                     } else {
                         try {
                             Block block = BlockUtility.convertToBlock(response.getData(), false);
-                            if (blockVerifierString != null) {
+                            if (blockVerifierString != null && blockNumber != 0) {
                                 BCOSBlockHeader bcosBlockHeader =
                                         (BCOSBlockHeader) block.blockHeader;
                                 BlockHeaderValidation.verifyBlockHeader(
