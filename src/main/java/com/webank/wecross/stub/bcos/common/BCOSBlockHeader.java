@@ -33,13 +33,13 @@ public class BCOSBlockHeader extends BlockHeader {
         return super.toString();
     }
 
-    public static String signatureListToString(List<BcosBlockHeader.Signature> signatureList){
+    public static String signatureListToString(List<BcosBlockHeader.Signature> signatureList) {
         StringBuilder sealerString = new StringBuilder();
         for (BcosBlockHeader.Signature signature : signatureList) {
             sealerString.append("\"");
             sealerString.append(signature.getSignature());
             sealerString.append("\", ");
         }
-        return sealerString.substring(0,sealerString.lastIndexOf(",")-1);
+        return sealerString.substring(0, sealerString.lastIndexOf(",") - 1);
     }
 }

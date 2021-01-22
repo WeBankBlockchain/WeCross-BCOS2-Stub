@@ -19,12 +19,16 @@ public class BlockHeaderValidation {
     private static final Logger logger = LoggerFactory.getLogger(BlockHeaderValidation.class);
 
     public static void verifyBlockHeader(
-            BCOSBlockHeader bcosBlockHeader, String blockVerifierString, String stubType) throws WeCrossException {
+            BCOSBlockHeader bcosBlockHeader, String blockVerifierString, String stubType)
+            throws WeCrossException {
         String chainType = getChainTypeInBCOSVerifier(blockVerifierString);
-        if(!stubType.equals(chainType)){
+        if (!stubType.equals(chainType)) {
             throw new WeCrossException(
                     WeCrossException.ErrorCode.UNEXPECTED_CONFIG,
-                    "blockVerifier config error: wrong chainType: " + chainType+" actual stubType: "+stubType);
+                    "blockVerifier config error: wrong chainType: "
+                            + chainType
+                            + " actual stubType: "
+                            + stubType);
         }
         List<String> sealerList = getPubKeyInBCOSVerifier(blockVerifierString);
 
@@ -39,7 +43,8 @@ public class BlockHeaderValidation {
 
         if (bcosBlockHeader.getNumber() != 0 && !isSignUnique(signatureList)) {
             logger.error(
-                    "Some signature in SignList is not unique, signatureList is {}", BCOSBlockHeader.signatureListToString(signatureList));
+                    "Some signature in SignList is not unique, signatureList is {}",
+                    BCOSBlockHeader.signatureListToString(signatureList));
             throw new WeCrossException(
                     WeCrossException.ErrorCode.INTERNAL_ERROR,
                     "verifyBlockHeader fail, caused by sign is not unique.");
@@ -64,7 +69,9 @@ public class BlockHeaderValidation {
                     finalizeFlag);
         }
         if (!finalizeFlag) {
-            logger.error("VerifyBlockHeader fail!, signatureList is {}", BCOSBlockHeader.signatureListToString(signatureList));
+            logger.error(
+                    "VerifyBlockHeader fail!, signatureList is {}",
+                    BCOSBlockHeader.signatureListToString(signatureList));
             throw new WeCrossException(
                     WeCrossException.ErrorCode.INTERNAL_ERROR,
                     "verifyBlockHeader fail, caused by verify fail.");
@@ -82,7 +89,8 @@ public class BlockHeaderValidation {
         return testFlag;
     }
 
-    private static String getChainTypeInBCOSVerifier(String blockVerifierString) throws WeCrossException {
+    private static String getChainTypeInBCOSVerifier(String blockVerifierString)
+            throws WeCrossException {
         ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
         try {
             Objects.requireNonNull(
@@ -91,7 +99,7 @@ public class BlockHeaderValidation {
             Map<String, Object> bcosVerifierMapper =
                     objectMapper.readValue(
                             blockVerifierString, new TypeReference<Map<String, Object>>() {});
-            return  (String) bcosVerifierMapper.get("chainType");
+            return (String) bcosVerifierMapper.get("chainType");
         } catch (JsonProcessingException e) {
             throw new WeCrossException(
                     WeCrossException.ErrorCode.UNEXPECTED_CONFIG,
