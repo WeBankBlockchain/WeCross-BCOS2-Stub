@@ -992,7 +992,7 @@ public class BCOSDriver implements Driver {
                                 BCOSBlockHeader bcosBlockHeader =
                                         (BCOSBlockHeader) block.blockHeader;
                                 BlockHeaderValidation.verifyBlockHeader(
-                                        bcosBlockHeader, blockVerifierString);
+                                        bcosBlockHeader, blockVerifierString, connection.getProperties().get(BCOSConstant.BCOS_STUB_TYPE));
                             }
                             callback.onResponse(null, block);
                         } catch (Exception e) {
