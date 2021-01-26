@@ -53,15 +53,21 @@ public class BlockHeaderValidation {
         Signer signer = Signer.newSigner(EncryptType.encryptType);
         boolean verifyFlag = false;
         boolean finalizeFlag = true;
-        for (BcosBlockHeader.Signature signature : signatureList) {
-            for (String sealer : sealerList) {
-                String address = Keys.getAddress(sealer);
-                byte[] signData = Numeric.hexStringToByteArray(signature.getSignature());
-                byte[] hashData = Numeric.hexStringToByteArray(blockHash);
-                verifyFlag = signer.verifyByHashData(signData, hashData, address);
-                if (verifyFlag) break;
+        try {
+            for (BcosBlockHeader.Signature signature : signatureList) {
+                for (String sealer : sealerList) {
+                    String address = Keys.getAddress(sealer);
+                    byte[] signData = Numeric.hexStringToByteArray(signature.getSignature());
+                    byte[] hashData = Numeric.hexStringToByteArray(blockHash);
+                    verifyFlag = signer.verifyByHashData(signData, hashData, address);
+                    if (verifyFlag) break;
+                }
+                finalizeFlag = finalizeFlag && verifyFlag;
             }
-            finalizeFlag = finalizeFlag && verifyFlag;
+        } catch (Exception e) {
+            throw new WeCrossException(
+                    WeCrossException.ErrorCode.INTERNAL_ERROR,
+                    "verifyBlockHeader fail, caused by " + e.getMessage());
         }
         if (logger.isDebugEnabled()) {
             logger.debug(
