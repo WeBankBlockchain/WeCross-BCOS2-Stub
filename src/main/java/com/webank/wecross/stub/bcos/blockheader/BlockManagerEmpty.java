@@ -2,7 +2,7 @@ package com.webank.wecross.stub.bcos.blockheader;
 
 import com.webank.wecross.stub.BlockManager;
 
-public class BlockHeaderNone implements BlockManager {
+public class BlockManagerEmpty implements BlockManager {
     @Override
     public void start() {}
 

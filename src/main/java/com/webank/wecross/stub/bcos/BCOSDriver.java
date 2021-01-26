@@ -17,7 +17,7 @@ import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
-import com.webank.wecross.stub.bcos.blockheader.BlockHeaderNone;
+import com.webank.wecross.stub.bcos.blockheader.BlockManagerEmpty;
 import com.webank.wecross.stub.bcos.common.*;
 import com.webank.wecross.stub.bcos.contract.BlockUtility;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
@@ -735,7 +735,7 @@ public class BCOSDriver implements Driver {
                                                                         // not support get
                                                                         // blockHeader
                                                                         blockManager =
-                                                                                new BlockHeaderNone();
+                                                                                new BlockManagerEmpty();
                                                                     }
 
                                                                     blockManager.asyncGetBlock(
@@ -974,7 +974,9 @@ public class BCOSDriver implements Driver {
                 Request.newRequest(
                         BCOSRequestType.GET_BLOCK_BY_NUMBER,
                         BigInteger.valueOf(blockNumber).toByteArray());
+
         String blockVerifierString = connection.getProperties().get(BCOSConstant.BCOS_SEALER_LIST);
+        String nodeVersion = connection.getProperties().get(BCOSConstant.BCOS_NODE_VERSION);
         connection.asyncSend(
                 request,
                 response -> {
@@ -988,7 +990,9 @@ public class BCOSDriver implements Driver {
                     } else {
                         try {
                             Block block = BlockUtility.convertToBlock(response.getData(), false);
-                            if (blockVerifierString != null && blockNumber != 0) {
+                            if (FeatureSupport.isSupportGetBlockHeader(nodeVersion)
+                                    && blockVerifierString != null
+                                    && blockNumber != 0) {
                                 BCOSBlockHeader bcosBlockHeader =
                                         (BCOSBlockHeader) block.blockHeader;
                                 BlockHeaderValidation.verifyBlockHeader(
