@@ -20,6 +20,7 @@ public class Web3jWrapperImplTest {
         try {
             Web3j web3j = Web3jUtility.initWeb3j(channelService);
         } catch (Exception e) {
+
         } finally {
             assertTrue(true);
         }
