@@ -62,7 +62,10 @@ configurations {
 //}
 
 dependencies {
-    implementation 'com.webank:wecross-java-stub:1.0.0'
+    implementation ('com.webank:wecross-java-stub:1.0.0') {
+        exclude group: "io.netty"
+    }
+
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'
 
@@ -72,15 +75,21 @@ dependencies {
     implementation ('org.fisco-bcos:web3sdk:2.6.4.01220-SNAPSHOT')  {
         exclude group: "org.ethereum"
         exclude group: "org.fisco-bcos", module: "tcnative"
+        exclude group: "io.netty"
     }
     implementation 'org.fisco-bcos:solcJ:0.5.2.0'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
+    testImplementation 'io.netty:netty-all:4.1.58.Final'
+    testImplementation 'org.fisco-bcos:tcnative:2.0.34.0'
     testImplementation 'org.slf4j:slf4j-log4j12:1.7.30'
     testImplementation 'org.springframework.boot:spring-boot-starter-test:2.1.13.RELEASE'
 
     integTestImplementation 'junit:junit:4.12'
+    integTestImplementation 'io.netty:netty-all:4.1.58.Final'
+    integTestImplementation 'org.fisco-bcos:tcnative:2.0.34.0'
+    integTestImplementation 'org.slf4j:slf4j-log4j12:1.7.30'
     integTestImplementation 'org.slf4j:slf4j-log4j12:1.7.30'
 }
 
@@ -136,6 +145,10 @@ task makeJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar, d
         )
     }
 
+    dependencies {
+        exclude(dependency('io.netty:.*'))
+    }
+
     relocate 'org.fisco.bcos', 'org.fisco.bcos.wecross.normal'
     relocate 'com.webank.wecross.stub.bcos', 'com.webank.wecross.stub.bcos.normal'
 
@@ -158,6 +171,10 @@ task makeGMJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar,
                 'Main-Class': 'com.webank.wecross.stub.bcos.guomi.BCOSGMStubFactory',
                 'version': project.version,
         )
+    }
+
+    dependencies {
+        exclude(dependency('io.netty:.*'))
     }
 
     relocate 'org.fisco.bcos', 'org.fisco.bcos.wecross.guomi'

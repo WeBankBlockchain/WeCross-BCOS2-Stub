@@ -139,7 +139,12 @@ public class BCOSStubCallContractIntegTest {
 
         driver = stubFactory.newDriver();
         account = stubFactory.newAccount("IntegBCOSAccount", "classpath:/accounts/bcos");
-        connection = BCOSConnectionFactory.build("./chains/bcos/", "stub.toml");
+        try {
+            connection = BCOSConnectionFactory.build("./chains/bcos/", "stub.toml");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         connection.setConnectionEventHandler(connectionEventHandlerImplMock);
 
         AbstractWeb3jWrapper web3jWrapper = ((BCOSConnection) connection).getWeb3jWrapper();

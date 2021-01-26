@@ -49,7 +49,7 @@ public class Web3jUtility {
         List<ChannelConnections> allChannelConnections = new ArrayList<>();
         ChannelConnections channelConnections = new ChannelConnections();
 
-        channelConnections.setEnableOpenSSL(false);
+        // channelConnections.setEnableOpenSSL(false);
         channelConnections.setGroupId(channelServiceConfig.getChain().getGroupID());
         channelConnections.setConnectionsStr(channelServiceConfig.getConnectionsStr());
         allChannelConnections.add(channelConnections);
