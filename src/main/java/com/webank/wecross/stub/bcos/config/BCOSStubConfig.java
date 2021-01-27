@@ -50,7 +50,7 @@ public class BCOSStubConfig {
         private String caCert;
         private String sslCert;
         private String sslKey;
-        private boolean gmConnect;
+        private boolean gmConnectEnable;
         private String gmCaCert;
         private String gmSslCert;
         private String gmSslKey;
@@ -93,12 +93,12 @@ public class BCOSStubConfig {
             this.sslKey = sslKey;
         }
 
-        public boolean isGmConnect() {
-            return gmConnect;
+        public boolean isGmConnectEnable() {
+            return gmConnectEnable;
         }
 
-        public void setGmConnect(boolean gmConnect) {
-            this.gmConnect = gmConnect;
+        public void setGmConnectEnable(boolean gmConnectEnable) {
+            this.gmConnectEnable = gmConnectEnable;
         }
 
         public String getGmCaCert() {
