@@ -7,7 +7,11 @@ import com.webank.wecross.exception.WeCrossException;
 import com.webank.wecross.stub.ObjectMapperFactory;
 import com.webank.wecross.stub.bcos.common.BCOSBlockHeader;
 import com.webank.wecross.stub.bcos.uaproof.Signer;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.fisco.bcos.web3j.crypto.Keys;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlockHeader;
@@ -44,7 +48,7 @@ public class BlockHeaderValidation {
         if (bcosBlockHeader.getNumber() != 0 && !isSignUnique(signatureList)) {
             logger.error(
                     "Some signature in SignList is not unique, signatureList is {}",
-                    BCOSBlockHeader.signatureListToString(signatureList));
+                    bcosBlockHeader.signatureListToString());
             throw new WeCrossException(
                     WeCrossException.ErrorCode.INTERNAL_ERROR,
                     "verifyBlockHeader fail, caused by sign is not unique.");
@@ -77,7 +81,7 @@ public class BlockHeaderValidation {
         if (!finalizeFlag) {
             logger.error(
                     "VerifyBlockHeader fail!, signatureList is {}",
-                    BCOSBlockHeader.signatureListToString(signatureList));
+                    bcosBlockHeader.signatureListToString());
             throw new WeCrossException(
                     WeCrossException.ErrorCode.INTERNAL_ERROR,
                     "verifyBlockHeader fail, caused by verify fail.");

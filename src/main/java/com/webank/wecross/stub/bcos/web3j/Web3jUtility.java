@@ -1,5 +1,6 @@
 package com.webank.wecross.stub.bcos.web3j;
 
+import com.webank.wecross.exception.WeCrossException;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,26 +59,41 @@ public class Web3jUtility {
         GroupChannelConnectionsConfig groupChannelConnectionsConfig =
                 new GroupChannelConnectionsConfig();
 
-        groupChannelConnectionsConfig.setCaCert(
-                resolver.getResource(channelServiceConfig.getCaCert()));
-        groupChannelConnectionsConfig.setSslCert(
-                resolver.getResource(channelServiceConfig.getSslCert()));
-        groupChannelConnectionsConfig.setSslKey(
-                resolver.getResource(channelServiceConfig.getSslKey()));
         groupChannelConnectionsConfig.setAllChannelConnections(allChannelConnections);
 
-        if (channelServiceConfig.isGmConnect()) {
+        if (channelServiceConfig.isGmConnectEnable()) {
+            checkCertExist(resolver, channelServiceConfig.getGmCaCert(), "GmCaCert");
             groupChannelConnectionsConfig.setGmCaCert(
                     resolver.getResource(channelServiceConfig.getGmCaCert()));
-            groupChannelConnectionsConfig.setGmSslCert(
-                    resolver.getResource(channelServiceConfig.getGmSslCert()));
+
+            checkCertExist(resolver, channelServiceConfig.getGmSslKey(), "GmSslKey");
             groupChannelConnectionsConfig.setGmSslKey(
                     resolver.getResource(channelServiceConfig.getGmSslKey()));
+
+            checkCertExist(resolver, channelServiceConfig.getGmEnSslCert(), "GmEnSslCert");
             groupChannelConnectionsConfig.setGmEnSslCert(
                     resolver.getResource(channelServiceConfig.getGmEnSslCert()));
+
+            checkCertExist(resolver, channelServiceConfig.getGmEnSslKey(), "GmEnSslKey");
             groupChannelConnectionsConfig.setGmEnSslKey(
                     resolver.getResource(channelServiceConfig.getGmEnSslKey()));
+
+            checkCertExist(resolver, channelServiceConfig.getGmEnSslCert(), "GmEnSslCert");
+            groupChannelConnectionsConfig.setGmSslCert(
+                    resolver.getResource(channelServiceConfig.getGmSslCert()));
             EncryptType.setEncryptType(EncryptType.SM2_TYPE);
+        } else {
+            checkCertExist(resolver, channelServiceConfig.getCaCert(), "CaCert");
+            groupChannelConnectionsConfig.setCaCert(
+                    resolver.getResource(channelServiceConfig.getCaCert()));
+
+            checkCertExist(resolver, channelServiceConfig.getSslCert(), "SslCert");
+            groupChannelConnectionsConfig.setSslCert(
+                    resolver.getResource(channelServiceConfig.getSslCert()));
+
+            checkCertExist(resolver, channelServiceConfig.getSslKey(), "SslKey");
+            groupChannelConnectionsConfig.setSslKey(
+                    resolver.getResource(channelServiceConfig.getSslKey()));
         }
 
         Service service = new Service();
@@ -98,5 +114,15 @@ public class Web3jUtility {
         channelEthereumService.setTimeout(channelServiceConfig.getTimeout());
         return org.fisco.bcos.web3j.protocol.Web3j.build(
                 channelEthereumService, service.getGroupId());
+    }
+
+    public static void checkCertExist(
+            PathMatchingResourcePatternResolver resolver, String location, String key)
+            throws WeCrossException {
+        if (!resolver.getResource(location).exists()) {
+            throw new WeCrossException(
+                    WeCrossException.ErrorCode.DIR_NOT_EXISTS,
+                    key + " does not exist, please check.");
+        }
     }
 }

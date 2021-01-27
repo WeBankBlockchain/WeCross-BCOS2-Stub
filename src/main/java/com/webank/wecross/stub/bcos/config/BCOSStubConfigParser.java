@@ -116,9 +116,9 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         String sslKey = stubDir + File.separator + (String) channelServiceConfigValue.get("sslKey");
         requireFieldNotNull(sslKey, "channelService", "sslKey", configFile);
 
-        boolean gmConnect =
-                channelServiceConfigValue.get("gmConnect") != null
-                        && (boolean) channelServiceConfigValue.get("gmConnect");
+        boolean gmConnectEnable =
+                channelServiceConfigValue.get("gmConnectEnable") != null
+                        && (boolean) channelServiceConfigValue.get("gmConnectEnable");
 
         // connectionsStr field
         @SuppressWarnings("unchecked")
@@ -145,9 +145,9 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         channelServiceConfig.setCaCert(caCertPath);
         channelServiceConfig.setSslCert(sslCert);
         channelServiceConfig.setSslKey(sslKey);
-        channelServiceConfig.setGmConnect(gmConnect);
+        channelServiceConfig.setGmConnectEnable(gmConnectEnable);
 
-        if (gmConnect) {
+        if (gmConnectEnable) {
             String gmCaCert =
                     stubDir + File.separator + (String) channelServiceConfigValue.get("gmCaCert");
             requireFieldNotNull(gmCaCert, "channelService", "gmCaCert", configFile);
