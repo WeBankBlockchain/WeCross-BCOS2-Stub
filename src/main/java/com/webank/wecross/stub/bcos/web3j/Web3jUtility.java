@@ -61,7 +61,7 @@ public class Web3jUtility {
 
         groupChannelConnectionsConfig.setAllChannelConnections(allChannelConnections);
 
-        if (channelServiceConfig.isGmConnect()) {
+        if (channelServiceConfig.isGmConnectEnable()) {
             checkCertExist(resolver, channelServiceConfig.getGmCaCert(), "GmCaCert");
             groupChannelConnectionsConfig.setGmCaCert(
                     resolver.getResource(channelServiceConfig.getGmCaCert()));
