@@ -70,7 +70,8 @@ dependencies {
     implementation 'commons-codec:commons-codec:1.14'
 
     implementation 'org.apache.commons:commons-lang3:3.11'
-    implementation 'com.google.guava:guava:28.1-jre'
+    implementation 'com.google.guava:guava:30.1-jre'
+    implementation 'org.yaml:snakeyaml:1.27'
 
     implementation ('org.fisco-bcos:web3sdk:2.6.4.01220-SNAPSHOT')  {
         exclude group: "org.ethereum"
