@@ -16,7 +16,7 @@ import com.webank.wecross.stub.bcos.contract.BlockUtility;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
+import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperCallNotSucStatus;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImplMock;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperWithExceptionMock;
@@ -78,7 +78,7 @@ public class BCOSConnectionTest {
 
     @Test
     public void handleUnknownTypeTest() throws IOException, InterruptedException {
-        Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
+        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperImplMock();
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
@@ -99,7 +99,7 @@ public class BCOSConnectionTest {
 
     @Test
     public void handleGetBlockNumberTest() {
-        Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
+        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperImplMock();
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
@@ -118,7 +118,7 @@ public class BCOSConnectionTest {
 
     @Test
     public void handleFailedGetBlockNumberTest() {
-        Web3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
+        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
@@ -137,7 +137,7 @@ public class BCOSConnectionTest {
     @Test
     public void handleGetBlockTest() throws IOException {
 
-        Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
+        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperImplMock();
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
@@ -184,7 +184,7 @@ public class BCOSConnectionTest {
 
     @Test
     public void handleFailedGetBlockTest() throws IOException {
-        Web3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
+        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
@@ -205,7 +205,7 @@ public class BCOSConnectionTest {
     @Test
     public void handleCallTest() throws IOException {
 
-        Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
+        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperImplMock();
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
@@ -260,7 +260,7 @@ public class BCOSConnectionTest {
     @Test
     public void handleFailedCallTest() throws IOException {
 
-        Web3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
+        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
@@ -297,7 +297,7 @@ public class BCOSConnectionTest {
     @Test
     public void handleFailedCallTest0() throws IOException {
 
-        Web3jWrapper web3jWrapper = new Web3jWrapperCallNotSucStatus();
+        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperCallNotSucStatus();
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
@@ -333,7 +333,7 @@ public class BCOSConnectionTest {
     @Test
     public void handleSendTransactionTest() throws IOException {
 
-        Web3jWrapper web3jWrapper = new Web3jWrapperImplMock();
+        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperImplMock();
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
@@ -396,7 +396,7 @@ public class BCOSConnectionTest {
     @Test
     public void handleFailedSendTransactionTest() throws IOException, InterruptedException {
 
-        Web3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
+        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
@@ -448,7 +448,7 @@ public class BCOSConnectionTest {
     @Test
     public void handleFailedSendTransactionTest0() throws IOException, InterruptedException {
 
-        Web3jWrapper web3jWrapper = new Web3jWrapperWithNullMock();
+        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperWithNullMock();
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
@@ -503,7 +503,7 @@ public class BCOSConnectionTest {
         request.setType(BCOSRequestType.GET_TRANSACTION_PROOF);
         request.setData(hash.getBytes(StandardCharsets.UTF_8));
 
-        Web3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
+        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,

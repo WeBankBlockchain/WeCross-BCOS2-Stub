@@ -19,8 +19,6 @@ public class BCOSStubConfig {
     /** BCOS resource list */
     private List<Resource> resources;
 
-    private Sealers sealers;
-
     public static class Chain {
         private int groupID;
         private int chainID;
@@ -52,6 +50,12 @@ public class BCOSStubConfig {
         private String caCert;
         private String sslCert;
         private String sslKey;
+        private boolean gmConnectEnable;
+        private String gmCaCert;
+        private String gmSslCert;
+        private String gmSslKey;
+        private String gmEnSslCert;
+        private String gmEnSslKey;
         private List<String> connectionsStr;
         private Chain chain;
         private int threadNum;
@@ -87,6 +91,54 @@ public class BCOSStubConfig {
 
         public void setSslKey(String sslKey) {
             this.sslKey = sslKey;
+        }
+
+        public boolean isGmConnectEnable() {
+            return gmConnectEnable;
+        }
+
+        public void setGmConnectEnable(boolean gmConnectEnable) {
+            this.gmConnectEnable = gmConnectEnable;
+        }
+
+        public String getGmCaCert() {
+            return gmCaCert;
+        }
+
+        public void setGmCaCert(String gmCaCert) {
+            this.gmCaCert = gmCaCert;
+        }
+
+        public String getGmSslCert() {
+            return gmSslCert;
+        }
+
+        public void setGmSslCert(String gmSslCert) {
+            this.gmSslCert = gmSslCert;
+        }
+
+        public String getGmSslKey() {
+            return gmSslKey;
+        }
+
+        public void setGmSslKey(String gmSslKey) {
+            this.gmSslKey = gmSslKey;
+        }
+
+        public String getGmEnSslCert() {
+            return gmEnSslCert;
+        }
+
+        public void setGmEnSslCert(String gmEnSslCert) {
+            this.gmEnSslCert = gmEnSslCert;
+        }
+
+        public String getGmEnSslKey() {
+            return gmEnSslKey;
+        }
+
+        public void setGmEnSslKey(String gmEnSslKey) {
+            this.gmEnSslKey = gmEnSslKey;
         }
 
         public List<String> getConnectionsStr() {
@@ -201,27 +253,6 @@ public class BCOSStubConfig {
         }
     }
 
-    public static class Sealers {
-        private List<String> sealerList;
-
-        public Sealers(List<String> sealerList) {
-            this.sealerList = sealerList;
-        }
-
-        public List<String> getSealerList() {
-            return sealerList;
-        }
-
-        public void setSealerList(List<String> sealerList) {
-            this.sealerList = sealerList;
-        }
-
-        @Override
-        public String toString() {
-            return "Sealers{" + "sealers=" + sealerList + '}';
-        }
-    }
-
     public String getType() {
         return type;
     }
@@ -252,14 +283,6 @@ public class BCOSStubConfig {
 
     public void setChain(Chain chain) {
         this.chain = chain;
-    }
-
-    public Sealers getSealers() {
-        return sealers;
-    }
-
-    public void setSealers(Sealers sealers) {
-        this.sealers = sealers;
     }
 
     @Override

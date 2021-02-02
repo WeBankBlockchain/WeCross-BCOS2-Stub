@@ -23,7 +23,7 @@ public class BlockUtility {
      */
     public static BlockHeader convertToBlockHeader(BcosBlock.Block block) throws IOException {
         List<String> headerExtraData = block.getExtraData();
-        if (!headerExtraData.isEmpty()) {
+        if (!headerExtraData.isEmpty() && (block.getNumber().longValue() != 0)) {
             return convertToBlockHeaderWithSignature(block);
         }
         BlockHeader blockHeader = new BlockHeader();
@@ -94,7 +94,9 @@ public class BlockUtility {
     public static Block convertToBlock(byte[] blockBytes, boolean onlyHeader) throws IOException {
         BcosBlock.Block block =
                 ObjectMapperFactory.getObjectMapper().readValue(blockBytes, BcosBlock.Block.class);
-        logger.debug("BcosBlock: {}", block.getExtraData().size());
+        if (logger.isDebugEnabled()) {
+            logger.debug("blockNumber: {}, blockHash: {}", block.getNumber(), block.getHash());
+        }
         Block stubBlock = convertToBlock(block, onlyHeader);
         stubBlock.setRawBytes(blockBytes);
         return stubBlock;
