@@ -62,7 +62,7 @@ configurations {
 //}
 
 dependencies {
-    implementation ('com.webank:wecross-java-stub:1.1.0-dev-02020-SNAPSHOT') {
+    implementation ('com.webank:wecross-java-stub:1.1.1') {
         exclude group: "io.netty"
     }
 
