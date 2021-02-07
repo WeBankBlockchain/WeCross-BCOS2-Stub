@@ -34,6 +34,7 @@ public class BlockHeaderValidation {
                             + " actual stubType: "
                             + stubType);
         }
+
         List<String> sealerList = getPubKeyInBCOSVerifier(blockVerifierString);
 
         List<BcosBlockHeader.Signature> signatureList = bcosBlockHeader.getSignatureList();
