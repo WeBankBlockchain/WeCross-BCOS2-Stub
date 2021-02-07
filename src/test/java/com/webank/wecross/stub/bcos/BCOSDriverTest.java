@@ -6,6 +6,7 @@ import static junit.framework.TestCase.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.stub.*;
 import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.BCOSStubException;
@@ -24,6 +25,8 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
@@ -37,6 +40,7 @@ import org.fisco.bcos.web3j.crypto.gm.GenCredential;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 public class BCOSDriverTest {
 
@@ -69,6 +73,8 @@ public class BCOSDriverTest {
                 new BCOSStubConfigParser("./", "stub-sample-ut.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
 
+        ScheduledExecutorService scheduledExecutorService =
+                new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
         connection = BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperImplMock());
         ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
         connection
@@ -81,6 +87,7 @@ public class BCOSDriverTest {
                                 + "\"95b7ff064f91de76598f90bc059bec1834f0d9eeb0d05e1086d49af1f9c2f321062d011ee8b0df7644bd54c4f9ca3d8515a3129bbb9d0df8287c9fa69552887e\","
                                 + "\"b8acb51b9fe84f88d670646be36f31c52e67544ce56faf3dc8ea4cf1b0ebff0864c6b218fdcd9cf9891ebd414a995847911bd26a770f429300085f37e1131f36\"]}");
 
+        connection.getProperties().put(BCOSConstant.BCOS_STUB_TYPE, "BCOS2.0");
         exceptionConnection =
                 BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperWithExceptionMock());
         nonExistConnection =
@@ -418,14 +425,14 @@ public class BCOSDriverTest {
 
         BCOSDriver bcosDriver = (BCOSDriver) driver;
         try {
-            bcosDriver.checkRequest(transactionContext, null);
+            bcosDriver.checkTransactionRequest(transactionContext, null);
         } catch (BCOSStubException e) {
             assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
             assertTrue(e.getMessage().equals("TransactionRequest is null"));
         }
 
         try {
-            bcosDriver.checkRequest(null, null);
+            bcosDriver.checkTransactionRequest(null, null);
         } catch (BCOSStubException e) {
             assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
             assertTrue(e.getMessage().equals("TransactionContext is null"));
@@ -434,7 +441,7 @@ public class BCOSDriverTest {
         try {
             TransactionContext transactionContext =
                     createTransactionContext(null, blockManager, resourceInfo);
-            bcosDriver.checkRequest(transactionContext, new TransactionRequest());
+            bcosDriver.checkTransactionRequest(transactionContext, new TransactionRequest());
         } catch (BCOSStubException e) {
             assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
             assertTrue(e.getMessage().equals("Account is null"));
@@ -443,7 +450,7 @@ public class BCOSDriverTest {
         try {
             TransactionContext transactionContext =
                     createTransactionContext(account, null, resourceInfo);
-            bcosDriver.checkRequest(transactionContext, new TransactionRequest());
+            bcosDriver.checkTransactionRequest(transactionContext, new TransactionRequest());
         } catch (BCOSStubException e) {
             assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
             assertTrue(e.getMessage().equals("BlockHeaderManager is null"));
@@ -451,7 +458,7 @@ public class BCOSDriverTest {
 
         try {
             TransactionRequest transactionRequest = new TransactionRequest(null, null);
-            bcosDriver.checkRequest(transactionContext, transactionRequest);
+            bcosDriver.checkTransactionRequest(transactionContext, transactionRequest);
         } catch (BCOSStubException e) {
             assertTrue(e.getErrorCode().intValue() == BCOSStatusCode.InvalidParameter);
             assertTrue(e.getMessage().equals("Method is null"));

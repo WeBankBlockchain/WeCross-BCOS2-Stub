@@ -1,16 +1,15 @@
 package com.webank.wecross.stub.bcos.web3j;
 
+import com.webank.wecross.exception.WeCrossException;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import java.util.ArrayList;
 import java.util.List;
 import org.fisco.bcos.channel.client.Service;
 import org.fisco.bcos.channel.handler.ChannelConnections;
 import org.fisco.bcos.channel.handler.GroupChannelConnectionsConfig;
-import org.fisco.bcos.fisco.EnumNodeVersion;
 import org.fisco.bcos.web3j.crypto.EncryptType;
 import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.channel.ChannelEthereumService;
-import org.fisco.bcos.web3j.protocol.core.methods.response.NodeVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -19,8 +18,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 public class Web3jUtility {
 
     private static final Logger logger = LoggerFactory.getLogger(Web3jUtility.class);
-
-    private Web3jUtility() {}
 
     public static ThreadPoolTaskExecutor build(int threadNum, int queueCapacity, String name) {
         logger.info(
@@ -39,86 +36,6 @@ public class Web3jUtility {
     }
 
     /**
-     * Initialize the web3j service with check the check the configuration
-     *
-     * @param bcosStubConfig
-     * @return
-     * @throws Exception
-     */
-    public static Web3j initWeb3j(BCOSStubConfig bcosStubConfig) throws Exception {
-
-        logger.info("BCOSStubConfig: {}", bcosStubConfig);
-
-        BCOSStubConfig.ChannelService channelService = bcosStubConfig.getChannelService();
-        Web3j web3j = initWeb3j(channelService);
-
-        NodeVersion.Version version = web3j.getNodeVersion().send().getNodeVersion();
-
-        logger.info("NodeVersion: {}", version);
-
-        // check version
-        checkVersion(version);
-        // check config
-        checkConfig(version, bcosStubConfig.getType());
-
-        return web3j;
-    }
-
-    /**
-     * Check the stub config type
-     *
-     * @param version
-     * @param stubType
-     */
-    public static void checkConfig(NodeVersion.Version version, String stubType) throws Exception {
-        boolean isGMStub = stubType.toLowerCase().contains("gm");
-        boolean isGMNode = version.getVersion().toLowerCase().contains("gm");
-        if (logger.isDebugEnabled()) {
-            logger.debug(" isGMStub: {}, isGMNode: {}", isGMStub, isGMNode);
-        }
-        if (!(isGMStub == isGMNode)) {
-            throw new Exception(
-                    "Please check config "
-                            + "stub.toml common::type field, change to \""
-                            + (isGMNode ? "GM_BCOS2.0" : "BCOS2.0")
-                            + "\"");
-        }
-    }
-
-    /**
-     * Check the node version information, 2.4.0+ supported
-     *
-     * @param version
-     * @throws Exception
-     */
-    public static void checkVersion(NodeVersion.Version version) throws Exception {
-
-        String supportedVersionStr = version.getSupportedVersion();
-        String nodeVersionStr = version.getVersion();
-
-        EnumNodeVersion.Version supportedVersion =
-                EnumNodeVersion.getClassVersion(supportedVersionStr);
-
-        /*2.4.0 gm or 2.4.0*/
-        String[] strings = nodeVersionStr.split(" ");
-        EnumNodeVersion.Version nodeVersion = EnumNodeVersion.getClassVersion(strings[0]);
-
-        // must not below than 2.4.0
-        if (!(supportedVersion.getMajor() == 2 && supportedVersion.getMinor() >= 4)) {
-            throw new Exception(
-                    "FISCO BCOS supported version is not supported, version must not below than 2.4.0, but current is "
-                            + supportedVersionStr);
-        }
-
-        // must not below than 2.4.0
-        if (!(nodeVersion.getMajor() == 2 && nodeVersion.getMinor() >= 4)) {
-            throw new Exception(
-                    "FISCO BCOS version is not supported, version must not below than 2.4.0, but current is "
-                            + nodeVersionStr);
-        }
-    }
-
-    /**
      * Initialize the web3j service
      *
      * @param channelServiceConfig
@@ -133,7 +50,7 @@ public class Web3jUtility {
         List<ChannelConnections> allChannelConnections = new ArrayList<>();
         ChannelConnections channelConnections = new ChannelConnections();
 
-        channelConnections.setEnableOpenSSL(false);
+        // channelConnections.setEnableOpenSSL(false);
         channelConnections.setGroupId(channelServiceConfig.getChain().getGroupID());
         channelConnections.setConnectionsStr(channelServiceConfig.getConnectionsStr());
         allChannelConnections.add(channelConnections);
@@ -142,26 +59,41 @@ public class Web3jUtility {
         GroupChannelConnectionsConfig groupChannelConnectionsConfig =
                 new GroupChannelConnectionsConfig();
 
-        groupChannelConnectionsConfig.setCaCert(
-                resolver.getResource(channelServiceConfig.getCaCert()));
-        groupChannelConnectionsConfig.setSslCert(
-                resolver.getResource(channelServiceConfig.getSslCert()));
-        groupChannelConnectionsConfig.setSslKey(
-                resolver.getResource(channelServiceConfig.getSslKey()));
         groupChannelConnectionsConfig.setAllChannelConnections(allChannelConnections);
 
-        if (channelServiceConfig.isGmConnect()) {
+        if (channelServiceConfig.isGmConnectEnable()) {
+            checkCertExist(resolver, channelServiceConfig.getGmCaCert(), "GmCaCert");
             groupChannelConnectionsConfig.setGmCaCert(
                     resolver.getResource(channelServiceConfig.getGmCaCert()));
-            groupChannelConnectionsConfig.setGmSslCert(
-                    resolver.getResource(channelServiceConfig.getGmSslCert()));
+
+            checkCertExist(resolver, channelServiceConfig.getGmSslKey(), "GmSslKey");
             groupChannelConnectionsConfig.setGmSslKey(
                     resolver.getResource(channelServiceConfig.getGmSslKey()));
+
+            checkCertExist(resolver, channelServiceConfig.getGmEnSslCert(), "GmEnSslCert");
             groupChannelConnectionsConfig.setGmEnSslCert(
                     resolver.getResource(channelServiceConfig.getGmEnSslCert()));
+
+            checkCertExist(resolver, channelServiceConfig.getGmEnSslKey(), "GmEnSslKey");
             groupChannelConnectionsConfig.setGmEnSslKey(
                     resolver.getResource(channelServiceConfig.getGmEnSslKey()));
+
+            checkCertExist(resolver, channelServiceConfig.getGmEnSslCert(), "GmEnSslCert");
+            groupChannelConnectionsConfig.setGmSslCert(
+                    resolver.getResource(channelServiceConfig.getGmSslCert()));
             EncryptType.setEncryptType(EncryptType.SM2_TYPE);
+        } else {
+            checkCertExist(resolver, channelServiceConfig.getCaCert(), "CaCert");
+            groupChannelConnectionsConfig.setCaCert(
+                    resolver.getResource(channelServiceConfig.getCaCert()));
+
+            checkCertExist(resolver, channelServiceConfig.getSslCert(), "SslCert");
+            groupChannelConnectionsConfig.setSslCert(
+                    resolver.getResource(channelServiceConfig.getSslCert()));
+
+            checkCertExist(resolver, channelServiceConfig.getSslKey(), "SslKey");
+            groupChannelConnectionsConfig.setSslKey(
+                    resolver.getResource(channelServiceConfig.getSslKey()));
         }
 
         Service service = new Service();
@@ -182,5 +114,15 @@ public class Web3jUtility {
         channelEthereumService.setTimeout(channelServiceConfig.getTimeout());
         return org.fisco.bcos.web3j.protocol.Web3j.build(
                 channelEthereumService, service.getGroupId());
+    }
+
+    public static void checkCertExist(
+            PathMatchingResourcePatternResolver resolver, String location, String key)
+            throws WeCrossException {
+        if (!resolver.getResource(location).exists()) {
+            throw new WeCrossException(
+                    WeCrossException.ErrorCode.DIR_NOT_EXISTS,
+                    key + " does not exist, please check.");
+        }
     }
 }

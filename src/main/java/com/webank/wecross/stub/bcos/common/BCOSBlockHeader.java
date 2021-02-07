@@ -32,4 +32,14 @@ public class BCOSBlockHeader extends BlockHeader {
     public String toString() {
         return super.toString();
     }
+
+    public String signatureListToString() {
+        StringBuilder sealerString = new StringBuilder();
+        for (BcosBlockHeader.Signature signature : this.signatureList) {
+            sealerString.append("\"");
+            sealerString.append(signature.getSignature());
+            sealerString.append("\"\n");
+        }
+        return sealerString.toString();
+    }
 }
