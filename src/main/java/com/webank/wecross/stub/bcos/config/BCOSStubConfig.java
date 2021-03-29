@@ -51,6 +51,7 @@ public class BCOSStubConfig {
         private String sslCert;
         private String sslKey;
         private boolean gmConnectEnable;
+
         private String gmCaCert;
         private String gmSslCert;
         private String gmSslKey;

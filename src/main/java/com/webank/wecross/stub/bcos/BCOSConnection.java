@@ -499,6 +499,7 @@ public class BCOSConnection implements Connection {
                 List<String> headerData = new ArrayList<>();
                 headerData.add(objectMapper.writeValueAsString(blockHeader));
                 block.setExtraData(headerData);
+
                 if (logger.isDebugEnabled()) {
                     logger.debug("handleAsyncGetBlockRequest: block.Ext: {}", headerData);
                 }

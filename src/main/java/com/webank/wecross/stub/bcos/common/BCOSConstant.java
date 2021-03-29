@@ -19,6 +19,7 @@ public interface BCOSConstant {
     String BCOS_NODE_VERSION = "BCOS_PROPERTY_NODE_VERSION";
 
     String BCOS_SEALER_LIST = "VERIFIER";
+    int BCOS_NODE_ID_LENGTH = 128;
 
     String BCOS_PROXY_ABI = "WeCrossProxyABI";
     String BCOS_PROXY_NAME = StubConstant.PROXY_NAME;

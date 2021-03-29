@@ -977,6 +977,7 @@ public class BCOSDriver implements Driver {
 
         String blockVerifierString = connection.getProperties().get(BCOSConstant.BCOS_SEALER_LIST);
         String nodeVersion = connection.getProperties().get(BCOSConstant.BCOS_NODE_VERSION);
+
         connection.asyncSend(
                 request,
                 response -> {

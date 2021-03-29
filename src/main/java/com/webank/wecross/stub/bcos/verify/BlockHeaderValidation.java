@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.exception.WeCrossException;
 import com.webank.wecross.stub.ObjectMapperFactory;
 import com.webank.wecross.stub.bcos.common.BCOSBlockHeader;
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.uaproof.Signer;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +35,7 @@ public class BlockHeaderValidation {
                             + " actual stubType: "
                             + stubType);
         }
+
         List<String> sealerList = getPubKeyInBCOSVerifier(blockVerifierString);
 
         List<BcosBlockHeader.Signature> signatureList = bcosBlockHeader.getSignatureList();
@@ -133,7 +135,23 @@ public class BlockHeaderValidation {
             Map<String, Object> bcosVerifierMapper =
                     objectMapper.readValue(
                             blockVerifierString, new TypeReference<Map<String, Object>>() {});
-            return (List<String>) bcosVerifierMapper.get("pubKey");
+            List<String> pubKey = (List<String>) bcosVerifierMapper.get("pubKey");
+            if (pubKey == null) {
+                throw new WeCrossException(
+                        WeCrossException.ErrorCode.UNEXPECTED_CONFIG,
+                        "pubKey is null in BCOS Verifier.");
+            }
+            for (String key : pubKey) {
+                if (key.length() != BCOSConstant.BCOS_NODE_ID_LENGTH) {
+                    throw new WeCrossException(
+                            WeCrossException.ErrorCode.UNEXPECTED_CONFIG,
+                            "pubKey length is not in conformity with the BCOS right way, pubKey: "
+                                    + key
+                                    + " length is "
+                                    + key.length());
+                }
+            }
+            return pubKey;
         } catch (JsonProcessingException e) {
             throw new WeCrossException(
                     WeCrossException.ErrorCode.UNEXPECTED_CONFIG,
