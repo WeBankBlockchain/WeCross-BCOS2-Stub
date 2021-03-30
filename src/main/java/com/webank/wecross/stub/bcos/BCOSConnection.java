@@ -309,32 +309,16 @@ public class BCOSConnection implements Connection {
                     new TransactionSucCallback() {
                         @Override
                         public void onResponse(TransactionReceipt receipt) {
-                            if (Objects.isNull(receipt)
-                                    || Objects.isNull(receipt.getTransactionHash())
-                                    || "".equals(receipt.getTransactionHash())
-                                    || (new BigInteger(
-                                                            receipt.getTransactionHash()
-                                                                    .substring(2),
-                                                            16)
-                                                    .compareTo(BigInteger.ZERO)
-                                            == 0)) {
-                                response.setErrorCode(BCOSStatusCode.TransactionReceiptNotExist);
+
+                            try {
+                                response.setErrorCode(BCOSStatusCode.Success);
                                 response.setErrorMessage(
-                                        BCOSStatusCode.getStatusMessage(
-                                                BCOSStatusCode.TransactionReceiptNotExist));
-                            } else {
-                                try {
-                                    response.setErrorCode(BCOSStatusCode.Success);
-                                    response.setErrorMessage(
-                                            BCOSStatusCode.getStatusMessage(
-                                                    BCOSStatusCode.Success));
-                                    response.setData(objectMapper.writeValueAsBytes(receipt));
-                                } catch (JsonProcessingException e) {
-                                    logger.error(" e:", e);
-                                    response.setErrorCode(
-                                            BCOSStatusCode.HandleSendTransactionFailed);
-                                    response.setErrorMessage(e.getMessage());
-                                }
+                                        BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
+                                response.setData(objectMapper.writeValueAsBytes(receipt));
+                            } catch (JsonProcessingException e) {
+                                logger.error(" e:", e);
+                                response.setErrorCode(BCOSStatusCode.HandleSendTransactionFailed);
+                                response.setErrorMessage(e.getMessage());
                             }
 
                             callback.onResponse(response);

@@ -20,6 +20,7 @@ public class Web3jWrapperWithNullMock extends Web3jWrapperImplMock {
     public void sendTransaction(String signedTransactionData, TransactionSucCallback callback)
             throws IOException {
         TransactionReceipt receipt = new TransactionReceipt();
+        receipt.setStatus("0x1a");
         callback.onResponse(receipt);
     }
 
