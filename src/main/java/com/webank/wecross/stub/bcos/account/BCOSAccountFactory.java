@@ -3,6 +3,8 @@ package com.webank.wecross.stub.bcos.account;
 import static com.webank.wecross.stub.bcos.common.BCOSConstant.BCOS_ACCOUNT;
 import static com.webank.wecross.stub.bcos.common.BCOSConstant.BCOS_SM_ACCOUNT;
 
+import com.webank.wecross.stub.Account;
+import com.webank.wecross.stub.AccountFactory;
 import com.webank.wecross.stub.bcos.config.BCOSAccountConfig;
 import com.webank.wecross.stub.bcos.config.BCOSAccountConfigParser;
 import java.io.ByteArrayInputStream;
@@ -24,11 +26,11 @@ import org.fisco.bcos.web3j.crypto.gm.GenCredential;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BCOSAccountFactory {
+public class BCOSAccountFactory implements AccountFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(BCOSAccountFactory.class);
 
-    public static BCOSAccount build(Map<String, Object> properties) {
+    public Account build(Map<String, Object> properties) {
         String username = (String) properties.get("username");
         Integer keyID = (Integer) properties.get("keyID");
         String type = (String) properties.get("type");
@@ -86,9 +88,11 @@ public class BCOSAccountFactory {
             Credentials credentials = buildPemPrivateKey(secKey);
             BCOSAccount account = new BCOSAccount(username, type, credentials);
 
+            /*
             if (!account.getCredentials().getAddress().equals(address)) {
                 throw new Exception("Given address is not belongs to the secKey of " + username);
             }
+             */
 
             return account;
 

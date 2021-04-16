@@ -26,6 +26,7 @@ repositories {
     jcenter()
     maven { url "https://maven.aliyun.com/nexus/content/groups/public/" }
     maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+    maven { url "https://s01.oss.sonatype.org/content/repositories/snapshots/" }
 }
 
 googleJavaFormat {
@@ -62,9 +63,11 @@ configurations {
 //}
 
 dependencies {
-    implementation ('com.webank:wecross-java-stub:1.1.1') {
+    implementation ('com.webank:wecross-java-stub:1.2.0-04160-SNAPSHOT') {
         exclude group: "io.netty"
     }
+
+    implementation 'com.gitee.luyu-community:luyu-protocol:1.0.0-04140-SNAPSHOT'
 
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'

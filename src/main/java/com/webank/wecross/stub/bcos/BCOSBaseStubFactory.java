@@ -108,28 +108,7 @@ public class BCOSBaseStubFactory implements StubFactory {
         try {
             logger.info("New connection: {} type:{}", path, EncryptType.encryptType);
             BCOSConnection connection = BCOSConnectionFactory.build(path, "stub.toml");
-
-            // check proxy contract
-            if (!connection.hasProxyDeployed()) {
-                String errorMsg =
-                        "WeCrossProxy error: WeCrossProxy contract has not been deployed!";
-                String help =
-                        "Please deploy WeCrossProxy contract by: "
-                                + ProxyContractDeployment.getUsage(path);
-                System.out.println(errorMsg + "\n" + help);
-                throw new Exception(errorMsg);
-            }
-
-            // check hub contract
-            if (!connection.hasHubDeployed()) {
-                String errorMsg = "WeCrossHub error: WeCrossHub contract has not been deployed!";
-                String help =
-                        "Please deploy WeCrossHub contract by: "
-                                + HubContractDeployment.getUsage(path);
-                System.out.println(errorMsg + "\n" + help);
-                throw new Exception(errorMsg);
-            }
-
+            checkConnection(connection, path);
             return connection;
         } catch (Exception e) {
             logger.error(" newConnection, e: ", e);
@@ -137,10 +116,44 @@ public class BCOSBaseStubFactory implements StubFactory {
         }
     }
 
+    public Connection newConnection(Map<String, Object> config) {
+        try {
+            String helpPath = "<your-chain-dir>";
+            logger.info("New connection: {} type:{}", helpPath, EncryptType.encryptType);
+            BCOSConnection connection = BCOSConnectionFactory.build(config);
+            checkConnection(connection, helpPath);
+            return connection;
+        } catch (Exception e) {
+            logger.error(" newConnection, e: ", e);
+            return null;
+        }
+    }
+
+    private void checkConnection(BCOSConnection connection, String path) throws Exception {
+        // check proxy contract
+        if (!connection.hasProxyDeployed()) {
+            String errorMsg = "WeCrossProxy error: WeCrossProxy contract has not been deployed!";
+            String help =
+                    "Please deploy WeCrossProxy contract by: "
+                            + ProxyContractDeployment.getUsage(path);
+            System.out.println(errorMsg + "\n" + help);
+            throw new Exception(errorMsg);
+        }
+
+        // check hub contract
+        if (!connection.hasHubDeployed()) {
+            String errorMsg = "WeCrossHub error: WeCrossHub contract has not been deployed!";
+            String help =
+                    "Please deploy WeCrossHub contract by: " + HubContractDeployment.getUsage(path);
+            System.out.println(errorMsg + "\n" + help);
+            throw new Exception(errorMsg);
+        }
+    }
+
     @Override
     public Account newAccount(Map<String, Object> properties) {
-
-        return BCOSAccountFactory.build(properties);
+        BCOSAccountFactory factory = new BCOSAccountFactory();
+        return factory.build(properties);
     }
 
     public Account newAccount(String name, String path) {

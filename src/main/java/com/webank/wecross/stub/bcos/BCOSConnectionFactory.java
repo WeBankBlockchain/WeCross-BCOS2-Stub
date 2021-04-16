@@ -6,6 +6,7 @@ import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.preparation.CnsService;
 import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperFactory;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -84,6 +85,19 @@ public class BCOSConnectionFactory {
 
         BCOSStubConfigParser bcosStubConfigParser =
                 new BCOSStubConfigParser(stubConfigPath, configName);
+        BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
+
+        AbstractWeb3jWrapper web3jWrapper =
+                Web3jWrapperFactory.createWeb3jWrapperInstance(bcosStubConfig);
+
+        return build(bcosStubConfig, web3jWrapper, executorService);
+    }
+
+    public static BCOSConnection build(Map<String, Object> config) throws Exception {
+        ScheduledExecutorService executorService =
+                new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
+
+        BCOSStubConfigParser bcosStubConfigParser = new BCOSStubConfigParser(config);
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
 
         AbstractWeb3jWrapper web3jWrapper =

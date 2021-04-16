@@ -1037,18 +1037,18 @@ public class BCOSDriver implements Driver {
                         callback.onResponse(exception, null);
                         return;
                     }
-
-                    if (blockNumber
-                            != proof.getReceiptAndProof()
-                                    .getTransactionReceipt()
-                                    .getBlockNumber()
-                                    .longValue()) {
-                        callback.onResponse(
-                                new Exception("Transaction hash does not match the block number"),
-                                null);
-                        return;
-                    }
-
+                    /* no need to verify blockNumber
+                                        if (blockNumber
+                                                != proof.getReceiptAndProof()
+                                                        .getTransactionReceipt()
+                                                        .getBlockNumber()
+                                                        .longValue()) {
+                                            callback.onResponse(
+                                                    new Exception("Transaction hash does not match the block number"),
+                                                    null);
+                                            return;
+                                        }
+                    */
                     TransactionReceipt transactionReceipt =
                             proof.getReceiptAndProof().getTransactionReceipt();
                     org.fisco.bcos.web3j.protocol.core.methods.response.Transaction transaction =
@@ -1056,7 +1056,7 @@ public class BCOSDriver implements Driver {
 
                     if (isVerified) {
                         MerkleValidation.verifyTransactionProof(
-                                blockNumber,
+                                transactionReceipt.getBlockNumber().longValue(),
                                 transactionHash,
                                 blockManager,
                                 proof,

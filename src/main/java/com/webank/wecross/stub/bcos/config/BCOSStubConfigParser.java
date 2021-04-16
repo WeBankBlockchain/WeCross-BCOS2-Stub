@@ -15,11 +15,21 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
 
     private static final Logger logger = LoggerFactory.getLogger(BCOSStubConfigParser.class);
 
-    private final String stubDir;
+    private String stubDir;
+    Map<String, Object> stubConfig;
 
-    public BCOSStubConfigParser(String configPath, String configName) {
+    public BCOSStubConfigParser(String configPath, String configName) throws IOException {
         super(configPath + File.separator + configName);
         this.stubDir = configPath;
+        BCOSToml bcosToml = new BCOSToml(getConfigPath());
+        Toml toml = bcosToml.getToml();
+
+        stubConfig = toml.toMap();
+    }
+
+    public BCOSStubConfigParser(Map<String, Object> stubConfig) {
+        super("memory params");
+        this.stubConfig = stubConfig;
     }
 
     /**
@@ -29,12 +39,6 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
      * @throws IOException
      */
     public BCOSStubConfig loadConfig() throws IOException {
-
-        BCOSToml bcosToml = new BCOSToml(getConfigPath());
-        Toml toml = bcosToml.getToml();
-
-        Map<String, Object> stubConfig = toml.toMap();
-
         Map<String, Object> commonConfigValue = (Map<String, Object>) stubConfig.get("common");
         requireItemNotNull(commonConfigValue, "common", getConfigPath());
 
