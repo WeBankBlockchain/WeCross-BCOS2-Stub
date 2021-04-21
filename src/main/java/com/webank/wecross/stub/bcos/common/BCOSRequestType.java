@@ -8,4 +8,5 @@ public class BCOSRequestType {
     public static final int GET_BLOCK_BY_NUMBER = 1003;
     public static final int GET_TRANSACTION_PROOF = 1004;
     public static final int GET_TRANSACTION = 1005;
+    public static final int QUERY_CNS = 1006;
 }

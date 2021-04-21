@@ -530,7 +530,7 @@ public class BCOSStubCallContractIntegTest {
     @Test
     public void cnsServiceTest() throws InterruptedException {
         AsyncToSync asyncToSync = new AsyncToSync();
-        asyncCnsService.selectByName(BCOSConstant.BCOS_PROXY_NAME, connection, driver, (exception, infoList) -> {
+        asyncCnsService.selectByName(BCOSConstant.BCOS_PROXY_NAME, connection, (exception, infoList) -> {
             Assert.assertTrue(Objects.isNull(exception));
             Assert.assertTrue(!Objects.isNull(infoList));
             asyncToSync.getSemaphore().release();

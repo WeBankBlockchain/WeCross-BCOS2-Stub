@@ -265,7 +265,7 @@ public class DeployContractHandler implements CommandHandler {
                             version,
                             res);
 
-                    asyncCnsService.addAbiToCache(path.getResource(), abi);
+                    // asyncCnsService.addAbiToCache(path.getResource(), abi);
                     callback.onResponse(null, res.getResult()[0]);
                 });
     }

@@ -121,9 +121,10 @@ public class BCOSBaseStubFactory implements StubFactory {
             String helpPath = "<your-chain-dir>";
             logger.info("New connection: {} type:{}", helpPath, EncryptType.encryptType);
             BCOSConnection connection = BCOSConnectionFactory.build(config);
-            checkConnection(connection, helpPath);
+            // For luyu protocol, no need to check proxy and hub
             return connection;
         } catch (Exception e) {
+            System.out.println(e);
             logger.error(" newConnection, e: ", e);
             return null;
         }

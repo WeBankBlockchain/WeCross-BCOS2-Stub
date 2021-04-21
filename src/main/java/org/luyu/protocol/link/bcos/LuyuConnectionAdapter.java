@@ -1,19 +1,23 @@
-package com.webank.wecross.stub.bcos.luyu;
+package org.luyu.protocol.link.bcos;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.Response;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.luyu.protocol.link.Connection;
+import org.luyu.protocol.network.Resource;
 
 public class LuyuConnectionAdapter implements Connection {
     private com.webank.wecross.stub.Connection wecrossConnection;
     private static ExecutorService executor = Executors.newFixedThreadPool(1);
     private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
+    private Collection<Resource> resources = new HashSet<>();
 
     public LuyuConnectionAdapter(com.webank.wecross.stub.Connection wecrossConnection) {
         this.wecrossConnection = wecrossConnection;
@@ -24,6 +28,8 @@ public class LuyuConnectionAdapter implements Connection {
 
         if (type == LuyuDefault.GET_PROPERTIES) {
             handleGetProperties(path, type, data, callback);
+        } else if (type == LuyuDefault.LIST_RESOURCES) {
+            handleListResources(path, type, data, callback);
         } else {
             handleNormalSend(path, type, data, callback);
         }
@@ -70,5 +76,26 @@ public class LuyuConnectionAdapter implements Connection {
                                 new byte[] {});
                     });
         }
+    }
+
+    private void handleListResources(String path, int type, byte[] data, Callback callback) {
+        try {
+            byte[] bytes = objectMapper.writeValueAsBytes(resources);
+
+            executor.submit(
+                    () -> {
+                        callback.onResponse(BCOSStatusCode.Success, "success", bytes);
+                    });
+        } catch (Exception e) {
+            executor.submit(
+                    () -> {
+                        callback.onResponse(
+                                BCOSStatusCode.ListResourcesFailed, e.getMessage(), new byte[] {});
+                    });
+        }
+    }
+
+    public void addResource(Resource resource) {
+        resources.add(resource);
     }
 }

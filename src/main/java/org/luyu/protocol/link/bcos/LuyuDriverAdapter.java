@@ -1,15 +1,24 @@
-package com.webank.wecross.stub.bcos.luyu;
+package org.luyu.protocol.link.bcos;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.stub.Account;
 import com.webank.wecross.stub.AccountFactory;
 import com.webank.wecross.stub.Block;
 import com.webank.wecross.stub.BlockManager;
+import com.webank.wecross.stub.Connection;
+import com.webank.wecross.stub.ObjectMapperFactory;
 import com.webank.wecross.stub.Path;
+import com.webank.wecross.stub.Request;
+import com.webank.wecross.stub.ResourceInfo;
+import com.webank.wecross.stub.Response;
 import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +27,7 @@ import org.luyu.protocol.network.CallRequest;
 import org.luyu.protocol.network.CallResponse;
 import org.luyu.protocol.network.Events;
 import org.luyu.protocol.network.Receipt;
+import org.luyu.protocol.network.Resource;
 import org.luyu.protocol.network.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +43,7 @@ public class LuyuDriverAdapter implements Driver {
     private LuyuWeCrossConnection luyuWeCrossConnection;
     private LuyuMemoryBlockManager blockManager;
     private AccountFactory accountFactory;
+    private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
 
     public LuyuDriverAdapter(
             String type,
@@ -101,7 +112,12 @@ public class LuyuDriverAdapter implements Driver {
     public void call(CallRequest request, CallResponseCallback callback) {
         try {
             Path path = Path.decode(request.getPath());
-            TransactionContext context = new TransactionContext(null, path, null, blockManager);
+            ResourceInfo resourceInfo = new ResourceInfo();
+            resourceInfo.setName(path.getResource());
+            resourceInfo.setStubType(type);
+
+            TransactionContext context =
+                    new TransactionContext(null, path, resourceInfo, blockManager);
             TransactionRequest transactionRequest = new TransactionRequest();
             transactionRequest.setMethod(request.getMethod());
             transactionRequest.setArgs(request.getArgs());
@@ -282,7 +298,39 @@ public class LuyuDriverAdapter implements Driver {
     }
 
     @Override
-    public void listResources(ResourcesCallback callback) {}
+    public void listResources(ResourcesCallback callback) {
+        Request request = new Request();
+        request.setPath(chainPath);
+        request.setType(LuyuDefault.LIST_RESOURCES);
+        luyuWeCrossConnection.asyncSend(
+                request,
+                new Connection.Callback() {
+                    @Override
+                    public void onResponse(Response response) {
+                        try {
+                            if (response.getErrorCode() != 0) {
+                                callback.onResponse(
+                                        response.getErrorCode(), response.getErrorMessage(), null);
+                                return;
+                            } else {
+                                Collection<Resource> resources = new HashSet<>();
+                                resources =
+                                        objectMapper.readValue(
+                                                response.getData(),
+                                                new TypeReference<Collection<Resource>>() {});
+
+                                callback.onResponse(
+                                        QUERY_SUCCESS,
+                                        "Success",
+                                        resources.toArray(new Resource[resources.size()]));
+                            }
+
+                        } catch (Exception e) {
+                            callback.onResponse(QUERY_FAILED, e.getMessage(), null);
+                        }
+                    }
+                });
+    }
 
     @Override
     public void registerEvents(Events events) {

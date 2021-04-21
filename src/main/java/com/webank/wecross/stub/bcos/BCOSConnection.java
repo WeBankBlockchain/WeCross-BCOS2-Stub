@@ -11,6 +11,7 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
+import com.webank.wecross.stub.bcos.preparation.CnsService;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionPair;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
@@ -29,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
+import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.fisco.bcos.web3j.protocol.channel.StatusCode;
 import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
@@ -221,6 +223,8 @@ public class BCOSConnection implements Connection {
             asyncGetTransaction(request, callback);
         } else if (request.getType() == BCOSRequestType.CALL) {
             handleAsyncCallRequest(request, callback);
+        } else if (request.getType() == BCOSRequestType.QUERY_CNS) {
+            handleCnsRequest(request, callback);
         } else {
             // Does not support asynchronous operation, async to sync
             logger.warn(" unrecognized request type, type: {}", request.getType());
@@ -232,6 +236,24 @@ public class BCOSConnection implements Connection {
                             + request.getType());
             callback.onResponse(response);
         }
+    }
+
+    public void handleCnsRequest(Request request, Callback callback) {
+        Response response = new Response();
+        try {
+            String name = new String(request.getData());
+            CnsInfo cnsInfo = CnsService.queryCnsInfo(getWeb3jWrapper(), name);
+
+            response.setErrorCode(BCOSStatusCode.Success);
+            response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
+            response.setData(objectMapper.writeValueAsBytes(cnsInfo));
+
+        } catch (Exception e) {
+            logger.warn("handleCnsRequest Exception:", e);
+            response.setErrorCode(BCOSStatusCode.HandleCnsRequestFailed);
+            response.setErrorMessage(e.getMessage());
+        }
+        callback.onResponse(response);
     }
 
     public void handleAsyncCallRequest(Request request, Callback callback) {

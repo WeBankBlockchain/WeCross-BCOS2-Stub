@@ -1,4 +1,4 @@
-package com.webank.wecross.stub.bcos.luyu;
+package org.luyu.protocol.link.bcos;
 
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;

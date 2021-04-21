@@ -32,7 +32,16 @@ public class CnsService {
     }
 
     /** query cns to get address,abi of hub contract */
-    private static CnsInfo queryCnsInfo(Web3jWrapper web3jWrapper, String name) {
+    public static CnsInfo queryCnsInfo(Web3jWrapper web3jWrapper, String name) {
+        if (name.equals(BCOSConstant.BCOS_CNS_NAME)) {
+            CnsInfo cnsPrecompiledInfo = new CnsInfo();
+            cnsPrecompiledInfo.setName(BCOSConstant.BCOS_CNS_NAME);
+            cnsPrecompiledInfo.setAbi(BCOSConstant.CNS_ABI);
+            cnsPrecompiledInfo.setAddress(BCOSConstant.CNS_PRECOMPILED_ADDRESS);
+            cnsPrecompiledInfo.setVersion("1.0");
+            return cnsPrecompiledInfo;
+        }
+
         /** function selectByName(string memory cnsName) public returns(string memory) */
         Function function =
                 new Function(

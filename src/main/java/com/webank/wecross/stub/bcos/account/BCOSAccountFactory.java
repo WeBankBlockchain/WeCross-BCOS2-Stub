@@ -68,18 +68,8 @@ public class BCOSAccountFactory implements AccountFactory {
             return null;
         }
 
-        if (pubKey == null || pubKey.length() == 0) {
-            logger.error("pubKey has not given");
-            return null;
-        }
-
         if (secKey == null || secKey.length() == 0) {
             logger.error("secKey has not given");
-            return null;
-        }
-
-        if (address == null || address.length() == 0) {
-            logger.error("address has not given in ext0");
             return null;
         }
 

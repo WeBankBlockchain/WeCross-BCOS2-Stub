@@ -28,7 +28,8 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
     }
 
     public BCOSStubConfigParser(Map<String, Object> stubConfig) {
-        super("memory params");
+        super((String) stubConfig.get("chainDir") + File.separator + "<memory properties>");
+        this.stubDir = (String) stubConfig.get("chainDir");
         this.stubConfig = stubConfig;
     }
 
@@ -109,6 +110,7 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         // caCert field
         String caCertPath =
                 stubDir + File.separator + (String) channelServiceConfigValue.get("caCert");
+        System.out.println("caCert path:" + caCertPath);
         requireFieldNotNull(caCertPath, "channelService", "caCert", configFile);
 
         // sslCert field

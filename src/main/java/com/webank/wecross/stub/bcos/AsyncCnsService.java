@@ -1,17 +1,23 @@
 package com.webank.wecross.stub.bcos;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.stub.Account;
 import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Path;
+import com.webank.wecross.stub.Request;
+import com.webank.wecross.stub.Response;
 import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
+import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.LRUCache;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
@@ -28,8 +34,7 @@ public class AsyncCnsService {
     private static final Logger logger = LoggerFactory.getLogger(AsyncCnsService.class);
 
     private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
-
-    private LRUCache<String, String> abiCache = new LRUCache<>(32);
+    private LRUCache<String, CnsInfo> abiCache = new LRUCache<>(32);
     private ScheduledExecutorService scheduledExecutorService =
             new ScheduledThreadPoolExecutor(1, new CustomizableThreadFactory("AsyncCnsService-"));
     private static final long CLEAR_EXPIRES = 30L * 60L; // 30 min
@@ -51,7 +56,7 @@ public class AsyncCnsService {
     }
 
     public interface QueryCallback {
-        void onResponse(Exception e, String info);
+        void onResponse(Exception e, String abi, String address);
     }
 
     public void queryABI(
@@ -61,57 +66,62 @@ public class AsyncCnsService {
             /** WeCrossProxy ABI */
             if (BCOSConstant.BCOS_PROXY_NAME.equals(name)) {
                 String proxyABI = connection.getProperties().get(BCOSConstant.BCOS_PROXY_ABI);
+                String proxyAddress = connection.getProperties().get(BCOSConstant.BCOS_PROXY_NAME);
                 if (logger.isTraceEnabled()) {
                     logger.trace("ProxyABI: {}", proxyABI);
                 }
-                callback.onResponse(null, proxyABI);
+                callback.onResponse(null, proxyABI, proxyAddress);
                 return;
             }
 
-            String abi = abiCache.get(name);
-            if (abi != null) {
-                callback.onResponse(null, abi);
+            CnsInfo cnsInfo = abiCache.get(name);
+            if (cnsInfo != null) {
+                callback.onResponse(null, cnsInfo.getAbi(), cnsInfo.getAddress());
                 return;
             }
 
             queryABISemaphore.acquire(1); // Only 1 thread can query abi remote
-            abi = abiCache.get(name);
-            if (abi != null) {
+            cnsInfo = abiCache.get(name);
+            if (cnsInfo != null) {
                 queryABISemaphore.release();
-                callback.onResponse(null, abi);
+                callback.onResponse(null, cnsInfo.getAbi(), cnsInfo.getAddress());
                 return;
             }
 
             selectByName(
                     name,
                     connection,
-                    driver,
                     (exception, infoList) -> {
                         queryABISemaphore.release();
 
                         if (Objects.nonNull(exception)) {
-                            callback.onResponse(exception, null);
+                            callback.onResponse(exception, null, null);
                             return;
                         }
 
                         if (Objects.isNull(infoList) || infoList.isEmpty()) {
-                            callback.onResponse(null, null);
+                            callback.onResponse(null, null, null);
                         } else {
                             int size = infoList.size();
-                            String currentAbi = infoList.get(size - 1).getAbi();
+                            CnsInfo currentCnsInfo = infoList.get(size - 1);
 
-                            addAbiToCache(name, currentAbi);
+                            addAbiToCache(name, currentCnsInfo);
 
                             if (logger.isDebugEnabled()) {
-                                logger.debug("queryABI name:{}, abi:{}", name, currentAbi);
+                                logger.debug(
+                                        "queryABI name:{}, abi:{}, address:{}",
+                                        name,
+                                        currentCnsInfo.getAbi(),
+                                        currentCnsInfo.getAddress());
                             }
 
-                            callback.onResponse(null, currentAbi);
+                            callback.onResponse(
+                                    null, currentCnsInfo.getAbi(), currentCnsInfo.getAddress());
                         }
                     });
         } catch (Exception e) {
             queryABISemaphore.release();
-            callback.onResponse(e, null);
+            callback.onResponse(e, null, null);
         }
     }
 
@@ -119,18 +129,37 @@ public class AsyncCnsService {
         void onResponse(Exception e, List<CnsInfo> infoList);
     }
 
-    public void selectByNameAndVersion(
-            String name,
-            String version,
-            Connection connection,
-            Driver driver,
-            SelectCallback callback) {
-        select(name, version, connection, driver, callback);
+    public void selectByName(String name, Connection connection, SelectCallback callback) {
+        select(name, connection, callback);
     }
 
-    public void selectByName(
-            String name, Connection connection, Driver driver, SelectCallback callback) {
-        select(name, null, connection, driver, callback);
+    private void select(String name, Connection connection, SelectCallback callback) {
+        Request request = new Request();
+        request.setType(BCOSRequestType.QUERY_CNS);
+        request.setData(name.getBytes(StandardCharsets.UTF_8));
+        connection.asyncSend(
+                request,
+                new Connection.Callback() {
+                    @Override
+                    public void onResponse(Response response) {
+                        try {
+                            if (response.getErrorCode() != 0) {
+                                throw new Exception(
+                                        "Select response error: " + response.getErrorMessage());
+                            }
+
+                            CnsInfo cnsInfo =
+                                    objectMapper.readValue(
+                                            response.getData(), new TypeReference<CnsInfo>() {});
+                            List<CnsInfo> cnsInfos = new LinkedList<>();
+                            cnsInfos.add(cnsInfo);
+                            callback.onResponse(null, cnsInfos);
+                        } catch (Exception e) {
+                            logger.error("select exception: ", e);
+                            callback.onResponse(e, null);
+                        }
+                    }
+                });
     }
 
     private void select(
@@ -150,14 +179,14 @@ public class AsyncCnsService {
         }
 
         Path path = new Path();
-        path.setResource(BCOSConstant.BCOS_PROXY_NAME);
+        path.setResource(BCOSConstant.BCOS_CNS_NAME);
 
         TransactionContext transactionContext = new TransactionContext(null, path, null, null);
 
         driver.asyncCall(
                 transactionContext,
                 transactionRequest,
-                true,
+                false,
                 connection,
                 (transactionException, connectionResponse) -> {
                     try {
@@ -236,7 +265,7 @@ public class AsyncCnsService {
                         return;
                     }
 
-                    addAbiToCache(path.getResource(), abi);
+                    // addAbiToCache(path.getResource(), abi);
 
                     logger.info(
                             " registerCNS successfully, name: {}, version: {}, address: {} ",
@@ -248,15 +277,15 @@ public class AsyncCnsService {
                 });
     }
 
-    public LRUCache<String, String> getAbiCache() {
+    public LRUCache<String, CnsInfo> getAbiCache() {
         return abiCache;
     }
 
-    public void setAbiCache(LRUCache<String, String> abiCache) {
+    public void setAbiCache(LRUCache<String, CnsInfo> abiCache) {
         this.abiCache = abiCache;
     }
 
-    public void addAbiToCache(String name, String abi) {
-        this.abiCache.put(name, abi);
+    public void addAbiToCache(String name, CnsInfo cnsInfo) {
+        this.abiCache.put(name, cnsInfo);
     }
 }

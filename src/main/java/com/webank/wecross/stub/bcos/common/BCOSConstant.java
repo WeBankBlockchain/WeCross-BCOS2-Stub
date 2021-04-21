@@ -24,10 +24,13 @@ public interface BCOSConstant {
     String BCOS_PROXY_ABI = "WeCrossProxyABI";
     String BCOS_PROXY_NAME = StubConstant.PROXY_NAME;
     String BCOS_HUB_NAME = StubConstant.HUB_NAME;
+    String BCOS_CNS_NAME = "WeCrossCNS";
 
     String CUSTOM_COMMAND_DEPLOY = "deploy";
     String CUSTOM_COMMAND_REGISTER = "register";
     String CNS_PRECOMPILED_ADDRESS = "0x0000000000000000000000000000000000001004";
+    String CNS_ABI =
+            "[{\"constant\":true,\"inputs\":[{\"name\":\"name\",\"type\":\"string\"}],\"name\":\"selectByName\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"version\",\"type\":\"string\"}],\"name\":\"selectByNameAndVersion\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"version\",\"type\":\"string\"},{\"name\":\"addr\",\"type\":\"string\"},{\"name\":\"abi\",\"type\":\"string\"}],\"name\":\"insert\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"version\",\"type\":\"string\"}],\"name\":\"getContractAddress\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]";
     String DEFAULT_ADDRESS = "0x1111111111111111111111111111111111111111";
     String CNS_METHOD_SELECTBYNAME = "selectByName";
     String PROXY_METHOD_DEPLOY = "deployContractWithRegisterCNS";

@@ -140,6 +140,7 @@ task makeJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar, d
     exclude '**/*.properties'
     exclude '**/*.yml'
     exclude '**/BCOSGMStubFactory.*'
+    exclude '**/LuyuBCOSGMPluginBuilder.*'
     exclude '**/performance/guomi/*'
 
     manifest {
@@ -189,6 +190,7 @@ task makeGMJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar,
     exclude '**/*.properties'
     exclude '**/*.yml'
     exclude '**/BCOSStubFactory.*'
+    exclude '**/LuyuBCOSPluginBuilder.*'
     exclude '**/performance/normal/*'
 
     manifest {

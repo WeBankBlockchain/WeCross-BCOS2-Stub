@@ -24,6 +24,8 @@ public class BCOSStatusCode {
     public static final int HandleGetTransactionProofFailed = 2025;
     public static final int HandleGetPropertiesFailed = 2026;
     public static final int RegisterContractFailed = 2027;
+    public static final int ListResourcesFailed = 2028;
+    public static final int HandleCnsRequestFailed = 2029;
 
     public static final int CallNotSuccessStatus = 2030;
     public static final int SendTransactionNotSuccessStatus = 2031;

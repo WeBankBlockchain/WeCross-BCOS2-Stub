@@ -1,4 +1,4 @@
-package com.webank.wecross.stub.bcos.luyu;
+package org.luyu.protocol.link.bcos;
 
 import com.webank.wecross.exception.WeCrossException;
 import com.webank.wecross.stub.Block;
@@ -55,6 +55,10 @@ public class LuyuMemoryBlockManager implements BlockManager {
     }
 
     public boolean hasBlock(long number) {
+        if (blockDataCache.size() == 0) {
+            return false;
+        }
+
         long max = blockDataCache.peekFirst().getBlockHeader().getNumber();
         long min = max - blockDataCache.size() + 1;
 

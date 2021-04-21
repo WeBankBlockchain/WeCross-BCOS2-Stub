@@ -1,10 +1,11 @@
-package com.webank.wecross.stub.bcos.luyu;
+package org.luyu.protocol.link.bcos;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.ObjectMapperFactory;
 import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.Response;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -72,7 +73,9 @@ public class LuyuWeCrossConnection implements Connection {
                     });
             byte[] propertiesBytes =
                     future.get(LuyuDefault.ADAPTER_QUERY_EXPIRES, TimeUnit.SECONDS);
-            properties = objectMapper.readValue(propertiesBytes, properties.getClass());
+            Map<String, String> retProperties = new HashMap<>();
+            retProperties = objectMapper.readValue(propertiesBytes, retProperties.getClass());
+            properties = retProperties;
             return properties;
         } catch (Exception e) {
             logger.warn("getProperties exception: ", e);
