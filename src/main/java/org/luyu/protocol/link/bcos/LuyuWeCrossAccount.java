@@ -55,9 +55,11 @@ public class LuyuWeCrossAccount extends BCOSAccount {
                 byte[] s = toBytesPadded(luyuSignData.getS(), 32);
 
                 Sign.SignatureData signatureData = new Sign.SignatureData(v, r, s);
-                byte[] signBytse = ExtendedTransactionEncoder.encode(
-                        extendedRawTransaction,
-                        signatureData); // TODO: extendedRawTransaction encode twice, need optimizing
+                byte[] signBytse =
+                        ExtendedTransactionEncoder.encode(
+                                extendedRawTransaction,
+                                signatureData); // TODO: extendedRawTransaction encode twice, need
+                                                // optimizing
                 return signBytse;
 
             } else {
