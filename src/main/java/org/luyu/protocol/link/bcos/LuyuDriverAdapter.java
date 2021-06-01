@@ -2,7 +2,6 @@ package org.luyu.protocol.link.bcos;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.webank.wecross.stub.Account;
 import com.webank.wecross.stub.AccountFactory;
 import com.webank.wecross.stub.Block;
 import com.webank.wecross.stub.BlockManager;
@@ -16,13 +15,14 @@ import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
+import com.webank.wecross.stub.bcos.BCOSStubFactory;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import org.luyu.protocol.algorithm.ecdsa.secp256k1.EcdsaSecp256k1WithSHA256;
 import org.luyu.protocol.link.Driver;
+import org.luyu.protocol.network.Account;
 import org.luyu.protocol.network.CallRequest;
 import org.luyu.protocol.network.CallResponse;
 import org.luyu.protocol.network.Events;
@@ -61,11 +61,12 @@ public class LuyuDriverAdapter implements Driver {
     }
 
     @Override
-    public void sendTransaction(Transaction request, ReceiptCallback callback) {
+    public void sendTransaction(Account account, Transaction request, ReceiptCallback callback) {
         try {
-            Account account = toAccount(request.getKey());
+
             Path path = Path.decode(request.getPath());
-            TransactionContext context = new TransactionContext(account, path, null, blockManager);
+            TransactionContext context =
+                    new TransactionContext(toWeCrossAccount(account), path, null, blockManager);
             TransactionRequest transactionRequest = new TransactionRequest();
             transactionRequest.setMethod(request.getMethod());
             transactionRequest.setArgs(request.getArgs());
@@ -109,7 +110,7 @@ public class LuyuDriverAdapter implements Driver {
     }
 
     @Override
-    public void call(CallRequest request, CallResponseCallback callback) {
+    public void call(Account account, CallRequest request, CallResponseCallback callback) {
         try {
             Path path = Path.decode(request.getPath());
             ResourceInfo resourceInfo = new ResourceInfo();
@@ -282,19 +283,19 @@ public class LuyuDriverAdapter implements Driver {
     }
 
     @Override
-    public byte[] accountSign(byte[] key, byte[] message) {
-        Account account = toAccount(key);
-        return wecrossDriver.accountSign(account, message);
-    }
-
-    @Override
-    public boolean accountVerify(byte[] identity, byte[] signBytes, byte[] message) {
-        return wecrossDriver.accountVerify(new String(identity), signBytes, message);
-    }
-
-    @Override
     public String getType() {
         return type;
+    }
+
+    @Override
+    public String getSignatureType() {
+        if (type.equals(new BCOSStubFactory().getStubType())) {
+            return EcdsaSecp256k1WithSHA256.TYPE;
+        } else {
+            // TODO: support sm2
+            logger.error("Unsupported plugin type: " + getType());
+            return null;
+        }
     }
 
     @Override
@@ -337,16 +338,7 @@ public class LuyuDriverAdapter implements Driver {
         // TODO: implement this
     }
 
-    private Account toAccount(byte[] key) {
-        Map<String, Object> properties = new HashMap<>();
-        properties.put("username", "luyuUser");
-        properties.put("keyID", new Integer(0)); // not used at all
-        properties.put("type", type);
-        properties.put("isDefault", false); // not used at all
-        properties.put("pubKey", ""); // not used at all
-        properties.put("secKey", new String(key));
-        properties.put("ext0", ""); // not used at all
-
-        return accountFactory.build(properties);
+    private com.webank.wecross.stub.Account toWeCrossAccount(Account account) {
+        return new LuyuWeCrossAccount(type, account);
     }
 }

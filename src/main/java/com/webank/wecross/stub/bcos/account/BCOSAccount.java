@@ -2,6 +2,8 @@ package com.webank.wecross.stub.bcos.account;
 
 import com.webank.wecross.stub.Account;
 import org.fisco.bcos.web3j.crypto.Credentials;
+import org.fisco.bcos.web3j.crypto.ExtendedRawTransaction;
+import org.fisco.bcos.web3j.crypto.ExtendedTransactionEncoder;
 import org.fisco.bcos.web3j.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +14,6 @@ public class BCOSAccount implements Account {
 
     private final String name;
     private final String type;
-    private final String publicKey;
     private final Credentials credentials;
 
     private int keyID;
@@ -23,10 +24,13 @@ public class BCOSAccount implements Account {
         this.name = name;
         this.type = type;
         this.credentials = credentials;
-        this.publicKey =
-                Numeric.toHexStringNoPrefixZeroPadded(
-                        credentials.getEcKeyPair().getPublicKey(), 128);
-        logger.info(" name: {}, type: {}, publicKey: {}", name, type, publicKey);
+        if (credentials != null) {
+            // for luyu protocol support
+            String publicKey =
+                    Numeric.toHexStringNoPrefixZeroPadded(
+                            credentials.getEcKeyPair().getPublicKey(), 128);
+            logger.info(" name: {}, type: {}, publicKey: {}", name, type, publicKey);
+        }
     }
 
     public Credentials getCredentials() {
@@ -66,7 +70,7 @@ public class BCOSAccount implements Account {
         isDefault = aDefault;
     }
 
-    public String getPub() {
-        return publicKey;
+    public byte[] sign(ExtendedRawTransaction extendedRawTransaction) {
+        return ExtendedTransactionEncoder.signMessage(extendedRawTransaction, credentials);
     }
 }

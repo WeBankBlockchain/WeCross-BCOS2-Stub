@@ -362,14 +362,11 @@ public class BCOSDriver implements Driver {
                                             request.getOptions()
                                                     .get(StubConstant.XA_TRANSACTION_ID);
 
-                            Function function = null;
-
                             // BCOSAccount to get credentials to sign the transaction
                             String from = BCOSConstant.DEFAULT_ADDRESS;
                             if (Objects.nonNull(context.getAccount())) {
                                 BCOSAccount bcosAccount = (BCOSAccount) context.getAccount();
-                                Credentials credentials = bcosAccount.getCredentials();
-                                from = credentials.getAddress();
+                                from = bcosAccount.getIdentity();
                             }
 
                             if (logger.isDebugEnabled()) {
@@ -596,8 +593,7 @@ public class BCOSDriver implements Driver {
                             String from = BCOSConstant.DEFAULT_ADDRESS;
                             if (Objects.nonNull(context.getAccount())) {
                                 BCOSAccount bcosAccount = (BCOSAccount) context.getAccount();
-                                Credentials credentials = bcosAccount.getCredentials();
-                                from = credentials.getAddress();
+                                from = bcosAccount.getIdentity();
                             }
 
                             if (logger.isDebugEnabled()) {
@@ -771,7 +767,6 @@ public class BCOSDriver implements Driver {
                                 }
                                 // BCOSAccount to get credentials to sign the transaction
                                 BCOSAccount bcosAccount = (BCOSAccount) context.getAccount();
-                                Credentials credentials = bcosAccount.getCredentials();
 
                                 Path path = context.getPath();
                                 String name = path.getResource();
@@ -826,70 +821,12 @@ public class BCOSDriver implements Driver {
                                                     encodedArgs = encodedObj.encode();
                                                 }
 
-                                                String uniqueID =
-                                                        (String)
-                                                                request.getOptions()
-                                                                        .get(
-                                                                                StubConstant
-                                                                                        .TRANSACTION_UNIQUE_ID);
-                                                String uid =
-                                                        Objects.nonNull(uniqueID)
-                                                                ? uniqueID
-                                                                : UUID.randomUUID()
-                                                                        .toString()
-                                                                        .replaceAll("-", "");
-
-                                                String transactionID =
-                                                        (String)
-                                                                request.getOptions()
-                                                                        .get(
-                                                                                StubConstant
-                                                                                        .XA_TRANSACTION_ID);
-
-                                                Long transactionSeq =
-                                                        (Long)
-                                                                request.getOptions()
-                                                                        .get(
-                                                                                StubConstant
-                                                                                        .XA_TRANSACTION_SEQ);
-                                                Long seq =
-                                                        Objects.isNull(transactionSeq)
-                                                                ? 0
-                                                                : transactionSeq;
-
-                                                Function function;
-                                                if (Objects.isNull(transactionID)
-                                                        || transactionID.isEmpty()
-                                                        || "0".equals(transactionID)) {
-                                                    function =
-                                                            FunctionUtility
-                                                                    .newSendTransactionProxyFunction(
-                                                                            uid,
-                                                                            path.getResource(),
-                                                                            functions
-                                                                                    .get(0)
-                                                                                    .getMethodSignatureAsString(),
-                                                                            encodedArgs);
-                                                } else {
-                                                    function =
-                                                            FunctionUtility
-                                                                    .newSendTransactionProxyFunction(
-                                                                            uid,
-                                                                            transactionID,
-                                                                            seq,
-                                                                            path.toString(),
-                                                                            functions
-                                                                                    .get(0)
-                                                                                    .getMethodSignatureAsString(),
-                                                                            encodedArgs);
-                                                }
-
                                                 String encodedAbi = methodId + encodedArgs;
 
                                                 // get signed transaction hex string
                                                 String signTx =
                                                         SignTransaction.sign(
-                                                                credentials,
+                                                                bcosAccount,
                                                                 address,
                                                                 BigInteger.valueOf(groupId),
                                                                 BigInteger.valueOf(chainId),
@@ -912,10 +849,7 @@ public class BCOSDriver implements Driver {
 
                                                 if (logger.isDebugEnabled()) {
                                                     logger.debug(
-                                                            "asyncSendTransactionByProxy, uid: {}, tid: {}, seq: {}, path: {}, abi: {}",
-                                                            uid,
-                                                            transactionID,
-                                                            seq,
+                                                            "asyncSendTransactionByProxy, path: {}, abi: {}",
                                                             path,
                                                             abi);
                                                 }
@@ -1201,7 +1135,6 @@ public class BCOSDriver implements Driver {
                                 }
                                 // BCOSAccount to get credentials to sign the transaction
                                 BCOSAccount bcosAccount = (BCOSAccount) context.getAccount();
-                                Credentials credentials = bcosAccount.getCredentials();
 
                                 Path path = context.getPath();
                                 String name = path.getResource();
@@ -1318,7 +1251,7 @@ public class BCOSDriver implements Driver {
                                                 // get signed transaction hex string
                                                 String signTx =
                                                         SignTransaction.sign(
-                                                                credentials,
+                                                                bcosAccount,
                                                                 contractAddress,
                                                                 BigInteger.valueOf(groupId),
                                                                 BigInteger.valueOf(chainId),

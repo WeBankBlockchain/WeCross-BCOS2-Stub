@@ -45,25 +45,27 @@ public class LuyuBCOSPluginBuilder implements PluginBuilder {
 
             ArrayList<Map<String, Object>> resources =
                     (ArrayList<Map<String, Object>>) properties.get("luyu-resources");
-            for (Map<String, Object> resourceMap : resources) {
-                Path path = Path.decode(chainPath);
-                String name = (String) resourceMap.get("name");
-                if (name == null) {
-                    throw new Exception("\"name\" item not found, please check config ");
+            if (resources != null) {
+                for (Map<String, Object> resourceMap : resources) {
+                    Path path = Path.decode(chainPath);
+                    String name = (String) resourceMap.get("name");
+                    if (name == null) {
+                        throw new Exception("\"name\" item not found, please check config ");
+                    }
+
+                    path.setResource(name);
+
+                    Resource resource = new Resource();
+                    resource.setType("BCOS2.0");
+                    resource.setPath(path.toString());
+
+                    ArrayList<String> methods = (ArrayList<String>) resourceMap.get("methods");
+                    if (methods != null) {
+                        resource.setMethods(methods.toArray(new String[] {}));
+                    }
+
+                    luyuConnectionAdapter.addResource(resource);
                 }
-
-                path.setResource(name);
-
-                Resource resource = new Resource();
-                resource.setType("BCOS2.0");
-                resource.setPath(path.toString());
-
-                ArrayList<String> methods = (ArrayList<String>) resourceMap.get("methods");
-                if (methods != null) {
-                    resource.setMethods(methods.toArray(new String[] {}));
-                }
-
-                luyuConnectionAdapter.addResource(resource);
             }
             return luyuConnectionAdapter;
         } catch (Exception e) {

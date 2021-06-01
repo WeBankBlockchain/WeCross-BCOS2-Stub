@@ -1,5 +1,6 @@
 package com.webank.wecross.stub.bcos.contract;
 
+import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import java.math.BigInteger;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
@@ -56,6 +57,40 @@ public class SignTransaction {
                         "");
 
         byte[] signedMessage = ExtendedTransactionEncoder.signMessage(rawTransaction, credentials);
+
+        if (logger.isTraceEnabled()) {
+            logger.trace(" encryptType: {}", EncryptType.encryptType);
+        }
+
+        return Numeric.toHexString(signedMessage);
+    }
+
+    public static String sign(
+            BCOSAccount account,
+            String contractAddress,
+            BigInteger groupId,
+            BigInteger chainId,
+            BigInteger blockNumber,
+            String abi) {
+
+        Random r = ThreadLocalRandom.current();
+        BigInteger randomid = new BigInteger(250, r);
+        BigInteger blockLimit = blockNumber.add(BigInteger.valueOf(BlockLimit.blockLimit));
+
+        ExtendedRawTransaction rawTransaction =
+                ExtendedRawTransaction.createTransaction(
+                        randomid,
+                        SignTransaction.gasPrice,
+                        SignTransaction.gasLimit,
+                        blockLimit,
+                        contractAddress,
+                        BigInteger.ZERO,
+                        abi,
+                        chainId,
+                        groupId,
+                        "");
+
+        byte[] signedMessage = account.sign(rawTransaction);
 
         if (logger.isTraceEnabled()) {
             logger.trace(" encryptType: {}", EncryptType.encryptType);

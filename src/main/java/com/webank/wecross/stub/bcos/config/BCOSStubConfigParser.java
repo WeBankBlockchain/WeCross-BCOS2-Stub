@@ -110,7 +110,6 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         // caCert field
         String caCertPath =
                 stubDir + File.separator + (String) channelServiceConfigValue.get("caCert");
-        System.out.println("caCert path:" + caCertPath);
         requireFieldNotNull(caCertPath, "channelService", "caCert", configFile);
 
         // sslCert field
