@@ -151,6 +151,11 @@ public class AsyncCnsService {
                             CnsInfo cnsInfo =
                                     objectMapper.readValue(
                                             response.getData(), new TypeReference<CnsInfo>() {});
+
+                            if (cnsInfo == null) {
+                                throw new Exception("Abi of \"" + name + "\" not found.");
+                            }
+
                             List<CnsInfo> cnsInfos = new LinkedList<>();
                             cnsInfos.add(cnsInfo);
                             callback.onResponse(null, cnsInfos);
