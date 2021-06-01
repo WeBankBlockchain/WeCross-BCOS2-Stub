@@ -40,7 +40,7 @@ public class LuyuBCOSGMPluginBuilder implements PluginBuilder {
             }
 
             LuyuConnectionAdapter luyuConnectionAdapter =
-                    new LuyuConnectionAdapter(wecrossConnection);
+                    new LuyuConnectionAdapter(wecrossConnection, chainPath);
             // parse resources
 
             ArrayList<Map<String, Object>> resources =
