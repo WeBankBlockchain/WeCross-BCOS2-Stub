@@ -65,6 +65,11 @@ public class LuyuConnectionAdapter implements Connection {
                 resources.put(info.getName(), resource);
             }
             Map<String, Object> properties = resource.getProperties();
+            if (properties == null) {
+                properties = new HashMap<>();
+                resource.setProperties(properties);
+            }
+
             for (Map.Entry<Object, Object> entry : info.getProperties().entrySet()) {
                 properties.put((String) entry.getKey(), entry.getValue());
             }

@@ -10,6 +10,7 @@ import org.fisco.bcos.web3j.crypto.Keys;
 import org.fisco.bcos.web3j.crypto.Sign;
 import org.fisco.bcos.web3j.utils.Numeric;
 import org.luyu.protocol.algorithm.ecdsa.secp256k1.SignatureData;
+import org.luyu.protocol.common.STATUS;
 import org.luyu.protocol.network.Account;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,7 @@ public class LuyuWeCrossAccount extends BCOSAccount {
                 new Account.SignCallback() {
                     @Override
                     public void onResponse(int status, String message, byte[] signBytes) {
-                        if (status != Account.STATUS.OK) {
+                        if (status != STATUS.OK) {
                             logger.error(
                                     "LuyuChainAccount sign error, status:{} message:{}",
                                     status,
