@@ -35,6 +35,8 @@ cd WeCross-BCOS2-Stub
 
 插件的详细使用方式请参阅[WeCross技术文档](https://wecross.readthedocs.io/zh_CN/latest/docs/stubs/bcos.html#id2)
 
+陆羽协议使用方式请参阅[陆羽协议配置及测试](docs/luyu.md)
+
 ## 贡献说明
 
 欢迎参与WeCross社区的维护和建设：
