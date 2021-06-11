@@ -4,90 +4,80 @@
 
 ### 配置插件
 
-将fabric1-stub-xxxx.jar放置于陆羽协议路由的plugin目录下
+将bcos2-stub-xxxx.jar和bcos2-stub-gm-xxxx.jar放置于陆羽协议路由的plugin目录下
 
 ### 配置接入链
 
-给要接入的链取名字：如 fabric1
+给要接入的链取名字：如 bcos1
 
-在陆羽协议的路由配置目录`chains/<chainName>`下，文件夹名即为链名（如链名为fabric1的配置文件目录为：`chains/fabric1`）
+在陆羽协议的路由配置目录`chains/<chainName>`下，文件夹名即为链名（如链名为bcos1的配置文件目录为：`chains/bcos1`）
 
 包含以下文件：
 
 ``` 
-fabric1/
-├── accounts
-│   └── fabric_admin # 向链上发送交易的账户，当前版本下只能指定一个，在driver.toml中配置生效
-│       ├── account.crt 
-│       ├── account.key
-│       └── account.toml
+bcos/
+├── ca.crt
 ├── connection.toml
 ├── driver.toml
-├── orderer-tlsca.crt
-├── org1-tlsca.crt
-├── org2-tlsca.crt
-└── plugin.toml
+├── plugin.toml
+├── sdk.crt
+└── sdk.key
 ```
 
 **plugin.toml**
 
 ```
 [common]
-    name = 'fabric1'
-    type = 'Fabric1.4'
+    name = 'bcos1'
+    type = 'BCOS2.0'
 ```
 
 **driver.toml**
 
 ```
-[users]
-    adminName = "fabric_admin" # 指定发送交易的账户，与accounts目录下的目录名对应
+（空文件）
 ```
 
 **connection.toml**
 
 ```
 [common]
-    name = 'fabric1'
-    type = 'Fabric1.4'
+    name = 'bcos1'
+    type = 'BCOS2.0' # BCOS2.0 or GM_BCOS2.0
 
-[fabricServices]
-    channelName = 'mychannel'
-    orgUserName = 'fabric_admin'
-    ordererTlsCaFile = 'orderer-tlsca.crt'
-    ordererAddress = 'grpcs://localhost:7050'
+[chain]
+    groupId = 1 # default 1
+    chainId = 1 # default 1
 
-[orgs]
-    [orgs.Org1]
-        tlsCaFile = 'org1-tlsca.crt'
-        endorsers = ['grpcs://localhost:7051']
+[channelService]
+    caCert = 'ca.crt'
+    sslCert = 'sdk.crt'
+    sslKey = 'sdk.key'
+    gmConnectEnable = false
+    gmCaCert = 'gm/gmca.crt'
+    gmSslCert = 'gm/gmsdk.crt'
+    gmSslKey = 'gm/gmsdk.key'
+    gmEnSslCert = 'gm/gmensdk.crt'
+    gmEnSslKey = 'gm/gmensdk.key'
+    timeout = 300000  # ms, default 60000ms
+    connectionsStr = ['127.0.0.1:20200']
 
-    [orgs.Org2]
-        tlsCaFile = 'org2-tlsca.crt'
-        endorsers = ['grpcs://localhost:9051']
-```
+[[luyu-resources]]
+    name = "hello"
+    methods = ["set(1)", "get(0)"]
 
-**accounts.toml**
-
-``` toml
-[account]
-    type = 'Fabric1.4'
-    mspid = 'Org1MSP'
-    keystore = 'account.key'
-    signcert = 'account.crt'
+[[luyu-resources]]
+    name = "test"
+    methods = ["set(1)", "get(0)"]
 ```
 
 **证书拷贝位置**
 
-例如`fabric-samples-1.4.4/first-network/crypto-config`下
+例如`nodes/127.0.0.1/sdk`下，直接拷贝下列文件即可
 
-| 文件              | 说明                       | 位置                                                         |
-| ----------------- | -------------------------- | ------------------------------------------------------------ |
-| account.crt       | 账户证书                   | `peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/signcerts/Admin@org1.example.com-cert.pem` |
-| account.key       | 账户私钥                   | `peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/*_sk` |
-| orderer-tlsca.crt | 连接排序节点的根证书       | `ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem` |
-| org1-tlsca.crt    | 连接org1的背书节点的根证书 | `peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt` |
-| org2-tlsca.crt    | 连接org2的背书节点的根证书 | `peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt` |
+```
+ca.crt  sdk.crt  sdk.key
+```
 
 ## 调试方法
 
@@ -116,14 +106,17 @@ fabric1/
 
 ``` json
 {
-        "version":"1.0.0",
-        "data":{
-                "path": "payment.fabric.mycc",
-                "method": "invoke",
-                "args": ["a", "b", "1"],
-                "nonce":123456,
-                "luyuSign": []
-        }
+	"version":"1.0.0",
+	"data":{
+		"path": "payment.bcos.HelloWorld",
+		"method": "set",
+		"args": ["aaaaaaa"],
+		"nonce":123456,
+		"luyuSign": [  102, -20, 99, 2, -87, 36, -103, 84, -53, -90, -24, 27, 32, -43, 116, 100, -103,
+                        -36, -120, -53, 74, -38, -75, 27, -128, -24, 70, 88, 89, 61, -44, -81],
+        "sender": "aabbccddeeff"
+		
+	}
 }
 ```
 
@@ -135,21 +128,17 @@ fabric1/
     "errorCode": 0,
     "message": "Success",
     "data": {
-        "result": [
-            ""
-        ],
+        "result": [],
         "code": 0,
-        "message": "Success",
-        "path": "payment.fabric.mycc",
-        "method": "invoke",
+        "message": "success",
+        "path": "payment.bcos.HelloWorld",
+        "method": "set",
         "args": [
-            "a",
-            "b",
-            "1"
+            "aaaaaaa"
         ],
-        "transactionHash": "534426ea5f3db65a143a1c36a30bbeff3488ecc7f978f8df3cfea1b533889957",
+        "transactionHash": "0xefac362c387924a3d50d592c6730868f4130073f342d910cc0c7da0d9c73f302",
         "transactionBytes": "",
-        "blockNumber": 12,
+        "blockNumber": 33,
         "version": null
     }
 }
@@ -163,14 +152,16 @@ fabric1/
 
 ``` json
 {
-        "version":"1",
-        "data":{
-                "path": "payment.fabric.mycc",
-                "method": "query",
-                "args": ["a"],
-                "nonce":123456,
-                "luyuSign":""
-        }
+	"version":"1.0.0",
+	"data":{
+		"path": "payment.bcos.HelloWorld",
+		"method": "get",
+		"args": [],
+		"nonce":123456,
+		"luyuSign": [  102, -20, 99, 2, -87, 36, -103, 84, -53, -90, -24, 27, 32, -43, 116, 100, -103,
+                        -36, -120, -53, 74, -38, -75, 27, -128, -24, 70, 88, 89, 61, -44, -81],
+        "sender": "aabbccddeeff"
+	}
 }
 ```
 
@@ -183,15 +174,13 @@ fabric1/
     "message": "Success",
     "data": {
         "result": [
-            "82"
+            "aaaaaaa"
         ],
         "code": 0,
-        "message": "",
-        "path": "payment.fabric.mycc",
-        "method": "query",
-        "args": [
-            "a"
-        ],
+        "message": "success",
+        "path": "payment.bcos.HelloWorld",
+        "method": "get",
+        "args": [],
         "version": null
     }
 }
