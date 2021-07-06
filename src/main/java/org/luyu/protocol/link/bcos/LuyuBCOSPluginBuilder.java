@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @LuyuPlugin("BCOS2.0")
-public class LuyuBCOSPluginBuilder implements PluginBuilder {
+public class LuyuBCOSPluginBuilder extends PluginBuilder {
     private static Logger logger = LoggerFactory.getLogger(LuyuBCOSPluginBuilder.class);
     private BCOSStubFactory stubFactory = new BCOSStubFactory();
     private LuyuMemoryBlockManagerFactory memoryBlockManagerFactory =
