@@ -36,8 +36,10 @@ public class BCOSConnectionFactoryTest {
             assertEquals(
                     resourceInfo.getProperties().get(resourceInfo.getName()),
                     "0x8827cca7f0f38b861b62dae6d711efe92a1e3602");
-            assertEquals(resourceInfo.getProperties().get(BCOSConstant.BCOS_GROUP_ID), 111);
-            assertEquals(resourceInfo.getProperties().get(BCOSConstant.BCOS_CHAIN_ID), 123);
+            assertEquals(
+                    resourceInfo.getProperties().get(BCOSConstant.BCOS_PROPERTY_GROUP_ID), 111);
+            assertEquals(
+                    resourceInfo.getProperties().get(BCOSConstant.BCOS_PROPERTY_CHAIN_ID), 123);
 
             ResourceInfo resourceInfo0 = resources.get(1);
             assertEquals(resourceInfo0.getName(), "Hello");
@@ -45,8 +47,10 @@ public class BCOSConnectionFactoryTest {
             assertEquals(
                     resourceInfo0.getProperties().get(resourceInfo0.getName()),
                     "0x8827cca7f0f38b861b62dae6d711efe92a1e3603");
-            assertEquals(resourceInfo0.getProperties().get(BCOSConstant.BCOS_GROUP_ID), 111);
-            assertEquals(resourceInfo0.getProperties().get(BCOSConstant.BCOS_CHAIN_ID), 123);
+            assertEquals(
+                    resourceInfo0.getProperties().get(BCOSConstant.BCOS_PROPERTY_GROUP_ID), 111);
+            assertEquals(
+                    resourceInfo0.getProperties().get(BCOSConstant.BCOS_PROPERTY_CHAIN_ID), 123);
         } catch (Exception e) {
             assertFalse(true);
         }

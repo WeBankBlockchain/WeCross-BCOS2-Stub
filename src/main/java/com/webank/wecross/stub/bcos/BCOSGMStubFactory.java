@@ -1,13 +1,14 @@
 package com.webank.wecross.stub.bcos;
 
 import com.webank.wecross.stub.Stub;
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import org.fisco.bcos.web3j.crypto.EncryptType;
 
 @Stub("GM_BCOS2.0")
 public class BCOSGMStubFactory extends BCOSBaseStubFactory {
 
     public BCOSGMStubFactory() {
-        super(EncryptType.SM2_TYPE, "sm2p256v1", "GM_BCOS2.0");
+        super(EncryptType.SM2_TYPE, "sm2p256v1", BCOSConstant.GM_BCOS_STUB_TYPE);
     }
 
     public static void main(String[] args) throws Exception {

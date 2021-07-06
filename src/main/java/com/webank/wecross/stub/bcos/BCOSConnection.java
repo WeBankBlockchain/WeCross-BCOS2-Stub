@@ -124,13 +124,15 @@ public class BCOSConnection implements Connection {
         if (Objects.nonNull(paths)) {
             for (String path : paths) {
                 ResourceInfo resourceInfo = new ResourceInfo();
-                resourceInfo.setStubType(properties.get(BCOSConstant.BCOS_STUB_TYPE));
+                resourceInfo.setStubType(properties.get(BCOSConstant.BCOS_PROPERTY_STUB_TYPE));
                 resourceInfo.setName(path.split("\\.")[2]);
                 Map<Object, Object> resourceProperties = new HashMap<>();
                 resourceProperties.put(
-                        BCOSConstant.BCOS_GROUP_ID, properties.get(BCOSConstant.BCOS_GROUP_ID));
+                        BCOSConstant.BCOS_PROPERTY_GROUP_ID,
+                        properties.get(BCOSConstant.BCOS_PROPERTY_GROUP_ID));
                 resourceProperties.put(
-                        BCOSConstant.BCOS_CHAIN_ID, properties.get(BCOSConstant.BCOS_CHAIN_ID));
+                        BCOSConstant.BCOS_PROPERTY_CHAIN_ID,
+                        properties.get(BCOSConstant.BCOS_PROPERTY_CHAIN_ID));
                 resourceInfo.setProperties(resourceProperties);
                 resources.add(resourceInfo);
             }

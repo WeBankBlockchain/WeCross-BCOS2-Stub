@@ -266,7 +266,7 @@ public class BCOSBaseStubFactory implements StubFactory {
                             + "    caCert = 'ca.crt'\n"
                             + "    sslCert = 'sdk.crt'\n"
                             + "    sslKey = 'sdk.key'\n"
-                            + (("BCOS2.0".equals(getStubType()))
+                            + ((BCOSConstant.BCOS_STUB_TYPE.equals(getStubType()))
                                     ? "    gmConnectEnable = false\n"
                                     : "    gmConnectEnable = true\n")
                             + "    gmCaCert = 'gm/gmca.crt'\n"

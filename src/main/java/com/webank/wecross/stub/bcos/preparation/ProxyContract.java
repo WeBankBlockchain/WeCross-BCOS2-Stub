@@ -57,8 +57,10 @@ public class ProxyContract {
 
         BCOSBaseStubFactory bcosBaseStubFactory =
                 isGM
-                        ? new BCOSBaseStubFactory(EncryptType.SM2_TYPE, "sm2p256v1", "GM_BCOS2.0")
-                        : new BCOSBaseStubFactory(EncryptType.ECDSA_TYPE, "secp256k1", "BCOS2.0");
+                        ? new BCOSBaseStubFactory(
+                                EncryptType.SM2_TYPE, "sm2p256v1", BCOSConstant.GM_BCOS_STUB_TYPE)
+                        : new BCOSBaseStubFactory(
+                                EncryptType.ECDSA_TYPE, "secp256k1", BCOSConstant.BCOS_STUB_TYPE);
 
         account =
                 (BCOSAccount)
@@ -144,10 +146,10 @@ public class ProxyContract {
         /** deploy the contract by sendTransaction */
         // groupId
         BigInteger groupID =
-                new BigInteger(connection.getProperties().get(BCOSConstant.BCOS_GROUP_ID));
+                new BigInteger(connection.getProperties().get(BCOSConstant.BCOS_PROPERTY_GROUP_ID));
         // chainId
         BigInteger chainID =
-                new BigInteger(connection.getProperties().get(BCOSConstant.BCOS_CHAIN_ID));
+                new BigInteger(connection.getProperties().get(BCOSConstant.BCOS_PROPERTY_CHAIN_ID));
 
         AbstractWeb3jWrapper web3jWrapper = connection.getWeb3jWrapper();
         BigInteger blockNumber = web3jWrapper.getBlockNumber();

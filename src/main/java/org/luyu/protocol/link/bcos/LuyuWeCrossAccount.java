@@ -1,15 +1,18 @@
 package org.luyu.protocol.link.bcos;
 
-import com.webank.wecross.stub.bcos.BCOSStubFactory;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
+import java.math.BigInteger;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.fisco.bcos.web3j.crypto.ExtendedRawTransaction;
 import org.fisco.bcos.web3j.crypto.ExtendedTransactionEncoder;
 import org.fisco.bcos.web3j.crypto.Keys;
 import org.fisco.bcos.web3j.crypto.Sign;
+import org.fisco.bcos.web3j.crypto.gm.sm2.crypto.asymmetric.SM2Algorithm;
 import org.fisco.bcos.web3j.utils.Numeric;
 import org.luyu.protocol.algorithm.ecdsa.secp256k1.SignatureData;
+import org.luyu.protocol.algorithm.sm2.SM2WithSM3;
 import org.luyu.protocol.common.STATUS;
 import org.luyu.protocol.network.Account;
 import org.slf4j.Logger;
@@ -26,6 +29,25 @@ public class LuyuWeCrossAccount extends BCOSAccount {
 
     @Override
     public byte[] sign(ExtendedRawTransaction extendedRawTransaction) {
+        try {
+
+            if (getType().equals(BCOSConstant.BCOS_STUB_TYPE)) {
+                return signNormal(extendedRawTransaction);
+
+            } else if (getType().equals(BCOSConstant.GM_BCOS_STUB_TYPE)) {
+                return signGM(extendedRawTransaction);
+            } else {
+                logger.error("Unsupported account type: {}", getType());
+                return null;
+            }
+
+        } catch (Exception e) {
+            logger.error("LuyuChainAccount exception: ", e);
+            return null;
+        }
+    }
+
+    public byte[] signNormal(ExtendedRawTransaction extendedRawTransaction) throws Exception {
         byte[] encodedExtendedRawTransaction =
                 ExtendedTransactionEncoder.encode(extendedRawTransaction);
         CompletableFuture<byte[]> future = new CompletableFuture();
@@ -47,32 +69,61 @@ public class LuyuWeCrossAccount extends BCOSAccount {
                     }
                 });
 
-        try {
-            byte[] luyuSignBytes = future.get(30, TimeUnit.SECONDS);
-            if (getType().equals(new BCOSStubFactory().getStubType())) {
-                SignatureData luyuSignData = SignatureData.parseFrom(luyuSignBytes);
-                byte v = (byte) luyuSignData.getV();
-                byte[] r = Numeric.toBytesPadded(luyuSignData.getR(), 32);
-                byte[] s = Numeric.toBytesPadded(luyuSignData.getS(), 32);
+        byte[] luyuSignBytes = future.get(30, TimeUnit.SECONDS);
 
-                Sign.SignatureData signatureData = new Sign.SignatureData(v, r, s);
-                byte[] signBytse =
-                        ExtendedTransactionEncoder.encode(
-                                extendedRawTransaction,
-                                signatureData); // TODO: extendedRawTransaction encode twice, need
-                // optimizing
-                return signBytse;
+        SignatureData luyuSignData = SignatureData.parseFrom(luyuSignBytes);
+        byte v = (byte) luyuSignData.getV();
+        byte[] r = Numeric.toBytesPadded(luyuSignData.getR(), 32);
+        byte[] s = Numeric.toBytesPadded(luyuSignData.getS(), 32);
 
-            } else {
-                // TODO: support gm
-                logger.error("Unsupported account type: {}", getType());
-                return null;
-            }
+        Sign.SignatureData signatureData = new Sign.SignatureData(v, r, s);
+        byte[] signBytes =
+                ExtendedTransactionEncoder.encode(
+                        extendedRawTransaction,
+                        signatureData); // TODO: extendedRawTransaction encode twice, need
+        // optimizing
+        return signBytes;
+    }
 
-        } catch (Exception e) {
-            logger.error("LuyuChainAccount exception: ", e);
-            return null;
-        }
+    public byte[] signGM(ExtendedRawTransaction extendedRawTransaction) throws Exception {
+        byte[] encodedExtendedRawTransaction =
+                ExtendedTransactionEncoder.encode(extendedRawTransaction);
+        CompletableFuture<byte[]> future = new CompletableFuture();
+
+        byte[] pubKey = luyuChainAccount.getPubKey();
+        byte[] prepareMessage = SM2WithSM3.prepareMessage(pubKey, encodedExtendedRawTransaction);
+
+        luyuChainAccount.sign(
+                prepareMessage,
+                new Account.SignCallback() {
+                    @Override
+                    public void onResponse(int status, String message, byte[] signBytes) {
+                        if (status != STATUS.OK) {
+                            logger.error(
+                                    "LuyuChainAccount sign error, status:{} message:{}",
+                                    status,
+                                    message);
+                            future.complete(null);
+                        } else {
+                            future.complete(signBytes);
+                        }
+                    }
+                });
+
+        byte[] luyuSignBytes = future.get(30, TimeUnit.SECONDS);
+
+        SignatureData luyuSignData = SignatureData.parseFrom(luyuSignBytes);
+        byte[] pub = Numeric.toBytesPadded(new BigInteger(1, pubKey), 64);
+        byte[] r = SM2Algorithm.getEncoded(luyuSignData.getR());
+        byte[] s = SM2Algorithm.getEncoded(luyuSignData.getS());
+
+        Sign.SignatureData signatureData = new Sign.SignatureData((byte) 0, r, s, pub);
+        byte[] signBytes =
+                ExtendedTransactionEncoder.encode(
+                        extendedRawTransaction,
+                        signatureData); // TODO: extendedRawTransaction encode twice, need
+        // optimizing
+        return signBytes;
     }
 
     @Override

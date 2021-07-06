@@ -7,6 +7,7 @@ import com.webank.wecross.stub.Account;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.util.Objects;
 import org.junit.Test;
 
@@ -37,7 +38,7 @@ public class BCOSStubFactoryTest {
         assertEquals(
                 bcosAccount.getCredentials().getAddress(),
                 "0x4c9e341a015ce8200060a028ce45dfea8bf33e15");
-        assertEquals(bcosAccount.getType(), "BCOS2.0");
+        assertEquals(bcosAccount.getType(), BCOSConstant.BCOS_STUB_TYPE);
         assertEquals(bcosAccount.getName(), "bcos");
     }
 
@@ -50,10 +51,10 @@ public class BCOSStubFactoryTest {
     @Test
     public void BCOSSubFactoryTypeTest() {
         System.out.println(bcosSubFactory.getStubType());
-        assertTrue(bcosSubFactory.getStubType().equals("BCOS2.0"));
+        assertTrue(bcosSubFactory.getStubType().equals(BCOSConstant.BCOS_STUB_TYPE));
         assertTrue(bcosSubFactory.getAlg().equals("secp256k1"));
 
-        // assertTrue(bcosgmStubFactory.getStubType().equals("GM_BCOS2.0"));
+        // assertTrue(bcosgmStubFactory.getStubType().equals(BCOSConstan..GM_BCOS_STUB_TYPE));
         // assertTrue(bcosgmStubFactory.getAlg().equals("sm2p256v1"));
     }
 }

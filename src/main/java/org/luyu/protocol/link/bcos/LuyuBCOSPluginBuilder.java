@@ -5,6 +5,7 @@ import com.webank.wecross.stub.ObjectMapperFactory;
 import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.bcos.BCOSStubFactory;
 import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.util.ArrayList;
 import java.util.Map;
 import org.luyu.protocol.link.Connection;
@@ -56,7 +57,7 @@ public class LuyuBCOSPluginBuilder implements PluginBuilder {
                     path.setResource(name);
 
                     Resource resource = new Resource();
-                    resource.setType("BCOS2.0");
+                    resource.setType(BCOSConstant.BCOS_STUB_TYPE);
                     resource.setPath(path.toString());
 
                     ArrayList<String> methods = (ArrayList<String>) resourceMap.get("methods");
@@ -83,7 +84,7 @@ public class LuyuBCOSPluginBuilder implements PluginBuilder {
                 memoryBlockManagerFactory.build(chainPath, wecrossDriver, luyuWeCrossConnection);
         LuyuDriverAdapter luyuDriverAdapter =
                 new LuyuDriverAdapter(
-                        "BCOS2.0",
+                        BCOSConstant.BCOS_STUB_TYPE,
                         chainPath,
                         wecrossDriver,
                         luyuWeCrossConnection,

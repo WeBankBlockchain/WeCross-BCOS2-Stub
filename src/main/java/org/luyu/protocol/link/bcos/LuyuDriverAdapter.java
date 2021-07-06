@@ -15,12 +15,13 @@ import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
-import com.webank.wecross.stub.bcos.BCOSStubFactory;
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.luyu.protocol.algorithm.ecdsa.secp256k1.EcdsaSecp256k1WithSHA256;
+import org.luyu.protocol.algorithm.sm2.SM2WithSM3;
 import org.luyu.protocol.link.Driver;
 import org.luyu.protocol.network.Account;
 import org.luyu.protocol.network.CallRequest;
@@ -289,10 +290,11 @@ public class LuyuDriverAdapter implements Driver {
 
     @Override
     public String getSignatureType() {
-        if (type.equals(new BCOSStubFactory().getStubType())) {
+        if (type.equals(BCOSConstant.BCOS_STUB_TYPE)) {
             return EcdsaSecp256k1WithSHA256.TYPE;
+        } else if (type.equals(BCOSConstant.GM_BCOS_STUB_TYPE)) {
+            return SM2WithSM3.TYPE;
         } else {
-            // TODO: support sm2
             logger.error("Unsupported plugin type: " + getType());
             return null;
         }

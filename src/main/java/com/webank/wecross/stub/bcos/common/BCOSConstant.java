@@ -4,19 +4,22 @@ import com.webank.wecross.stub.StubConstant;
 
 /** The definition of the resource type in BCOS */
 public interface BCOSConstant {
+    String BCOS_STUB_TYPE = "BCOS2.0";
+    String GM_BCOS_STUB_TYPE = "GM_BCOS2.0";
+
     String ADMIN_ACCOUNT = "admin";
 
     /** BCOS contract resource */
     String RESOURCE_TYPE_BCOS_CONTRACT = "BCOS_CONTRACT";
     /** */
-    String BCOS_ACCOUNT = "BCOS2.0";
+    String BCOS_ACCOUNT = BCOS_STUB_TYPE;
     /** */
-    String BCOS_SM_ACCOUNT = "GM_BCOS2.0";
+    String BCOS_SM_ACCOUNT = GM_BCOS_STUB_TYPE;
 
-    String BCOS_GROUP_ID = "BCOS_PROPERTY_GROUP_ID";
-    String BCOS_CHAIN_ID = "BCOS_PROPERTY_CHAIN_ID";
-    String BCOS_STUB_TYPE = "BCOS_PROPERTY_STUB_TYPE";
-    String BCOS_NODE_VERSION = "BCOS_PROPERTY_NODE_VERSION";
+    String BCOS_PROPERTY_GROUP_ID = "BCOS_PROPERTY_GROUP_ID";
+    String BCOS_PROPERTY_CHAIN_ID = "BCOS_PROPERTY_CHAIN_ID";
+    String BCOS_PROPERTY_STUB_TYPE = "BCOS_PROPERTY_STUB_TYPE";
+    String BCOS_PROPERTY_NODE_VERSION = "BCOS_PROPERTY_NODE_VERSION";
 
     String BCOS_SEALER_LIST = "VERIFIER";
     int BCOS_NODE_ID_LENGTH = 128;

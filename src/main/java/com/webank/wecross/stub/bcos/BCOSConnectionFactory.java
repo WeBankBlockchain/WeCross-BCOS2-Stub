@@ -50,13 +50,16 @@ public class BCOSConnectionFactory {
         bcosConnection.setResourceInfoList(bcosStubConfig.convertToResourceInfos());
 
         bcosConnection.addProperty(
-                BCOSConstant.BCOS_GROUP_ID, String.valueOf(bcosStubConfig.getChain().getGroupID()));
+                BCOSConstant.BCOS_PROPERTY_GROUP_ID,
+                String.valueOf(bcosStubConfig.getChain().getGroupID()));
         bcosConnection.addProperty(
-                BCOSConstant.BCOS_CHAIN_ID, String.valueOf(bcosStubConfig.getChain().getChainID()));
+                BCOSConstant.BCOS_PROPERTY_CHAIN_ID,
+                String.valueOf(bcosStubConfig.getChain().getChainID()));
         bcosConnection.addProperty(
-                BCOSConstant.BCOS_STUB_TYPE, String.valueOf(bcosStubConfig.getType()));
+                BCOSConstant.BCOS_PROPERTY_STUB_TYPE, String.valueOf(bcosStubConfig.getType()));
         if (web3jWrapper.getVersion() != null) {
-            bcosConnection.addProperty(BCOSConstant.BCOS_NODE_VERSION, web3jWrapper.getVersion());
+            bcosConnection.addProperty(
+                    BCOSConstant.BCOS_PROPERTY_NODE_VERSION, web3jWrapper.getVersion());
         }
 
         CnsInfo proxyCnsInfo = CnsService.queryProxyCnsInfo(web3jWrapper);

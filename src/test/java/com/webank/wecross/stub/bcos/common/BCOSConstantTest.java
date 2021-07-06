@@ -10,8 +10,8 @@ public class BCOSConstantTest {
 
     @Test
     public void constantValueTest() throws IOException {
-        assertEquals(BCOSConstant.BCOS_CHAIN_ID, "BCOS_PROPERTY_CHAIN_ID");
-        assertEquals(BCOSConstant.BCOS_GROUP_ID, "BCOS_PROPERTY_GROUP_ID");
+        assertEquals(BCOSConstant.BCOS_PROPERTY_CHAIN_ID, "BCOS_PROPERTY_CHAIN_ID");
+        assertEquals(BCOSConstant.BCOS_PROPERTY_GROUP_ID, "BCOS_PROPERTY_GROUP_ID");
         assertEquals(BCOSConstant.RESOURCE_TYPE_BCOS_CONTRACT, "BCOS_CONTRACT");
         assertEquals(BCOSConstant.BCOS_ACCOUNT, "BCOS2.0");
         assertEquals(BCOSConstant.BCOS_SM_ACCOUNT, "GM_BCOS2.0");

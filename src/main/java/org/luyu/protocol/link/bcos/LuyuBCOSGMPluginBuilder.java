@@ -5,6 +5,7 @@ import com.webank.wecross.stub.ObjectMapperFactory;
 import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.bcos.BCOSGMStubFactory;
 import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.util.ArrayList;
 import java.util.Map;
 import org.luyu.protocol.link.Connection;
@@ -17,7 +18,7 @@ import org.slf4j.LoggerFactory;
 
 @LuyuPlugin("GM_BCOS2.0")
 public class LuyuBCOSGMPluginBuilder implements PluginBuilder {
-    private static Logger logger = LoggerFactory.getLogger(LuyuBCOSPluginBuilder.class);
+    private static Logger logger = LoggerFactory.getLogger(LuyuBCOSGMPluginBuilder.class);
     private BCOSGMStubFactory stubFactory = new BCOSGMStubFactory();
     private LuyuMemoryBlockManagerFactory memoryBlockManagerFactory =
             new LuyuMemoryBlockManagerFactory();
@@ -56,7 +57,7 @@ public class LuyuBCOSGMPluginBuilder implements PluginBuilder {
                     path.setResource(name);
 
                     Resource resource = new Resource();
-                    resource.setType("GM_BCOS2.0");
+                    resource.setType(BCOSConstant.GM_BCOS_STUB_TYPE);
                     resource.setPath(path.toString());
 
                     ArrayList<String> methods = (ArrayList<String>) resourceMap.get("methods");
@@ -83,13 +84,13 @@ public class LuyuBCOSGMPluginBuilder implements PluginBuilder {
                 memoryBlockManagerFactory.build(chainPath, wecrossDriver, luyuWeCrossConnection);
         LuyuDriverAdapter luyuDriverAdapter =
                 new LuyuDriverAdapter(
-                        "GM_BCOS2.0",
+                        BCOSConstant.GM_BCOS_STUB_TYPE,
                         chainPath,
                         wecrossDriver,
                         luyuWeCrossConnection,
                         blockManager,
                         accountFactory);
-
+        blockManager.start();
         return luyuDriverAdapter;
     }
 }

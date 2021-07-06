@@ -748,11 +748,11 @@ public class BCOSDriver implements Driver {
             checkProperties(properties, false);
 
             // groupId
-            int groupId = Integer.parseInt(properties.get(BCOSConstant.BCOS_GROUP_ID));
+            int groupId = Integer.parseInt(properties.get(BCOSConstant.BCOS_PROPERTY_GROUP_ID));
             // chainId
-            int chainId = Integer.parseInt(properties.get(BCOSConstant.BCOS_CHAIN_ID));
+            int chainId = Integer.parseInt(properties.get(BCOSConstant.BCOS_PROPERTY_CHAIN_ID));
             // bcos node version
-            String nodeVersion = properties.get(BCOSConstant.BCOS_NODE_VERSION);
+            String nodeVersion = properties.get(BCOSConstant.BCOS_PROPERTY_NODE_VERSION);
 
             context.getBlockManager()
                     .asyncGetBlockNumber(
@@ -1116,11 +1116,11 @@ public class BCOSDriver implements Driver {
             // contractAddress
             String contractAddress = properties.get(BCOSConstant.BCOS_PROXY_NAME);
             // groupId
-            int groupId = Integer.parseInt(properties.get(BCOSConstant.BCOS_GROUP_ID));
+            int groupId = Integer.parseInt(properties.get(BCOSConstant.BCOS_PROPERTY_GROUP_ID));
             // chainId
-            int chainId = Integer.parseInt(properties.get(BCOSConstant.BCOS_CHAIN_ID));
+            int chainId = Integer.parseInt(properties.get(BCOSConstant.BCOS_PROPERTY_CHAIN_ID));
             // bcos node version
-            String nodeVersion = properties.get(BCOSConstant.BCOS_NODE_VERSION);
+            String nodeVersion = properties.get(BCOSConstant.BCOS_PROPERTY_NODE_VERSION);
 
             context.getBlockManager()
                     .asyncGetBlockNumber(
@@ -1557,7 +1557,8 @@ public class BCOSDriver implements Driver {
                         BigInteger.valueOf(blockNumber).toByteArray());
 
         String blockVerifierString = connection.getProperties().get(BCOSConstant.BCOS_SEALER_LIST);
-        String nodeVersion = connection.getProperties().get(BCOSConstant.BCOS_NODE_VERSION);
+        String nodeVersion =
+                connection.getProperties().get(BCOSConstant.BCOS_PROPERTY_NODE_VERSION);
 
         connection.asyncSend(
                 request,
@@ -1582,7 +1583,7 @@ public class BCOSDriver implements Driver {
                                         blockVerifierString,
                                         connection
                                                 .getProperties()
-                                                .get(BCOSConstant.BCOS_STUB_TYPE));
+                                                .get(BCOSConstant.BCOS_PROPERTY_STUB_TYPE));
                             }
                             callback.onResponse(null, block);
                         } catch (Exception e) {
@@ -1602,7 +1603,8 @@ public class BCOSDriver implements Driver {
             Connection connection,
             GetTransactionCallback callback) {
 
-        String nodeVersion = connection.getProperties().get(BCOSConstant.BCOS_NODE_VERSION);
+        String nodeVersion =
+                connection.getProperties().get(BCOSConstant.BCOS_PROPERTY_NODE_VERSION);
         boolean supportGetTxProof = FeatureSupport.isSupportGetTxProof(nodeVersion);
         if (!supportGetTxProof) {
             asyncRequestTransaction(transactionHash, connection, callback);
@@ -1961,16 +1963,16 @@ public class BCOSDriver implements Driver {
                     "Proxy contract address not found, resource: " + BCOSConstant.BCOS_PROXY_NAME);
         }
 
-        if (!properties.containsKey(BCOSConstant.BCOS_GROUP_ID)) {
+        if (!properties.containsKey(BCOSConstant.BCOS_PROPERTY_GROUP_ID)) {
             throw new BCOSStubException(
                     BCOSStatusCode.InvalidParameter,
-                    "Group id not found, resource: " + BCOSConstant.BCOS_GROUP_ID);
+                    "Group id not found, resource: " + BCOSConstant.BCOS_PROPERTY_GROUP_ID);
         }
 
-        if (!properties.containsKey(BCOSConstant.BCOS_CHAIN_ID)) {
+        if (!properties.containsKey(BCOSConstant.BCOS_PROPERTY_CHAIN_ID)) {
             throw new BCOSStubException(
                     BCOSStatusCode.InvalidParameter,
-                    "Chain id not found, resource: " + BCOSConstant.BCOS_CHAIN_ID);
+                    "Chain id not found, resource: " + BCOSConstant.BCOS_PROPERTY_CHAIN_ID);
         }
     }
 

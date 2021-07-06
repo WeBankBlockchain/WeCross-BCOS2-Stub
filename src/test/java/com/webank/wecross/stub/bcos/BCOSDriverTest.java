@@ -87,7 +87,7 @@ public class BCOSDriverTest {
                                 + "\"95b7ff064f91de76598f90bc059bec1834f0d9eeb0d05e1086d49af1f9c2f321062d011ee8b0df7644bd54c4f9ca3d8515a3129bbb9d0df8287c9fa69552887e\","
                                 + "\"b8acb51b9fe84f88d670646be36f31c52e67544ce56faf3dc8ea4cf1b0ebff0864c6b218fdcd9cf9891ebd414a995847911bd26a770f429300085f37e1131f36\"]}");
 
-        connection.getProperties().put(BCOSConstant.BCOS_STUB_TYPE, "BCOS2.0");
+        connection.getProperties().put(BCOSConstant.BCOS_PROPERTY_STUB_TYPE, "BCOS2.0");
         exceptionConnection =
                 BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperWithExceptionMock());
         nonExistConnection =

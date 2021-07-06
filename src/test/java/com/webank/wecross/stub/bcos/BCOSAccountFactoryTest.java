@@ -6,6 +6,7 @@ import static junit.framework.TestCase.assertTrue;
 
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -57,6 +58,6 @@ public class BCOSAccountFactoryTest {
 
         assertEquals(bcosAccount0.getName(), "bcos");
 
-        assertEquals(bcosAccount0.getType(), "BCOS2.0");
+        assertEquals(bcosAccount0.getType(), BCOSConstant.BCOS_STUB_TYPE);
     }
 }

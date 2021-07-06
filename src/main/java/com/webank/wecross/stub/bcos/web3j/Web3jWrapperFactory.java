@@ -1,5 +1,6 @@
 package com.webank.wecross.stub.bcos.web3j;
 
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.FeatureSupport;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import org.fisco.bcos.fisco.EnumNodeVersion;
@@ -78,7 +79,9 @@ public class Web3jWrapperFactory {
             throw new Exception(
                     "Please check config "
                             + "stub.toml common::type field, change to \""
-                            + (isGMNode ? "GM_BCOS2.0" : "BCOS2.0")
+                            + (isGMNode
+                                    ? BCOSConstant.GM_BCOS_STUB_TYPE
+                                    : BCOSConstant.BCOS_STUB_TYPE)
                             + "\"");
         }
     }
