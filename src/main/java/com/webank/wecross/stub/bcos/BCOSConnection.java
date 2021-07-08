@@ -163,6 +163,11 @@ public class BCOSConnection implements Connection {
         Function function =
                 FunctionUtility.newDefaultFunction(BCOSConstant.PROXY_METHOD_GETPATHS, null);
         String address = properties.get(BCOSConstant.BCOS_PROXY_NAME);
+
+        if (address == null) {
+            return new String[0];
+        }
+
         try {
             Call.CallOutput callOutput =
                     web3jWrapper.call(

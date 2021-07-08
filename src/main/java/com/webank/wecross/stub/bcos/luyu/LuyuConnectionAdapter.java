@@ -1,4 +1,4 @@
-package org.luyu.protocol.link.bcos;
+package com.webank.wecross.stub.bcos.luyu;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.stub.Path;
@@ -31,10 +31,12 @@ public class LuyuConnectionAdapter implements Connection {
             throws Exception {
         this.wecrossConnection = wecrossConnection;
         this.chainPath = Path.decode(chainPathStr);
+    }
 
+    @Override
+    public void start() throws RuntimeException {
         List<ResourceInfo> currentResources = ((BCOSConnection) wecrossConnection).getResources();
         updateResourceBackup(currentResources);
-
         this.wecrossConnection.setConnectionEventHandler(
                 new com.webank.wecross.stub.Connection.ConnectionEventHandler() {
                     @Override
@@ -43,6 +45,9 @@ public class LuyuConnectionAdapter implements Connection {
                     }
                 });
     }
+
+    @Override
+    public void stop() throws RuntimeException {}
 
     private void updateResourceBackup(List<ResourceInfo> resourceInfos) {
         if (resourceInfos == null) {

@@ -1,4 +1,4 @@
-package org.luyu.protocol.link.bcos;
+package com.webank.wecross.stub.bcos.luyu;
 
 public class LuyuDefault {
     public static final int GET_PROPERTIES = 22900;

@@ -1,4 +1,4 @@
-package org.luyu.protocol.link.bcos;
+package com.webank.wecross.stub.bcos.luyu;
 
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;

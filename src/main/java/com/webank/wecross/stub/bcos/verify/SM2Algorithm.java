@@ -377,10 +377,10 @@ public class SM2Algorithm {
         byte[] btR = ByteUtils.subByteArray(btRS, 0, btRS.length / 2);
         byte[] btS = ByteUtils.subByteArray(btRS, btR.length, btRS.length - btR.length);
         BigInteger r = new BigInteger(1, btR);
-        // check r ′ ∈[1, n-1]
+
         if (!checkValidateK(r)) return false;
         BigInteger s = new BigInteger(1, btS);
-        // check s ′ ∈[1, n-1]
+
         if (!checkValidateK(s)) return false;
 
         byte[] hashData = new byte[32];

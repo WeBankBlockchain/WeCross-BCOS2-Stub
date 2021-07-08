@@ -1,4 +1,4 @@
-package org.luyu.protocol.link.bcos;
+package com.webank.wecross.stub.bcos.luyu;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.stub.Connection;

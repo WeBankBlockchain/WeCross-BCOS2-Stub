@@ -1,4 +1,4 @@
-package org.luyu.protocol.link.bcos;
+package com.webank.wecross.stub.bcos.luyu;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,6 +59,14 @@ public class LuyuDriverAdapter implements Driver {
         this.luyuWeCrossConnection = luyuWeCrossConnection;
         this.blockManager = blockManager;
         this.accountFactory = accountFactory;
+    }
+
+    @Override
+    public void start() throws RuntimeException {}
+
+    @Override
+    public void stop() throws RuntimeException {
+        blockManager.stop();
     }
 
     @Override
