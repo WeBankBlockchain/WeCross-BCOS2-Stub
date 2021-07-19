@@ -8,12 +8,14 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
-import com.webank.wecross.stub.bcos.web3j.Web3jUtility;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
+import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
+import com.webank.wecross.stub.bcos.web3j.Web3jWrapperFactory;
 import java.io.File;
 import java.math.BigInteger;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.crypto.EncryptType;
@@ -22,13 +24,14 @@ import org.fisco.bcos.web3j.precompile.cns.CnsService;
 import org.fisco.bcos.web3j.precompile.common.PrecompiledCommon;
 import org.fisco.bcos.web3j.precompile.common.PrecompiledResponse;
 import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
-import org.fisco.bcos.web3j.protocol.Web3j;
+import org.fisco.bcos.web3j.protocol.channel.StatusCode;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.fisco.solc.compiler.CompilationResult;
 import org.fisco.solc.compiler.SolidityCompiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 public class ProxyContract {
 
@@ -48,19 +51,33 @@ public class ProxyContract {
                 new BCOSStubConfigParser(chainPath, "stub.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
 
-        boolean isSM = bcosStubConfig.getType().toLowerCase().contains("gm");
+        boolean isGM = bcosStubConfig.getType().toLowerCase().contains("gm");
+        AbstractWeb3jWrapper web3jWrapper =
+                Web3jWrapperFactory.createWeb3jWrapperInstance(bcosStubConfig);
+
         BCOSBaseStubFactory bcosBaseStubFactory =
-                isSM
+                isGM
                         ? new BCOSBaseStubFactory(EncryptType.SM2_TYPE, "sm2p256v1", "GM_BCOS2.0")
                         : new BCOSBaseStubFactory(EncryptType.ECDSA_TYPE, "secp256k1", "BCOS2.0");
 
-        Web3j web3j = Web3jUtility.initWeb3j(bcosStubConfig.getChannelService());
-        Web3jWrapper web3jWrapper = new Web3jWrapperImpl(web3j);
         account =
                 (BCOSAccount)
                         bcosBaseStubFactory.newAccount(
-                                accountName, "classpath:accounts" + File.separator + accountName);
-        connection = BCOSConnectionFactory.build(bcosStubConfig, web3jWrapper);
+                                accountName,
+                                "classpath:" + chainPath + File.separator + accountName);
+        if (account == null) {
+            System.out.println("Not f");
+            account =
+                    (BCOSAccount)
+                            bcosBaseStubFactory.newAccount(
+                                    accountName,
+                                    "classpath:accounts" + File.separator + accountName);
+        }
+
+        ScheduledExecutorService scheduledExecutorService =
+                new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
+        connection =
+                BCOSConnectionFactory.build(bcosStubConfig, web3jWrapper, scheduledExecutorService);
         if (account == null) {
             throw new Exception("Account " + accountName + " not found");
         }
@@ -132,7 +149,7 @@ public class ProxyContract {
         BigInteger chainID =
                 new BigInteger(connection.getProperties().get(BCOSConstant.BCOS_CHAIN_ID));
 
-        Web3jWrapper web3jWrapper = connection.getWeb3jWrapper();
+        AbstractWeb3jWrapper web3jWrapper = connection.getWeb3jWrapper();
         BigInteger blockNumber = web3jWrapper.getBlockNumber();
 
         logger.info(
@@ -154,7 +171,7 @@ public class ProxyContract {
                         metadata.bin);
 
         CompletableFuture<String> completableFuture = new CompletableFuture<>();
-        web3jWrapper.sendTransactionAndGetProof(
+        web3jWrapper.sendTransaction(
                 signTx,
                 new TransactionSucCallback() {
                     @Override
@@ -163,7 +180,7 @@ public class ProxyContract {
                             logger.error(
                                     " deploy contract failed, error status: {}, error message: {} ",
                                     receipt.getStatus(),
-                                    receipt.getMessage());
+                                    StatusCode.getStatusMessage(receipt.getStatus()));
                             completableFuture.complete(null);
                         } else {
                             logger.info(
@@ -175,6 +192,10 @@ public class ProxyContract {
                 });
 
         String contractAddress = completableFuture.get(10, TimeUnit.SECONDS);
+        if (Objects.isNull(contractAddress)) {
+            throw new Exception("Failed to deploy proxy contract.");
+        }
+
         CnsService cnsService = new CnsService(web3jWrapper.getWeb3j(), account.getCredentials());
         String result = cnsService.registerCns(cnsName, cnsVersion, contractAddress, metadata.abi);
 
@@ -218,19 +239,5 @@ public class ProxyContract {
 
         System.out.println(
                 "SUCCESS: WeCrossProxy:" + version + " has been upgraded! chain: " + chainPath);
-    }
-
-    public static void check(String chainPath) {
-        try {
-            BCOSConnection connection = BCOSConnectionFactory.build(chainPath, "stub.toml");
-
-            if (!connection.hasProxyDeployed()) {
-                System.out.println("WeCrossProxy has not been deployed");
-            } else {
-                System.out.println("WeCrossProxy has been deployed.");
-            }
-        } catch (Exception e) {
-            System.out.println(e);
-        }
     }
 }

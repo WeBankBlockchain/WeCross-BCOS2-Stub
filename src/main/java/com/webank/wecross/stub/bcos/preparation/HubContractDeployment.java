@@ -1,5 +1,6 @@
 package com.webank.wecross.stub.bcos.preparation;
 
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,32 +19,34 @@ public class HubContractDeployment {
         return "Usage:\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + HubContractDeployment.class.getName()
-                + " check [chainName]\n"
+                + " deploy [chainName] [accountName(optional)]\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + HubContractDeployment.class.getName()
-                + " deploy [chainName] [accountName]\n"
-                + "         java -cp 'conf/:lib/*:plugin/*' "
-                + HubContractDeployment.class.getName()
-                + " upgrade [chainName] [accountName]\n"
+                + " upgrade [chainName] [accountName(optional)]\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + HubContractDeployment.class.getName()
                 + " getAddress [chainName]\n"
                 + "Example:\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + HubContractDeployment.class.getName()
-                + " check "
+                + " deploy "
                 + pureChainPath
-                + "\n"
+                + " \n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + HubContractDeployment.class.getName()
                 + " deploy "
                 + pureChainPath
-                + " bcos_user1\n"
+                + " admin\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + HubContractDeployment.class.getName()
                 + " upgrade "
                 + pureChainPath
-                + " bcos_user1\n"
+                + " \n"
+                + "         java -cp 'conf/:lib/*:plugin/*' "
+                + HubContractDeployment.class.getName()
+                + " upgrade "
+                + pureChainPath
+                + " admin\n"
                 + "         java -cp 'conf/:lib/*:plugin/*' "
                 + HubContractDeployment.class.getName()
                 + " getAddress "
@@ -86,13 +89,17 @@ public class HubContractDeployment {
 
         String cmd = args[0];
         String chainPath = args[1];
+        String accountName = BCOSConstant.ADMIN_ACCOUNT;
 
         switch (cmd) {
-            case "check":
-                check(chainPath);
-                break;
             case "getAddress":
-                getAddress(chainPath);
+                getAddress(chainPath, accountName);
+                break;
+            case "deploy":
+                deploy(chainPath, accountName);
+                break;
+            case "upgrade":
+                upgrade(chainPath, accountName);
                 break;
             default:
                 usage();
@@ -120,12 +127,17 @@ public class HubContractDeployment {
         }
     }
 
-    public static void check(String chainPath) {
-        HubContract.check(chainPath);
-    }
-
-    public static void getAddress(String chainPath) {
-        HubContract.getHubAddress(chainPath);
+    public static void getAddress(String chainPath, String accountName) {
+        try {
+            String hubContractFile =
+                    chainPath + File.separator + "WeCrossHub" + File.separator + "WeCrossHub.sol";
+            HubContract hubContract = new HubContract(hubContractFile, chainPath, accountName);
+            hubContract.getHubAddress();
+        } catch (Exception e) {
+            logger.error("getAddress, e: ", e);
+            System.out.println("Failed, please check contract or account. Exception details:");
+            e.printStackTrace();
+        }
     }
 
     public static void deploy(String chainPath, String accountName) {
@@ -135,8 +147,9 @@ public class HubContractDeployment {
             HubContract hubContract = new HubContract(hubContractFile, chainPath, accountName);
             hubContract.deploy();
         } catch (Exception e) {
-            logger.error("e: ", e);
-            System.out.println(e);
+            logger.error("deploy, e: ", e);
+            System.out.println("Failed, please check contract or account. Exception details:");
+            e.printStackTrace();
         }
     }
 
@@ -147,8 +160,9 @@ public class HubContractDeployment {
             HubContract hubContract = new HubContract(hubContractFile, chainPath, accountName);
             hubContract.upgrade();
         } catch (Exception e) {
-            logger.error("e: ", e);
-            System.out.println(e);
+            logger.error("upgrade, e: ", e);
+            System.out.println("Failed, please check contract or account. Exception details:");
+            e.printStackTrace();
         }
     }
 }

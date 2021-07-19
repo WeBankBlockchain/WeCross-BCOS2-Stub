@@ -16,16 +16,16 @@ public class BCOSStubFactoryTest {
     // private BCOSGMStubFactory bcosgmStubFactory = new BCOSGMStubFactory();
 
     @Test
+    public void newConnectionTest() {
+        Connection connection = bcosSubFactory.newConnection("./");
+        assertTrue(Objects.isNull(connection));
+    }
+
+    @Test
     public void newDriverTest() {
         Driver driver = bcosSubFactory.newDriver();
         assertTrue(Objects.nonNull(driver));
         assertTrue(driver instanceof BCOSDriver);
-    }
-
-    @Test
-    public void newConnectionTest() {
-        Connection connection = bcosSubFactory.newConnection("./");
-        assertTrue(Objects.isNull(connection));
     }
 
     @Test

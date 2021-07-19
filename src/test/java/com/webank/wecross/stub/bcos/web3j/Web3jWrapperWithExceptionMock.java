@@ -4,20 +4,20 @@ import java.io.IOException;
 import java.math.BigInteger;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.protocol.Web3j;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof;
+import org.fisco.bcos.web3j.protocol.core.methods.response.*;
 
-public class Web3jWrapperWithExceptionMock implements Web3jWrapper {
+public class Web3jWrapperWithExceptionMock extends AbstractWeb3jWrapper {
+
+    public Web3jWrapperWithExceptionMock() {
+        super(null);
+    }
 
     @Override
     public BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException {
         throw new IOException(" IOException");
     }
 
-    @Override
-    public String getRawBlockByNumber(long blockNumber) throws IOException {
+    public BcosBlockHeader.BlockHeader getBlockHeaderByNumber(long blockNumber) throws IOException {
         throw new IOException(" IOException");
     }
 
@@ -27,8 +27,8 @@ public class Web3jWrapperWithExceptionMock implements Web3jWrapper {
     }
 
     @Override
-    public void sendTransactionAndGetProof(
-            String signedTransactionData, TransactionSucCallback callback) throws IOException {
+    public void sendTransaction(String signedTransactionData, TransactionSucCallback callback)
+            throws IOException {
         throw new IOException(" IOException");
     }
 

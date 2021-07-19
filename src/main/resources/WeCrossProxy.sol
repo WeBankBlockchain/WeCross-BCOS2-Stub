@@ -1,5 +1,5 @@
 /*
-*   v1.0.0-rc4
+*   v1.0.0
 *   proxy contract for WeCross
 *   main entrance of all contract call
 */
@@ -46,9 +46,9 @@ contract WeCrossProxy {
     mapping(string => XATransactionStep) xaTransactionSteps;  // key: xaTransactionID || xaTransactionSeq
 
     /*
-    * record all xa tansactionIDs
-    * head: point to the current xa tansaction to be checked
-    * tail: point to the next position for added xa tansaction
+    * record all xa transactionIDs
+    * head: point to the current xa transaction to be checked
+    * tail: point to the next position for added xa transaction
     */
     uint256 head = 0;
     uint256 tail = 0;
@@ -68,7 +68,6 @@ contract WeCrossProxy {
     uint256 constant MAX_SETP = 1024;
 
     string[] pathCache;
-    mapping(string => address) addressCache; // key: contract name
 
     struct Transaction {
         bool existed;
@@ -82,42 +81,35 @@ contract WeCrossProxy {
         cns = CNSPrecompiled(0x1004);
     }
 
-    function getVersion(string[] memory _args) public pure
-    returns(string[] memory)
+    function getVersion() public pure
+    returns(string memory)
     {
-        string[] memory result = new string[](1);
-        result[0] = version;
-        return result;
+        return version;
     }
 
-    function addPath(string[] memory _args) public
+    function addPath(string memory _path) public
     {
-        pathCache.push(_args[0]);
+        pathCache.push(_path);
     }
 
-    function getPaths(string[] memory _args) public view
+    function getPaths() public view
     returns (string[] memory)
     {
         return pathCache;
     }
 
-    function deletePathList(string[] memory _args) public
+    function deletePathList() public
     {
         pathCache.length = 0;
-    }
-
-    // fetch the address by the name of the path
-    function getAddressByNameByCache(string memory _name) public view returns(address) {
-        return addressCache[_name];
     }
 
     /*
     * deploy contract by contract binary code
     */
-    function deployContract(bytes memory bin) public returns(address addr) {
+    function deployContract(bytes memory _bin) public returns(address addr) {
         bool ok = false;
         assembly {
-            addr := create(0,add(bin,0x20), mload(bin))
+            addr := create(0,add(_bin,0x20), mload(_bin))
             ok := gt(extcodesize(addr),0)
         }
         if(!ok) {
@@ -128,54 +120,54 @@ contract WeCrossProxy {
     /**
     * deploy contract and register contract to cns
     */
-    function deployContractWithRegisterCNS(string memory _name, string memory _version, bytes memory _bin, string memory _abi) public returns(address) {
-
-        address addr = getAddressByName(_name, false);
+    function deployContractWithRegisterCNS(string memory _path, string memory _version, bytes memory _bin, string memory _abi) public returns(address) {
+        string memory name = getNameByPath(_path);
+        address addr = getAddressByName(name, false);
         if((addr != address(0x0))  && lockedContracts[addr].locked) {
-            revert(string(abi.encodePacked(_name, " is locked by unfinished xa transaction: ", lockedContracts[addr].xaTransactionID)));
+            revert(string(abi.encodePacked(name, " is locked by unfinished xa transaction: ", lockedContracts[addr].xaTransactionID)));
         }
 
         // deploy contract first
         address deploy_addr = deployContract(_bin);
         // register to cns
-        int ret = cns.insert(_name, _version, addressToString(deploy_addr), _abi);
+        int ret = cns.insert(name, _version, addressToString(deploy_addr), _abi);
         if(1 != ret) {
-            revert(string(abi.encodePacked(_name, ":", _version, " unable register to cns, error: ", uint256ToString(uint256(ret > 0? ret : -ret)))));
+            revert(string(abi.encodePacked(name, ":", _version, " unable register to cns, error: ", uint256ToString(uint256(ret > 0? ret : -ret)))));
         }
-        addressCache[_name] = deploy_addr;
+        pathCache.push(_path);
         return deploy_addr;
     }
 
     /**
     * register contract to cns
     */
-    function registerCNS(string memory _name, string memory _version, string memory _addr, string memory _abi) public {
-        address addr = getAddressByName(_name, false);
+    function registerCNS(string memory _path, string memory _version, string memory _addr, string memory _abi) public {
+        string memory name = getNameByPath(_path);
+        address addr = getAddressByName(name, false);
         if((addr != address(0x0))  && lockedContracts[addr].locked) {
-            revert(string(abi.encodePacked(_name, " is locked by unfinished xa transaction: ", lockedContracts[addr].xaTransactionID)));
+            revert(string(abi.encodePacked(name, " is locked by unfinished xa transaction: ", lockedContracts[addr].xaTransactionID)));
         }
 
         // check if version info exist ???
-        int ret = cns.insert(_name, _version, _addr, _abi);
+        int ret = cns.insert(name, _version, _addr, _abi);
         if(1 != ret) {
-            revert(string(abi.encodePacked(_name, ":", _version, " unable register to cns, error: ", uint256ToString(uint256(ret > 0 ? ret : - ret)))));
+            revert(string(abi.encodePacked(name, ":", _version, " unable register to cns, error: ", uint256ToString(uint256(ret > 0 ? ret : - ret)))));
         }
-        // add address to map
-        addressCache[_name] = bytesToAddress(bytes(_addr));
+        pathCache.push(_path);
     }
 
     /**
     * select cns by name
     */
-    function selectByName(string memory name) public view returns(string memory) {
-        return cns.selectByName(name);
+    function selectByName(string memory _name) public view returns(string memory) {
+        return cns.selectByName(_name);
     }
 
     /**
     * select cns by name and version
     */
-    function selectByNameAndVersion(string memory name, string memory version) public view returns(string memory) {
-        return cns.selectByNameAndVersion(name, version);
+    function selectByNameAndVersion(string memory _name, string memory _version) public view returns(string memory) {
+        return cns.selectByNameAndVersion(_name, _version);
     }
 
     // constant call with xaTransactionID
@@ -189,7 +181,7 @@ contract WeCrossProxy {
         }
 
         if(!sameString(lockedContracts[addr].xaTransactionID, _XATransactionID)) {
-            revert(string(abi.encodePacked(_path, "is unregistered in xa transaction: ", _XATransactionID)));
+            revert(string(abi.encodePacked(_path, " is unregistered in xa transaction: ", _XATransactionID)));
         }
 
         return callContract(addr, _func, _args);
@@ -200,10 +192,7 @@ contract WeCrossProxy {
     returns(bytes memory)
     {
         // find address from abi cache first
-        address addr = addressCache[_name];
-        if(addr == address(0x0)) {
-            addr = getAddressByName(_name, true);
-        }
+        address addr = getAddressByName(_name, true);
 
         if(lockedContracts[addr].locked) {
             revert(string(abi.encodePacked("resource is locked by unfinished xa transaction: ", lockedContracts[addr].xaTransactionID)));
@@ -235,7 +224,7 @@ contract WeCrossProxy {
         }
 
         if(!sameString(lockedContracts[addr].xaTransactionID, _XATransactionID)) {
-            revert(string(abi.encodePacked(_path, "is unregistered in xa transaction ", _XATransactionID)));
+            revert(string(abi.encodePacked(_path, " is unregistered in xa transaction ", _XATransactionID)));
         }
 
         if(!isValidXATransactionSep(_XATransactionID, _XATransactionSeq)) {
@@ -271,11 +260,7 @@ contract WeCrossProxy {
         }
 
         // find address from abi cache first
-        address addr = addressCache[_name];
-        if(addr == address(0x0)) {
-            addr = getAddressByName(_name, true);
-            addressCache[_name] = addr;
-        }
+        address addr = getAddressByName(_name, true);
 
         if(lockedContracts[addr].locked) {
             revert(string(abi.encodePacked(_name, " is locked by unfinished xa transaction: ", lockedContracts[addr].xaTransactionID)));
@@ -289,54 +274,43 @@ contract WeCrossProxy {
     }
 
     /*
-    * @param xaTransactionID || num || path1 || path2 || ...
-    * the first num paths are related to current chain
+    * @param xaTransactionID
+    * @param selfPaths are related to current chain
     * result: success
     */
-    function startXATransaction(string[] memory _args) public
-    returns(string[] memory)
+    function startXATransaction(string memory _xaTransactionID, string[] memory _selfPaths, string[] memory _otherPaths) public
+    returns(string memory)
     {
-        string[] memory res = new string[](1);
-        res[0] = SUCCESS_FLAG;
-
-        uint256 len = _args.length;
-        if(len < 4) {
-            revert("invalid arguments");
+        if(isExistedXATransaction(_xaTransactionID)) {
+            revert(string(abi.encodePacked("xa transaction ", _xaTransactionID, " already exists")));
         }
 
-        uint256 num = stringToUint256(_args[1]);
-        if((num == 0) || ((2*num+2) > len)) {
-            revert("invalid arguments");
-        }
+        uint256 selfLen = _selfPaths.length;
+        uint256 otherLen = _otherPaths.length;
 
-        string memory xaTransactionID = _args[0];
-
-        if(isExistedXATransaction(xaTransactionID)) {
-            revert(string(abi.encodePacked("xa transaction ", xaTransactionID, " already exists")));
-        }
-
-        address[] memory contracts = new address[](num);
-        string[] memory allPaths = new string[](len-num-2);
+        address[] memory contracts = new address[](selfLen);
+        string[] memory allPaths = new string[](selfLen + otherLen);
 
         // recode ACL
-        for(uint256 i = 0; i < num; i++) {
-            address addr = getAddressByPath(_args[i+2]);
+        for(uint256 i = 0; i < selfLen; i++) {
+            address addr = getAddressByPath(_selfPaths[i]);
             contracts[i] = addr;
             if(lockedContracts[addr].locked) {
-                revert(string(abi.encodePacked(_args[i+2], " is locked by unfinished xa transaction: ", lockedContracts[addr].xaTransactionID)));
+                revert(string(abi.encodePacked(_selfPaths[i], " is locked by unfinished xa transaction: ", lockedContracts[addr].xaTransactionID)));
             }
             lockedContracts[addr].locked = true;
-            lockedContracts[addr].xaTransactionID = xaTransactionID;
+            lockedContracts[addr].xaTransactionID = _xaTransactionID;
+            allPaths[i] = _selfPaths[i];
         }
 
-        for(uint256 i = 0; i < len-2-num; i++)
+        for(uint256 i = 0; i < otherLen; i++)
         {
-            allPaths[i] = _args[i+2+num];
+            allPaths[selfLen+i] = _otherPaths[i];
         }
 
         uint256[] memory seqs = new uint256[](MAX_SETP);
         // recode xa transaction
-        xaTransactions[xaTransactionID] = XATransaction(
+        xaTransactions[_xaTransactionID] = XATransaction(
             addressToString(tx.origin),
             allPaths,
             contracts,
@@ -348,82 +322,66 @@ contract WeCrossProxy {
             0
         );
 
-        addXATransaction(xaTransactionID);
+        addXATransaction(_xaTransactionID);
 
-        return res;
+        return SUCCESS_FLAG;
     }
 
     /*
     *  @param xaTransactionID
     * result: success
     */
-    function commitXATransaction(string[] memory _args) public
-    returns(string[] memory)
+    function commitXATransaction(string memory _xaTransactionID) public
+    returns(string memory)
     {
-        string[] memory res = new string[](1);
-        res[0] = SUCCESS_FLAG;
-
-        if(_args.length != 1) {
-            revert("invalid arguments");
-        }
-
-        string memory xaTransactionID = _args[0];
-
-        if(!isExistedXATransaction(xaTransactionID)) {
+        if(!isExistedXATransaction(_xaTransactionID)) {
             revert("xa transaction not found");
         }
 
         // has committed
-        if(sameString(xaTransactions[xaTransactionID].status, XA_STATUS_COMMITTED)) {
+        if(sameString(xaTransactions[_xaTransactionID].status, XA_STATUS_COMMITTED)) {
             revert("xa transaction has been committed");
         }
 
         // has rolledback
-        if(sameString(xaTransactions[xaTransactionID].status, XA_STATUS_ROLLEDBACK)) {
+        if(sameString(xaTransactions[_xaTransactionID].status, XA_STATUS_ROLLEDBACK)) {
             revert("xa transaction has been rolledback");
         }
 
-        xaTransactions[xaTransactionID].commitTimestamp = block.timestamp / 1000;
-        xaTransactions[xaTransactionID].status = XA_STATUS_COMMITTED;
-        deleteLockedContracts(xaTransactionID);
-        return res;
+        xaTransactions[_xaTransactionID].commitTimestamp = block.timestamp / 1000;
+        xaTransactions[_xaTransactionID].status = XA_STATUS_COMMITTED;
+        deleteLockedContracts(_xaTransactionID);
+
+        return SUCCESS_FLAG;
     }
 
     /*
     *  @param xaTransactionID
     * result: success | message
     */
-    function rollbackXATransaction(string[] memory _args) public
-    returns(string[] memory)
+    function rollbackXATransaction(string memory _xaTransactionID) public
+    returns(string memory)
     {
-        string[] memory res = new string[](1);
-        res[0] = SUCCESS_FLAG;
-
-        if(_args.length != 1) {
-            revert("invalid arguments");
-        }
-
-        string memory xaTransactionID = _args[0];
-
-        if(!isExistedXATransaction(xaTransactionID)) {
+        string memory result = SUCCESS_FLAG;
+        if(!isExistedXATransaction(_xaTransactionID)) {
             revert("xa transaction not found");
         }
 
         // has committed
-        if(sameString(xaTransactions[xaTransactionID].status, XA_STATUS_COMMITTED)) {
+        if(sameString(xaTransactions[_xaTransactionID].status, XA_STATUS_COMMITTED)) {
             revert("xa transaction has been committed");
         }
 
         // has rolledback
-        if(sameString(xaTransactions[xaTransactionID].status, XA_STATUS_ROLLEDBACK)) {
+        if(sameString(xaTransactions[_xaTransactionID].status, XA_STATUS_ROLLEDBACK)) {
             revert("xa transaction has been rolledback");
         }
 
         string memory message = 'warning:';
-        uint256 stepNum = xaTransactions[xaTransactionID].stepNum;
+        uint256 stepNum = xaTransactions[_xaTransactionID].stepNum;
         for(uint256 i = stepNum; i > 0; i--) {
-            uint256 seq = xaTransactions[xaTransactionID].seqs[i-1];
-            string memory key = getXATransactionStepKey(xaTransactionID, seq);
+            uint256 seq = xaTransactions[_xaTransactionID].seqs[i-1];
+            string memory key = getXATransactionStepKey(_xaTransactionID, seq);
 
             string memory func = xaTransactionSteps[key].func;
             address contractAddress = xaTransactionSteps[key].contractAddress;
@@ -435,78 +393,81 @@ contract WeCrossProxy {
             (success, ) = address(contractAddress).call(abi.encodePacked(sig, args));
             if(!success) {
                 message = string(abi.encodePacked(message, ' revert "', func, '" failed.'));
-                res[0] = message;
+                result = message;
             }
         }
 
-        xaTransactions[xaTransactionID].rollbackTimestamp = block.timestamp / 1000;
-        xaTransactions[xaTransactionID].status = XA_STATUS_ROLLEDBACK;
-        deleteLockedContracts(xaTransactionID);
-        return res;
-    }
-
-    function getXATransactionNumber() public view
-    returns (string[] memory)
-    {
-        string[] memory result = new string[](1);
-        if(xaTransactionIDs.length == 0) {
-            result[0] = "0";
-        } else {
-            result[0] = uint256ToString(xaTransactionIDs.length);
-        }
+        xaTransactions[_xaTransactionID].rollbackTimestamp = block.timestamp / 1000;
+        xaTransactions[_xaTransactionID].status = XA_STATUS_ROLLEDBACK;
+        deleteLockedContracts(_xaTransactionID);
         return result;
     }
 
-    /*
-    [
-        {
-        	"xaTransactionID": "001",
-    		"accountIdentity": "0x11",
-    		"status": "processing",
-    		"timestamp": 123
-    	},
-    	{
-        	"xaTransactionID": "002",
-    		"accountIdentity": "0x11",
-    		"status": "committed",
-    		"timestamp": 123
-    	}
-    ]
-    */
-    function listXATransactions(string[] memory _args) public view
-    returns (string[] memory)
+    function getXATransactionNumber() public view
+    returns (string memory)
     {
-        uint256 reverseOffset = stringToUint256(_args[0]);
-        uint256 size = stringToUint256(_args[1]);
+        if(xaTransactionIDs.length == 0) {
+            return "0";
+        } else {
+            return uint256ToString(xaTransactionIDs.length);
+        }
+    }
 
-        string[] memory result = new string[](1);
+    /*
+    * traverse in reverse order
+    * outputs:
+    {
+        "total": 100,
+        "xaTransactions":
+        [
+            {
+            	"xaTransactionID": "001",
+        		"accountIdentity": "0x11",
+        		"status": "processing",
+        		"timestamp": 123,
+        		"paths": ["a.b.1","a.b.2"]
+        	},
+        	{
+            	"xaTransactionID": "002",
+        		"accountIdentity": "0x11",
+        		"status": "committed",
+        		"timestamp": 123,
+        		"paths": ["a.b.1","a.b.2"]
+        	}
+        ]
+    }
+    */
+    function listXATransactions(string memory _index, uint256 _size) public view
+    returns (string memory)
+    {
         uint256 len = xaTransactionIDs.length;
-        if(len == 0 || len <= reverseOffset) {
-            result[0] = '[]';
-            return result;
+        uint256 index = sameString("-1", _index) ? (len - 1) : stringToUint256(_index);
+
+        if(len == 0 || len <= index) {
+            return '{"total":0,"xaTransactions":[]}';
         }
 
-        uint256 index = len - reverseOffset;
         string memory jsonStr = '[';
-        for(uint256 i = 0; i < (size - 1) && (index - i) > 1; i++) {
-            string memory xaTransactionID = xaTransactionIDs[index-i-1];
+        for(uint256 i = 0; i < (_size - 1) && (index - i) > 0; i++) {
+            string memory xaTransactionID = xaTransactionIDs[index-i];
             jsonStr = string(abi.encodePacked(jsonStr, '{"xaTransactionID":"', xaTransactionID, '",',
                 '"accountIdentity":"', xaTransactions[xaTransactionID].accountIdentity, '",',
                 '"status":"', xaTransactions[xaTransactionID].status, '",',
+                '"paths":', pathsToJson(xaTransactionID), ',',
                 '"timestamp":', uint256ToString(xaTransactions[xaTransactionID].startTimestamp), '},')
             );
         }
 
-        uint256 lastIndex = index >= size ? (index - size) : 0;
+        uint256 lastIndex = (index + 1) >= _size ? (index + 1 - _size) : 0;
         string memory xaTransactionID = xaTransactionIDs[lastIndex];
         jsonStr = string(abi.encodePacked(jsonStr, '{"xaTransactionID":"', xaTransactionID, '",',
             '"accountIdentity":"', xaTransactions[xaTransactionID].accountIdentity, '",',
             '"status":"', xaTransactions[xaTransactionID].status, '",',
+            '"paths":', pathsToJson(xaTransactionID), ',',
             '"timestamp":', uint256ToString(xaTransactions[xaTransactionID].startTimestamp), '}]')
         );
 
-        result[0] = jsonStr;
-        return result;
+        return string(abi.encodePacked('{"total":', uint256ToString(len),',"xaTransactions":', jsonStr, '}'));
     }
 
     /*
@@ -540,67 +501,43 @@ contract WeCrossProxy {
     	]
     }
     */
-    function getXATransaction(string[] memory _args) public view
-    returns(string[] memory)
+    function getXATransaction(string memory _xaTransactionID) public view
+    returns(string memory)
     {
-        string[] memory res = new string[](1);
-
-        if(_args.length != 1) {
-            revert("invalid arguments");
-        }
-
-        string memory xaTransactionID = _args[0];
-
-        if(!isExistedXATransaction(xaTransactionID)) {
+        if(!isExistedXATransaction(_xaTransactionID)) {
             revert("xa transaction not found");
         }
 
-        uint256 len = xaTransactions[xaTransactionID].paths.length;
-        string memory paths = string(abi.encodePacked('["', xaTransactions[xaTransactionID].paths[0], '"'));
-        for(uint256 i = 1; i < len; i++) {
-            paths = string(abi.encodePacked(paths, ',"', xaTransactions[xaTransactionID].paths[i], '"'));
-        }
-        paths = string(abi.encodePacked(paths, ']'));
-
-
-        res[0] = string(abi.encodePacked('{"xaTransactionID":"', xaTransactionID, '",',
-            '"accountIdentity":"', xaTransactions[xaTransactionID].accountIdentity, '",',
-            '"status":"', xaTransactions[xaTransactionID].status, '",',
-            '"paths":', paths, ',',
-            '"startTimestamp":', uint256ToString(xaTransactions[xaTransactionID].startTimestamp), ',',
-            '"commitTimestamp":', uint256ToString(xaTransactions[xaTransactionID].commitTimestamp), ',',
-            '"rollbackTimestamp":', uint256ToString(xaTransactions[xaTransactionID].rollbackTimestamp), ',',
-            '"xaTransactionSteps":', xaTransactionStepArrayToJson(xaTransactionID, xaTransactions[xaTransactionID].seqs, xaTransactions[xaTransactionID].stepNum), "}")
+        return string(abi.encodePacked('{"xaTransactionID":"', _xaTransactionID, '",',
+            '"accountIdentity":"', xaTransactions[_xaTransactionID].accountIdentity, '",',
+            '"status":"', xaTransactions[_xaTransactionID].status, '",',
+            '"paths":', pathsToJson(_xaTransactionID), ',',
+            '"startTimestamp":', uint256ToString(xaTransactions[_xaTransactionID].startTimestamp), ',',
+            '"commitTimestamp":', uint256ToString(xaTransactions[_xaTransactionID].commitTimestamp), ',',
+            '"rollbackTimestamp":', uint256ToString(xaTransactions[_xaTransactionID].rollbackTimestamp), ',',
+            '"xaTransactionSteps":', xaTransactionStepArrayToJson(_xaTransactionID, xaTransactions[_xaTransactionID].seqs, xaTransactions[_xaTransactionID].stepNum), "}")
         );
-        return res;
     }
 
     // called by router to check xa transaction status
     function getLatestXATransaction() public view
-    returns(string[] memory)
+    returns(string memory)
     {
-        string[] memory res = new string[](1);
-
         string memory xaTransactionID;
-
         if(head == tail) {
-            res[0] = '{}';
-            return res;
+            return '{}';
         } else {
             xaTransactionID = xaTransactionIDs[uint256(head)];
         }
-
-        string[] memory args = new string[](1);
-        args[0] = xaTransactionID;
-        return getXATransaction(args);
+        return getXATransaction(xaTransactionID);
     }
 
     // called by router to rollbach transaction
-    function rollbackAndDeleteXATransactionTask(string[] memory _args) public
-    returns (string[] memory)
+    function rollbackAndDeleteXATransactionTask(string memory _xaTransactionID) public
+    returns (string memory)
     {
-        rollbackXATransaction(_args);
-        return deleteXATransactionTask(_args[0]);
+        rollbackXATransaction(_xaTransactionID);
+        return deleteXATransactionTask(_xaTransactionID);
     }
 
     function getLatestXATransactionID() public view
@@ -613,22 +550,18 @@ contract WeCrossProxy {
         }
     }
 
-    function getXATransactionState(string[] memory _args) public view
-    returns (string[] memory)
+    function getXATransactionState(string memory _path) public view
+    returns (string memory)
     {
-        string[] memory result = new string[](1);
-
-        address addr = getAddressByPath(_args[0]);
+        address addr = getAddressByPath(_path);
         if(!lockedContracts[addr].locked) {
-            result[0] = NULL_FLAG;
+            return NULL_FLAG;
         } else {
             string memory xaTransactionID = lockedContracts[addr].xaTransactionID;
             uint256 index = xaTransactions[xaTransactionID].stepNum;
             uint256 seq = index == 0 ? 0 : xaTransactions[xaTransactionID].seqs[index-1];
-            result[0] = string(abi.encodePacked(xaTransactionID, " ", uint256ToString(seq)));
+            return string(abi.encodePacked(xaTransactionID, " ", uint256ToString(seq)));
         }
-
-        return result;
     }
 
     function addXATransaction(string memory _xaTransactionID) internal
@@ -638,11 +571,8 @@ contract WeCrossProxy {
     }
 
     function deleteXATransactionTask(string memory _xaTransactionID) internal
-    returns (string[] memory)
+    returns (string memory)
     {
-        string[] memory res = new string[](1);
-        res[0] = SUCCESS_FLAG;
-
         if(head == tail) {
             revert("delete nonexistent xa transaction");
         }
@@ -652,7 +582,7 @@ contract WeCrossProxy {
         }
 
         head++;
-        return res;
+        return SUCCESS_FLAG;
     }
 
     // internal call
@@ -744,6 +674,20 @@ contract WeCrossProxy {
         }
 
         return string(name);
+    }
+
+    /*
+        ["a.b.c1", "a.b.c2"]
+    */
+    function pathsToJson(string memory _transactionID) internal view
+    returns(string memory)
+    {
+        uint256 len = xaTransactions[_transactionID].paths.length;
+        string memory paths = string(abi.encodePacked('["', xaTransactions[_transactionID].paths[0], '"'));
+        for(uint256 i = 1; i < len; i++) {
+            paths = string(abi.encodePacked(paths, ',"', xaTransactions[_transactionID].paths[i], '"'));
+        }
+        return string(abi.encodePacked(paths, ']'));
     }
 
     /*

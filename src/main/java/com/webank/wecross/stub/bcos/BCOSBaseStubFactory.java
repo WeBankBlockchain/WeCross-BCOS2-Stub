@@ -149,7 +149,7 @@ public class BCOSBaseStubFactory implements StubFactory {
             return BCOSAccountFactory.build(
                     name, path.startsWith("classpath") ? path : "file:" + path);
         } catch (Exception e) {
-            logger.error(" newAccount, e: ", e);
+            logger.warn(" newAccount, e: ", e);
             return null;
         }
     }
@@ -176,8 +176,15 @@ public class BCOSBaseStubFactory implements StubFactory {
             String keyFile = path + "/" + accountAddress + "_" + getAlg() + ".key";
             File file = new File(keyFile);
 
+            if (!file.getParentFile().exists()) {
+
+                if (!file.getParentFile().mkdirs()) {
+                    System.out.println("Account dir:" + file.getParent() + " create failed");
+                }
+            }
+
             if (!file.createNewFile()) {
-                logger.error("Key file exists! {}", keyFile);
+                System.out.println("Key file exists!" + keyFile);
                 return;
             }
 
@@ -200,7 +207,7 @@ public class BCOSBaseStubFactory implements StubFactory {
             String confFilePath = path + "/account.toml";
             File confFile = new File(confFilePath);
             if (!confFile.createNewFile()) {
-                logger.error("Conf file exists! {}", confFile);
+                System.out.println("Conf file exists! " + confFile);
                 return;
             }
 
@@ -219,7 +226,7 @@ public class BCOSBaseStubFactory implements StubFactory {
                             + path
                             + "\"");
         } catch (Exception e) {
-            logger.error("Exception: ", e);
+            System.out.println("Exception: " + e);
         }
     }
 
@@ -245,6 +252,14 @@ public class BCOSBaseStubFactory implements StubFactory {
                             + "    caCert = 'ca.crt'\n"
                             + "    sslCert = 'sdk.crt'\n"
                             + "    sslKey = 'sdk.key'\n"
+                            + (("BCOS2.0".equals(getStubType()))
+                                    ? "    gmConnectEnable = false\n"
+                                    : "    gmConnectEnable = true\n")
+                            + "    gmCaCert = 'gm/gmca.crt'\n"
+                            + "    gmSslCert = 'gm/gmsdk.crt'\n"
+                            + "    gmSslKey = 'gm/gmsdk.key'\n"
+                            + "    gmEnSslCert = 'gm/gmensdk.crt'\n"
+                            + "    gmEnSslKey = 'gm/gmensdk.key'\n"
                             + "    timeout = 300000  # ms, default 60000ms\n"
                             + "    connectionsStr = ['127.0.0.1:20200']\n"
                             + "\n";
@@ -264,6 +279,8 @@ public class BCOSBaseStubFactory implements StubFactory {
 
             generateProxyContract(path);
             generateHubContract(path);
+
+            generateAccount(path + File.separator + BCOSConstant.ADMIN_ACCOUNT, null);
 
             System.out.println(
                     "SUCCESS: Chain \""

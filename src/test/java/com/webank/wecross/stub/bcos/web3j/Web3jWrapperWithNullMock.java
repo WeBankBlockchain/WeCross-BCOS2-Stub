@@ -7,6 +7,7 @@ import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWit
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof;
 
 public class Web3jWrapperWithNullMock extends Web3jWrapperImplMock {
+
     @Override
     public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(
             String transactionHash) throws IOException {
@@ -16,8 +17,8 @@ public class Web3jWrapperWithNullMock extends Web3jWrapperImplMock {
     }
 
     @Override
-    public void sendTransactionAndGetProof(
-            String signedTransactionData, TransactionSucCallback callback) throws IOException {
+    public void sendTransaction(String signedTransactionData, TransactionSucCallback callback)
+            throws IOException {
         TransactionReceipt receipt = new TransactionReceipt();
         callback.onResponse(receipt);
     }

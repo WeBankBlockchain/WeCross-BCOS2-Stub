@@ -4,16 +4,12 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.preparation.CnsService;
-import com.webank.wecross.stub.bcos.web3j.Web3jUtility;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImpl;
+import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
+import com.webank.wecross.stub.bcos.web3j.Web3jWrapperFactory;
 import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import org.fisco.bcos.fisco.EnumNodeVersion;
 import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
-import org.fisco.bcos.web3j.protocol.Web3j;
-import org.fisco.bcos.web3j.protocol.core.methods.response.NodeVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
@@ -21,21 +17,33 @@ import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 public class BCOSConnectionFactory {
     private static final Logger logger = LoggerFactory.getLogger(BCOSConnectionFactory.class);
 
-    public static BCOSConnection build(BCOSStubConfig bcosStubConfig, Web3jWrapper web3jWrapper)
-            throws Exception {
+    /**
+     * @param bcosStubConfig
+     * @param web3jWrapper
+     * @return
+     * @throws Exception
+     */
+    public static BCOSConnection build(
+            BCOSStubConfig bcosStubConfig, AbstractWeb3jWrapper web3jWrapper) throws Exception {
         ScheduledExecutorService scheduledExecutorService =
                 new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
         return build(bcosStubConfig, web3jWrapper, scheduledExecutorService);
     }
 
+    /**
+     * @param bcosStubConfig
+     * @param web3jWrapper
+     * @param executorService
+     * @return
+     * @throws Exception
+     */
     public static BCOSConnection build(
             BCOSStubConfig bcosStubConfig,
-            Web3jWrapper web3jWrapper,
+            AbstractWeb3jWrapper web3jWrapper,
             ScheduledExecutorService executorService)
             throws Exception {
-        /** load stub.toml config */
-        logger.info(" stubConfigPath: {} ", bcosStubConfig);
-        checkBCOSVersion(web3jWrapper);
+
+        logger.info(" bcosStubConfig: {}, version: {} ", bcosStubConfig, web3jWrapper.getVersion());
 
         BCOSConnection bcosConnection = new BCOSConnection(web3jWrapper, executorService);
         bcosConnection.setResourceInfoList(bcosStubConfig.convertToResourceInfos());
@@ -46,6 +54,9 @@ public class BCOSConnectionFactory {
                 BCOSConstant.BCOS_CHAIN_ID, String.valueOf(bcosStubConfig.getChain().getChainID()));
         bcosConnection.addProperty(
                 BCOSConstant.BCOS_STUB_TYPE, String.valueOf(bcosStubConfig.getType()));
+        if (web3jWrapper.getVersion() != null) {
+            bcosConnection.addProperty(BCOSConstant.BCOS_NODE_VERSION, web3jWrapper.getVersion());
+        }
 
         CnsInfo proxyCnsInfo = CnsService.queryProxyCnsInfo(web3jWrapper);
         if (Objects.nonNull(proxyCnsInfo)) {
@@ -69,44 +80,15 @@ public class BCOSConnectionFactory {
     public static BCOSConnection build(
             String stubConfigPath, String configName, ScheduledExecutorService executorService)
             throws Exception {
-        /** load stub.toml config */
         logger.info(" stubConfigPath: {} ", stubConfigPath);
+
         BCOSStubConfigParser bcosStubConfigParser =
                 new BCOSStubConfigParser(stubConfigPath, configName);
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
 
-        Web3j web3j = Web3jUtility.initWeb3j(bcosStubConfig.getChannelService());
-        Web3jWrapper web3jWrapper = new Web3jWrapperImpl(web3j);
-        logger.info(" web3j: {} ", web3j);
+        AbstractWeb3jWrapper web3jWrapper =
+                Web3jWrapperFactory.createWeb3jWrapperInstance(bcosStubConfig);
 
         return build(bcosStubConfig, web3jWrapper, executorService);
-    }
-
-    public static void checkBCOSVersion(Web3jWrapper web3jWrapper) throws Exception {
-        NodeVersion.Version respondNodeVersion =
-                web3jWrapper.getWeb3j().getNodeVersion().send().getNodeVersion();
-
-        String supportedVersionStr = respondNodeVersion.getSupportedVersion();
-        String nodeVersionStr = respondNodeVersion.getVersion();
-        EnumNodeVersion.Version supportedVersion =
-                EnumNodeVersion.getClassVersion(supportedVersionStr);
-
-        /*2.4.0 gm or 2.4.0*/
-        String[] strings = nodeVersionStr.split(" ");
-        EnumNodeVersion.Version nodeVersion = EnumNodeVersion.getClassVersion(strings[0]);
-
-        // must not below than 2.4.0
-        if (!(supportedVersion.getMajor() == 2 && supportedVersion.getMinor() >= 4)) {
-            throw new Exception(
-                    "FISCO BCOS supported version is not supported, version must not below than 2.4.0, but current is "
-                            + supportedVersionStr);
-        }
-
-        // must not below than 2.4.0
-        if (!(nodeVersion.getMajor() == 2 && nodeVersion.getMinor() >= 4)) {
-            throw new Exception(
-                    "FISCO BCOS version is not supported, version must not below than 2.4.0, but current is "
-                            + nodeVersionStr);
-        }
     }
 }

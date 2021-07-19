@@ -14,7 +14,7 @@ plugins {
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'com.webank.wecross'
-version '1.0.0-rc5'
+version '1.1.1'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -62,24 +62,35 @@ configurations {
 //}
 
 dependencies {
-    implementation 'com.webank:wecross-java-stub:1.0.0-rc5-1029-SNAPSHOT'
+    implementation ('com.webank:wecross-java-stub:1.1.1') {
+        exclude group: "io.netty"
+    }
+
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'
 
     implementation 'org.apache.commons:commons-lang3:3.11'
-    implementation 'com.google.guava:guava:28.1-jre'
-    implementation ('org.fisco-bcos:web3sdk:2.5.1')  {
-        exclude group: "org.ethereum"
-    }
+    implementation 'com.google.guava:guava:30.1-jre'
+    implementation 'org.yaml:snakeyaml:1.27'
 
+    implementation ('org.fisco-bcos:web3sdk:2.6.4-SNAPSHOT')  {
+        exclude group: "org.ethereum"
+        exclude group: "org.fisco-bcos", module: "tcnative"
+        exclude group: "io.netty"
+    }
     implementation 'org.fisco-bcos:solcJ:0.5.2.0'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
+    testImplementation 'io.netty:netty-all:4.1.58.Final'
+    testImplementation 'org.fisco-bcos:tcnative:2.0.34.0'
     testImplementation 'org.slf4j:slf4j-log4j12:1.7.30'
     testImplementation 'org.springframework.boot:spring-boot-starter-test:2.1.13.RELEASE'
 
     integTestImplementation 'junit:junit:4.12'
+    integTestImplementation 'io.netty:netty-all:4.1.58.Final'
+    integTestImplementation 'org.fisco-bcos:tcnative:2.0.34.0'
+    integTestImplementation 'org.slf4j:slf4j-log4j12:1.7.30'
     integTestImplementation 'org.slf4j:slf4j-log4j12:1.7.30'
 }
 
@@ -133,6 +144,31 @@ task makeJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar, d
                 'Main-Class': 'com.webank.wecross.stub.bcos.normal.BCOSStubFactory',
                 'version': project.version,
         )
+
+        try {
+            def repo = grgit.open(dir: file('.').canonicalPath)
+            if (repo != null) {
+                def date = new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+                def branch = repo.branch.getCurrent().getName()
+                def commit = repo.head().getAbbreviatedId(40)
+
+                attributes(["Implementation-Timestamp": date,
+                            "Git-Branch"              : branch,
+                            "Git-Commit"              : commit
+                ])
+
+                logger.info("  Commit : ")
+                logger.info("  => date: {}", date)
+                logger.info("  => branch: {}", branch)
+                logger.info("  => commit: {}", commit)
+            }
+        } catch (Exception e) {
+            // logger.warn(' .git not exist, cannot found commit info')
+        }
+    }
+
+    dependencies {
+        exclude(dependency('io.netty:.*'))
     }
 
     relocate 'org.fisco.bcos', 'org.fisco.bcos.wecross.normal'
@@ -157,6 +193,31 @@ task makeGMJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar,
                 'Main-Class': 'com.webank.wecross.stub.bcos.guomi.BCOSGMStubFactory',
                 'version': project.version,
         )
+
+        try {
+            def repo = grgit.open(dir: file('.').canonicalPath)
+            if (repo != null) {
+                def date = new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+                def branch = repo.branch.getCurrent().getName()
+                def commit = repo.head().getAbbreviatedId(40)
+
+                attributes(["Implementation-Timestamp": date,
+                            "Git-Branch"              : branch,
+                            "Git-Commit"              : commit
+                ])
+
+                logger.info("  Commit : ")
+                logger.info("  => date: {}", date)
+                logger.info("  => branch: {}", branch)
+                logger.info("  => commit: {}", commit)
+            }
+        } catch (Exception e) {
+            // logger.warn(' .git not exist, cannot found commit info')
+        }
+    }
+
+    dependencies {
+        exclude(dependency('io.netty:.*'))
     }
 
     relocate 'org.fisco.bcos', 'org.fisco.bcos.wecross.guomi'
@@ -232,7 +293,7 @@ publishing {
             pom {
                 name = "WeCross-BCOS-Stub"
                 description = "Stub interface for WeCross"
-                url = "https://github.com/WeBankFinTech/WeCross"
+                url = "https://github.com/WeBankBlockchain/WeCross"
                 licenses {
                     license {
                         name = "The Apache License, Version 2.0"
@@ -247,9 +308,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection = "scm:git:git://github.com/WeBankFinTech/WeCross.git"
-                    developerConnection = "scm:git:ssh://github.com/WeBankFinTech/WeCross.git"
-                    url = "https://github.com/WeBankFinTech/WeCross"
+                    connection = "scm:git:git://github.com/WeBankBlockchain/WeCross.git"
+                    developerConnection = "scm:git:ssh://github.com/WeBankBlockchain/WeCross.git"
+                    url = "https://github.com/WeBankBlockchain/WeCross"
                 }
             }
         }

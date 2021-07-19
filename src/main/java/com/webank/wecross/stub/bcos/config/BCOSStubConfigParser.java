@@ -6,10 +6,7 @@ import com.webank.wecross.stub.bcos.common.BCOSToml;
 import com.webank.wecross.stub.bcos.web3j.Web3jDefaultConfig;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,6 +116,10 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         String sslKey = stubDir + File.separator + (String) channelServiceConfigValue.get("sslKey");
         requireFieldNotNull(sslKey, "channelService", "sslKey", configFile);
 
+        boolean gmConnectEnable =
+                channelServiceConfigValue.get("gmConnectEnable") != null
+                        && (boolean) channelServiceConfigValue.get("gmConnectEnable");
+
         // connectionsStr field
         @SuppressWarnings("unchecked")
         List<String> connectionsStr =
@@ -144,6 +145,37 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         channelServiceConfig.setCaCert(caCertPath);
         channelServiceConfig.setSslCert(sslCert);
         channelServiceConfig.setSslKey(sslKey);
+        channelServiceConfig.setGmConnectEnable(gmConnectEnable);
+
+        if (gmConnectEnable) {
+            String gmCaCert =
+                    stubDir + File.separator + (String) channelServiceConfigValue.get("gmCaCert");
+            requireFieldNotNull(gmCaCert, "channelService", "gmCaCert", configFile);
+
+            String gmSslCert =
+                    stubDir + File.separator + (String) channelServiceConfigValue.get("gmSslCert");
+            requireFieldNotNull(gmSslCert, "channelService", "gmSslCert", configFile);
+
+            String gmSslKey =
+                    stubDir + File.separator + (String) channelServiceConfigValue.get("gmSslKey");
+            requireFieldNotNull(gmSslKey, "channelService", "gmSslKey", configFile);
+
+            String gmEnSslCert =
+                    stubDir
+                            + File.separator
+                            + (String) channelServiceConfigValue.get("gmEnSslCert");
+            requireFieldNotNull(gmEnSslCert, "channelService", "gmEnSslCert", configFile);
+
+            String gmEnSslKey =
+                    stubDir + File.separator + (String) channelServiceConfigValue.get("gmEnSslKey");
+            requireFieldNotNull(gmEnSslKey, "channelService", "gmEnSslKey", configFile);
+
+            channelServiceConfig.setGmCaCert(gmCaCert);
+            channelServiceConfig.setGmSslCert(gmSslCert);
+            channelServiceConfig.setGmSslKey(gmSslKey);
+            channelServiceConfig.setGmEnSslCert(gmEnSslCert);
+            channelServiceConfig.setGmEnSslKey(gmEnSslKey);
+        }
         channelServiceConfig.setConnectionsStr(connectionsStr);
 
         logger.debug(" ChannelServiceConfig: {}", channelServiceConfig);
@@ -157,20 +189,20 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
             List<Map<String, String>> resourcesConfigValue) {
         List<BCOSStubConfig.Resource> resourceList = new ArrayList<>();
 
-        for (int i = 0; i < resourcesConfigValue.size(); ++i) {
-            String name = resourcesConfigValue.get(i).get("name");
+        for (Map<String, String> stringStringMap : resourcesConfigValue) {
+            String name = stringStringMap.get("name");
             requireFieldNotNull(name, "resources", "name", configFile);
 
-            String type = resourcesConfigValue.get(i).get("type");
-            requireFieldNotNull(name, "resources", "type", configFile);
+            String type = stringStringMap.get("type");
+            requireFieldNotNull(type, "resources", "type", configFile);
             // check type invalid
             if (!BCOSConstant.RESOURCE_TYPE_BCOS_CONTRACT.equals(type)) {
                 logger.error(" unrecognized bcos resource type, name: {}, type: {}", name, type);
                 continue;
             }
 
-            String address = resourcesConfigValue.get(i).get("contractAddress");
-            requireFieldNotNull(name, "resources", "contractAddress", configFile);
+            String address = stringStringMap.get("contractAddress");
+            requireFieldNotNull(address, "resources", "contractAddress", configFile);
 
             BCOSStubConfig.Resource resource = new BCOSStubConfig.Resource();
             resource.setName(name);
