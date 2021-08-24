@@ -5,6 +5,7 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.math.BigInteger;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import org.bouncycastle.util.encoders.Hex;
 import org.fisco.bcos.web3j.crypto.ExtendedRawTransaction;
 import org.fisco.bcos.web3j.crypto.ExtendedTransactionEncoder;
 import org.fisco.bcos.web3j.crypto.Keys;
@@ -128,7 +129,8 @@ public class LuyuWeCrossAccount extends BCOSAccount {
 
     @Override
     public String getIdentity() {
-        return new String(Keys.getAddress(luyuChainAccount.getPubKey()));
+        String identity = "0x" + Hex.toHexString(Keys.getAddress(luyuChainAccount.getPubKey()));
+        return identity;
     }
 
     @Override

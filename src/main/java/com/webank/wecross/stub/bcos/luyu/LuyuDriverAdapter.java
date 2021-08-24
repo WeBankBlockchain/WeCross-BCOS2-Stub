@@ -127,7 +127,8 @@ public class LuyuDriverAdapter implements Driver {
             resourceInfo.setStubType(type);
 
             TransactionContext context =
-                    new TransactionContext(null, path, resourceInfo, blockManager);
+                    new TransactionContext(
+                            toWeCrossAccount(account), path, resourceInfo, blockManager);
             TransactionRequest transactionRequest = new TransactionRequest();
             transactionRequest.setMethod(request.getMethod());
             transactionRequest.setArgs(request.getArgs());
