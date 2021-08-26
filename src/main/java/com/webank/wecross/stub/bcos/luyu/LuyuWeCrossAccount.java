@@ -1,5 +1,7 @@
 package com.webank.wecross.stub.bcos.luyu;
 
+import static org.luyu.protocol.algorithm.ecdsa.secp256k1.Utils.toBytesPadded;
+
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.math.BigInteger;
@@ -127,9 +129,16 @@ public class LuyuWeCrossAccount extends BCOSAccount {
         return signBytes;
     }
 
+    private byte[] toPaddedPubKeyBytes(byte[] bytes) {
+        return toBytesPadded(new BigInteger(1, bytes), 64);
+    }
+
     @Override
     public String getIdentity() {
-        String identity = "0x" + Hex.toHexString(Keys.getAddress(luyuChainAccount.getPubKey()));
+        String identity =
+                "0x"
+                        + Hex.toHexString(
+                                Keys.getAddress(toPaddedPubKeyBytes(luyuChainAccount.getPubKey())));
         return identity;
     }
 
