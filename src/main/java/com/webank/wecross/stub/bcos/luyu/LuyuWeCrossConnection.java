@@ -15,10 +15,10 @@ import org.slf4j.LoggerFactory;
 public class LuyuWeCrossConnection implements Connection {
     private static Logger logger = LoggerFactory.getLogger(LuyuWeCrossConnection.class);
     private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
-    private org.luyu.protocol.link.Connection luyuConnection;
+    private link.luyu.protocol.link.Connection luyuConnection;
     private Map<String, String> properties;
 
-    public LuyuWeCrossConnection(org.luyu.protocol.link.Connection luyuConnection) {
+    public LuyuWeCrossConnection(link.luyu.protocol.link.Connection luyuConnection) {
         this.luyuConnection = luyuConnection;
     }
 
@@ -28,7 +28,7 @@ public class LuyuWeCrossConnection implements Connection {
                 request.getPath(),
                 request.getType(),
                 request.getData(),
-                new org.luyu.protocol.link.Connection.Callback() {
+                new link.luyu.protocol.link.Connection.Callback() {
                     @Override
                     public void onResponse(int errorCode, String message, byte[] responseData) {
                         Response response = new Response();
@@ -57,7 +57,7 @@ public class LuyuWeCrossConnection implements Connection {
                     "",
                     LuyuDefault.GET_PROPERTIES,
                     new byte[] {},
-                    new org.luyu.protocol.link.Connection.Callback() {
+                    new link.luyu.protocol.link.Connection.Callback() {
                         @Override
                         public void onResponse(int errorCode, String message, byte[] responseData) {
                             if (errorCode != 0) {

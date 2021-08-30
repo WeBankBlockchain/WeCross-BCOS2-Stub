@@ -1,13 +1,13 @@
 package com.webank.wecross.stub.bcos.integration;
 
-import org.luyu.protocol.algorithm.SignAlgManager;
-import org.luyu.protocol.algorithm.SignatureAlgorithm;
-import org.luyu.protocol.network.Account;
+import link.luyu.protocol.algorithm.SignAlgManager;
+import link.luyu.protocol.algorithm.SignatureAlgorithm;
+import link.luyu.protocol.network.Account;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-public class MockAccountManager implements org.luyu.protocol.network.AccountManager {
+public class MockAccountManager implements link.luyu.protocol.network.AccountManager {
     @Override
     public Account getAccountBySignature(String signatureType, byte[] LuyuSign) {
         SignatureAlgorithm algorithm;

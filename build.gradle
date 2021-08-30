@@ -67,7 +67,7 @@ dependencies {
         exclude group: "io.netty"
     }
 
-    implementation 'com.gitee.luyu-community:luyu-protocol:1.0.0-07071-SNAPSHOT'
+    implementation 'link.luyu:luyu-protocol:1.0.0-08300-SNAPSHOT'
 
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'

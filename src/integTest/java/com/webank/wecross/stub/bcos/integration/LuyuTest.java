@@ -1,20 +1,18 @@
 package com.webank.wecross.stub.bcos.integration;
 
 import com.moandjiezana.toml.Toml;
-import com.webank.wecross.stub.bcos.common.BCOSToml;
-import org.checkerframework.checker.units.qual.C;
 import org.junit.Test;
-import org.luyu.protocol.link.Connection;
-import org.luyu.protocol.link.Driver;
-import org.luyu.protocol.link.PluginBuilder;
-import org.luyu.protocol.link.bcos.LuyuBCOSPluginBuilder;
-import org.luyu.protocol.network.Account;
-import org.luyu.protocol.network.AccountManager;
-import org.luyu.protocol.network.Block;
-import org.luyu.protocol.network.CallRequest;
-import org.luyu.protocol.network.CallResponse;
-import org.luyu.protocol.network.Receipt;
-import org.luyu.protocol.network.Transaction;
+import link.luyu.protocol.link.Connection;
+import link.luyu.protocol.link.Driver;
+import link.luyu.protocol.link.PluginBuilder;
+import link.luyu.protocol.link.bcos.LuyuBCOSPluginBuilder;
+import link.luyu.protocol.network.Account;
+import link.luyu.protocol.network.AccountManager;
+import link.luyu.protocol.network.Block;
+import link.luyu.protocol.network.CallRequest;
+import link.luyu.protocol.network.CallResponse;
+import link.luyu.protocol.network.Receipt;
+import link.luyu.protocol.network.Transaction;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
@@ -91,10 +89,10 @@ public class LuyuTest {
 
     @Test
     public void listResourceTest() throws Exception {
-        CompletableFuture<org.luyu.protocol.network.Resource[]> future = new CompletableFuture<>();
+        CompletableFuture<link.luyu.protocol.network.Resource[]> future = new CompletableFuture<>();
         driver.listResources(new Driver.ResourcesCallback() {
             @Override
-            public void onResponse(int status, String message, org.luyu.protocol.network.Resource[] resources) {
+            public void onResponse(int status, String message, link.luyu.protocol.network.Resource[] resources) {
                 future.complete(resources);
             }
         });
