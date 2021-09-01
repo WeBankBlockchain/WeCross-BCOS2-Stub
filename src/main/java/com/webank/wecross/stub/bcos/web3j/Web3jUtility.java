@@ -35,16 +35,8 @@ public class Web3jUtility {
         return threadPool;
     }
 
-    /**
-     * Initialize the web3j service
-     *
-     * @param channelServiceConfig
-     * @return Web3J object
-     * @throws Exception
-     */
-    public static Web3j initWeb3j(BCOSStubConfig.ChannelService channelServiceConfig)
+    public static Service initService(BCOSStubConfig.ChannelService channelServiceConfig)
             throws Exception {
-
         logger.info(" ChannelService: {}", channelServiceConfig);
 
         List<ChannelConnections> allChannelConnections = new ArrayList<>();
@@ -108,7 +100,18 @@ public class Web3jUtility {
 
         /** service run */
         service.run();
+        return service;
+    }
 
+    /**
+     * Initialize the web3j service
+     *
+     * @param channelServiceConfig
+     * @return Web3J object
+     * @throws Exception
+     */
+    public static Web3j initWeb3j(
+            BCOSStubConfig.ChannelService channelServiceConfig, Service service) throws Exception {
         ChannelEthereumService channelEthereumService = new ChannelEthereumService();
         channelEthereumService.setChannelService(service);
         channelEthereumService.setTimeout(channelServiceConfig.getTimeout());

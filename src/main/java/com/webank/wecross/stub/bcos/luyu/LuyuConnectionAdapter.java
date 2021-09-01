@@ -7,6 +7,7 @@ import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.Response;
 import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
+import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,12 +26,20 @@ public class LuyuConnectionAdapter implements Connection {
     private static ExecutorService executor = Executors.newFixedThreadPool(1);
     private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
     private Map<String, Resource> resources = new HashMap<>();
+    private ChainEventManager chainEventManager;
 
     public LuyuConnectionAdapter(
             com.webank.wecross.stub.Connection wecrossConnection, String chainPathStr)
             throws Exception {
         this.wecrossConnection = wecrossConnection;
         this.chainPath = Path.decode(chainPathStr);
+
+        if (wecrossConnection instanceof BCOSConnection) {
+            logger.info("Enable chain event manager.");
+            AbstractWeb3jWrapper web3jWrapper =
+                    ((BCOSConnection) wecrossConnection).getWeb3jWrapper();
+            chainEventManager = new ChainEventManager(web3jWrapper);
+        }
     }
 
     @Override
@@ -54,6 +63,7 @@ public class LuyuConnectionAdapter implements Connection {
             return;
         }
         for (ResourceInfo info : resourceInfos) {
+            // assume that there is no resource deletion in this chain
             Resource resource = resources.get(info.getName());
             if (resource == null) {
                 // build path
@@ -67,7 +77,7 @@ public class LuyuConnectionAdapter implements Connection {
                 resource.setType(info.getStubType());
                 resource.setPath(path.toString());
 
-                resources.put(info.getName(), resource);
+                addResource(resource);
             }
             Map<String, Object> properties = resource.getProperties();
             if (properties == null) {
@@ -95,7 +105,27 @@ public class LuyuConnectionAdapter implements Connection {
 
     @Override
     public void subscribe(int type, byte[] data, Callback callback) {
-        // no need to use
+        if (type == LuyuDefault.SUBSCRIBE_CHAIN_SEND_TX_EVENT) {
+            if (chainEventManager != null) {
+                chainEventManager.addSendTransactionEventCallback(
+                        new ChainEventManager.ChainEventCallback() {
+                            @Override
+                            public void onEvent(String resourceName, byte[] bytes) {
+                                callback.onResponse(0, resourceName, bytes);
+                            }
+                        });
+            }
+        } else if (type == LuyuDefault.SUBSCRIBE_CHAIN_CALL_EVENT) {
+            if (chainEventManager != null) {
+                chainEventManager.addCallEventCallback(
+                        new ChainEventManager.ChainEventCallback() {
+                            @Override
+                            public void onEvent(String resourceName, byte[] bytes) {
+                                callback.onResponse(0, resourceName, bytes);
+                            }
+                        });
+            }
+        }
     }
 
     private void handleNormalSend(String path, int type, byte[] data, Callback callback) {
@@ -160,6 +190,7 @@ public class LuyuConnectionAdapter implements Connection {
                 throw new Exception("Empty resource name of " + resource.toString());
             }
             resources.put(name, resource);
+            chainEventManager.registerEvent(resource);
         } catch (Exception e) {
             logger.error("addResource backup exception: ", e);
         }

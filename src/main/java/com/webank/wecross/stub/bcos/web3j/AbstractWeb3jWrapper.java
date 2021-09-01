@@ -2,6 +2,7 @@ package com.webank.wecross.stub.bcos.web3j;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import org.fisco.bcos.channel.client.Service;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.core.methods.request.Transaction;
@@ -16,6 +17,7 @@ public abstract class AbstractWeb3jWrapper implements Web3jWrapper {
 
     private Web3j web3j;
     private String version;
+    private Service service;
 
     public AbstractWeb3jWrapper(Web3j web3j) {
         this.web3j = web3j;
@@ -78,5 +80,13 @@ public abstract class AbstractWeb3jWrapper implements Web3jWrapper {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    public Service getService() {
+        return service;
+    }
+
+    public void setService(Service service) {
+        this.service = service;
     }
 }

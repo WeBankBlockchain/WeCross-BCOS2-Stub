@@ -83,4 +83,8 @@ public class LuyuWeCrossConnection implements Connection {
 
         return null;
     }
+
+    public link.luyu.protocol.link.Connection getLuyuConnection() {
+        return luyuConnection;
+    }
 }

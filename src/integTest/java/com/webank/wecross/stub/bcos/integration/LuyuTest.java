@@ -1,6 +1,7 @@
 package com.webank.wecross.stub.bcos.integration;
 
 import com.moandjiezana.toml.Toml;
+import link.luyu.protocol.network.Events;
 import org.junit.Test;
 import link.luyu.protocol.link.Connection;
 import link.luyu.protocol.link.Driver;
@@ -47,6 +48,33 @@ public class LuyuTest {
         connection = builder.newConnection(connectionConfig);
         driver = builder.newDriver(connection, driverConfig);
         accountManager = new MockAccountManager();
+
+        driver.start();
+    }
+
+    @Test
+    public void chainEventTest() throws Exception {
+
+        driver.registerEvents(new Events() {
+            @Override
+            public void sendTransaction(Account account, Transaction tx, Driver.ReceiptCallback callback) {
+                driver.sendTransaction(account, tx, callback);
+            }
+
+            @Override
+            public void call(Account account, CallRequest request, Driver.CallResponseCallback callback) {
+                driver.call(account, request, callback);
+            }
+
+            @Override
+            public void getAccountByIdentity(String identity, KeyCallback callback) {
+                callback.onResponse(accountManager.getAccountByIdentity(driver.getSignatureType(), identity));
+            }
+        });
+
+        for (int i = 0; i < 10000; i++) {
+            Thread.sleep(1000);
+        }
     }
 
     @Test
@@ -56,7 +84,7 @@ public class LuyuTest {
         request.setMethod("set");
         request.setArgs(new String[]{"aaa"});
 
-        Account account = accountManager.getAccountBySignature(driver.getSignatureType(), "SignBytes".getBytes(StandardCharsets.UTF_8));
+        Account account = accountManager.getAccountBySignature(driver.getSignatureType(), "SignBytes".getBytes(StandardCharsets.UTF_8), null);
 
         CompletableFuture<Receipt> future = new CompletableFuture<>();
         driver.sendTransaction(account, request, new Driver.ReceiptCallback() {
@@ -75,7 +103,7 @@ public class LuyuTest {
         request.setMethod("get");
         request.setArgs(new String[]{});
 
-        Account account = accountManager.getAccountBySignature(driver.getSignatureType(), "SignBytes".getBytes(StandardCharsets.UTF_8));
+        Account account = accountManager.getAccountBySignature(driver.getSignatureType(), "SignBytes".getBytes(StandardCharsets.UTF_8), null);
 
         CompletableFuture<CallResponse> future = new CompletableFuture<>();
         driver.call(account, request, new Driver.CallResponseCallback() {

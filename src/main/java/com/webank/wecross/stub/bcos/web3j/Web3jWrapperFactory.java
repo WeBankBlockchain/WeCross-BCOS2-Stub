@@ -3,6 +3,7 @@ package com.webank.wecross.stub.bcos.web3j;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.FeatureSupport;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
+import org.fisco.bcos.channel.client.Service;
 import org.fisco.bcos.fisco.EnumNodeVersion;
 import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.core.methods.response.NodeVersion;
@@ -21,8 +22,8 @@ public class Web3jWrapperFactory {
             throws Exception {
 
         logger.info("BCOSStubConfig: {}", bcosStubConfig);
-
-        Web3j web3j = Web3jUtility.initWeb3j(bcosStubConfig.getChannelService());
+        Service service = Web3jUtility.initService(bcosStubConfig.getChannelService());
+        Web3j web3j = Web3jUtility.initWeb3j(bcosStubConfig.getChannelService(), service);
         NodeVersion.Version nodeVersion = web3j.getNodeVersion().send().getNodeVersion();
         logger.info("NodeVersion: {}", nodeVersion);
         checkConfig(nodeVersion, bcosStubConfig.getType());
@@ -36,6 +37,7 @@ public class Web3jWrapperFactory {
 
         AbstractWeb3jWrapper web3jWrapper = createWeb3jWrapperInstance(version, web3j);
         web3jWrapper.setVersion(nodeVersion.getSupportedVersion());
+        web3jWrapper.setService(service);
 
         return web3jWrapper;
     }

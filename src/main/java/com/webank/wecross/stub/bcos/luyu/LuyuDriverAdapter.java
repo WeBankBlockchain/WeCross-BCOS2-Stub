@@ -15,7 +15,11 @@ import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
+import com.webank.wecross.stub.bcos.AsyncCnsService;
+import com.webank.wecross.stub.bcos.BCOSDriver;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
+import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
@@ -30,6 +34,10 @@ import link.luyu.protocol.network.Events;
 import link.luyu.protocol.network.Receipt;
 import link.luyu.protocol.network.Resource;
 import link.luyu.protocol.network.Transaction;
+import org.fisco.bcos.web3j.protocol.core.methods.response.Log;
+import org.fisco.bcos.web3j.tx.txdecode.LogResult;
+import org.fisco.bcos.web3j.tx.txdecode.TransactionDecoder;
+import org.fisco.bcos.web3j.tx.txdecode.TransactionDecoderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,10 +48,11 @@ public class LuyuDriverAdapter implements Driver {
 
     private String type;
     private String chainPath;
-    private com.webank.wecross.stub.Driver wecrossDriver;
+    private BCOSDriver wecrossDriver;
     private LuyuWeCrossConnection luyuWeCrossConnection;
     private LuyuMemoryBlockManager blockManager;
     private AccountFactory accountFactory;
+    private Events routerEventsHandler;
     private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
 
     public LuyuDriverAdapter(
@@ -55,14 +64,58 @@ public class LuyuDriverAdapter implements Driver {
             AccountFactory accountFactory) {
         this.type = type;
         this.chainPath = chainPath;
-        this.wecrossDriver = wecrossDriver;
+        this.wecrossDriver = (BCOSDriver) wecrossDriver;
         this.luyuWeCrossConnection = luyuWeCrossConnection;
         this.blockManager = blockManager;
         this.accountFactory = accountFactory;
     }
 
     @Override
-    public void start() throws RuntimeException {}
+    public void start() throws RuntimeException {
+        this.luyuWeCrossConnection
+                .getLuyuConnection()
+                .subscribe(
+                        LuyuDefault.SUBSCRIBE_CHAIN_SEND_TX_EVENT,
+                        new byte[0],
+                        new link.luyu.protocol.link.Connection.Callback() {
+                            @Override
+                            public void onResponse(
+                                    int errorCode, String message, byte[] responseData) {
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug(
+                                            "Receive sendTransaction event. code: {}, message: {}, data: {}",
+                                            errorCode,
+                                            message,
+                                            new String(responseData));
+                                }
+                                if (errorCode == 0) {
+                                    handleChainSendTransactionEvent(message, responseData);
+                                }
+                            }
+                        });
+
+        this.luyuWeCrossConnection
+                .getLuyuConnection()
+                .subscribe(
+                        LuyuDefault.SUBSCRIBE_CHAIN_CALL_EVENT,
+                        new byte[0],
+                        new link.luyu.protocol.link.Connection.Callback() {
+                            @Override
+                            public void onResponse(
+                                    int errorCode, String message, byte[] responseData) {
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug(
+                                            "Receive call event. code: {}, message: {}, data: {}",
+                                            errorCode,
+                                            message,
+                                            new String(responseData));
+                                }
+                                if (errorCode == 0) {
+                                    handleChainCallEvent(message, responseData);
+                                }
+                            }
+                        });
+    }
 
     @Override
     public void stop() throws RuntimeException {
@@ -344,12 +397,177 @@ public class LuyuDriverAdapter implements Driver {
                 });
     }
 
-    @Override
-    public void registerEvents(Events events) {
-        // TODO: implement this
-    }
-
     private com.webank.wecross.stub.Account toWeCrossAccount(Account account) {
         return new LuyuWeCrossAccount(type, account);
+    }
+
+    @Override
+    public void registerEvents(Events events) {
+        this.routerEventsHandler = events;
+    }
+
+    private void handleChainSendTransactionEvent(String resourceName, byte[] data) {
+        try {
+            Log log = objectMapper.readValue(data, new TypeReference<Log>() {});
+            asyncQueryCns(
+                    resourceName,
+                    new AsyncCnsService.QueryCallback() {
+                        @Override
+                        public void onResponse(Exception e, String abi, String address) {
+                            if (e != null) {
+                                logger.warn("Get abi failed. name: {} e: {}", resourceName, e);
+                                return;
+                            }
+
+                            LogResult logResult = null;
+                            try {
+                                TransactionDecoder txDecoder =
+                                        TransactionDecoderFactory.buildTransactionDecoder(abi, "");
+                                logResult = txDecoder.decodeEventLogReturnObject(log);
+                                String luyuIdentity =
+                                        (String) logResult.getLogParams().get(4).getData();
+                                String callbackMethod =
+                                        (String) logResult.getLogParams().get(5).getData();
+                                String sender = (String) logResult.getLogParams().get(6).getData();
+                                Transaction transaction = toTransaction(logResult);
+
+                                routerEventsHandler.getAccountByIdentity(
+                                        luyuIdentity,
+                                        new Events.KeyCallback() {
+                                            @Override
+                                            public void onResponse(Account account) {
+                                                com.webank.wecross.stub.Account weCrossAccount =
+                                                        toWeCrossAccount(account);
+                                                /* TODO: enable this
+                                                if (!weCrossAccount.getIdentity().equals(sender)) {
+                                                    logger.warn(
+                                                            "Permission denied of chain account:{} using luyu account:{} to query",
+                                                            sender,
+                                                            luyuIdentity);
+                                                    return;
+                                                }
+                                                 */
+                                                routerEventsHandler.sendTransaction(
+                                                        account,
+                                                        transaction,
+                                                        new ReceiptCallback() {
+                                                            @Override
+                                                            public void onResponse(
+                                                                    int status,
+                                                                    String message,
+                                                                    Receipt receipt) {
+                                                                if (status != 0
+                                                                        || receipt == null) {
+                                                                    logger.error(
+                                                                            "Chain event sendTransaction failed. status:{}, message:{}",
+                                                                            status,
+                                                                            message);
+                                                                    return;
+                                                                }
+
+                                                                if (receipt.getCode() != 0) {
+                                                                    logger.error(
+                                                                            "Chain event sendTransaction response failed. receipt:{}",
+                                                                            receipt.toString());
+                                                                    return;
+                                                                }
+
+                                                                Path callbackPath = null;
+                                                                try {
+                                                                    callbackPath =
+                                                                            Path.decode(chainPath);
+                                                                    callbackPath.setResource(
+                                                                            resourceName);
+                                                                } catch (Exception e) {
+                                                                    logger.error(
+                                                                            "Chain path decode error, e:",
+                                                                            e);
+                                                                }
+
+                                                                ArrayList<String> args =
+                                                                        new ArrayList<>();
+                                                                args.add(
+                                                                        new Long(
+                                                                                        transaction
+                                                                                                .getNonce())
+                                                                                .toString()); // set
+                                                                                              // nonce
+                                                                for (String arg :
+                                                                        receipt.getResult()) {
+                                                                    args.add(arg);
+                                                                }
+                                                                Transaction callbackTx =
+                                                                        new Transaction();
+                                                                callbackTx.setPath(
+                                                                        callbackPath.toString());
+                                                                callbackTx.setMethod(
+                                                                        callbackMethod);
+                                                                callbackTx.setArgs(
+                                                                        args.toArray(
+                                                                                new String[] {}));
+                                                                callbackTx.setSender(luyuIdentity);
+                                                                callbackTx.setNonce(
+                                                                        transaction
+                                                                                .getNonce()); // for
+                                                                                              // easily debugging
+
+                                                                sendTransaction(
+                                                                        account,
+                                                                        callbackTx,
+                                                                        new ReceiptCallback() {
+                                                                            @Override
+                                                                            public void onResponse(
+                                                                                    int status,
+                                                                                    String message,
+                                                                                    Receipt
+                                                                                            receipt) {
+                                                                                logger.debug(
+                                                                                        "CallbackTx sended. {} {} {}",
+                                                                                        status,
+                                                                                        message,
+                                                                                        receipt);
+                                                                            }
+                                                                        });
+                                                            }
+                                                        });
+                                            }
+                                        });
+                            } catch (Exception e1) {
+                                logger.warn("Handle chain event failed,", e1);
+                            }
+                        }
+                    });
+
+        } catch (Exception e) {
+            logger.warn("Parse sendTransaction event exception, ", e);
+        }
+    }
+
+    private Transaction toTransaction(LogResult logResult) throws Exception {
+        String path = (String) logResult.getLogParams().get(0).getData();
+        String method = (String) logResult.getLogParams().get(1).getData();
+        ArrayList<String> args = (ArrayList<String>) logResult.getLogParams().get(2).getData();
+        BigInteger nonce = (BigInteger) logResult.getLogParams().get(3).getData();
+
+        Transaction transaction = new Transaction();
+        transaction.setPath(path);
+        transaction.setMethod(method);
+        transaction.setArgs(args.toArray(new String[] {}));
+        transaction.setNonce(nonce.longValue());
+        return transaction;
+    }
+
+    private void handleChainCallEvent(String resourceName, byte[] data) {
+        try {
+            LogResult logResult = objectMapper.readValue(data, new TypeReference<LogResult>() {});
+        } catch (Exception e) {
+            logger.warn("Parse call event exception, ", e);
+        }
+    }
+
+    private void asyncQueryCns(String resourceName, AsyncCnsService.QueryCallback callback) {
+        wecrossDriver
+                .getAsyncCnsService()
+                .queryABI(resourceName, wecrossDriver, luyuWeCrossConnection, callback);
     }
 }
