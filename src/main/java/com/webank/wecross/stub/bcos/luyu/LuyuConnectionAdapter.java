@@ -190,7 +190,11 @@ public class LuyuConnectionAdapter implements Connection {
                 throw new Exception("Empty resource name of " + resource.toString());
             }
             resources.put(name, resource);
-            chainEventManager.registerEvent(resource);
+
+            // register even in resource
+            if (chainEventManager != null) {
+                chainEventManager.registerEvent(resource);
+            }
         } catch (Exception e) {
             logger.error("addResource backup exception: ", e);
         }

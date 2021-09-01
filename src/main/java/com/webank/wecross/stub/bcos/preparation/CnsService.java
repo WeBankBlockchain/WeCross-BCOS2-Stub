@@ -77,7 +77,7 @@ public class CnsService {
                                         .constructCollectionType(List.class, CnsInfo.class));
 
                 if (Objects.isNull(infoList) || infoList.isEmpty()) {
-                    logger.warn("Cns info empty.");
+                    logger.warn("Cns info of {} is empty.", name);
                     return null;
                 } else {
                     int size = infoList.size();
