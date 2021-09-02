@@ -427,24 +427,27 @@ public class LuyuDriverAdapter implements Driver {
                             LogResult logResult = null;
                             try {
                                 if (logger.isDebugEnabled()) {
-                                    logger.debug("handleChainSendTransactionEvent cns back {}", abi);
+                                    logger.debug(
+                                            "handleChainSendTransactionEvent cns back {}", abi);
                                 }
                                 TransactionDecoder txDecoder =
                                         TransactionDecoderFactory.buildTransactionDecoder(abi, "");
                                 logResult = txDecoder.decodeEventLogReturnObject(log);
-                                String luyuIdentity =
-                                        (String) logResult.getLogParams().get(4).getData();
+                                Transaction transaction = toTransaction(logResult);
+                                String luyuIdentity = transaction.getSender();
                                 String callbackMethod =
                                         (String) logResult.getLogParams().get(5).getData();
                                 String sender = (String) logResult.getLogParams().get(6).getData();
-                                Transaction transaction = toTransaction(logResult);
+
                                 routerEventsHandler.getAccountByIdentity(
                                         luyuIdentity,
                                         new Events.KeyCallback() {
                                             @Override
                                             public void onResponse(Account account) {
                                                 if (account == null) {
-                                                    logger.error("Could not get account from account manager of luyuIdentity:{}", luyuIdentity);
+                                                    logger.error(
+                                                            "Could not get account from account manager of luyuIdentity:{}",
+                                                            luyuIdentity);
                                                 }
 
                                                 com.webank.wecross.stub.Account weCrossAccount =
@@ -459,7 +462,6 @@ public class LuyuDriverAdapter implements Driver {
                                                 }
                                                  */
                                                 routerEventsHandler.sendTransaction(
-                                                        account,
                                                         transaction,
                                                         new ReceiptCallback() {
                                                             @Override
@@ -467,6 +469,13 @@ public class LuyuDriverAdapter implements Driver {
                                                                     int status,
                                                                     String message,
                                                                     Receipt receipt) {
+                                                                if (logger.isDebugEnabled()) {
+                                                                    logger.debug(
+                                                                            "handleChainSendTransactionEvent resource response: status:{} message:{} receipt:{}",
+                                                                            status,
+                                                                            message,
+                                                                            receipt);
+                                                                }
                                                                 if (status != 0
                                                                         || receipt == null) {
                                                                     logger.error(
@@ -509,12 +518,14 @@ public class LuyuDriverAdapter implements Driver {
         String method = (String) logResult.getLogParams().get(1).getData();
         ArrayList<String> args = (ArrayList<String>) logResult.getLogParams().get(2).getData();
         BigInteger nonce = (BigInteger) logResult.getLogParams().get(3).getData();
+        String luyuIdentity = (String) logResult.getLogParams().get(4).getData();
 
         Transaction transaction = new Transaction();
         transaction.setPath(path);
         transaction.setMethod(method);
         transaction.setArgs(args.toArray(new String[] {}));
         transaction.setNonce(nonce.longValue());
+        transaction.setSender(luyuIdentity);
         return transaction;
     }
 
@@ -542,12 +553,11 @@ public class LuyuDriverAdapter implements Driver {
                                 TransactionDecoder txDecoder =
                                         TransactionDecoderFactory.buildTransactionDecoder(abi, "");
                                 logResult = txDecoder.decodeEventLogReturnObject(log);
-                                String luyuIdentity =
-                                        (String) logResult.getLogParams().get(4).getData();
+                                CallRequest callRequest = toCallRequest(logResult);
+                                String luyuIdentity = callRequest.getSender();
                                 String callbackMethod =
                                         (String) logResult.getLogParams().get(5).getData();
                                 String sender = (String) logResult.getLogParams().get(6).getData();
-                                CallRequest callRequest = toCallRequest(logResult);
 
                                 routerEventsHandler.getAccountByIdentity(
                                         luyuIdentity,
@@ -555,7 +565,9 @@ public class LuyuDriverAdapter implements Driver {
                                             @Override
                                             public void onResponse(Account account) {
                                                 if (account == null) {
-                                                    logger.error("Could not get account from account manager of luyuIdentity:{}", luyuIdentity);
+                                                    logger.error(
+                                                            "Could not get account from account manager of luyuIdentity:{}",
+                                                            luyuIdentity);
                                                 }
                                                 com.webank.wecross.stub.Account weCrossAccount =
                                                         toWeCrossAccount(account);
@@ -569,7 +581,6 @@ public class LuyuDriverAdapter implements Driver {
                                                 }
                                                  */
                                                 routerEventsHandler.call(
-                                                        account,
                                                         callRequest,
                                                         new CallResponseCallback() {
                                                             @Override
@@ -577,6 +588,14 @@ public class LuyuDriverAdapter implements Driver {
                                                                     int status,
                                                                     String message,
                                                                     CallResponse callResponse) {
+                                                                if (logger.isDebugEnabled()) {
+                                                                    logger.debug(
+                                                                            "handleChainSendTransactionEvent resource response: status:{} message:{} receipt:{}",
+                                                                            status,
+                                                                            message,
+                                                                            callResponse);
+                                                                }
+
                                                                 if (status != 0
                                                                         || callResponse == null) {
                                                                     logger.error(
@@ -619,12 +638,14 @@ public class LuyuDriverAdapter implements Driver {
         String method = (String) logResult.getLogParams().get(1).getData();
         ArrayList<String> args = (ArrayList<String>) logResult.getLogParams().get(2).getData();
         BigInteger nonce = (BigInteger) logResult.getLogParams().get(3).getData();
+        String luyuIdentity = (String) logResult.getLogParams().get(4).getData();
 
         CallRequest callRequest = new CallRequest();
         callRequest.setPath(path);
         callRequest.setMethod(method);
         callRequest.setArgs(args.toArray(new String[] {}));
         callRequest.setNonce(nonce.longValue());
+        callRequest.setSender(luyuIdentity);
         return callRequest;
     }
 
