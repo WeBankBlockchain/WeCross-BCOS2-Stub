@@ -2,6 +2,8 @@ package com.webank.wecross.stub.bcos.web3j;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.fisco.bcos.channel.client.Service;
 import org.fisco.bcos.channel.client.TransactionSucCallback;
 import org.fisco.bcos.web3j.protocol.Web3j;
@@ -25,14 +27,28 @@ public abstract class AbstractWeb3jWrapper implements Web3jWrapper {
 
     @Override
     public BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException {
-        BcosBlock bcosBlock = web3j.getBlockByNumber(BigInteger.valueOf(blockNumber), false).send();
-        return bcosBlock.getResult();
+        try {
+            CompletableFuture<BcosBlock> future =
+                    web3j.getBlockByNumber(BigInteger.valueOf(blockNumber), false).sendAsync();
+
+            BcosBlock bcosBlock = future.get(10, TimeUnit.SECONDS);
+
+            return bcosBlock.getResult();
+        } catch (Exception e) {
+            throw new IOException("Could not getBlockByNumber: " + blockNumber);
+        }
     }
 
     @Override
     public BigInteger getBlockNumber() throws IOException {
-        BlockNumber blockNumber = web3j.getBlockNumber().send();
-        return blockNumber.getBlockNumber();
+        try {
+            CompletableFuture<BlockNumber> future = web3j.getBlockNumber().sendAsync();
+
+            BlockNumber blockNumber = future.get(10, TimeUnit.SECONDS);
+            return blockNumber.getBlockNumber();
+        } catch (Exception e) {
+            throw new IOException("Could not getBlockNumber");
+        }
     }
 
     @Override
@@ -54,16 +70,29 @@ public abstract class AbstractWeb3jWrapper implements Web3jWrapper {
 
     @Override
     public TransactionReceipt getTransactionReceipt(String transactionHash) throws IOException {
-        BcosTransactionReceipt bcosTransactionReceipt =
-                web3j.getTransactionReceipt(transactionHash).send();
-        return bcosTransactionReceipt.getResult();
+        try {
+            CompletableFuture<BcosTransactionReceipt> future =
+                    web3j.getTransactionReceipt(transactionHash).sendAsync();
+
+            BcosTransactionReceipt bcosTransactionReceipt = future.get(30, TimeUnit.SECONDS);
+            return bcosTransactionReceipt.getResult();
+        } catch (Exception e) {
+            throw new IOException("Could not getTransactionReceipt of hash: " + transactionHash);
+        }
     }
 
     @Override
     public org.fisco.bcos.web3j.protocol.core.methods.response.Transaction getTransaction(
             String transactionHash) throws IOException {
-        BcosTransaction bcosTransaction = web3j.getTransactionByHash(transactionHash).send();
-        return bcosTransaction.getResult();
+        try {
+            CompletableFuture<BcosTransaction> future =
+                    web3j.getTransactionByHash(transactionHash).sendAsync();
+
+            BcosTransaction bcosTransaction = future.get(30, TimeUnit.SECONDS);
+            return bcosTransaction.getResult();
+        } catch (Exception e) {
+            throw new IOException("Could not getTransaction of hash: " + transactionHash);
+        }
     }
 
     public void setWeb3j(Web3j web3j) {

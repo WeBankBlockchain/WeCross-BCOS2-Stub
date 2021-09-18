@@ -31,6 +31,7 @@ public class LuyuMemoryBlockManager implements BlockManager {
     private Driver driver;
     private Connection connection;
     private AtomicBoolean running = new AtomicBoolean(false);
+    private TimerTask syncTask;
     private Timer timer;
     private ReadWriteLock lock = new ReentrantReadWriteLock();
     private long getBlockNumberDelay = 1000;
@@ -70,6 +71,7 @@ public class LuyuMemoryBlockManager implements BlockManager {
         if (Objects.nonNull(e)) {
             logger.warn("onGetBlockNumber failed, e: ", e);
             fetchBlockNumberStatus.set(Status.Failure);
+            System.out.println("XXX onGetBlockNumber waitAndSyncBlock");
             waitAndSyncBlock(getGetBlockNumberDelay());
             return;
         }
@@ -114,6 +116,7 @@ public class LuyuMemoryBlockManager implements BlockManager {
                     });
 
         } else {
+            System.out.println("XXX onGetBlockNumber else waitAndSyncBlock");
             waitAndSyncBlock(getGetBlockNumberDelay());
         }
     }
@@ -176,31 +179,40 @@ public class LuyuMemoryBlockManager implements BlockManager {
                                     target);
                         });
             } else {
+                System.out.println("XXX onSyncBlock waitAndSyncBlock");
                 waitAndSyncBlock(0);
             }
         } else {
             logger.warn("onSyncBlock failed, currentBlockNumber: {}, e: ", currentBlockNumber, e);
+            System.out.println("XXX onSyncBlock else waitAndSyncBlock");
             waitAndSyncBlock(getGetBlockNumberDelay());
         }
     }
 
     private void waitAndSyncBlock(long delay) {
         if (running.get()) {
-            timer.schedule(
-                    new TimerTask() {
-                        @Override
-                        public void run() {
-                            driver.asyncGetBlockNumber(
-                                    connection,
-                                    new Driver.GetBlockNumberCallback() {
-                                        @Override
-                                        public void onResponse(Exception e, long blockNumber) {
-                                            onGetBlockNumber(e, blockNumber);
-                                        }
-                                    });
-                        }
-                    },
-                    delay);
+            synchronized (running) {
+                if (syncTask != null) {
+                    syncTask.cancel();
+                }
+
+                syncTask =
+                        new TimerTask() {
+                            @Override
+                            public void run() {
+                                driver.asyncGetBlockNumber(
+                                        connection,
+                                        new Driver.GetBlockNumberCallback() {
+                                            @Override
+                                            public void onResponse(Exception e, long blockNumber) {
+                                                onGetBlockNumber(e, blockNumber);
+                                            }
+                                        });
+                            }
+                        };
+
+                timer.schedule(syncTask, delay);
+            }
         }
     }
 
@@ -248,6 +260,7 @@ public class LuyuMemoryBlockManager implements BlockManager {
 
             blockDataCache.clear();
             getBlockCallbacks.clear();
+            timer.cancel();
         }
     }
 
@@ -293,6 +306,7 @@ public class LuyuMemoryBlockManager implements BlockManager {
                 }
 
                 getBlockCallbacks.get(blockNumber).add(callback);
+                System.out.println("XXX asyncGetBlock waitAndSyncBlock");
                 waitAndSyncBlock(0); // query blockNumber right now
 
             } else {
