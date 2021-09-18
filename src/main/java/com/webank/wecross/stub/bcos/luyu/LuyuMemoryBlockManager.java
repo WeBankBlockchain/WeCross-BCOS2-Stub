@@ -71,7 +71,6 @@ public class LuyuMemoryBlockManager implements BlockManager {
         if (Objects.nonNull(e)) {
             logger.warn("onGetBlockNumber failed, e: ", e);
             fetchBlockNumberStatus.set(Status.Failure);
-            System.out.println("XXX onGetBlockNumber waitAndSyncBlock");
             waitAndSyncBlock(getGetBlockNumberDelay());
             return;
         }
@@ -116,7 +115,6 @@ public class LuyuMemoryBlockManager implements BlockManager {
                     });
 
         } else {
-            System.out.println("XXX onGetBlockNumber else waitAndSyncBlock");
             waitAndSyncBlock(getGetBlockNumberDelay());
         }
     }
@@ -179,12 +177,10 @@ public class LuyuMemoryBlockManager implements BlockManager {
                                     target);
                         });
             } else {
-                System.out.println("XXX onSyncBlock waitAndSyncBlock");
                 waitAndSyncBlock(0);
             }
         } else {
             logger.warn("onSyncBlock failed, currentBlockNumber: {}, e: ", currentBlockNumber, e);
-            System.out.println("XXX onSyncBlock else waitAndSyncBlock");
             waitAndSyncBlock(getGetBlockNumberDelay());
         }
     }
@@ -306,7 +302,6 @@ public class LuyuMemoryBlockManager implements BlockManager {
                 }
 
                 getBlockCallbacks.get(blockNumber).add(callback);
-                System.out.println("XXX asyncGetBlock waitAndSyncBlock");
                 waitAndSyncBlock(0); // query blockNumber right now
 
             } else {
