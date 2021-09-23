@@ -11,7 +11,7 @@ public class BCOSStubFactory extends BCOSBaseStubFactory {
         super(EncryptType.ECDSA_TYPE, "secp256k1", BCOSConstant.BCOS_STUB_TYPE);
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void help() throws Exception {
         System.out.println("This is BCOS2.0 Stub Plugin. Please copy this file to router/plugin/");
         System.out.println("For deploy WeCrossProxy:");
         System.out.println(
@@ -28,5 +28,19 @@ public class BCOSStubFactory extends BCOSBaseStubFactory {
                 "    Proxy:   java -cp conf/:lib/*:plugin/* "
                         + com.webank.wecross.stub.bcos.performance.hellowecross.proxy
                                 .PerformanceTest.class.getName());
+    }
+
+    public static void main(String[] args) throws Exception {
+        if (args.length == 3 && args[0].equals("customCommand")) {
+            runCustomCommand(args[1], args[2]);
+        } else {
+            help();
+        }
+    }
+
+    public static void runCustomCommand(String accountName, String content) throws Exception {
+        BCOSStubFactory factory = new BCOSStubFactory();
+        factory.executeCustomCommand(accountName, content);
+        System.exit(0);
     }
 }

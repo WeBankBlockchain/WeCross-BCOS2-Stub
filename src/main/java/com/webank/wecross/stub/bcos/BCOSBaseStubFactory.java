@@ -1,17 +1,28 @@
 package com.webank.wecross.stub.bcos;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.stub.Account;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
+import com.webank.wecross.stub.ObjectMapperFactory;
+import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.StubFactory;
 import com.webank.wecross.stub.WeCrossContext;
+import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
+import com.webank.wecross.stub.bcos.blockheader.BlockManagerEmpty;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
+import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
+import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.custom.CommandHandlerDispatcher;
+import com.webank.wecross.stub.bcos.custom.CustomCommandRequest;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import com.webank.wecross.stub.bcos.custom.RegisterCnsHandler;
 import com.webank.wecross.stub.bcos.preparation.HubContractDeployment;
 import com.webank.wecross.stub.bcos.preparation.ProxyContractDeployment;
+import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
+import com.webank.wecross.stub.bcos.web3j.Web3jWrapperFactory;
 import java.io.File;
 import java.io.FileWriter;
 import java.net.URL;
@@ -328,5 +339,63 @@ public class BCOSBaseStubFactory implements StubFactory {
         } catch (Exception e) {
             System.out.println(e);
         }
+    }
+
+    public void executeCustomCommand(String accountName, String content) throws Exception {
+        ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
+
+        CustomCommandRequest request =
+                objectMapper.readValue(content, new TypeReference<CustomCommandRequest>() {});
+
+        Path path = Path.decode(request.getPath());
+
+        BCOSStubConfigParser bcosStubConfigParser =
+                new BCOSStubConfigParser(
+                        "chains" + File.separator + path.getChain(), "connection.toml");
+        BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
+
+        AbstractWeb3jWrapper web3jWrapper =
+                Web3jWrapperFactory.createWeb3jWrapperInstance(bcosStubConfig);
+
+        BCOSAccount account =
+                (BCOSAccount)
+                        newAccount(
+                                accountName, "classpath:accounts" + File.separator + accountName);
+
+        Connection connection =
+                BCOSConnectionFactory.build(
+                        bcosStubConfig, web3jWrapper, connectionScheduledExecutorService);
+
+        if (account == null) {
+            throw new Exception("Account " + accountName + " not found");
+        }
+
+        if (connection == null) {
+            throw new Exception("Init connection exception, please check log");
+        }
+
+        Driver driver = newDriver();
+        driver.asyncCustomCommand(
+                request.getCommand(),
+                path,
+                request.getArgs().toArray(new Object[0]),
+                account,
+                new BlockManagerEmpty(),
+                connection,
+                new Driver.CustomCommandCallback() {
+                    @Override
+                    public void onResponse(Exception error, Object response) {
+                        if (error != null) {
+                            System.out.println(error.getMessage());
+                            System.exit(1);
+                        } else {
+                            System.out.println(
+                                    "Success on command: "
+                                            + request.getCommand()
+                                            + " path: "
+                                            + request.getPath());
+                        }
+                    }
+                });
     }
 }

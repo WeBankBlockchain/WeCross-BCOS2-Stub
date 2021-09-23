@@ -11,7 +11,7 @@ public class BCOSGMStubFactory extends BCOSBaseStubFactory {
         super(EncryptType.SM2_TYPE, "sm2p256v1", BCOSConstant.GM_BCOS_STUB_TYPE);
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void help() {
         System.out.println(
                 "This is BCOS2.0 Guomi Stub Plugin. Please copy this file to router/plugin/");
         System.out.println("For deploy WeCrossProxy:");
@@ -29,5 +29,19 @@ public class BCOSGMStubFactory extends BCOSBaseStubFactory {
                 "    Proxy:   java -cp conf/:lib/*:plugin/* "
                         + com.webank.wecross.stub.bcos.performance.hellowecross.proxy
                                 .PerformanceTest.class.getName());
+    }
+
+    public static void main(String[] args) throws Exception {
+        if (args.length == 3 && args[0].equals("customCommand")) {
+            runCustomCommand(args[1], args[2]);
+        } else {
+            help();
+        }
+    }
+
+    public static void runCustomCommand(String accountName, String content) throws Exception {
+        BCOSGMStubFactory factory = new BCOSGMStubFactory();
+        factory.executeCustomCommand(accountName, content);
+        System.exit(0);
     }
 }

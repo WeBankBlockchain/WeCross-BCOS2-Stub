@@ -837,8 +837,7 @@ public class BCOSDriver implements Driver {
                                                         new TransactionParams(
                                                                 request,
                                                                 signTx,
-                                                                TransactionParams.SUB_TYPE
-                                                                        .SEND_TX_BY_PROXY);
+                                                                TransactionParams.SUB_TYPE.SEND_TX);
 
                                                 transaction.setAbi(abi);
                                                 Request req =
