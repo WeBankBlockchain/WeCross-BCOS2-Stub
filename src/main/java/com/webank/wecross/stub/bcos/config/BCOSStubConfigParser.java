@@ -59,20 +59,9 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         BCOSStubConfig.ChannelService channelServiceConfig =
                 getChannelServiceConfig(getConfigPath(), channelServiceConfigValue);
 
-        List<Map<String, String>> resourcesConfigValue =
-                (List<Map<String, String>>) stubConfig.get("resources");
-
-        if (resourcesConfigValue == null) {
-            resourcesConfigValue = new ArrayList<>();
-        }
-
-        List<BCOSStubConfig.Resource> bcosResources =
-                getBCOSResourceConfig(getConfigPath(), chain, resourcesConfigValue);
-
         BCOSStubConfig bcosStubConfig = new BCOSStubConfig();
         bcosStubConfig.setType(stubType);
         bcosStubConfig.setChannelService(channelServiceConfig);
-        bcosStubConfig.setResources(bcosResources);
         bcosStubConfig.setChain(chain);
         channelServiceConfig.setChain(chain);
 

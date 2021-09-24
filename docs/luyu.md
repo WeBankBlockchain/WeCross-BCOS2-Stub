@@ -62,11 +62,11 @@ bcos/
     timeout = 300000  # ms, default 60000ms
     connectionsStr = ['127.0.0.1:20200']
 
-[[luyu-resources]]
+[[resources]]
     name = "hello"
     methods = ["set(1)", "get(0)"]
 
-[[luyu-resources]]
+[[resources]]
     name = "test"
     methods = ["set(1)", "get(0)"]
 ```

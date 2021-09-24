@@ -208,7 +208,8 @@ public class RegisterCnsHandler implements CommandHandler {
             Driver.CustomCommandCallback callback) {
         // Only execute in local connection
         if (!(connection instanceof BCOSConnection)) {
-            callback.onResponse(new Exception("Only execute locally"), null);
+            callback.onResponse(
+                    new Exception("This command must be executed in local connection!"), null);
             return;
         }
 

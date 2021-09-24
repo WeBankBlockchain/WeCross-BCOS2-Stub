@@ -49,8 +49,13 @@ public class LuyuBCOSGMPluginBuilder extends PluginBuilder {
                     new LuyuConnectionAdapter(wecrossConnection, chainPath);
             // parse resources
 
-            ArrayList<Map<String, Object>> resources =
-                    (ArrayList<Map<String, Object>>) properties.get("luyu-resources");
+            ArrayList<Map<String, Object>> resources = null;
+            if (properties.containsKey("resources")) {
+                resources = (ArrayList<Map<String, Object>>) properties.get("resources");
+            } else if (properties.containsKey("luyu-resources")) {
+                resources = (ArrayList<Map<String, Object>>) properties.get("luyu-resources");
+            }
+
             if (resources != null) {
                 for (Map<String, Object> resourceMap : resources) {
                     Path path = Path.decode(chainPath);

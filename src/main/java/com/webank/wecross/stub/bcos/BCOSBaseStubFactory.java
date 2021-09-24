@@ -33,8 +33,10 @@ import java.security.SecureRandom;
 import java.security.Security;
 import java.security.spec.ECGenParameterSpec;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemObject;
@@ -375,6 +377,7 @@ public class BCOSBaseStubFactory implements StubFactory {
         }
 
         Driver driver = newDriver();
+        CompletableFuture<Exception> future = new CompletableFuture<>();
         driver.asyncCustomCommand(
                 request.getCommand(),
                 path,
@@ -387,7 +390,6 @@ public class BCOSBaseStubFactory implements StubFactory {
                     public void onResponse(Exception error, Object response) {
                         if (error != null) {
                             System.out.println(error.getMessage());
-                            System.exit(1);
                         } else {
                             System.out.println(
                                     "Success on command: "
@@ -395,7 +397,17 @@ public class BCOSBaseStubFactory implements StubFactory {
                                             + " path: "
                                             + request.getPath());
                         }
+                        future.complete(error);
                     }
                 });
+        try {
+            Exception e = future.get(30, TimeUnit.SECONDS);
+            if (e != null) {
+                throw e;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 }
