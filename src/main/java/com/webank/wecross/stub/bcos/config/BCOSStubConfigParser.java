@@ -1,7 +1,6 @@
 package com.webank.wecross.stub.bcos.config;
 
 import com.moandjiezana.toml.Toml;
-import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSToml;
 import com.webank.wecross.stub.bcos.web3j.Web3jDefaultConfig;
 import java.io.File;

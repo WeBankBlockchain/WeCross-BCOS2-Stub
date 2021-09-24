@@ -309,7 +309,7 @@ public class BCOSStubConfig {
 
             resourceInfo.setName(resource.getName());
             resourceInfo.setStubType(this.type);
-            resourceInfo.setChecksum(sha3Digest.hash(resource.getValue()));
+            // resourceInfo.setChecksum(sha3Digest.hash(resource.getValue()));
 
             resourceInfo.getProperties().put(resource.getName(), resource.getValue());
             resourceInfo
