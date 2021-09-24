@@ -59,9 +59,20 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         BCOSStubConfig.ChannelService channelServiceConfig =
                 getChannelServiceConfig(getConfigPath(), channelServiceConfigValue);
 
+        List<Map<String, String>> resourcesConfigValue =
+                (List<Map<String, String>>) stubConfig.get("resources");
+
+        if (resourcesConfigValue == null) {
+            resourcesConfigValue = new ArrayList<>();
+        }
+
+        List<BCOSStubConfig.Resource> bcosResources =
+                getBCOSResourceConfig(getConfigPath(), chain, resourcesConfigValue);
+
         BCOSStubConfig bcosStubConfig = new BCOSStubConfig();
         bcosStubConfig.setType(stubType);
         bcosStubConfig.setChannelService(channelServiceConfig);
+        bcosStubConfig.setResources(bcosResources);
         bcosStubConfig.setChain(chain);
         channelServiceConfig.setChain(chain);
 
@@ -187,21 +198,8 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
             String name = stringStringMap.get("name");
             requireFieldNotNull(name, "resources", "name", configFile);
 
-            String type = stringStringMap.get("type");
-            requireFieldNotNull(type, "resources", "type", configFile);
-            // check type invalid
-            if (!BCOSConstant.RESOURCE_TYPE_BCOS_CONTRACT.equals(type)) {
-                logger.error(" unrecognized bcos resource type, name: {}, type: {}", name, type);
-                continue;
-            }
-
-            String address = stringStringMap.get("contractAddress");
-            requireFieldNotNull(address, "resources", "contractAddress", configFile);
-
             BCOSStubConfig.Resource resource = new BCOSStubConfig.Resource();
             resource.setName(name);
-            resource.setType(type);
-            resource.setValue(address);
             resource.setChain(chain);
 
             resourceList.add(resource);

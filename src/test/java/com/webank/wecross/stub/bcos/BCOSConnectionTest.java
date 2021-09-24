@@ -7,8 +7,11 @@ import static junit.framework.TestCase.assertTrue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.webank.wecross.stub.*;
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
+import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
+import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.BlockUtility;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
@@ -21,6 +24,7 @@ import com.webank.wecross.stub.bcos.web3j.Web3jWrapperWithNullMock;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
@@ -52,6 +56,26 @@ public class BCOSConnectionTest {
         assertEquals(blockHeader.getStateRoot(), block.getStateRoot());
         assertEquals(blockHeader.getNumber(), block.getNumber().intValue());
         assertEquals(blockHeader.getTransactionRoot(), block.getTransactionsRoot());
+    }
+
+    @Test
+    public void resourceInfoListTest() throws IOException {
+        BCOSStubConfigParser bcosStubConfigParser =
+                new BCOSStubConfigParser("./", "stub-sample-ut.toml");
+        BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
+
+        List<ResourceInfo> resourceInfoList = bcosStubConfig.convertToResourceInfos();
+
+        assertEquals(resourceInfoList.size(), bcosStubConfig.getResources().size());
+        assertFalse(resourceInfoList.isEmpty());
+        for (int i = 0; i < resourceInfoList.size(); i++) {
+            ResourceInfo resourceInfo = resourceInfoList.get(i);
+            assertEquals(resourceInfo.getStubType(), bcosStubConfig.getType());
+            assertEquals(
+                    resourceInfo.getProperties().get(BCOSConstant.BCOS_PROPERTY_CHAIN_ID), 123);
+            assertEquals(
+                    resourceInfo.getProperties().get(BCOSConstant.BCOS_PROPERTY_GROUP_ID), 111);
+        }
     }
 
     @Test

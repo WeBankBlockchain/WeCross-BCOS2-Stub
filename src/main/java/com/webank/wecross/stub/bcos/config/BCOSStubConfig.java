@@ -270,6 +270,14 @@ public class BCOSStubConfig {
         this.channelService = channelService;
     }
 
+    public List<Resource> getResources() {
+        return resources;
+    }
+
+    public void setResources(List<Resource> resources) {
+        this.resources = resources;
+    }
+
     public Chain getChain() {
         return chain;
     }
