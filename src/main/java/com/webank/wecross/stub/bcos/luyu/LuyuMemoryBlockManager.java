@@ -167,7 +167,7 @@ public class LuyuMemoryBlockManager implements BlockManager {
             if (block.getBlockHeader().getNumber() < target) {
                 driver.asyncGetBlock(
                         block.getBlockHeader().getNumber() + 1,
-                        true,
+                        false,
                         connection,
                         (error, blockData) -> {
                             onSyncBlock(
