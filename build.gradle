@@ -14,7 +14,7 @@ plugins {
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'com.webank.wecross'
-version '1.2.0-luyu'
+version '2.0.0'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -68,6 +68,7 @@ dependencies {
     }
 
     implementation 'link.luyu:luyu-protocol:1.0.0-09100-SNAPSHOT'
+    implementation fileTree(dir: 'libs', include: '*.jar')
 
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'commons-codec:commons-codec:1.14'
@@ -141,6 +142,7 @@ task makeJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar, d
     exclude '**/*.yml'
     exclude '**/BCOSGMStubFactory.*'
     exclude '**/LuyuBCOSGMPluginBuilder.*'
+    exclude '**/TnBCOSGMPluginBuilder.*'
     exclude '**/performance/guomi/*'
 
     manifest {
@@ -191,6 +193,7 @@ task makeGMJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar,
     exclude '**/*.yml'
     exclude '**/BCOSStubFactory.*'
     exclude '**/LuyuBCOSPluginBuilder.*'
+    exclude '**/TnBCOSPluginBuilder.*'
     exclude '**/performance/normal/*'
 
     manifest {
