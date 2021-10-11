@@ -54,36 +54,36 @@ public class Web3jUtility {
         groupChannelConnectionsConfig.setAllChannelConnections(allChannelConnections);
 
         if (channelServiceConfig.isGmConnectEnable()) {
-            checkCertExist(resolver, channelServiceConfig.getGmCaCert(), "GmCaCert");
+            checkCertExist(resolver, channelServiceConfig.getGmCaCert(), "gmCaCert");
             groupChannelConnectionsConfig.setGmCaCert(
                     resolver.getResource(channelServiceConfig.getGmCaCert()));
 
-            checkCertExist(resolver, channelServiceConfig.getGmSslKey(), "GmSslKey");
+            checkCertExist(resolver, channelServiceConfig.getGmSslKey(), "gmSslKey");
             groupChannelConnectionsConfig.setGmSslKey(
                     resolver.getResource(channelServiceConfig.getGmSslKey()));
 
-            checkCertExist(resolver, channelServiceConfig.getGmEnSslCert(), "GmEnSslCert");
+            checkCertExist(resolver, channelServiceConfig.getGmEnSslCert(), "gmEnSslCert");
             groupChannelConnectionsConfig.setGmEnSslCert(
                     resolver.getResource(channelServiceConfig.getGmEnSslCert()));
 
-            checkCertExist(resolver, channelServiceConfig.getGmEnSslKey(), "GmEnSslKey");
+            checkCertExist(resolver, channelServiceConfig.getGmEnSslKey(), "gmEnSslKey");
             groupChannelConnectionsConfig.setGmEnSslKey(
                     resolver.getResource(channelServiceConfig.getGmEnSslKey()));
 
-            checkCertExist(resolver, channelServiceConfig.getGmEnSslCert(), "GmEnSslCert");
+            checkCertExist(resolver, channelServiceConfig.getGmEnSslCert(), "gmEnSslCert");
             groupChannelConnectionsConfig.setGmSslCert(
                     resolver.getResource(channelServiceConfig.getGmSslCert()));
             EncryptType.setEncryptType(EncryptType.SM2_TYPE);
         } else {
-            checkCertExist(resolver, channelServiceConfig.getCaCert(), "CaCert");
+            checkCertExist(resolver, channelServiceConfig.getCaCert(), "caCert");
             groupChannelConnectionsConfig.setCaCert(
                     resolver.getResource(channelServiceConfig.getCaCert()));
 
-            checkCertExist(resolver, channelServiceConfig.getSslCert(), "SslCert");
+            checkCertExist(resolver, channelServiceConfig.getSslCert(), "sslCert");
             groupChannelConnectionsConfig.setSslCert(
                     resolver.getResource(channelServiceConfig.getSslCert()));
 
-            checkCertExist(resolver, channelServiceConfig.getSslKey(), "SslKey");
+            checkCertExist(resolver, channelServiceConfig.getSslKey(), "sslKey");
             groupChannelConnectionsConfig.setSslKey(
                     resolver.getResource(channelServiceConfig.getSslKey()));
         }
