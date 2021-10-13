@@ -41,10 +41,6 @@ bcos/
 **connection.toml**
 
 ```
-[common]
-    name = 'bcos1'
-    type = 'BCOS2.0' # BCOS2.0 or GM_BCOS2.0
-
 [chain]
     groupId = 1 # default 1
     chainId = 1 # default 1
