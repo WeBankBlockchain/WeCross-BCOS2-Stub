@@ -31,10 +31,15 @@ public class BCOSStubFactory extends BCOSBaseStubFactory {
     }
 
     public static void main(String[] args) throws Exception {
-        if (args.length == 3 && args[0].equals("customCommand")) {
-            runCustomCommand(args[1], args[2]);
-        } else {
-            help();
+        try {
+            if (args.length == 3 && args[0].equals("customCommand")) {
+                runCustomCommand(args[1], args[2]);
+            } else {
+                help();
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+            System.exit(-1);
         }
     }
 

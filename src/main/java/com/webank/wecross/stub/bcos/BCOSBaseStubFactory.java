@@ -351,10 +351,15 @@ public class BCOSBaseStubFactory implements StubFactory {
 
         Path path = Path.decode(request.getPath());
 
-        BCOSStubConfigParser bcosStubConfigParser =
+        BCOSStubConfigParser pluginConfig =
+                new BCOSStubConfigParser(
+                        "chains" + File.separator + path.getChain(), "plugin.toml");
+
+        BCOSStubConfigParser connectionConfig =
                 new BCOSStubConfigParser(
                         "chains" + File.separator + path.getChain(), "connection.toml");
-        BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
+        connectionConfig.append(pluginConfig);
+        BCOSStubConfig bcosStubConfig = connectionConfig.loadConfig();
 
         AbstractWeb3jWrapper web3jWrapper =
                 Web3jWrapperFactory.createWeb3jWrapperInstance(bcosStubConfig);

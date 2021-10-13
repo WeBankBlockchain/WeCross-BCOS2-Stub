@@ -1305,9 +1305,7 @@ public class BCOSDriver implements Driver {
 
                                                                 if (receipt.isStatusOK()) {
 
-                                                                    BlockManager blockManager =
-                                                                            context
-                                                                                    .getBlockManager();
+                                                                    final BlockManager blockManager;
 
                                                                     if (!FeatureSupport
                                                                             .isSupportGetTxProof(
@@ -1316,6 +1314,10 @@ public class BCOSDriver implements Driver {
                                                                         // blockHeader
                                                                         blockManager =
                                                                                 new BlockManagerEmpty();
+                                                                    } else {
+                                                                        blockManager =
+                                                                                context
+                                                                                        .getBlockManager();
                                                                     }
 
                                                                     blockManager.asyncGetBlock(
@@ -1339,8 +1341,11 @@ public class BCOSDriver implements Driver {
                                                                                     }
 
                                                                                     if (FeatureSupport
-                                                                                            .isSupportGetTxProof(
-                                                                                                    nodeVersion)) {
+                                                                                                    .isSupportGetTxProof(
+                                                                                                            nodeVersion)
+                                                                                            && !(blockManager
+                                                                                                    instanceof
+                                                                                                    BlockManagerEmpty)) {
                                                                                         MerkleValidation
                                                                                                 .verifyTransactionReceiptProof(
                                                                                                         receipt

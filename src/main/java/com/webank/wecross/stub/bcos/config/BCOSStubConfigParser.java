@@ -26,6 +26,12 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         stubConfig = toml.toMap();
     }
 
+    public void append(BCOSStubConfigParser config) {
+        for (Map.Entry<String, Object> entry : config.stubConfig.entrySet()) {
+            stubConfig.putIfAbsent(entry.getKey(), entry.getValue());
+        }
+    }
+
     public BCOSStubConfigParser(Map<String, Object> stubConfig) {
         super((String) stubConfig.get("chainDir") + File.separator + "<memory properties>");
         this.stubDir = (String) stubConfig.get("chainDir");

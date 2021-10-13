@@ -239,6 +239,10 @@ public class DeployContractHandler implements CommandHandler {
             DeployContractCallback callback) {
         Map<String, String> properties = connection.getProperties();
 
+        for (Map.Entry<String, String> entry : properties.entrySet()) {
+            System.out.println("Chain properties: " + entry.getKey() + "->" + entry.getValue());
+        }
+
         if (properties.containsKey(BCOSConstant.BCOS_PROXY_NAME)) {
             // if proxy has been deployed, use proxy to deploy
             deployContractByProxyAndRegisterCNS(
