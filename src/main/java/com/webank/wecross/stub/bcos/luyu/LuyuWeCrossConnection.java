@@ -5,6 +5,7 @@ import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.ObjectMapperFactory;
 import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.Response;
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -17,6 +18,7 @@ public class LuyuWeCrossConnection implements Connection {
     private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
     private link.luyu.protocol.link.Connection luyuConnection;
     private Map<String, String> properties;
+    private String verifierString = null;
 
     public LuyuWeCrossConnection(link.luyu.protocol.link.Connection luyuConnection) {
         this.luyuConnection = luyuConnection;
@@ -76,6 +78,10 @@ public class LuyuWeCrossConnection implements Connection {
             Map<String, String> retProperties = new HashMap<>();
             retProperties = objectMapper.readValue(propertiesBytes, retProperties.getClass());
             properties = retProperties;
+
+            // replace verifier to local configure
+            properties.put(BCOSConstant.BCOS_SEALER_LIST, verifierString);
+
             return properties;
         } catch (Exception e) {
             logger.warn("getProperties exception: ", e);
@@ -86,5 +92,9 @@ public class LuyuWeCrossConnection implements Connection {
 
     public link.luyu.protocol.link.Connection getLuyuConnection() {
         return luyuConnection;
+    }
+
+    public void setVerifierString(String verifierString) {
+        this.verifierString = verifierString;
     }
 }

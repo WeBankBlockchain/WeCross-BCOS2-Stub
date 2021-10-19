@@ -5,6 +5,7 @@ import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.ObjectMapperFactory;
 import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.Response;
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -17,6 +18,7 @@ public class TnWeCrossConnection implements Connection {
     private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
     private org.trustnet.protocol.link.Connection tnConnection;
     private Map<String, String> properties;
+    private String verifierString = null;
 
     public TnWeCrossConnection(org.trustnet.protocol.link.Connection tnConnection) {
         this.tnConnection = tnConnection;
@@ -75,6 +77,10 @@ public class TnWeCrossConnection implements Connection {
             Map<String, String> retProperties = new HashMap<>();
             retProperties = objectMapper.readValue(propertiesBytes, retProperties.getClass());
             properties = retProperties;
+
+            // replace verifier to local configure
+            properties.put(BCOSConstant.BCOS_SEALER_LIST, verifierString);
+
             return properties;
         } catch (Exception e) {
             logger.warn("getProperties exception: ", e);
@@ -85,5 +91,9 @@ public class TnWeCrossConnection implements Connection {
 
     public org.trustnet.protocol.link.Connection getTnConnection() {
         return tnConnection;
+    }
+
+    public void setVerifierString(String verifierString) {
+        this.verifierString = verifierString;
     }
 }

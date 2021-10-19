@@ -90,6 +90,10 @@ public class TnBCOSGMPluginBuilder extends PluginBuilder {
         String chainPath = (String) properties.get("chainPath");
         com.webank.wecross.stub.Driver wecrossDriver = stubFactory.newDriver();
         TnWeCrossConnection tnWeCrossConnection = new TnWeCrossConnection(connection);
+
+        String verifierString = getVerifierString(properties);
+        tnWeCrossConnection.setVerifierString(verifierString);
+
         TnMemoryBlockManager blockManager =
                 memoryBlockManagerFactory.build(chainPath, wecrossDriver, tnWeCrossConnection);
         TnDriverAdapter tnDriverAdapter =
@@ -102,5 +106,32 @@ public class TnBCOSGMPluginBuilder extends PluginBuilder {
                         accountFactory);
         blockManager.start();
         return tnDriverAdapter;
+    }
+
+    private String getVerifierString(Map<String, Object> properties) throws RuntimeException {
+
+        String chainPath = (String) properties.get("chainPath");
+        String chainDir = (String) properties.get("chainDir");
+        String verifierKey = BCOSConstant.BCOS_SEALER_LIST.toLowerCase();
+        try {
+            if (properties.containsKey(verifierKey)) {
+
+                Map<String, Object> verifierMap = (Map<String, Object>) properties.get(verifierKey);
+                // add chainDir in verifierMap
+                verifierMap.put("chainDir", chainDir);
+                verifierMap.put("chainType", BCOSConstant.GM_BCOS_STUB_TYPE);
+
+                ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
+                String verifierString = objectMapper.writeValueAsString(verifierMap);
+                logger.info("Chain: " + chainPath + " configure verifier as: " + verifierString);
+
+                return verifierString;
+            } else {
+                return null;
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Parse [" + verifierKey + "] in driver.toml failed. " + e);
+        }
     }
 }
