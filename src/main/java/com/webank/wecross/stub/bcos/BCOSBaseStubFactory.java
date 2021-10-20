@@ -247,11 +247,7 @@ public class BCOSBaseStubFactory implements StubFactory {
 
             String name = new File(path).getName();
             System.out.println(
-                    "SUCCESS: Account \""
-                            + name
-                            + "\" config framework has been generated to \""
-                            + path
-                            + "\"");
+                    "SUCCESS: Account \"" + name + "\" has been generated to \"" + path + "\"");
         } catch (Exception e) {
             System.out.println("Exception: " + e);
         }
