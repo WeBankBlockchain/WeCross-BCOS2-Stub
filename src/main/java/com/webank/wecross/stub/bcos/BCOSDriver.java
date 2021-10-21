@@ -857,6 +857,14 @@ public class BCOSDriver implements Driver {
                                                         response -> {
                                                             try {
                                                                 if (response.getErrorCode()
+                                                                        == BCOSStatusCode
+                                                                                .TransactionReceiptNotExist) {
+                                                                    throw new BCOSStubException(
+                                                                            response.getErrorCode(),
+                                                                            "Blockchain is not available.");
+                                                                }
+
+                                                                if (response.getErrorCode()
                                                                         != BCOSStatusCode.Success) {
                                                                     throw new BCOSStubException(
                                                                             response.getErrorCode(),
@@ -1700,7 +1708,7 @@ public class BCOSDriver implements Driver {
                     .setBlockNumber(receipt.getBlockNumber().longValue());
 
             String proxyInput = receipt.getInput();
-            String proxyOutput = receipt.getOutput();
+            String output = "";
             if (proxyInput.startsWith(FunctionUtility.ProxySendTXMethodId)) {
                 Tuple3<String, String, byte[]> proxyResult =
                         FunctionUtility.getSendTransactionProxyWithoutTxIdFunctionInput(proxyInput);
@@ -1708,7 +1716,7 @@ public class BCOSDriver implements Driver {
                 input = Numeric.toHexString(proxyResult.getValue3());
                 methodId = input.substring(0, FunctionUtility.MethodIDWithHexPrefixLength);
                 input = input.substring(FunctionUtility.MethodIDWithHexPrefixLength);
-
+                output = receipt.getOutput().substring(130);
                 if (logger.isDebugEnabled()) {
                     logger.debug("  resource: {}, methodId: {}", resource, methodId);
                 }
@@ -1722,6 +1730,7 @@ public class BCOSDriver implements Driver {
                 resource = Path.decode(path).getResource();
                 String methodSig = proxyInputResult.getValue5();
                 input = Numeric.toHexString(proxyInputResult.getValue6());
+                output = receipt.getOutput().substring(130);
                 methodId = FunctionEncoder.buildMethodId(methodSig);
 
                 if (logger.isDebugEnabled()) {
@@ -1735,9 +1744,18 @@ public class BCOSDriver implements Driver {
                 }
             } else {
                 // transaction not send by proxy
-                transaction.setTransactionByProxy(false);
-                callback.onResponse(null, transaction);
-                return;
+                resource = asyncCnsService.getNameByAddressFromCache(receipt.getTo());
+                input = receipt.getInput().substring(FunctionUtility.MethodIDWithHexPrefixLength);
+                output = receipt.getOutput();
+                methodId =
+                        receipt.getInput()
+                                .substring(0, FunctionUtility.MethodIDWithHexPrefixLength);
+
+                if (resource == null || resource.length() == 0) {
+                    transaction.setTransactionByProxy(false);
+                    callback.onResponse(null, transaction);
+                    return;
+                }
             }
 
             transaction
@@ -1753,6 +1771,7 @@ public class BCOSDriver implements Driver {
             // query ABI
             String finalMethodId = methodId;
             String finalInput = input;
+            String finalOutput = output;
             asyncCnsService.queryABI(
                     resource,
                     this,
@@ -1800,8 +1819,7 @@ public class BCOSDriver implements Driver {
                         if (StatusCode.Success.equals(receipt.getStatus())) {
                             ABIObject outputObject = ABIObjectFactory.createOutputObject(function);
                             List<String> outputParams =
-                                    abiCodecJsonWrapper.decode(
-                                            outputObject, proxyOutput.substring(130));
+                                    abiCodecJsonWrapper.decode(outputObject, finalOutput);
                             /** decode output from output */
                             transaction
                                     .getTransactionResponse()

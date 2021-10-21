@@ -35,6 +35,7 @@ public class AsyncCnsService {
 
     private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
     private LRUCache<String, CnsInfo> abiCache = new LRUCache<>(32);
+    private LRUCache<String, CnsInfo> address2CnsInfoCache = new LRUCache<>(128);
     private ScheduledExecutorService scheduledExecutorService =
             new ScheduledThreadPoolExecutor(1, new CustomizableThreadFactory("AsyncCnsService-"));
     private static final long CLEAR_EXPIRES = 30L * 60L; // 30 min
@@ -292,5 +293,15 @@ public class AsyncCnsService {
 
     public void addAbiToCache(String name, CnsInfo cnsInfo) {
         this.abiCache.put(name, cnsInfo);
+        this.address2CnsInfoCache.put(cnsInfo.getAddress(), cnsInfo);
+    }
+
+    public String getNameByAddressFromCache(String address) {
+        CnsInfo cnsInfo = address2CnsInfoCache.get(address);
+
+        if (cnsInfo == null) {
+            return null;
+        }
+        return cnsInfo.getName();
     }
 }

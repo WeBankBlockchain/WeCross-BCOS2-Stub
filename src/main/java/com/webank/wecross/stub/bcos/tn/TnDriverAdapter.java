@@ -72,6 +72,11 @@ public class TnDriverAdapter implements Driver {
 
     @Override
     public void start() throws RuntimeException {
+        registerEvents();
+        prepareCnsCache();
+    }
+
+    private void registerEvents() {
         this.tnWeCrossConnection
                 .getTnConnection()
                 .subscribe(
@@ -115,6 +120,27 @@ public class TnDriverAdapter implements Driver {
                                 }
                             }
                         });
+    }
+
+    private void prepareCnsCache() {
+        listResources(
+                (int status, String message, Resource[] resources) -> {
+                    if (status == 0 && resources != null && resources.length != 0)
+                        for (Resource resource : resources) {
+                            try {
+                                Path path = Path.decode(resource.getPath());
+                                asyncQueryCns(
+                                        path.getResource(),
+                                        (Exception e, String abi, String address) -> {
+                                            if (e == null) {
+                                                logger.info(
+                                                        "Resource {} recognized", path.toString());
+                                            }
+                                        });
+                            } catch (Exception e) {
+                            }
+                        }
+                });
     }
 
     @Override
@@ -453,7 +479,7 @@ public class TnDriverAdapter implements Driver {
 
                                                 com.webank.wecross.stub.Account weCrossAccount =
                                                         toWeCrossAccount(account);
-                                                /* TODO: enable this
+                                                // * TODO: enable this
                                                 if (!weCrossAccount.getIdentity().equals(sender)) {
                                                     logger.warn(
                                                             "Permission denied of chain account:{} using tn account:{} to query",
@@ -461,7 +487,7 @@ public class TnDriverAdapter implements Driver {
                                                             tnIdentity);
                                                     return;
                                                 }
-                                                 */
+                                                // */
                                                 routerEventsHandler.submit(
                                                         transaction,
                                                         new ReceiptCallback() {
@@ -572,7 +598,7 @@ public class TnDriverAdapter implements Driver {
                                                 }
                                                 com.webank.wecross.stub.Account weCrossAccount =
                                                         toWeCrossAccount(account);
-                                                /* TODO: enable this
+                                                // * TODO: enable this
                                                 if (!weCrossAccount.getIdentity().equals(sender)) {
                                                     logger.warn(
                                                             "Permission denied of chain account:{} using tn account:{} to query",
@@ -580,7 +606,7 @@ public class TnDriverAdapter implements Driver {
                                                             tnIdentity);
                                                     return;
                                                 }
-                                                 */
+                                                // */
                                                 routerEventsHandler.call(
                                                         callRequest,
                                                         new CallResponseCallback() {
