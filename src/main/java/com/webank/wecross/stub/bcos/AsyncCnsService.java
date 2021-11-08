@@ -34,8 +34,28 @@ public class AsyncCnsService {
     private static final Logger logger = LoggerFactory.getLogger(AsyncCnsService.class);
 
     private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
-    private LRUCache<String, CnsInfo> abiCache = new LRUCache<>(32);
-    private LRUCache<String, CnsInfo> address2CnsInfoCache = new LRUCache<>(128);
+    private final long CNS_EXPIRES = 20000; // millseconds
+
+    class CnsInfoExt {
+        public CnsInfo getCnsInfo() {
+            return cnsInfo;
+        }
+
+        private CnsInfo cnsInfo;
+        private long expires;
+
+        public CnsInfoExt(CnsInfo cnsInfo) {
+            this.cnsInfo = cnsInfo;
+            this.expires = System.currentTimeMillis() + CNS_EXPIRES;
+        }
+
+        public boolean isAvailable() {
+            return this.expires > System.currentTimeMillis();
+        }
+    }
+
+    private LRUCache<String, CnsInfoExt> abiCache = new LRUCache<>(32);
+    private LRUCache<String, CnsInfoExt> address2CnsInfoCache = new LRUCache<>(128);
     private ScheduledExecutorService scheduledExecutorService =
             new ScheduledThreadPoolExecutor(1, new CustomizableThreadFactory("AsyncCnsService-"));
     private static final long CLEAR_EXPIRES = 30L * 60L; // 30 min
@@ -75,17 +95,23 @@ public class AsyncCnsService {
                 return;
             }
 
-            CnsInfo cnsInfo = abiCache.get(name);
-            if (cnsInfo != null) {
-                callback.onResponse(null, cnsInfo.getAbi(), cnsInfo.getAddress());
+            CnsInfoExt cnsInfoExt = abiCache.get(name);
+            if (cnsInfoExt != null && cnsInfoExt.isAvailable()) {
+                callback.onResponse(
+                        null,
+                        cnsInfoExt.getCnsInfo().getAbi(),
+                        cnsInfoExt.getCnsInfo().getAddress());
                 return;
             }
 
             queryABISemaphore.acquire(1); // Only 1 thread can query abi remote
-            cnsInfo = abiCache.get(name);
-            if (cnsInfo != null) {
+            cnsInfoExt = abiCache.get(name);
+            if (cnsInfoExt != null && cnsInfoExt.isAvailable()) {
                 queryABISemaphore.release();
-                callback.onResponse(null, cnsInfo.getAbi(), cnsInfo.getAddress());
+                callback.onResponse(
+                        null,
+                        cnsInfoExt.getCnsInfo().getAbi(),
+                        cnsInfoExt.getCnsInfo().getAddress());
                 return;
             }
 
@@ -283,25 +309,22 @@ public class AsyncCnsService {
                 });
     }
 
-    public LRUCache<String, CnsInfo> getAbiCache() {
+    public LRUCache<String, CnsInfoExt> getAbiCache() {
         return abiCache;
     }
 
-    public void setAbiCache(LRUCache<String, CnsInfo> abiCache) {
-        this.abiCache = abiCache;
-    }
-
     public void addAbiToCache(String name, CnsInfo cnsInfo) {
-        this.abiCache.put(name, cnsInfo);
-        this.address2CnsInfoCache.put(cnsInfo.getAddress(), cnsInfo);
+        CnsInfoExt cnsInfoExt = new CnsInfoExt(cnsInfo);
+        this.abiCache.put(name, cnsInfoExt);
+        this.address2CnsInfoCache.put(cnsInfo.getAddress(), cnsInfoExt);
     }
 
     public String getNameByAddressFromCache(String address) {
-        CnsInfo cnsInfo = address2CnsInfoCache.get(address);
+        CnsInfoExt cnsInfoExt = address2CnsInfoCache.get(address);
 
-        if (cnsInfo == null) {
+        if (cnsInfoExt == null) {
             return null;
         }
-        return cnsInfo.getName();
+        return cnsInfoExt.getCnsInfo().getName();
     }
 }
