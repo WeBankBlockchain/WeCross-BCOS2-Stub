@@ -14,7 +14,7 @@ plugins {
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'com.webank.wecross'
-version '2.0.0'
+version '2.0.0-rc1'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -63,7 +63,7 @@ configurations {
 //}
 
 dependencies {
-    implementation ('com.webank:wecross-java-stub:1.2.0') {
+    implementation('com.webank:wecross-java-stub:1.2.0') {
         exclude group: "io.netty"
     }
 
@@ -77,7 +77,7 @@ dependencies {
     implementation 'com.google.guava:guava:30.1-jre'
     implementation 'org.yaml:snakeyaml:1.27'
 
-    implementation ('org.fisco-bcos:web3sdk:2.6.4')  {
+    implementation('org.fisco-bcos:web3sdk:2.6.4') {
         exclude group: "org.ethereum"
         exclude group: "org.fisco-bcos", module: "tcnative"
         exclude group: "io.netty"
@@ -101,6 +101,20 @@ dependencies {
 sourceSets {
 
     main {
+        java {
+            FileTree tree = fileTree(dir: 'libs', include: 'trustnet-protocol*.jar')
+            tree.each { File file ->
+                println file.name
+            }
+            if (tree.empty) {
+                // println 'Disable trustnet compilation.'
+                exclude '**/trustnet/*'
+                exclude '**/tn/*'
+            } else {
+                println 'Enable trustnet compilation.'
+            }
+        }
+
         resources {
             exclude '**/*.toml'
             exclude '**/*.xml'
@@ -281,11 +295,11 @@ jacocoTestReport {
 
 ext {
     if (!project.hasProperty("NEXUS_USERNAME")) {
-        NEXUS_USERNAME="xxx"
+        NEXUS_USERNAME = "xxx"
     }
 
     if (!project.hasProperty("NEXUS_PASSWORD")) {
-        NEXUS_PASSWORD="xxx"
+        NEXUS_PASSWORD = "xxx"
     }
 }
 
