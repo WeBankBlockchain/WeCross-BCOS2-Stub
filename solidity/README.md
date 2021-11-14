@@ -1,4 +1,4 @@
-# 陆羽协议 Solidity SDK
+# 陆羽跨链协议 FISCO BCOS Solidity SDK
 
 基于[LuyuSDK.sol](LuyuSDK.sol)，使用Solidity语言从**链上**发起跨链调用。
 
