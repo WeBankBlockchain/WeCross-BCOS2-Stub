@@ -1,11 +1,14 @@
-![](./docs/images/menu_logo_wecross.png)
+![](./docs/images/menu_logo_wecross.png) with <img src="https://gitee.com/luyu-community/luyu-cross-chain-protocol/raw/master/doc/img/logo_nor.svg" style="zoom: 25%;" />
 
-# WeCross-BCOS2-Stub
+# WeCross-BCOS2-Stub & Luyu-BCOS2-Plugin
 
 [![CodeFactor](https://www.codefactor.io/repository/github/webankblockchain/WeCross-BCOS2-Stub/badge)](https://www.codefactor.io/repository/github/webankblockchain/WeCross-BCOS2-Stub) [![Build Status](https://travis-ci.org/WeBankBlockchain/WeCross-BCOS2-Stub.svg?branch=dev)](https://travis-ci.org/WeBankBlockchain/WeCross-BCOS2-Stub) [![Latest release](https://img.shields.io/github/release/WeBankBlockchain/WeCross-BCOS2-Stub.svg)](https://github.com/WeBankBlockchain/WeCross-BCOS2-Stub/releases/latest)
 [![License](https://img.shields.io/github/license/WeBankBlockchain/WeCross-BCOS2-Stub)](https://www.apache.org/licenses/LICENSE-2.0) [![Language](https://img.shields.io/badge/Language-Java-blue.svg)](https://www.java.com)
 
-WeCross BCOS2 Stub是[WeCross](https://github.com/WeBankBlockchain/WeCross)用于适配[FISCO BCOS 2.6](https://github.com/FISCO-BCOS/FISCO-BCOS)及以上版本的插件。
+本项目是适配[FISCO BCOS 2.6](https://github.com/FISCO-BCOS/FISCO-BCOS)及以上版本的插件，同时支持以下两个平台
+
+* [陆羽跨链协议](https://gitee.com/luyu-community/luyu-cross-chain-protocol)
+* [WeCross](https://github.com/WeBankFinTech/WeCross)
 
 ## 关键特性
 
@@ -33,9 +36,9 @@ cd WeCross-BCOS2-Stub
 
 ## 插件使用
 
-插件的详细使用方式请参阅[WeCross技术文档](https://wecross.readthedocs.io/zh_CN/latest/docs/stubs/bcos.html#id2)
+* 用于陆羽跨链协议：请参阅[陆羽跨链协议](docs/luyu.md)
 
-陆羽协议使用方式请参阅[陆羽协议配置及测试](docs/luyu.md)
+* 用于WeCross：请参阅[WeCross技术文档](https://wecross.readthedocs.io/zh_CN/latest/docs/stubs/bcos.html#id2)
 
 ## 贡献说明
 
