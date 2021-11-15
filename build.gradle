@@ -67,7 +67,7 @@ dependencies {
         exclude group: "io.netty"
     }
 
-    implementation 'link.luyu:luyu-protocol:1.0.0-09100-SNAPSHOT'
+    implementation 'link.luyu:luyu-cross-chain-protocol:1.0.0'
     implementation fileTree(dir: 'libs', include: '*.jar')
 
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
@@ -156,7 +156,6 @@ task makeJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar, d
     exclude '**/*.yml'
     exclude '**/BCOSGMStubFactory.*'
     exclude '**/LuyuBCOSGMPluginBuilder.*'
-    exclude '**/TnBCOSGMPluginBuilder.*'
     exclude '**/performance/guomi/*'
 
     manifest {
@@ -207,7 +206,6 @@ task makeGMJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar,
     exclude '**/*.yml'
     exclude '**/BCOSStubFactory.*'
     exclude '**/LuyuBCOSPluginBuilder.*'
-    exclude '**/TnBCOSPluginBuilder.*'
     exclude '**/performance/normal/*'
 
     manifest {
