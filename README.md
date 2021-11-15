@@ -30,7 +30,7 @@
 **编译命令**:
 
 ```bash
-git clone https://github.com/WeBankBlockchain/WeCross-BCOS2-Stub.git
+git clone https://gitee.com/luyu-community/fisco-bcos-plugin.git
 cd WeCross-BCOS2-Stub
 ./gradlew assemble
 ```
