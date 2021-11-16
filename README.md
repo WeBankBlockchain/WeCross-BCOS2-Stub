@@ -1,8 +1,7 @@
 ![](./docs/images/menu_logo_wecross.png) with <img src="https://gitee.com/luyu-community/luyu-cross-chain-protocol/raw/master/doc/img/logo_nor.svg" style="zoom: 25%;" />
 
 <hr>
-
-# WeCross-BCOS2-Stub & FISCO BCOS Plugin
+# WeCross-BCOS2-Stub（FISCO BCOS Plugin）
 
 [![CodeFactor](https://www.codefactor.io/repository/github/webankblockchain/WeCross-BCOS2-Stub/badge)](https://www.codefactor.io/repository/github/webankblockchain/WeCross-BCOS2-Stub) [![Build Status](https://travis-ci.org/WeBankBlockchain/WeCross-BCOS2-Stub.svg?branch=dev)](https://travis-ci.org/WeBankBlockchain/WeCross-BCOS2-Stub) [![Latest release](https://img.shields.io/github/release/WeBankBlockchain/WeCross-BCOS2-Stub.svg)](https://github.com/WeBankBlockchain/WeCross-BCOS2-Stub/releases/latest)
 [![License](https://img.shields.io/github/license/WeBankBlockchain/WeCross-BCOS2-Stub)](https://www.apache.org/licenses/LICENSE-2.0) [![Language](https://img.shields.io/badge/Language-Java-blue.svg)](https://www.java.com)
@@ -20,7 +19,13 @@
 - FISCO BCOS交易签名与解析
 - FISCO BCOS交易默克尔验证
 
-## 插件编译
+## 获取插件
+
+### 直接下载
+
+请查看本项目的release，直接下载最新插件（jar包）。
+
+### 手动编译
 
 **环境要求**:
 
