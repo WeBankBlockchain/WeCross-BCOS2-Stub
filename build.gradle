@@ -14,7 +14,7 @@ plugins {
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'com.webank.wecross'
-version '2.0.0-rc1'
+version '2.0.0-rc2'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -62,7 +62,18 @@ configurations {
 //    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 //}
 
+def log4j_version="2.17.1"
+List logger = [
+        "org.apache.logging.log4j:log4j-api:$log4j_version",
+        "org.apache.logging.log4j:log4j-core:$log4j_version",
+        //"org.apache.logging.log4j:log4j-slf4j-impl:$log4j_version",
+        "org.apache.logging.log4j:log4j-to-slf4j:$log4j_version",
+        //"org.apache.logging.log4j:log4j-web:$log4j_version",
+        "org.apache.logging.log4j:log4j-jul:$log4j_version"
+]
+
 dependencies {
+    compile logger
     implementation('com.webank:wecross-java-stub:1.2.0') {
         exclude group: "io.netty"
     }
