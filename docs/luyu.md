@@ -59,7 +59,7 @@ bcos1/
     connectionsStr = ['127.0.0.1:20200']
 
 [[resources]]
-    name = "hello"
+    name = "hello" # 为链上合约CNS名（需事先用FISCO BCOS的控制台为一个合约注册CNS的名字，请参考FISCO BCOS的文档）
     methods = ["set(1)", "get(0)"]
 
 [[resources]]
