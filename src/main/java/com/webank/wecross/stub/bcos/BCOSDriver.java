@@ -767,7 +767,8 @@ public class BCOSDriver implements Driver {
                                                                                                                 .getTransactionHash(),
                                                                                                         block
                                                                                                                 .getBlockHeader(),
-                                                                                                        receipt);
+                                                                                                        receipt,
+                                                                                                        nodeVersion);
                                                                                     }
 
                                                                                     transactionResponse
@@ -1060,6 +1061,7 @@ public class BCOSDriver implements Driver {
                                 transactionHash,
                                 blockManager,
                                 proof,
+                                nodeVersion,
                                 verifyException -> {
                                     if (Objects.nonNull(verifyException)) {
                                         callback.onResponse(verifyException, null);
