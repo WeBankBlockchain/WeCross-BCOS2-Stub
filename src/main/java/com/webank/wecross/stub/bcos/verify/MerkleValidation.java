@@ -17,14 +17,18 @@ public class MerkleValidation {
      * @throws BCOSStubException
      */
     public static void verifyTransactionReceiptProof(
-            String hash, BlockHeader blockHeader, TransactionReceipt transactionReceipt)
+            String hash,
+            BlockHeader blockHeader,
+            TransactionReceipt transactionReceipt,
+            String nodeVersion)
             throws BCOSStubException {
 
         // verify transaction
         if (!MerkleProofUtility.verifyTransactionReceipt(
                 blockHeader.getReceiptRoot(),
                 transactionReceipt,
-                transactionReceipt.getReceiptProof())) {
+                transactionReceipt.getReceiptProof(),
+                nodeVersion)) {
             throw new BCOSStubException(
                     BCOSStatusCode.TransactionReceiptProofVerifyFailed,
                     BCOSStatusCode.getStatusMessage(
@@ -63,6 +67,7 @@ public class MerkleValidation {
             String hash,
             BlockManager blockManager,
             TransactionProof transactionProof,
+            String nodeVersion,
             VerifyCallback callback) {
         blockManager.asyncGetBlock(
                 blockNumber,
@@ -81,7 +86,8 @@ public class MerkleValidation {
                     // verify transaction
                     if (!MerkleProofUtility.verifyTransactionReceipt(
                             block.getBlockHeader().getReceiptRoot(),
-                            transactionProof.getReceiptAndProof())) {
+                            transactionProof.getReceiptAndProof(),
+                            nodeVersion)) {
                         callback.onResponse(
                                 new BCOSStubException(
                                         BCOSStatusCode.TransactionReceiptProofVerifyFailed,
