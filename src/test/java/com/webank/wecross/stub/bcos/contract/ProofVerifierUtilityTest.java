@@ -93,11 +93,11 @@ public class ProofVerifierUtilityTest {
 
         assertTrue(
                 MerkleProofUtility.verifyTransactionReceipt(
-                        block.getReceiptsRoot(), receiptAndProof, null));
+                        block.getReceiptsRoot(), receiptAndProof));
 
         assertTrue(
                 MerkleProofUtility.verifyTransactionReceipt(
-                        block0.getReceiptsRoot(), receiptAndProof0, null));
+                        block0.getReceiptsRoot(), receiptAndProof0));
     }
 
     @Test
@@ -121,10 +121,10 @@ public class ProofVerifierUtilityTest {
     public void verifyTransactionReceiptWithProofTest() {
         assertTrue(
                 MerkleProofUtility.verifyTransactionReceipt(
-                        block.getReceiptsRoot(), receipt, receipt.getReceiptProof(), null));
+                        block.getReceiptsRoot(), receipt, receipt.getReceiptProof()));
 
         assertTrue(
                 MerkleProofUtility.verifyTransactionReceipt(
-                        block0.getReceiptsRoot(), receipt0, receipt0.getReceiptProof(), null));
+                        block0.getReceiptsRoot(), receipt0, receipt0.getReceiptProof()));
     }
 }
