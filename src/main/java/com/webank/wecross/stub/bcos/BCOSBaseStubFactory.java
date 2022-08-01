@@ -12,44 +12,43 @@ import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import com.webank.wecross.stub.bcos.custom.RegisterCnsHandler;
 import com.webank.wecross.stub.bcos.preparation.HubContractDeployment;
 import com.webank.wecross.stub.bcos.preparation.ProxyContractDeployment;
-import java.io.File;
-import java.io.FileWriter;
-import java.net.URL;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PrivateKey;
-import java.security.SecureRandom;
-import java.security.Security;
-import java.security.spec.ECGenParameterSpec;
-import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
-import org.fisco.bcos.web3j.crypto.Credentials;
-import org.fisco.bcos.web3j.crypto.ECKeyPair;
-import org.fisco.bcos.web3j.crypto.EncryptType;
-import org.fisco.bcos.web3j.crypto.gm.GenCredential;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.net.URL;
+import java.security.PrivateKey;
+import java.security.Security;
+import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class BCOSBaseStubFactory implements StubFactory {
     private Logger logger = LoggerFactory.getLogger(BCOSBaseStubFactory.class);
 
     private String alg = null;
     private String stubType = null;
+    private CryptoSuite cryptoSuite;
+    private BCOSAccountFactory bcosAccountFactory;
 
     private ScheduledExecutorService connectionScheduledExecutorService =
             new ScheduledThreadPoolExecutor(16, new CustomizableThreadFactory("BCOSConnection-"));
 
     public BCOSBaseStubFactory(int encryptType, String alg, String stubType) {
-        EncryptType.setEncryptType(encryptType);
         this.alg = alg;
         this.stubType = stubType;
-        logger.info(" EncryptType: {}", EncryptType.getEncryptType());
+        this.cryptoSuite = new CryptoSuite(encryptType);
+        this.bcosAccountFactory = BCOSAccountFactory.getInstance(this.cryptoSuite);
+
+        logger.info(" EncryptType: {}", this.cryptoSuite.getCryptoTypeConfig());
     }
 
     @Override
@@ -75,7 +74,7 @@ public class BCOSBaseStubFactory implements StubFactory {
 
     @Override
     public Driver newDriver() {
-        logger.info("New driver type:{}", EncryptType.encryptType);
+        logger.info("New driver type:{}", this.cryptoSuite.getCryptoTypeConfig());
 
         /** Initializes the cns service */
         AsyncCnsService asyncCnsService = new AsyncCnsService();
@@ -106,7 +105,7 @@ public class BCOSBaseStubFactory implements StubFactory {
     @Override
     public Connection newConnection(String path) {
         try {
-            logger.info("New connection: {} type:{}", path, EncryptType.encryptType);
+            logger.info("New connection: {} type:{}", path, this.cryptoSuite.getCryptoTypeConfig());
             BCOSConnection connection = BCOSConnectionFactory.build(path, "stub.toml");
 
             // check proxy contract
@@ -140,13 +139,13 @@ public class BCOSBaseStubFactory implements StubFactory {
     @Override
     public Account newAccount(Map<String, Object> properties) {
 
-        return BCOSAccountFactory.build(properties);
+        return bcosAccountFactory.build(properties);
     }
 
     public Account newAccount(String name, String path) {
         try {
-            logger.info("New account: {} type:{}", name, EncryptType.encryptType);
-            return BCOSAccountFactory.build(
+            logger.info("New account: {} type:{}", name, this.cryptoSuite.getCryptoTypeConfig());
+            return bcosAccountFactory.build(
                     name, path.startsWith("classpath") ? path : "file:" + path);
         } catch (Exception e) {
             logger.warn(" newAccount, e: ", e);
@@ -160,17 +159,9 @@ public class BCOSBaseStubFactory implements StubFactory {
             /** create KeyPair first */
             Security.addProvider(new BouncyCastleProvider());
 
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC", "BC");
-            ECGenParameterSpec ecGenParameterSpec = new ECGenParameterSpec(getAlg());
-            SecureRandom secureRandom = new SecureRandom();
-            keyPairGenerator.initialize(ecGenParameterSpec, secureRandom);
-
-            KeyPair keyPair = keyPairGenerator.generateKeyPair();
-            ECKeyPair ecKeyPair = ECKeyPair.create(keyPair);
-            Credentials credentials = GenCredential.create(ecKeyPair);
-            PrivateKey ecPrivateKey = keyPair.getPrivate();
-
-            String accountAddress = credentials.getAddress();
+            CryptoKeyPair keyPair = cryptoSuite.getKeyPairFactory().generateKeyPair();
+            PrivateKey ecPrivateKey = keyPair.keyPair.getPrivate();
+            String accountAddress = keyPair.getAddress();
 
             /** write private to file in pem format */
             String keyFile = path + "/" + accountAddress + "_" + getAlg() + ".key";
