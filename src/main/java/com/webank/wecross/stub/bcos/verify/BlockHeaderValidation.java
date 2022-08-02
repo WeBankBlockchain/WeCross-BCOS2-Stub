@@ -8,15 +8,21 @@ import com.webank.wecross.stub.ObjectMapperFactory;
 import com.webank.wecross.stub.bcos.common.BCOSBlockHeader;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.uaproof.Signer;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import org.fisco.bcos.web3j.crypto.EncryptType;
-import org.fisco.bcos.web3j.crypto.Keys;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlockHeader;
-import org.fisco.bcos.web3j.utils.Numeric;
+
+
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.crypto.keypair.ECDSAKeyPair;
+import org.fisco.bcos.sdk.model.CryptoType;
+import org.fisco.bcos.sdk.utils.Numeric;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,22 +56,24 @@ public class BlockHeaderValidation {
         if (bcosBlockHeader.getNumber() != 0 && !isSignUnique(signatureList)) {
             logger.error(
                     "Some signature in SignList is not unique, signatureList is {}",
-                    bcosBlockHeader.signatureListToString());
+                    bcosBlockHeader.getSignatureList().toString());
             throw new WeCrossException(
                     WeCrossException.ErrorCode.INTERNAL_ERROR,
                     "verifyBlockHeader fail, caused by sign is not unique.");
         }
         String blockHash = bcosBlockHeader.getHash();
-        Signer signer = Signer.newSigner(EncryptType.encryptType);
+        //Signer signer = Signer.newSigner(CryptoType.ECDSA_TYPE);
+        CryptoSuite cryptoSuite=new CryptoSuite(CryptoType.ECDSA_TYPE);
         boolean verifyFlag = false;
         boolean finalizeFlag = true;
         try {
             for (BcosBlockHeader.Signature signature : signatureList) {
                 for (String sealer : sealerList) {
-                    String address = Keys.getAddress(sealer);
+                    //String address = Keys.getAddress(sealer);
                     byte[] signData = Numeric.hexStringToByteArray(signature.getSignature());
                     byte[] hashData = Numeric.hexStringToByteArray(blockHash);
-                    verifyFlag = signer.verifyByHashData(signData, hashData, address);
+                    verifyFlag=cryptoSuite.verify(sealer,hashData,signData);
+                    //verifyFlag = signer.verifyByHashData(signData, hashData, address);
                     if (verifyFlag) break;
                 }
                 finalizeFlag = finalizeFlag && verifyFlag;
