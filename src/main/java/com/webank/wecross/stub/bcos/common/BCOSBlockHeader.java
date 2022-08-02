@@ -1,8 +1,9 @@
 package com.webank.wecross.stub.bcos.common;
 
 import com.webank.wecross.stub.BlockHeader;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
+
 import java.util.List;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlockHeader;
 
 public class BCOSBlockHeader extends BlockHeader {
     private List<String> sealerList;
