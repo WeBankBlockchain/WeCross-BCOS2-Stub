@@ -1,6 +1,5 @@
 package com.webank.wecross.stub.bcos.protocol.response;
 
-
 import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
 
@@ -9,7 +8,8 @@ public class TransactionProof {
     private TransactionWithProof.TransactionAndProof transAndProof;
     private TransactionReceiptWithProof.ReceiptAndProof receiptAndProof;
 
-    public TransactionProof() {}
+    public TransactionProof() {
+    }
 
     public TransactionProof(
             TransactionWithProof.TransactionAndProof transAndProof,

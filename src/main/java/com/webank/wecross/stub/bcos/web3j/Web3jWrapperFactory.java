@@ -2,9 +2,9 @@ package com.webank.wecross.stub.bcos.web3j;
 
 import com.webank.wecross.stub.bcos.common.FeatureSupport;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
-import org.fisco.bcos.fisco.EnumNodeVersion;
-import org.fisco.bcos.web3j.protocol.Web3j;
-import org.fisco.bcos.web3j.protocol.core.methods.response.NodeVersion;
+import org.fisco.bcos.sdk.channel.model.EnumNodeVersion;
+import org.fisco.bcos.sdk.client.Client;
+import org.fisco.bcos.sdk.model.NodeVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,17 +12,13 @@ public class Web3jWrapperFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(Web3jWrapperFactory.class);
 
-    /**
-     * @param bcosStubConfig
-     * @return
-     */
     public static AbstractWeb3jWrapper createWeb3jWrapperInstance(BCOSStubConfig bcosStubConfig)
             throws Exception {
 
         logger.info("BCOSStubConfig: {}", bcosStubConfig);
 
-        Web3j web3j = Web3jUtility.initWeb3j(bcosStubConfig.getChannelService());
-        NodeVersion.Version nodeVersion = web3j.getNodeVersion().send().getNodeVersion();
+        Client client = Web3jUtility.initClient(bcosStubConfig.getChannelService());
+        NodeVersion.ClientVersion nodeVersion = client.getNodeVersion().getNodeVersion();
         logger.info("NodeVersion: {}", nodeVersion);
         checkConfig(nodeVersion, bcosStubConfig.getType());
 
@@ -33,40 +29,29 @@ public class Web3jWrapperFactory {
                     "Unsupported BCOS version, version: " + nodeVersion);
         }
 
-        AbstractWeb3jWrapper web3jWrapper = createWeb3jWrapperInstance(version, web3j);
+        AbstractWeb3jWrapper web3jWrapper = createWeb3jWrapperInstance(version, client);
         web3jWrapper.setVersion(nodeVersion.getSupportedVersion());
 
         return web3jWrapper;
     }
 
-    /**
-     * @param version
-     * @parweb3j
-     * @return
-     */
     private static AbstractWeb3jWrapper createWeb3jWrapperInstance(
-            EnumNodeVersion.Version version, Web3j web3j) {
+            EnumNodeVersion.Version version, Client client) {
 
         if (FeatureSupport.isSupportGetBlockHeader(version)) {
             logger.info("new Web3jWrapperImplV26");
-            return new Web3jWrapperImplV26(web3j);
+            return new Web3jWrapperImplV26(client);
         } else if (FeatureSupport.isSupportGetTxProof(version)) {
             logger.info("new Web3jWrapperImplV24");
-            return new Web3jWrapperImplV24(web3j);
+            return new Web3jWrapperImplV24(client);
         }
 
         logger.info("new Web3jWrapperImplV20");
         // default version
-        return new Web3jWrapperImplV20(web3j);
+        return new Web3jWrapperImplV20(client);
     }
 
-    /**
-     * Check the stub config type
-     *
-     * @param version
-     * @param stubType
-     */
-    private static void checkConfig(NodeVersion.Version version, String stubType) throws Exception {
+    private static void checkConfig(NodeVersion.ClientVersion version, String stubType) throws Exception {
         boolean isGMStub = stubType.toLowerCase().contains("gm");
         boolean isGMNode = version.getVersion().toLowerCase().contains("gm");
 

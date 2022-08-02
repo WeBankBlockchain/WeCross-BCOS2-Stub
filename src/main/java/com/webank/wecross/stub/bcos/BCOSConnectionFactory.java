@@ -6,13 +6,15 @@ import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.preparation.CnsService;
 import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperFactory;
-import java.util.Objects;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
+import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
+
+import java.util.Objects;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class BCOSConnectionFactory {
     private static final Logger logger = LoggerFactory.getLogger(BCOSConnectionFactory.class);
@@ -23,11 +25,12 @@ public class BCOSConnectionFactory {
      * @return
      * @throws Exception
      */
-    public static BCOSConnection build(
-            BCOSStubConfig bcosStubConfig, AbstractWeb3jWrapper web3jWrapper) throws Exception {
+    public static BCOSConnection build(BCOSStubConfig bcosStubConfig,
+                                       AbstractWeb3jWrapper web3jWrapper,
+                                       CryptoSuite cryptoSuite) throws Exception {
         ScheduledExecutorService scheduledExecutorService =
                 new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
-        return build(bcosStubConfig, web3jWrapper, scheduledExecutorService);
+        return build(bcosStubConfig, web3jWrapper, scheduledExecutorService, cryptoSuite);
     }
 
     /**
@@ -37,15 +40,14 @@ public class BCOSConnectionFactory {
      * @return
      * @throws Exception
      */
-    public static BCOSConnection build(
-            BCOSStubConfig bcosStubConfig,
-            AbstractWeb3jWrapper web3jWrapper,
-            ScheduledExecutorService executorService)
-            throws Exception {
+    public static BCOSConnection build(BCOSStubConfig bcosStubConfig,
+                                       AbstractWeb3jWrapper web3jWrapper,
+                                       ScheduledExecutorService executorService,
+                                       CryptoSuite cryptoSuite) throws Exception {
 
         logger.info(" bcosStubConfig: {}, version: {} ", bcosStubConfig, web3jWrapper.getVersion());
 
-        BCOSConnection bcosConnection = new BCOSConnection(web3jWrapper, executorService);
+        BCOSConnection bcosConnection = new BCOSConnection(web3jWrapper, executorService, cryptoSuite);
         bcosConnection.setResourceInfoList(bcosStubConfig.convertToResourceInfos());
 
         bcosConnection.addProperty(
@@ -71,15 +73,18 @@ public class BCOSConnectionFactory {
         return bcosConnection;
     }
 
-    public static BCOSConnection build(String stubConfigPath, String configName) throws Exception {
+    public static BCOSConnection build(String stubConfigPath,
+                                       String configName,
+                                       CryptoSuite cryptoSuite) throws Exception {
         ScheduledExecutorService scheduledExecutorService =
                 new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
-        return build(stubConfigPath, configName, scheduledExecutorService);
+        return build(stubConfigPath, configName, scheduledExecutorService, cryptoSuite);
     }
 
-    public static BCOSConnection build(
-            String stubConfigPath, String configName, ScheduledExecutorService executorService)
-            throws Exception {
+    public static BCOSConnection build(String stubConfigPath,
+                                       String configName,
+                                       ScheduledExecutorService executorService,
+                                       CryptoSuite cryptoSuite) throws Exception {
         logger.info(" stubConfigPath: {} ", stubConfigPath);
 
         BCOSStubConfigParser bcosStubConfigParser =
@@ -89,6 +94,6 @@ public class BCOSConnectionFactory {
         AbstractWeb3jWrapper web3jWrapper =
                 Web3jWrapperFactory.createWeb3jWrapperInstance(bcosStubConfig);
 
-        return build(bcosStubConfig, web3jWrapper, executorService);
+        return build(bcosStubConfig, web3jWrapper, executorService, cryptoSuite);
     }
 }

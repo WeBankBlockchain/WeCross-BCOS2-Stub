@@ -15,6 +15,23 @@ import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionPair;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
+import org.fisco.bcos.sdk.abi.FunctionEncoder;
+import org.fisco.bcos.sdk.abi.datatypes.Function;
+import org.fisco.bcos.sdk.client.protocol.model.JsonTransactionResponse;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
+import org.fisco.bcos.sdk.client.protocol.response.Call;
+import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
+import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
+import org.fisco.bcos.sdk.model.callback.TransactionCallback;
+import org.fisco.bcos.sdk.utils.ObjectMapperFactory;
+import org.fisco.bcos.web3j.protocol.channel.StatusCode;
+import org.fisco.bcos.web3j.tx.exceptions.ContractCallException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -26,23 +43,10 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import org.fisco.bcos.channel.client.TransactionSucCallback;
-import org.fisco.bcos.web3j.abi.FunctionEncoder;
-import org.fisco.bcos.web3j.abi.datatypes.Function;
-import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
-import org.fisco.bcos.web3j.protocol.channel.StatusCode;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlockHeader;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Transaction;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof;
-import org.fisco.bcos.web3j.tx.exceptions.ContractCallException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-/** The implementation of connection for BCOS */
+/**
+ * The implementation of connection for BCOS
+ */
 public class BCOSConnection implements Connection {
 
     private static final Logger logger = LoggerFactory.getLogger(BCOSConnection.class);
@@ -61,8 +65,12 @@ public class BCOSConnection implements Connection {
 
     private Map<String, String> properties = new HashMap<>();
 
+    private FunctionEncoder functionEncoder;
+
     public BCOSConnection(
-            AbstractWeb3jWrapper web3jWrapper, ScheduledExecutorService scheduledExecutorService) {
+            AbstractWeb3jWrapper web3jWrapper,
+            ScheduledExecutorService scheduledExecutorService,
+            CryptoSuite cryptoSuite) {
         this.web3jWrapper = web3jWrapper;
         this.scheduledExecutorService = scheduledExecutorService;
         this.objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
@@ -75,6 +83,7 @@ public class BCOSConnection implements Connection {
                 10000,
                 30000,
                 TimeUnit.MILLISECONDS);
+        this.functionEncoder = new FunctionEncoder(cryptoSuite);
     }
 
     private void noteOnResourcesChange() {
@@ -154,7 +163,9 @@ public class BCOSConnection implements Connection {
         this.properties.put(key, value);
     }
 
-    /** list paths stored in proxy contract */
+    /**
+     * list paths stored in proxy contract
+     */
     public String[] listPaths() {
         Function function =
                 FunctionUtility.newDefaultFunction(BCOSConstant.PROXY_METHOD_GETPATHS, null);
@@ -164,7 +175,7 @@ public class BCOSConnection implements Connection {
                     web3jWrapper.call(
                             BCOSConstant.DEFAULT_ADDRESS,
                             address,
-                            FunctionEncoder.encode(function));
+                            functionEncoder.encode(function));
 
             if (logger.isDebugEnabled()) {
                 logger.debug(
@@ -306,18 +317,18 @@ public class BCOSConnection implements Connection {
 
             web3jWrapper.sendTransaction(
                     transaction.getData(),
-                    new TransactionSucCallback() {
+                    new TransactionCallback() {
                         @Override
                         public void onResponse(TransactionReceipt receipt) {
                             if (Objects.isNull(receipt)
                                     || Objects.isNull(receipt.getTransactionHash())
                                     || "".equals(receipt.getTransactionHash())
                                     || (new BigInteger(
-                                                            receipt.getTransactionHash()
-                                                                    .substring(2),
-                                                            16)
-                                                    .compareTo(BigInteger.ZERO)
-                                            == 0)) {
+                                    receipt.getTransactionHash()
+                                            .substring(2),
+                                    16)
+                                    .compareTo(BigInteger.ZERO)
+                                    == 0)) {
                                 response.setErrorCode(BCOSStatusCode.TransactionReceiptNotExist);
                                 response.setErrorMessage(
                                         BCOSStatusCode.getStatusMessage(
@@ -342,13 +353,13 @@ public class BCOSConnection implements Connection {
                             // trigger resources sync after cns updated
                             if (transaction.getTransactionRequest() != null
                                     && (transaction
-                                                    .getTransactionRequest()
-                                                    .getMethod()
-                                                    .equals(BCOSConstant.PROXY_METHOD_DEPLOY)
-                                            || transaction
-                                                    .getTransactionRequest()
-                                                    .getMethod()
-                                                    .equals(BCOSConstant.PPROXY_METHOD_REGISTER))) {
+                                    .getTransactionRequest()
+                                    .getMethod()
+                                    .equals(BCOSConstant.PROXY_METHOD_DEPLOY)
+                                    || transaction
+                                    .getTransactionRequest()
+                                    .getMethod()
+                                    .equals(BCOSConstant.PPROXY_METHOD_REGISTER))) {
 
                                 scheduledExecutorService.schedule(
                                         () -> noteOnResourcesChange(), 1, TimeUnit.MILLISECONDS);
@@ -391,17 +402,17 @@ public class BCOSConnection implements Connection {
         Response response = new Response();
         try {
             // get transaction and transaction merkle proof
-            TransactionWithProof.TransAndProof transAndProof =
+            TransactionWithProof.TransactionAndProof transAndProof =
                     web3jWrapper.getTransactionByHashWithProof(txHash);
 
             if (Objects.isNull(transAndProof)
                     || Objects.isNull(transAndProof.getTransaction())
                     || Objects.isNull(transAndProof.getTransaction().getHash())
                     || transAndProof
-                            .getTransaction()
-                            .getHash()
-                            .equals(
-                                    "0x0000000000000000000000000000000000000000000000000000000000000000")) {
+                    .getTransaction()
+                    .getHash()
+                    .equals(
+                            "0x0000000000000000000000000000000000000000000000000000000000000000")) {
                 response.setErrorCode(BCOSStatusCode.TransactionReceiptProofNotExist);
                 response.setErrorMessage("Transaction proof not found, tx hash: " + txHash);
                 callback.onResponse(response);
@@ -411,9 +422,9 @@ public class BCOSConnection implements Connection {
             TransactionReceiptWithProof.ReceiptAndProof receiptAndProof =
                     web3jWrapper.getTransactionReceiptByHashWithProof(txHash);
             if (Objects.isNull(receiptAndProof)
-                    || Objects.isNull(receiptAndProof.getTransactionReceipt())
+                    || Objects.isNull(receiptAndProof.getReceipt())
                     || Objects.isNull(
-                            receiptAndProof.getTransactionReceipt().getTransactionHash())) {
+                    receiptAndProof.getReceipt().getTransactionHash())) {
                 response.setErrorCode(BCOSStatusCode.TransactionReceiptProofNotExist);
                 response.setErrorMessage("Transaction proof not found, tx hash: " + txHash);
                 callback.onResponse(response);
@@ -452,7 +463,7 @@ public class BCOSConnection implements Connection {
         String txHash = new String(request.getData(), StandardCharsets.UTF_8);
         Response response = new Response();
         try {
-            Transaction transaction = web3jWrapper.getTransaction(txHash);
+            JsonTransactionResponse transaction = web3jWrapper.getTransaction(txHash);
             TransactionReceipt transactionReceipt = web3jWrapper.getTransactionReceipt(txHash);
 
             if (Objects.isNull(transaction)
