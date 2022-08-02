@@ -2,13 +2,14 @@ package com.webank.wecross.stub.bcos.contract;
 
 import static junit.framework.TestCase.assertTrue;
 
+import com.webank.wecross.stub.ObjectMapperFactory;
+import com.webank.wecross.stub.bcos.common.MerkleProofUtility;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
 import java.io.IOException;
-import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof;
-import org.fisco.bcos.web3j.tx.MerkleProofUtility;
+
+import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
+import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,12 +37,12 @@ public class ProofVerifierUtilityTest {
 
     private BcosBlock.Block block = null;
     private TransactionReceipt receipt = null;
-    private TransactionWithProof.TransAndProof transAndProof = null;
+    private TransactionWithProof.TransactionAndProof transAndProof = null;
     private TransactionReceiptWithProof.ReceiptAndProof receiptAndProof = null;
 
     private BcosBlock.Block block0 = null;
     private TransactionReceipt receipt0 = null;
-    private TransactionWithProof.TransAndProof transAndProof0 = null;
+    private TransactionWithProof.TransactionAndProof transAndProof0 = null;
     private TransactionReceiptWithProof.ReceiptAndProof receiptAndProof0 = null;
 
     @Before
@@ -50,7 +51,7 @@ public class ProofVerifierUtilityTest {
         transAndProof =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(
-                                transactionAndProofJson, TransactionWithProof.TransAndProof.class);
+                                transactionAndProofJson, TransactionWithProof.TransactionAndProof.class);
         receiptAndProof =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(
@@ -65,7 +66,7 @@ public class ProofVerifierUtilityTest {
         transAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(
-                                transactionAndProofJson0, TransactionWithProof.TransAndProof.class);
+                                transactionAndProofJson0, TransactionWithProof.TransactionAndProof.class);
         receiptAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(

@@ -4,10 +4,11 @@ import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.BCOSStubException;
+import com.webank.wecross.stub.bcos.common.MerkleProofUtility;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
+
 import java.util.Objects;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.fisco.bcos.web3j.tx.MerkleProofUtility;
 
 public class MerkleValidation {
 
