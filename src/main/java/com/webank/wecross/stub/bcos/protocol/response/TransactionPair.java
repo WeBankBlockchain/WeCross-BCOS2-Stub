@@ -1,15 +1,16 @@
 package com.webank.wecross.stub.bcos.protocol.response;
 
-import org.fisco.bcos.web3j.protocol.core.methods.response.Transaction;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.fisco.bcos.sdk.client.protocol.model.JsonTransactionResponse;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
 
 public class TransactionPair {
     private TransactionReceipt receipt;
-    private Transaction transaction;
+    private JsonTransactionResponse transaction;
 
-    public TransactionPair() {}
+    public TransactionPair() {
+    }
 
-    public TransactionPair(Transaction transaction, TransactionReceipt receipt) {
+    public TransactionPair(JsonTransactionResponse transaction, TransactionReceipt receipt) {
         this.receipt = receipt;
         this.transaction = transaction;
     }
@@ -22,11 +23,11 @@ public class TransactionPair {
         this.receipt = receipt;
     }
 
-    public Transaction getTransaction() {
+    public JsonTransactionResponse getTransaction() {
         return transaction;
     }
 
-    public void setTransaction(Transaction transaction) {
+    public void setTransaction(JsonTransactionResponse transaction) {
         this.transaction = transaction;
     }
 

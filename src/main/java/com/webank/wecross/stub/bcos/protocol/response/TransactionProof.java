@@ -1,23 +1,24 @@
 package com.webank.wecross.stub.bcos.protocol.response;
 
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof;
+import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
+import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
 
 public class TransactionProof {
 
-    private TransactionWithProof.TransAndProof transAndProof;
+    private TransactionWithProof.TransactionAndProof transAndProof;
     private TransactionReceiptWithProof.ReceiptAndProof receiptAndProof;
 
-    public TransactionProof() {}
+    public TransactionProof() {
+    }
 
     public TransactionProof(
-            TransactionWithProof.TransAndProof transAndProof,
+            TransactionWithProof.TransactionAndProof transAndProof,
             TransactionReceiptWithProof.ReceiptAndProof receiptAndProof) {
         this.transAndProof = transAndProof;
         this.receiptAndProof = receiptAndProof;
     }
 
-    public void setTransAndProof(TransactionWithProof.TransAndProof transAndProof) {
+    public void setTransAndProof(TransactionWithProof.TransactionAndProof transAndProof) {
         this.transAndProof = transAndProof;
     }
 
@@ -25,7 +26,7 @@ public class TransactionProof {
         this.receiptAndProof = receiptAndProof;
     }
 
-    public TransactionWithProof.TransAndProof getTransAndProof() {
+    public TransactionWithProof.TransactionAndProof getTransAndProof() {
         return transAndProof;
     }
 

@@ -1,37 +1,32 @@
 package com.webank.wecross.stub.bcos.web3j;
 
-import java.io.IOException;
-import org.fisco.bcos.channel.client.TransactionSucCallback;
-import org.fisco.bcos.web3j.protocol.Web3j;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof.ReceiptAndProof;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof;
+import org.fisco.bcos.sdk.client.Client;
+import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
+import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
+import org.fisco.bcos.sdk.model.callback.TransactionCallback;
 
 public class Web3jWrapperImplV24 extends Web3jWrapperImplV20 {
 
-    public Web3jWrapperImplV24(Web3j web3j) {
-        super(web3j);
+    public Web3jWrapperImplV24(Client client) {
+        super(client);
     }
 
     @Override
-    public void sendTransaction(String signedTransactionData, TransactionSucCallback callback)
-            throws IOException {
-        getWeb3j().sendRawTransactionAndGetProof(signedTransactionData, callback);
+    public void sendTransaction(String signedTransactionData, TransactionCallback callback){
+        getClient().sendRawTransactionAndGetReceiptAsync(signedTransactionData, callback);
     }
 
     @Override
-    public ReceiptAndProof getTransactionReceiptByHashWithProof(String transactionHash)
-            throws IOException {
+    public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(String transactionHash){
         TransactionReceiptWithProof transactionReceiptWithProof =
-                getWeb3j().getTransactionReceiptByHashWithProof(transactionHash).send();
+                getClient().getTransactionReceiptByHashWithProof(transactionHash);
         return transactionReceiptWithProof.getResult();
     }
 
     @Override
-    public TransactionWithProof.TransAndProof getTransactionByHashWithProof(String transactionHash)
-            throws IOException {
+    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(String transactionHash){
         TransactionWithProof transactionWithProof =
-                getWeb3j().getTransactionByHashWithProof(transactionHash).send();
+                getClient().getTransactionByHashWithProof(transactionHash);
         return transactionWithProof.getResult();
     }
 }

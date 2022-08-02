@@ -1,75 +1,71 @@
 package com.webank.wecross.stub.bcos.web3j;
 
-import java.io.IOException;
+import org.fisco.bcos.sdk.client.Client;
+import org.fisco.bcos.sdk.client.RespCallback;
+import org.fisco.bcos.sdk.client.protocol.model.JsonTransactionResponse;
+import org.fisco.bcos.sdk.client.protocol.request.Transaction;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
+import org.fisco.bcos.sdk.client.protocol.response.BcosTransaction;
+import org.fisco.bcos.sdk.client.protocol.response.BcosTransactionReceipt;
+import org.fisco.bcos.sdk.client.protocol.response.BlockNumber;
+import org.fisco.bcos.sdk.client.protocol.response.Call;
+import org.fisco.bcos.sdk.client.protocol.response.SendTransaction;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
+import org.fisco.bcos.sdk.model.callback.TransactionCallback;
+
 import java.math.BigInteger;
-import org.fisco.bcos.channel.client.TransactionSucCallback;
-import org.fisco.bcos.web3j.protocol.Web3j;
-import org.fisco.bcos.web3j.protocol.core.methods.request.Transaction;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosTransaction;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosTransactionReceipt;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BlockNumber;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 
 public abstract class AbstractWeb3jWrapper implements Web3jWrapper {
 
-    private Web3j web3j;
+    private Client client;
     private String version;
 
-    public AbstractWeb3jWrapper(Web3j web3j) {
-        this.web3j = web3j;
+    public AbstractWeb3jWrapper(Client client) {
+        this.client = client;
     }
 
     @Override
-    public BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException {
-        BcosBlock bcosBlock = web3j.getBlockByNumber(BigInteger.valueOf(blockNumber), false).send();
+    public BcosBlock.Block getBlockByNumber(long blockNumber) {
+        BcosBlock bcosBlock = client.getBlockByNumber(BigInteger.valueOf(blockNumber), false);
         return bcosBlock.getResult();
     }
 
     @Override
-    public BigInteger getBlockNumber() throws IOException {
-        BlockNumber blockNumber = web3j.getBlockNumber().send();
+    public BigInteger getBlockNumber() {
+        BlockNumber blockNumber = client.getBlockNumber();
         return blockNumber.getBlockNumber();
     }
 
     @Override
-    public void sendTransaction(String signedTransactionData, TransactionSucCallback callback)
-            throws IOException {
-        web3j.sendRawTransaction(signedTransactionData, callback);
+    public void sendTransaction(String signedTransactionData, TransactionCallback callback) {
+        client.sendRawTransactionAndGetReceiptAsync(signedTransactionData, callback);
     }
 
     @Override
-    public Call.CallOutput call(String accountAddress, String contractAddress, String data)
-            throws IOException {
-        Call call =
-                web3j.call(
-                                Transaction.createEthCallTransaction(
-                                        accountAddress, contractAddress, data))
-                        .send();
-        return call.getResult();
-    }
-
-    @Override
-    public TransactionReceipt getTransactionReceipt(String transactionHash) throws IOException {
-        BcosTransactionReceipt bcosTransactionReceipt =
-                web3j.getTransactionReceipt(transactionHash).send();
+    public TransactionReceipt getTransactionReceipt(String transactionHash) {
+        BcosTransactionReceipt bcosTransactionReceipt = client.getTransactionReceipt(transactionHash);
         return bcosTransactionReceipt.getResult();
     }
 
     @Override
-    public org.fisco.bcos.web3j.protocol.core.methods.response.Transaction getTransaction(
-            String transactionHash) throws IOException {
-        BcosTransaction bcosTransaction = web3j.getTransactionByHash(transactionHash).send();
+    public JsonTransactionResponse getTransaction(String transactionHash){
+        BcosTransaction bcosTransaction = client.getTransactionByHash(transactionHash);
         return bcosTransaction.getResult();
     }
 
-    public void setWeb3j(Web3j web3j) {
-        this.web3j = web3j;
+    @Override
+    public Call.CallOutput call(String accountAddress, String contractAddress, String data) {
+        Transaction transaction = new Transaction(accountAddress, contractAddress, data);
+        Call call = client.call(transaction);
+        return call.getResult();
     }
 
-    public Web3j getWeb3j() {
-        return web3j;
+    public Client getClient() {
+        return client;
+    }
+
+    public void setClient(Client client) {
+        this.client = client;
     }
 
     public String getVersion() {

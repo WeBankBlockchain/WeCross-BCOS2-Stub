@@ -1,35 +1,35 @@
 package com.webank.wecross.stub.bcos.web3j;
 
-import java.io.IOException;
+import org.fisco.bcos.sdk.client.RespCallback;
+import org.fisco.bcos.sdk.client.protocol.model.JsonTransactionResponse;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
+import org.fisco.bcos.sdk.client.protocol.response.Call;
+import org.fisco.bcos.sdk.client.protocol.response.SendTransaction;
+import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
+import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
+import org.fisco.bcos.sdk.model.callback.TransactionCallback;
+
 import java.math.BigInteger;
-import org.fisco.bcos.channel.client.TransactionSucCallback;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlockHeader;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Transaction;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof.ReceiptAndProof;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof.TransAndProof;
 
 /** Wrapper interface for JavaSDK */
 public interface Web3jWrapper {
-    BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException;
+    BcosBlock.Block getBlockByNumber(long blockNumber);
 
-    BcosBlockHeader.BlockHeader getBlockHeaderByNumber(long blockNumber) throws IOException;
+    BcosBlockHeader.BlockHeader getBlockHeaderByNumber(long blockNumber);
 
-    BigInteger getBlockNumber() throws IOException;
+    BigInteger getBlockNumber();
 
-    void sendTransaction(String signedTransactionData, TransactionSucCallback callback)
-            throws IOException;
+    void sendTransaction(String signedTransactionData, TransactionCallback callback);
 
-    ReceiptAndProof getTransactionReceiptByHashWithProof(String transactionHash) throws IOException;
+    TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(String transactionHash);
 
-    TransAndProof getTransactionByHashWithProof(String transactionHash) throws IOException;
+    TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(String transactionHash);
 
-    TransactionReceipt getTransactionReceipt(String transactionHash) throws IOException;
+    TransactionReceipt getTransactionReceipt(String transactionHash);
 
-    Transaction getTransaction(String transactionHash) throws IOException;
+    JsonTransactionResponse getTransaction(String transactionHash);
 
-    Call.CallOutput call(String accountAddress, String contractAddress, String data)
-            throws IOException;
+    Call.CallOutput call(String accountAddress, String contractAddress, String data);
 }

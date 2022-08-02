@@ -3,9 +3,10 @@ package com.webank.wecross.stub.bcos.web3j;
 import com.webank.wecross.stub.Block;
 import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.bcos.contract.BlockUtility;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
+
 import java.io.IOException;
 import java.math.BigInteger;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 
 public class Web3jBlockManager implements BlockManager {
     private Web3jWrapper web3jWrapper;
@@ -15,24 +16,22 @@ public class Web3jBlockManager implements BlockManager {
     }
 
     public long getBlockNumber() {
-        try {
-            BigInteger blockNumber = web3jWrapper.getBlockNumber();
-            return blockNumber.longValue();
-        } catch (IOException e) {
-            return -1;
-        }
+        BigInteger blockNumber = web3jWrapper.getBlockNumber();
+        return blockNumber.longValue();
     }
 
-    public Block getBlock(long l) throws IOException {
-        BcosBlock.Block block = web3jWrapper.getBlockByNumber(l);
+    public Block getBlock(long blockNumber) throws IOException {
+        BcosBlock.Block block = web3jWrapper.getBlockByNumber(blockNumber);
         return BlockUtility.convertToBlock(block, false);
     }
 
     @Override
-    public void start() {}
+    public void start() {
+    }
 
     @Override
-    public void stop() {}
+    public void stop() {
+    }
 
     @Override
     public void asyncGetBlockNumber(GetBlockNumberCallback callback) {
