@@ -1360,7 +1360,7 @@ public class BCOSDriver implements Driver {
             callback.onResponse(new Exception("Command not found, command: " + command), null);
             return;
         }
-        commandHandler.handle(path, args, account, blockManager, connection, callback);
+        commandHandler.handle(path, args, account, blockManager, connection, callback, cryptoSuite);
     }
 
     @Override

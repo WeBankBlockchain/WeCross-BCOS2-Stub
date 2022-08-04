@@ -49,13 +49,13 @@ public class BCOSConnectionFactory {
             bcosConnection.addProperty(BCOSConstant.BCOS_NODE_VERSION, web3jWrapper.getVersion());
         }
 
-        CnsInfo proxyCnsInfo = CnsService.queryProxyCnsInfo(web3jWrapper);
+        CnsInfo proxyCnsInfo = CnsService.queryProxyCnsInfo(web3jWrapper, cryptoSuite);
         if (Objects.nonNull(proxyCnsInfo)) {
             bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_NAME, proxyCnsInfo.getAddress());
             bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_ABI, proxyCnsInfo.getAbi());
         }
 
-        CnsInfo hubCnsInfo = CnsService.queryHubCnsInfo(web3jWrapper);
+        CnsInfo hubCnsInfo = CnsService.queryHubCnsInfo(web3jWrapper, cryptoSuite);
         if (Objects.nonNull(hubCnsInfo)) {
             bcosConnection.addProperty(BCOSConstant.BCOS_HUB_NAME, hubCnsInfo.getAddress());
         }
