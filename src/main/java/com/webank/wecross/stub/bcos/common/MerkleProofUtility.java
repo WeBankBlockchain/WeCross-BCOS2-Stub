@@ -81,13 +81,13 @@ public class MerkleProofUtility {
                 RlpEncoder.encode(RlpString.create(transactionReceipt.getTransactionIndex()));
 
         if (!transactionReceipt.getGasUsed().startsWith("0x")) {
-            transactionReceipt.setGasUsed("0x" + transactionReceipt.getGasUsed().toString(16));
+            transactionReceipt.setGasUsed("0x" + transactionReceipt.getGasUsed());
         }
 
         if (classVersion != null && classVersion.getMinor() >= 9) {
             if (!transactionReceipt.getRemainGas().startsWith("0x")) {
                 transactionReceipt.setRemainGas(
-                        "0x" + transactionReceipt.getRemainGas();
+                        "0x" + transactionReceipt.getRemainGas());
             }
         }
 

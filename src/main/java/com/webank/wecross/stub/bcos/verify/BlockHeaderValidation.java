@@ -52,18 +52,18 @@ public class BlockHeaderValidation {
                     "verifyBlockHeader fail, caused by sign is not unique.");
         }
         String blockHash = bcosBlockHeader.getHash();
-        //Signer signer = Signer.newSigner(CryptoType.ECDSA_TYPE);
-        CryptoSuite cryptoSuite=new CryptoSuite(CryptoType.ECDSA_TYPE);
+        Signer signer = Signer.newSigner(CryptoType.ECDSA_TYPE);
+        //CryptoSuite cryptoSuite=new CryptoSuite(CryptoType.ECDSA_TYPE);
         boolean verifyFlag = false;
         boolean finalizeFlag = true;
         try {
             for (BcosBlockHeader.Signature signature : signatureList) {
                 for (String sealer : sealerList) {
-                    //String address = Keys.getAddress(sealer);
+                    String address = Keys.getAddress(sealer);
                     byte[] signData = Numeric.hexStringToByteArray(signature.getSignature());
                     byte[] hashData = Numeric.hexStringToByteArray(blockHash);
-                    verifyFlag=cryptoSuite.verify(sealer,hashData,signData);
-                    //verifyFlag = signer.verifyByHashData(signData, hashData, address);
+                    //verifyFlag=cryptoSuite.verify(sealer,hashData,signData);
+                    verifyFlag = signer.verifyByHashData(signData, hashData, address);
                     if (verifyFlag) break;
                 }
                 finalizeFlag = finalizeFlag && verifyFlag;
