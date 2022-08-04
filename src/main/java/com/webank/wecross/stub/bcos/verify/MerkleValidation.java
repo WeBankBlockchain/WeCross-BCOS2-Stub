@@ -6,6 +6,7 @@ import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.BCOSStubException;
 import com.webank.wecross.stub.bcos.common.MerkleProofUtility;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 
 import java.util.Objects;
@@ -21,7 +22,7 @@ public class MerkleValidation {
             String hash,
             BlockHeader blockHeader,
             TransactionReceipt transactionReceipt,
-            String nodeVersion)
+            String nodeVersion, CryptoSuite cryptoSuite)
             throws BCOSStubException {
 
         // verify transaction
@@ -29,7 +30,7 @@ public class MerkleValidation {
                 blockHeader.getReceiptRoot(),
                 transactionReceipt,
                 transactionReceipt.getReceiptProof(),
-                nodeVersion)) {
+                nodeVersion,cryptoSuite)) {
             throw new BCOSStubException(
                     BCOSStatusCode.TransactionReceiptProofVerifyFailed,
                     BCOSStatusCode.getStatusMessage(
@@ -69,7 +70,7 @@ public class MerkleValidation {
             BlockManager blockManager,
             TransactionProof transactionProof,
             String nodeVersion,
-            VerifyCallback callback) {
+            VerifyCallback callback,CryptoSuite cryptoSuite) {
         blockManager.asyncGetBlock(
                 blockNumber,
                 (blockHeaderException, block) -> {
@@ -88,7 +89,7 @@ public class MerkleValidation {
                     if (!MerkleProofUtility.verifyTransactionReceipt(
                             block.getBlockHeader().getReceiptRoot(),
                             transactionProof.getReceiptAndProof(),
-                            nodeVersion)) {
+                            nodeVersion,cryptoSuite)) {
                         callback.onResponse(
                                 new BCOSStubException(
                                         BCOSStatusCode.TransactionReceiptProofVerifyFailed,
@@ -103,7 +104,7 @@ public class MerkleValidation {
                     // verify transaction
                     if (!MerkleProofUtility.verifyTransaction(
                             block.getBlockHeader().getTransactionRoot(),
-                            transactionProof.getTransAndProof())) {
+                            transactionProof.getTransAndProof(),cryptoSuite)) {
 
                         callback.onResponse(
                                 new BCOSStubException(

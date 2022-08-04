@@ -8,6 +8,11 @@ import java.util.List;
 import java.util.Objects;
 
 import org.fisco.bcos.sdk.abi.datatypes.Function;
+import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple2;
+import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple3;
+import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple4;
+import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple6;
+import org.fisco.bcos.sdk.abi.datatypes.Function;
 import org.fisco.bcos.sdk.utils.Numeric;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.FunctionReturnDecoder;

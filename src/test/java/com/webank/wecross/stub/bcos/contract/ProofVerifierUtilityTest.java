@@ -9,6 +9,7 @@ import java.io.IOException;
 
 import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,7 +45,7 @@ public class ProofVerifierUtilityTest {
     private TransactionReceipt receipt0 = null;
     private TransactionWithProof.TransactionAndProof transAndProof0 = null;
     private TransactionReceiptWithProof.ReceiptAndProof receiptAndProof0 = null;
-
+    private CryptoSuite cryptoSuite=new CryptoSuite(0);
     @Before
     public void init() throws IOException {
         block = ObjectMapperFactory.getObjectMapper().readValue(blockJson, BcosBlock.Block.class);
@@ -83,10 +84,10 @@ public class ProofVerifierUtilityTest {
     @Test
     public void verifyTransactionTest() {
         assertTrue(
-                MerkleProofUtility.verifyTransaction(block.getTransactionsRoot(), transAndProof));
+                MerkleProofUtility.verifyTransaction(block.getTransactionsRoot(), transAndProof,cryptoSuite));
 
         assertTrue(
-                MerkleProofUtility.verifyTransaction(block0.getTransactionsRoot(), transAndProof0));
+                MerkleProofUtility.verifyTransaction(block0.getTransactionsRoot(), transAndProof0,cryptoSuite));
     }
 
     @Test
@@ -94,11 +95,11 @@ public class ProofVerifierUtilityTest {
 
         assertTrue(
                 MerkleProofUtility.verifyTransactionReceipt(
-                        block.getReceiptsRoot(), receiptAndProof, null));
+                        block.getReceiptsRoot(), receiptAndProof, null,cryptoSuite));
 
         assertTrue(
                 MerkleProofUtility.verifyTransactionReceipt(
-                        block0.getReceiptsRoot(), receiptAndProof0, null));
+                        block0.getReceiptsRoot(), receiptAndProof0, null,cryptoSuite));
     }
 
     @Test
@@ -122,10 +123,10 @@ public class ProofVerifierUtilityTest {
     public void verifyTransactionReceiptWithProofTest() {
         assertTrue(
                 MerkleProofUtility.verifyTransactionReceipt(
-                        block.getReceiptsRoot(), receipt, receipt.getReceiptProof(), null));
+                        block.getReceiptsRoot(), receipt, receipt.getReceiptProof(), null,cryptoSuite));
 
         assertTrue(
                 MerkleProofUtility.verifyTransactionReceipt(
-                        block0.getReceiptsRoot(), receipt0, receipt0.getReceiptProof(), null));
+                        block0.getReceiptsRoot(), receipt0, receipt0.getReceiptProof(), null,cryptoSuite));
     }
 }

@@ -1,6 +1,8 @@
 package com.webank.wecross.stub.bcos.contract;
 
 import java.io.IOException;
+
+import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple2;
 import org.fisco.bcos.web3j.abi.TypeDecoder;
 import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
 import org.fisco.bcos.web3j.precompile.common.PrecompiledCommon;

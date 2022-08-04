@@ -5,6 +5,8 @@ import org.fisco.bcos.sdk.channel.model.ChannelPrococolExceiption;
 import org.fisco.bcos.sdk.client.protocol.model.JsonTransactionResponse;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.crypto.hash.Hash;
 import org.fisco.bcos.sdk.model.MerkleProofUnit;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.fisco.bcos.sdk.rlp.RlpEncoder;
@@ -13,7 +15,6 @@ import org.fisco.bcos.sdk.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -37,7 +38,7 @@ public class MerkleProofUtility {
      * @return
      */
     public static boolean verifyTransaction(
-            String transactionRoot, TransactionWithProof.TransactionAndProof transAndProof) {
+            String transactionRoot, TransactionWithProof.TransactionAndProof transAndProof,CryptoSuite cryptoSuite) {
         // transaction index
         JsonTransactionResponse transaction = transAndProof.getTransaction();
         String index = transaction.getTransactionIndex();
@@ -66,7 +67,7 @@ public class MerkleProofUtility {
     public static boolean verifyTransactionReceipt(
             String receiptRoot,
             TransactionReceiptWithProof.ReceiptAndProof receiptAndProof,
-            String supportedVersion) {
+            String supportedVersion,CryptoSuite cryptoSuite) {
 
         EnumNodeVersion.Version classVersion = null;
         try {
@@ -92,7 +93,8 @@ public class MerkleProofUtility {
         }
 
         String receiptRlp = ReceiptEncoder.encode(transactionReceipt, classVersion);
-        String rlpHash = Hash.sha3(receiptRlp);
+        //String rlpHash = Hash.sha3(receiptRlp);
+        String rlpHash = cryptoSuite.hash(receiptRlp);
         String input = Numeric.toHexString(byteIndex) + rlpHash.substring(2);
 
         String proof = Merkle.calculateMerkleRoot(receiptAndProof.getReceiptProof(), input);
@@ -150,10 +152,10 @@ public class MerkleProofUtility {
             String receiptRoot,
             TransactionReceipt transactionReceipt,
             List<MerkleProofUnit> receiptProof,
-            String supportedVersion) {
+            String supportedVersion,CryptoSuite cryptoSuite) {
 
         if (!transactionReceipt.getGasUsed().startsWith("0x")) {
-            transactionReceipt.setGasUsed("0x" + transactionReceipt.getGasUsed().toString(16));
+            transactionReceipt.setGasUsed("0x" + transactionReceipt.getGasUsed());
         }
 
         EnumNodeVersion.Version classVersion = null;
@@ -174,7 +176,8 @@ public class MerkleProofUtility {
                 RlpEncoder.encode(RlpString.create(transactionReceipt.getTransactionIndex()));
 
         String receiptRlp = ReceiptEncoder.encode(transactionReceipt, classVersion);
-        String rlpHash = Hash.sha3(receiptRlp);
+        //String rlpHash = Hash.sha3(receiptRlp);
+        String rlpHash = cryptoSuite.hash(receiptRlp);
         String input = Numeric.toHexString(byteIndex) + rlpHash.substring(2);
 
         String proof = Merkle.calculateMerkleRoot(receiptProof, input);

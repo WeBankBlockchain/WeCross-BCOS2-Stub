@@ -93,7 +93,7 @@ public class BCOSBaseStubFactory implements StubFactory {
                 BCOSConstant.CUSTOM_COMMAND_DEPLOY, deployContractHandler);
 
         /** Initializes the bcos driver */
-        BCOSDriver driver = new BCOSDriver();
+        BCOSDriver driver = new BCOSDriver(this.cryptoSuite);
         driver.setAsyncCnsService(asyncCnsService);
         driver.setCommandHandlerDispatcher(commandHandlerDispatcher);
 
