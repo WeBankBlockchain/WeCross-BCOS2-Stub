@@ -27,8 +27,7 @@ public class Merkle {
             String left = splicing(merkleProofUnit.getLeft());
             String right = splicing(merkleProofUnit.getRight());
             String input = splicing("0x", left, result.substring(2), right);
-            Keccak256 keccak256=new Keccak256();
-            result = keccak256.hash(input);
+            result = Hash.sha3(input);
         }
         return result;
     }
