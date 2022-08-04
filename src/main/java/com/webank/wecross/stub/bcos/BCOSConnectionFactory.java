@@ -19,12 +19,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 public class BCOSConnectionFactory {
     private static final Logger logger = LoggerFactory.getLogger(BCOSConnectionFactory.class);
 
-    /**
-     * @param bcosStubConfig
-     * @param web3jWrapper
-     * @return
-     * @throws Exception
-     */
+
     public static BCOSConnection build(BCOSStubConfig bcosStubConfig,
                                        AbstractWeb3jWrapper web3jWrapper,
                                        CryptoSuite cryptoSuite) throws Exception {
@@ -33,13 +28,7 @@ public class BCOSConnectionFactory {
         return build(bcosStubConfig, web3jWrapper, scheduledExecutorService, cryptoSuite);
     }
 
-    /**
-     * @param bcosStubConfig
-     * @param web3jWrapper
-     * @param executorService
-     * @return
-     * @throws Exception
-     */
+
     public static BCOSConnection build(BCOSStubConfig bcosStubConfig,
                                        AbstractWeb3jWrapper web3jWrapper,
                                        ScheduledExecutorService executorService,
@@ -60,13 +49,13 @@ public class BCOSConnectionFactory {
             bcosConnection.addProperty(BCOSConstant.BCOS_NODE_VERSION, web3jWrapper.getVersion());
         }
 
-        CnsInfo proxyCnsInfo = CnsService.queryProxyCnsInfo(web3jWrapper);
+        CnsInfo proxyCnsInfo = CnsService.queryProxyCnsInfo(web3jWrapper, cryptoSuite);
         if (Objects.nonNull(proxyCnsInfo)) {
             bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_NAME, proxyCnsInfo.getAddress());
             bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_ABI, proxyCnsInfo.getAbi());
         }
 
-        CnsInfo hubCnsInfo = CnsService.queryHubCnsInfo(web3jWrapper);
+        CnsInfo hubCnsInfo = CnsService.queryHubCnsInfo(web3jWrapper, cryptoSuite);
         if (Objects.nonNull(hubCnsInfo)) {
             bcosConnection.addProperty(BCOSConstant.BCOS_HUB_NAME, hubCnsInfo.getAddress());
         }

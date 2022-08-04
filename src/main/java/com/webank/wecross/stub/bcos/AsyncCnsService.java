@@ -11,6 +11,12 @@ import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.LRUCache;
+import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
+import org.fisco.bcos.sdk.utils.ObjectMapperFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -18,11 +24,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
-import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 public class AsyncCnsService {
     private static final Logger logger = LoggerFactory.getLogger(AsyncCnsService.class);

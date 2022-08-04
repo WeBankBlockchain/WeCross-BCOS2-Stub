@@ -11,6 +11,21 @@ import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.bcos.AsyncCnsService;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
+import com.webank.wecross.stub.bcos.preparation.CnsService;
+import org.fisco.bcos.sdk.abi.wrapper.ABICodecJsonWrapper;
+import org.fisco.bcos.sdk.abi.wrapper.ABIDefinition;
+import org.fisco.bcos.sdk.abi.wrapper.ABIDefinitionFactory;
+import org.fisco.bcos.sdk.abi.wrapper.ABIObject;
+import org.fisco.bcos.sdk.abi.wrapper.ABIObjectFactory;
+import org.fisco.bcos.sdk.abi.wrapper.ContractABIDefinition;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.model.CryptoType;
+import org.fisco.bcos.sdk.utils.Numeric;
+import org.fisco.solc.compiler.CompilationResult;
+import org.fisco.solc.compiler.SolidityCompiler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
@@ -19,19 +34,6 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
-import org.fisco.bcos.web3j.abi.wrapper.ABICodecJsonWrapper;
-import org.fisco.bcos.web3j.abi.wrapper.ABIDefinition;
-import org.fisco.bcos.web3j.abi.wrapper.ABIDefinitionFactory;
-import org.fisco.bcos.web3j.abi.wrapper.ABIObject;
-import org.fisco.bcos.web3j.abi.wrapper.ABIObjectFactory;
-import org.fisco.bcos.web3j.abi.wrapper.ContractABIDefinition;
-import org.fisco.bcos.web3j.crypto.EncryptType;
-import org.fisco.bcos.web3j.precompile.cns.CnsService;
-import org.fisco.bcos.web3j.utils.Numeric;
-import org.fisco.solc.compiler.CompilationResult;
-import org.fisco.solc.compiler.SolidityCompiler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class DeployContractHandler implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(DeployContractHandler.class);
@@ -71,7 +73,8 @@ public class DeployContractHandler implements CommandHandler {
             Account account,
             BlockManager blockManager,
             Connection connection,
-            Driver.CustomCommandCallback callback) {
+            Driver.CustomCommandCallback callback,
+            CryptoSuite cryptoSuite) {
 
         if (Objects.isNull(args) || args.length < 4) {
             callback.onResponse(new Exception("incomplete args"), null);
@@ -104,7 +107,7 @@ public class DeployContractHandler implements CommandHandler {
         /* First compile the contract source code */
         CompilationResult.ContractMetadata metadata;
         try {
-            boolean sm = (EncryptType.encryptType == EncryptType.SM2_TYPE);
+            boolean sm = (cryptoSuite.getCryptoTypeConfig() == CryptoType.SM_TYPE);
 
             File sourceFile = File.createTempFile("BCOSContract-", "-" + cnsName + ".sol");
             try (OutputStream outputStream = new FileOutputStream(sourceFile)) {
@@ -137,7 +140,8 @@ public class DeployContractHandler implements CommandHandler {
             return;
         }
 
-        ContractABIDefinition contractABIDefinition = ABIDefinitionFactory.loadABI(metadata.abi);
+        ABIDefinitionFactory abiDefinitionFactory = new ABIDefinitionFactory(cryptoSuite);
+        ContractABIDefinition contractABIDefinition = abiDefinitionFactory.loadABI(metadata.abi);
         ABIDefinition constructor = contractABIDefinition.getConstructor();
 
         /* check if solidity constructor needs arguments */

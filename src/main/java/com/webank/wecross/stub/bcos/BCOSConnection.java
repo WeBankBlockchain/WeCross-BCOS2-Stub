@@ -10,6 +10,7 @@ import com.webank.wecross.stub.Response;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
+import com.webank.wecross.stub.bcos.common.StatusCode;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionPair;
@@ -27,8 +28,6 @@ import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.fisco.bcos.sdk.model.callback.TransactionCallback;
 import org.fisco.bcos.sdk.utils.ObjectMapperFactory;
-import org.fisco.bcos.web3j.protocol.channel.StatusCode;
-import org.fisco.bcos.web3j.tx.exceptions.ContractCallException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -251,20 +250,9 @@ public class BCOSConnection implements Connection {
             TransactionParams transaction =
                     objectMapper.readValue(request.getData(), TransactionParams.class);
 
-            Call.CallOutput callOutput = null;
-
-            try {
-                callOutput =
-                        web3jWrapper.call(
-                                transaction.getFrom(), transaction.getTo(), transaction.getData());
-
-            } catch (ContractCallException e) {
-                if (e.getCallOutput() != null) {
-                    callOutput = e.getCallOutput();
-                } else {
-                    throw e;
-                }
-            }
+            Call.CallOutput callOutput =
+                    web3jWrapper.call(
+                            transaction.getFrom(), transaction.getTo(), transaction.getData());
 
             if (logger.isDebugEnabled()) {
                 logger.debug(
@@ -280,18 +268,6 @@ public class BCOSConnection implements Connection {
             response.setErrorCode(BCOSStatusCode.Success);
             response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
             response.setData(objectMapper.writeValueAsBytes(callOutput));
-        } catch (ContractCallException e) {
-            Call.CallOutput callOutput = new Call.CallOutput();
-            callOutput.setStatus(String.valueOf(BCOSStatusCode.CallNotSuccessStatus));
-            callOutput.setOutput(e.getMessage());
-            try {
-                response.setErrorCode(BCOSStatusCode.Success);
-                response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
-                response.setData(objectMapper.writeValueAsBytes(callOutput));
-            } catch (JsonProcessingException jsonProcessingException) {
-                response.setErrorCode(BCOSStatusCode.HandleCallRequestFailed);
-                response.setErrorMessage(e.getMessage());
-            }
         } catch (Exception e) {
             logger.warn("handleCallRequest Exception:", e);
             response.setErrorCode(BCOSStatusCode.HandleCallRequestFailed);
