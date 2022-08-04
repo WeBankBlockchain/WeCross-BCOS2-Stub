@@ -19,12 +19,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 public class BCOSConnectionFactory {
     private static final Logger logger = LoggerFactory.getLogger(BCOSConnectionFactory.class);
 
-    /**
-     * @param bcosStubConfig
-     * @param web3jWrapper
-     * @return
-     * @throws Exception
-     */
+
     public static BCOSConnection build(BCOSStubConfig bcosStubConfig,
                                        AbstractWeb3jWrapper web3jWrapper,
                                        CryptoSuite cryptoSuite) throws Exception {
@@ -33,13 +28,7 @@ public class BCOSConnectionFactory {
         return build(bcosStubConfig, web3jWrapper, scheduledExecutorService, cryptoSuite);
     }
 
-    /**
-     * @param bcosStubConfig
-     * @param web3jWrapper
-     * @param executorService
-     * @return
-     * @throws Exception
-     */
+
     public static BCOSConnection build(BCOSStubConfig bcosStubConfig,
                                        AbstractWeb3jWrapper web3jWrapper,
                                        ScheduledExecutorService executorService,
