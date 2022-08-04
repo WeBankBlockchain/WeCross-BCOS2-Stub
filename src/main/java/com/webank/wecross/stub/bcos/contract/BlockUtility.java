@@ -8,9 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
-import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlockHeader;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
+import org.fisco.bcos.sdk.utils.ObjectMapperFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
