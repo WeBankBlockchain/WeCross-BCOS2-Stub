@@ -6,6 +6,8 @@ import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.BCOSStubException;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import java.util.Objects;
+
+import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.fisco.bcos.web3j.tx.MerkleProofUtility;
 
