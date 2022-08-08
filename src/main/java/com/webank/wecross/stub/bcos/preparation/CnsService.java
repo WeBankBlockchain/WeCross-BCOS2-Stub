@@ -38,7 +38,7 @@ public class CnsService {
     /** query cns to get address,abi of hub contract */
     private static CnsInfo queryCnsInfo(Web3jWrapper web3jWrapper, String name, CryptoSuite cryptoSuite) {
         /** function selectByName(string memory cnsName) public returns(string memory) */
-        FunctionEncoder functionEncoder = new FunctionEncoder(cryptoSuite)
+        FunctionEncoder functionEncoder = new FunctionEncoder(cryptoSuite);
 
         Function function =
                 new Function(
