@@ -109,14 +109,14 @@ public class ProofVerifierUtilityTest {
                         receipt.getTransactionHash(),
                         receipt.getTransactionIndex(),
                         block.getTransactionsRoot(),
-                        receipt.getTxProof()));
+                        receipt.getTxProof(),cryptoSuite));
 
         assertTrue(
                 MerkleProofUtility.verifyTransaction(
                         receipt0.getTransactionHash(),
                         receipt0.getTransactionIndex(),
                         block0.getTransactionsRoot(),
-                        receipt0.getTxProof()));
+                        receipt0.getTxProof(),cryptoSuite));
     }
 
     @Test

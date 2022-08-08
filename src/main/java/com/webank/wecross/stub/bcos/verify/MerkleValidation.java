@@ -44,7 +44,7 @@ public class MerkleValidation {
                 transactionReceipt.getTransactionHash(),
                 transactionReceipt.getTransactionIndex(),
                 blockHeader.getTransactionRoot(),
-                transactionReceipt.getTxProof())) {
+                transactionReceipt.getTxProof(),cryptoSuite)) {
             throw new BCOSStubException(
                     BCOSStatusCode.TransactionProofVerifyFailed,
                     BCOSStatusCode.getStatusMessage(BCOSStatusCode.TransactionProofVerifyFailed)

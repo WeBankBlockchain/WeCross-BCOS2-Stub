@@ -780,7 +780,7 @@ public class BCOSDriver implements Driver {
                                                                                                         block
                                                                                                                 .getBlockHeader(),
                                                                                                         receipt,
-                                                                                                        nodeVersion);
+                                                                                                        nodeVersion,cryptoSuite);
                                                                                     }
 
                                                                                     transactionResponse
@@ -1082,7 +1082,7 @@ public class BCOSDriver implements Driver {
                                             transactionReceipt,
                                             connection,
                                             callback);
-                                });
+                                },cryptoSuite);
                     } else {
                         assembleTransaction(
                                 transactionHash,

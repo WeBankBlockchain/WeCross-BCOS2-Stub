@@ -45,7 +45,7 @@ public class MerkleProofUtility {
         String input =
                 Numeric.toHexString(RlpEncoder.encode(RlpString.create(index)))
                         + transaction.getHash().substring(2);
-        String proof = Merkle.calculateMerkleRoot(transAndProof.getTransactionProof(), input);
+        String proof = Merkle.calculateMerkleRoot(transAndProof.getTransactionProof(), input,cryptoSuite);
 
         logger.debug(
                 " transaction hash: {}, transaction index: {}, root: {}, proof: {}",
@@ -97,7 +97,7 @@ public class MerkleProofUtility {
         String rlpHash = cryptoSuite.hash(receiptRlp);
         String input = Numeric.toHexString(byteIndex) + rlpHash.substring(2);
 
-        String proof = Merkle.calculateMerkleRoot(receiptAndProof.getReceiptProof(), input);
+        String proof = Merkle.calculateMerkleRoot(receiptAndProof.getReceiptProof(), input,cryptoSuite);
 
         logger.debug(
                 " transaction hash: {}, receipt index: {}, root: {}, proof: {}, receipt: {}",
@@ -123,11 +123,11 @@ public class MerkleProofUtility {
             String transactionHash,
             String index,
             String transactionRoot,
-            List<MerkleProofUnit> txProof) {
+            List<MerkleProofUnit> txProof,CryptoSuite cryptoSuite) {
         String input =
                 Numeric.toHexString(RlpEncoder.encode(RlpString.create(index)))
                         + transactionHash.substring(2);
-        String proof = Merkle.calculateMerkleRoot(txProof, input);
+        String proof = Merkle.calculateMerkleRoot(txProof, input,cryptoSuite);
 
         logger.debug(
                 " transaction hash: {}, transaction index: {}, txProof: {}, transactionRoot: {}, proof: {}",
@@ -180,7 +180,7 @@ public class MerkleProofUtility {
         String rlpHash = cryptoSuite.hash(receiptRlp);
         String input = Numeric.toHexString(byteIndex) + rlpHash.substring(2);
 
-        String proof = Merkle.calculateMerkleRoot(receiptProof, input);
+        String proof = Merkle.calculateMerkleRoot(receiptProof, input,cryptoSuite);
 
         logger.debug(
                 " transaction hash: {}, transactionReceipt: {}, receiptProof: {}, receiptRoot: {}, proof: {}",
