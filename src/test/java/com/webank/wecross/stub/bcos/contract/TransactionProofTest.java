@@ -1,16 +1,17 @@
 package com.webank.wecross.stub.bcos.contract;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
-
+import com.webank.wecross.stub.ObjectMapperFactory;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
+import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
+import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
+import org.junit.Test;
+
 import java.io.IOException;
 import java.util.Objects;
-import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof;
-import org.junit.Test;
+
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
 public class TransactionProofTest {
     @Test
@@ -32,10 +33,10 @@ public class TransactionProofTest {
 
         BcosBlock.Block block0 =
                 ObjectMapperFactory.getObjectMapper().readValue(blockJson0, BcosBlock.Block.class);
-        TransactionWithProof.TransAndProof transAndProof0 =
+        TransactionWithProof.TransactionAndProof transAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(
-                                transactionAndProofJson0, TransactionWithProof.TransAndProof.class);
+                                transactionAndProofJson0, TransactionWithProof.TransactionAndProof.class);
         TransactionReceiptWithProof.ReceiptAndProof receiptAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(
@@ -47,7 +48,7 @@ public class TransactionProofTest {
                         && !transactionProof.toString().isEmpty());
         assertTrue(Objects.nonNull(transactionProof.getReceiptAndProof()));
         assertEquals(
-                transactionProof.getReceiptAndProof().getTransactionReceipt().getTransactionHash(),
+                transactionProof.getReceiptAndProof().getReceipt().getTransactionHash(),
                 "0x633a3386a189455354c058af6606d705697f3b216ad555958dc680f68cc4e99d");
         assertTrue(Objects.nonNull(transactionProof.getTransAndProof()));
         assertEquals(
