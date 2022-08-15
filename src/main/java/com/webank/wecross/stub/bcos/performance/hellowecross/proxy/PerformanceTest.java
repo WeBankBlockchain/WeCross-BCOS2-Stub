@@ -1,11 +1,12 @@
 package com.webank.wecross.stub.bcos.performance.hellowecross.proxy;
 
 import com.webank.wecross.stub.bcos.performance.PerformanceManager;
-import java.math.BigInteger;
-import java.util.Objects;
-import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
+import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.math.BigInteger;
+import java.util.Objects;
 
 public class PerformanceTest {
 
