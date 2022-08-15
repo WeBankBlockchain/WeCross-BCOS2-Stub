@@ -88,7 +88,6 @@ public class MerkleProofUtility {
         }
 
         String receiptRlp = ReceiptEncoder.encode(transactionReceipt, classVersion);
-        //String rlpHash = Hash.sha3(receiptRlp);
         String rlpHash = cryptoSuite.hash(receiptRlp);
         String input = Numeric.toHexString(byteIndex) + rlpHash.substring(2);
 

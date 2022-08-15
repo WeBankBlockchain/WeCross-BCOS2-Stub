@@ -23,7 +23,6 @@ public class Merkle {
             String right = splicing(merkleProofUnit.getRight());
             String input = splicing("0x", left, result.substring(2), right);
             result = cryptoSuite.hash(input);
-            //result = Hash.sha3(input);
         }
         return result;
     }

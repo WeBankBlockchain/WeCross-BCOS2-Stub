@@ -9,12 +9,15 @@ import com.webank.wecross.stub.bcos.common.BCOSBlockHeader;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
-import org.fisco.bcos.sdk.model.CryptoType;
 import org.fisco.bcos.sdk.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 public class BlockHeaderValidation {
     private static final Logger logger = LoggerFactory.getLogger(BlockHeaderValidation.class);
@@ -52,18 +55,14 @@ public class BlockHeaderValidation {
                     "verifyBlockHeader fail, caused by sign is not unique.");
         }
         String blockHash = bcosBlockHeader.getHash();
-        //Signer signer = Signer.newSigner(CryptoType.ECDSA_TYPE);
-        //CryptoSuite cryptoSuite=new CryptoSuite(CryptoType.ECDSA_TYPE);
         boolean verifyFlag = false;
         boolean finalizeFlag = true;
         try {
             for (BcosBlockHeader.Signature signature : signatureList) {
                 for (String sealer : sealerList) {
-                    //String address = Keys.getAddress(sealer);
                     byte[] signData = Numeric.hexStringToByteArray(signature.getSignature());
                     byte[] hashData = Numeric.hexStringToByteArray(blockHash);
                     verifyFlag=cryptoSuite.verify(sealer,hashData,signData);
-                    //verifyFlag = signer.verifyByHashData(signData, hashData, address);
                     if (verifyFlag) break;
                 }
                 finalizeFlag = finalizeFlag && verifyFlag;
