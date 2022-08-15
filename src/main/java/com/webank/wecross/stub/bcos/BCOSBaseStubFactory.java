@@ -106,7 +106,7 @@ public class BCOSBaseStubFactory implements StubFactory {
     public Connection newConnection(String path) {
         try {
             logger.info("New connection: {} type:{}", path, this.cryptoSuite.getCryptoTypeConfig());
-            BCOSConnection connection = BCOSConnectionFactory.build(path, "stub.toml");
+            BCOSConnection connection = BCOSConnectionFactory.build(path, "stub.toml", cryptoSuite);
 
             // check proxy contract
             if (!connection.hasProxyDeployed()) {

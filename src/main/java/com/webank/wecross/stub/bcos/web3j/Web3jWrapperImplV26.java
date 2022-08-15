@@ -1,10 +1,9 @@
 package com.webank.wecross.stub.bcos.web3j;
 
-import java.io.IOException;
-import java.math.BigInteger;
-
 import org.fisco.bcos.sdk.client.Client;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
+
+import java.math.BigInteger;
 
 public class Web3jWrapperImplV26 extends Web3jWrapperImplV24 {
 

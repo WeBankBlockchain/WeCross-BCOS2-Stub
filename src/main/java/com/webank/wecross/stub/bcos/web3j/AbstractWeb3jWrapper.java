@@ -1,7 +1,6 @@
 package com.webank.wecross.stub.bcos.web3j;
 
 import org.fisco.bcos.sdk.client.Client;
-import org.fisco.bcos.sdk.client.RespCallback;
 import org.fisco.bcos.sdk.client.protocol.model.JsonTransactionResponse;
 import org.fisco.bcos.sdk.client.protocol.request.Transaction;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
@@ -9,7 +8,6 @@ import org.fisco.bcos.sdk.client.protocol.response.BcosTransaction;
 import org.fisco.bcos.sdk.client.protocol.response.BcosTransactionReceipt;
 import org.fisco.bcos.sdk.client.protocol.response.BlockNumber;
 import org.fisco.bcos.sdk.client.protocol.response.Call;
-import org.fisco.bcos.sdk.client.protocol.response.SendTransaction;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.fisco.bcos.sdk.model.callback.TransactionCallback;
 
