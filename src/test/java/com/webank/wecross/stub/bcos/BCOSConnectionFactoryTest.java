@@ -1,9 +1,5 @@
 package com.webank.wecross.stub.bcos;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
-
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.ResourceInfo;
@@ -11,23 +7,31 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImplMock;
-import java.io.IOException;
-import java.util.List;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.model.CryptoType;
 import org.junit.Test;
+
+import java.util.List;
+
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 
 public class BCOSConnectionFactoryTest {
     @Test
-    public void buildTest() throws IOException {
+    public void buildTest() {
         try {
 
             BCOSStubConfigParser bcosStubConfigParser =
                     new BCOSStubConfigParser("./", "stub-sample-ut.toml");
             BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
+            CryptoSuite cryptoSuite = bcosStubConfig.getChannelService().isGmConnectEnable() ?
+                    new CryptoSuite(CryptoType.SM_TYPE) : new CryptoSuite(CryptoType.ECDSA_TYPE);
 
             Connection connection =
                     BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperImplMock());
 
-            Driver driver = new BCOSDriver();
+            Driver driver = new BCOSDriver(cryptoSuite);
             List<ResourceInfo> resources = driver.getResources(connection);
             assertTrue(resources.size() == 4);
             ResourceInfo resourceInfo = resources.get(0);

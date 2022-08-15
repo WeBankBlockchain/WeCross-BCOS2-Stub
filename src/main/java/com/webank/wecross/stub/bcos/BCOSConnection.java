@@ -64,12 +64,13 @@ public class BCOSConnection implements Connection {
 
     private Map<String, String> properties = new HashMap<>();
 
+    private CryptoSuite cryptoSuite;
+
     private FunctionEncoder functionEncoder;
 
     public BCOSConnection(
             AbstractWeb3jWrapper web3jWrapper,
-            ScheduledExecutorService scheduledExecutorService,
-            CryptoSuite cryptoSuite) {
+            ScheduledExecutorService scheduledExecutorService) {
         this.web3jWrapper = web3jWrapper;
         this.scheduledExecutorService = scheduledExecutorService;
         this.objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
@@ -82,6 +83,7 @@ public class BCOSConnection implements Connection {
                 10000,
                 30000,
                 TimeUnit.MILLISECONDS);
+        this.cryptoSuite = web3jWrapper.getClient().getCryptoSuite();
         this.functionEncoder = new FunctionEncoder(cryptoSuite);
     }
 

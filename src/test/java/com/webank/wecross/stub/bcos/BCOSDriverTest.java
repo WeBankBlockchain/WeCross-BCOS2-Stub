@@ -1,10 +1,19 @@
 package com.webank.wecross.stub.bcos;
 
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.TestCase.*;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.webank.wecross.stub.*;
+import com.webank.wecross.stub.Account;
+import com.webank.wecross.stub.BlockHeader;
+import com.webank.wecross.stub.BlockManager;
+import com.webank.wecross.stub.Connection;
+import com.webank.wecross.stub.Driver;
+import com.webank.wecross.stub.ObjectMapperFactory;
+import com.webank.wecross.stub.Path;
+import com.webank.wecross.stub.Request;
+import com.webank.wecross.stub.ResourceInfo;
+import com.webank.wecross.stub.TransactionContext;
+import com.webank.wecross.stub.TransactionException;
+import com.webank.wecross.stub.TransactionRequest;
+import com.webank.wecross.stub.TransactionResponse;
 import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
@@ -21,13 +30,9 @@ import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImplMock;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperTxVerifyMock;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperWithExceptionMock;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperWithNullMock;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import org.apache.commons.lang3.tuple.Pair;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.model.CryptoType;
 import org.fisco.bcos.web3j.abi.FunctionEncoder;
 import org.fisco.bcos.web3j.abi.datatypes.Function;
 import org.fisco.bcos.web3j.abi.wrapper.ABICodecJsonWrapper;
@@ -37,10 +42,21 @@ import org.fisco.bcos.web3j.abi.wrapper.ABIObject;
 import org.fisco.bcos.web3j.abi.wrapper.ABIObjectFactory;
 import org.fisco.bcos.web3j.abi.wrapper.ContractABIDefinition;
 import org.fisco.bcos.web3j.crypto.gm.GenCredential;
-import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 
 public class BCOSDriverTest {
 
@@ -72,7 +88,8 @@ public class BCOSDriverTest {
         BCOSStubConfigParser bcosStubConfigParser =
                 new BCOSStubConfigParser("./", "stub-sample-ut.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
-
+        CryptoSuite cryptoSuite = bcosStubConfig.getChannelService().isGmConnectEnable() ?
+                new CryptoSuite(CryptoType.SM_TYPE) : new CryptoSuite(CryptoType.ECDSA_TYPE);
         ScheduledExecutorService scheduledExecutorService =
                 new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
         connection = BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperImplMock());

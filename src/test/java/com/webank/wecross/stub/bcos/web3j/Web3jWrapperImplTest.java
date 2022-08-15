@@ -1,12 +1,13 @@
 package com.webank.wecross.stub.bcos.web3j;
 
-import static junit.framework.TestCase.assertTrue;
-
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
-import java.io.IOException;
-import org.fisco.bcos.web3j.protocol.Web3j;
+import org.fisco.bcos.sdk.client.Client;
 import org.junit.Test;
+
+import java.io.IOException;
+
+import static junit.framework.TestCase.assertTrue;
 
 public class Web3jWrapperImplTest {
     @Test
@@ -18,7 +19,7 @@ public class Web3jWrapperImplTest {
         BCOSStubConfig.ChannelService channelService = bcosStubConfig.getChannelService();
 
         try {
-            Web3j web3j = Web3jUtility.initWeb3j(channelService);
+            Client client = Web3jUtility.initClient(channelService);
         } catch (Exception e) {
 
         } finally {

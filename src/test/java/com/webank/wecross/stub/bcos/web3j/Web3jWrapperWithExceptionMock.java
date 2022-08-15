@@ -1,10 +1,16 @@
 package com.webank.wecross.stub.bcos.web3j;
 
+import lombok.SneakyThrows;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
+import org.fisco.bcos.sdk.client.protocol.response.Call;
+import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
+import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
+import org.fisco.bcos.sdk.model.callback.TransactionCallback;
+
 import java.io.IOException;
 import java.math.BigInteger;
-import org.fisco.bcos.channel.client.TransactionSucCallback;
-import org.fisco.bcos.web3j.protocol.Web3j;
-import org.fisco.bcos.web3j.protocol.core.methods.response.*;
+
 
 public class Web3jWrapperWithExceptionMock extends AbstractWeb3jWrapper {
 
@@ -12,46 +18,46 @@ public class Web3jWrapperWithExceptionMock extends AbstractWeb3jWrapper {
         super(null);
     }
 
+    @SneakyThrows
     @Override
-    public BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException {
+    public BcosBlock.Block getBlockByNumber(long blockNumber){
         throw new IOException(" IOException");
     }
 
-    public BcosBlockHeader.BlockHeader getBlockHeaderByNumber(long blockNumber) throws IOException {
+    @SneakyThrows
+    public BcosBlockHeader.BlockHeader getBlockHeaderByNumber(long blockNumber){
         throw new IOException(" IOException");
     }
 
+    @SneakyThrows
     @Override
-    public BigInteger getBlockNumber() throws IOException {
+    public BigInteger getBlockNumber(){
         throw new IOException(" IOException");
     }
 
+
+    @SneakyThrows
     @Override
-    public void sendTransaction(String signedTransactionData, TransactionSucCallback callback)
-            throws IOException {
+    public void sendTransaction(String signedTransactionData, TransactionCallback callback) {
         throw new IOException(" IOException");
     }
 
+    @SneakyThrows
     @Override
-    public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(
-            String transactionHash) throws IOException {
+    public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(String transactionHash) {
         throw new IOException(" IOException");
     }
 
+    @SneakyThrows
     @Override
-    public TransactionWithProof.TransAndProof getTransactionByHashWithProof(String transactionHash)
-            throws IOException {
+    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(String transactionHash) {
         throw new IOException(" IOException");
     }
 
+    @SneakyThrows
     @Override
-    public Call.CallOutput call(String accountAddress, String contractAddress, String data)
-            throws IOException {
+    public Call.CallOutput call(String accountAddress, String contractAddress, String data) {
         throw new IOException(" IOException");
     }
 
-    @Override
-    public Web3j getWeb3j() {
-        return new MockWeb3j();
-    }
 }

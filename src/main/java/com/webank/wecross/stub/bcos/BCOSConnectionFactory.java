@@ -8,6 +8,7 @@ import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperFactory;
 import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.model.CryptoType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
@@ -21,22 +22,22 @@ public class BCOSConnectionFactory {
 
 
     public static BCOSConnection build(BCOSStubConfig bcosStubConfig,
-                                       AbstractWeb3jWrapper web3jWrapper,
-                                       CryptoSuite cryptoSuite) throws Exception {
+                                       AbstractWeb3jWrapper web3jWrapper) throws Exception {
         ScheduledExecutorService scheduledExecutorService =
                 new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
-        return build(bcosStubConfig, web3jWrapper, scheduledExecutorService, cryptoSuite);
+        return build(bcosStubConfig, web3jWrapper, scheduledExecutorService);
     }
 
 
     public static BCOSConnection build(BCOSStubConfig bcosStubConfig,
                                        AbstractWeb3jWrapper web3jWrapper,
-                                       ScheduledExecutorService executorService,
-                                       CryptoSuite cryptoSuite) throws Exception {
+                                       ScheduledExecutorService executorService) throws Exception {
 
         logger.info(" bcosStubConfig: {}, version: {} ", bcosStubConfig, web3jWrapper.getVersion());
+        CryptoSuite cryptoSuite = bcosStubConfig.getChannelService().isGmConnectEnable() ?
+                new CryptoSuite(CryptoType.SM_TYPE) : new CryptoSuite(CryptoType.ECDSA_TYPE);
 
-        BCOSConnection bcosConnection = new BCOSConnection(web3jWrapper, executorService, cryptoSuite);
+        BCOSConnection bcosConnection = new BCOSConnection(web3jWrapper, executorService);
         bcosConnection.setResourceInfoList(bcosStubConfig.convertToResourceInfos());
 
         bcosConnection.addProperty(
@@ -63,17 +64,15 @@ public class BCOSConnectionFactory {
     }
 
     public static BCOSConnection build(String stubConfigPath,
-                                       String configName,
-                                       CryptoSuite cryptoSuite) throws Exception {
+                                       String configName) throws Exception {
         ScheduledExecutorService scheduledExecutorService =
                 new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
-        return build(stubConfigPath, configName, scheduledExecutorService, cryptoSuite);
+        return build(stubConfigPath, configName, scheduledExecutorService);
     }
 
     public static BCOSConnection build(String stubConfigPath,
                                        String configName,
-                                       ScheduledExecutorService executorService,
-                                       CryptoSuite cryptoSuite) throws Exception {
+                                       ScheduledExecutorService executorService) throws Exception {
         logger.info(" stubConfigPath: {} ", stubConfigPath);
 
         BCOSStubConfigParser bcosStubConfigParser =
@@ -83,6 +82,6 @@ public class BCOSConnectionFactory {
         AbstractWeb3jWrapper web3jWrapper =
                 Web3jWrapperFactory.createWeb3jWrapperInstance(bcosStubConfig);
 
-        return build(bcosStubConfig, web3jWrapper, executorService, cryptoSuite);
+        return build(bcosStubConfig, web3jWrapper, executorService);
     }
 }
