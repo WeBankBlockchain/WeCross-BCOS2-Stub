@@ -6,7 +6,6 @@ import org.fisco.bcos.sdk.client.protocol.model.JsonTransactionResponse;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
-import org.fisco.bcos.sdk.crypto.hash.Hash;
 import org.fisco.bcos.sdk.model.MerkleProofUnit;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.fisco.bcos.sdk.rlp.RlpEncoder;
@@ -21,11 +20,7 @@ import java.util.List;
  * @projectName: bcos2-stub
  * @package: com.webank.wecross.stub.bcos.common
  * @className: MerkleProofUtility
- * @author: lbhan2
- * @description: MerkleProofUtility
  * @date: 2022/8/2 16:03
- * @Copyright: 2021 www.iflytek.com Inc. All rights reserved.
- * 注意：本内容仅限于科大讯飞股份有限公司内部传阅，禁止外泄以及用于其他的商业目的
  */
 public class MerkleProofUtility {
     private static final Logger logger = LoggerFactory.getLogger(MerkleProofUtility.class);
@@ -38,14 +33,14 @@ public class MerkleProofUtility {
      * @return
      */
     public static boolean verifyTransaction(
-            String transactionRoot, TransactionWithProof.TransactionAndProof transAndProof,CryptoSuite cryptoSuite) {
+            String transactionRoot, TransactionWithProof.TransactionAndProof transAndProof, CryptoSuite cryptoSuite) {
         // transaction index
         JsonTransactionResponse transaction = transAndProof.getTransaction();
         String index = transaction.getTransactionIndex();
         String input =
                 Numeric.toHexString(RlpEncoder.encode(RlpString.create(index)))
                         + transaction.getHash().substring(2);
-        String proof = Merkle.calculateMerkleRoot(transAndProof.getTransactionProof(), input,cryptoSuite);
+        String proof = Merkle.calculateMerkleRoot(transAndProof.getTransactionProof(), input, cryptoSuite);
 
         logger.debug(
                 " transaction hash: {}, transaction index: {}, root: {}, proof: {}",
@@ -67,7 +62,7 @@ public class MerkleProofUtility {
     public static boolean verifyTransactionReceipt(
             String receiptRoot,
             TransactionReceiptWithProof.ReceiptAndProof receiptAndProof,
-            String supportedVersion,CryptoSuite cryptoSuite) {
+            String supportedVersion, CryptoSuite cryptoSuite) {
 
         EnumNodeVersion.Version classVersion = null;
         try {
@@ -97,7 +92,7 @@ public class MerkleProofUtility {
         String rlpHash = cryptoSuite.hash(receiptRlp);
         String input = Numeric.toHexString(byteIndex) + rlpHash.substring(2);
 
-        String proof = Merkle.calculateMerkleRoot(receiptAndProof.getReceiptProof(), input,cryptoSuite);
+        String proof = Merkle.calculateMerkleRoot(receiptAndProof.getReceiptProof(), input, cryptoSuite);
 
         logger.debug(
                 " transaction hash: {}, receipt index: {}, root: {}, proof: {}, receipt: {}",
@@ -123,11 +118,11 @@ public class MerkleProofUtility {
             String transactionHash,
             String index,
             String transactionRoot,
-            List<MerkleProofUnit> txProof,CryptoSuite cryptoSuite) {
+            List<MerkleProofUnit> txProof, CryptoSuite cryptoSuite) {
         String input =
                 Numeric.toHexString(RlpEncoder.encode(RlpString.create(index)))
                         + transactionHash.substring(2);
-        String proof = Merkle.calculateMerkleRoot(txProof, input,cryptoSuite);
+        String proof = Merkle.calculateMerkleRoot(txProof, input, cryptoSuite);
 
         logger.debug(
                 " transaction hash: {}, transaction index: {}, txProof: {}, transactionRoot: {}, proof: {}",
@@ -152,7 +147,7 @@ public class MerkleProofUtility {
             String receiptRoot,
             TransactionReceipt transactionReceipt,
             List<MerkleProofUnit> receiptProof,
-            String supportedVersion,CryptoSuite cryptoSuite) {
+            String supportedVersion, CryptoSuite cryptoSuite) {
 
         if (!transactionReceipt.getGasUsed().startsWith("0x")) {
             transactionReceipt.setGasUsed("0x" + transactionReceipt.getGasUsed());
@@ -180,7 +175,7 @@ public class MerkleProofUtility {
         String rlpHash = cryptoSuite.hash(receiptRlp);
         String input = Numeric.toHexString(byteIndex) + rlpHash.substring(2);
 
-        String proof = Merkle.calculateMerkleRoot(receiptProof, input,cryptoSuite);
+        String proof = Merkle.calculateMerkleRoot(receiptProof, input, cryptoSuite);
 
         logger.debug(
                 " transaction hash: {}, transactionReceipt: {}, receiptProof: {}, receiptRoot: {}, proof: {}",

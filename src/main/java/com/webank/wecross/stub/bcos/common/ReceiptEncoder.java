@@ -14,21 +14,17 @@ import java.util.List;
  * @projectName: bcos2-stub
  * @package: com.webank.wecross.stub.bcos.common
  * @className: ReceiptEncoder
- * @author: lbhan2
- * @description: ReceiptEncoder
  * @date: 2022/8/2 16:43
- * @Copyright: 2021 www.iflytek.com Inc. All rights reserved.
- * 注意：本内容仅限于科大讯飞股份有限公司内部传阅，禁止外泄以及用于其他的商业目的
  */
 public class ReceiptEncoder {
-    public static String encode(TransactionReceipt transactionReceipt,EnumNodeVersion.Version version) {
-        List<RlpType> values = asRlpValues(transactionReceipt,version);
+    public static String encode(TransactionReceipt transactionReceipt, EnumNodeVersion.Version version) {
+        List<RlpType> values = asRlpValues(transactionReceipt, version);
         RlpList rlpList = new RlpList(values);
         byte[] rlpBytes = RlpEncoder.encode(rlpList);
         return Numeric.toHexString(rlpBytes);
     }
 
-    private static List<RlpType> asRlpValues(TransactionReceipt transactionReceipt ,EnumNodeVersion.Version version) {
+    private static List<RlpType> asRlpValues(TransactionReceipt transactionReceipt, EnumNodeVersion.Version version) {
         List<RlpType> result = new ArrayList<>();
         // bytes
         result.add(RlpString.create(Numeric.hexStringToByteArray(transactionReceipt.getRoot())));

@@ -6,11 +6,7 @@ import org.fisco.bcos.sdk.channel.model.ChannelPrococolExceiption;
  * @projectName: bcos2-stub
  * @package: com.webank.wecross.stub.bcos.common
  * @className: EnumNodeVersion
- * @author: lbhan2
- * @description: EnumNodeVersion
  * @date: 2022/8/2 18:33
- * @Copyright: 2021 www.iflytek.com Inc. All rights reserved.
- * 注意：本内容仅限于科大讯飞股份有限公司内部传阅，禁止外泄以及用于其他的商业目的
  */
 public enum EnumNodeVersion {
     BCOS_2_0_0_RC1("2.0.0-rc1"),
