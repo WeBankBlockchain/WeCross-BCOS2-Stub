@@ -9,7 +9,9 @@ import com.webank.wecross.stub.bcos.performance.PerformanceSuite;
 import java.io.File;
 
 import org.fisco.bcos.sdk.client.Client;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.model.CryptoType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +21,7 @@ public abstract class PureBCOSSuite implements PerformanceSuite {
 
     private Client client;
     private CryptoKeyPair credentials;
+    private CryptoSuite cryptoSuite;
 
     public Client getClient() {
         return client;
@@ -36,6 +39,10 @@ public abstract class PureBCOSSuite implements PerformanceSuite {
         this.credentials = credentials;
     }
 
+    public CryptoSuite getCryptoSuite() {
+        return cryptoSuite;
+    }
+
     public PureBCOSSuite(String chainName, String accountName, boolean sm) {
 
         logger.info(" chain: {}, account: {}, enableGM: {}", chainName, accountName, sm);
@@ -45,6 +52,7 @@ public abstract class PureBCOSSuite implements PerformanceSuite {
                 (BCOSConnection) stubFactory.newConnection("classpath:/" + chainName);
 
         this.client = connection.getWeb3jWrapper().getClient();
+        this.cryptoSuite = new CryptoSuite(sm ? CryptoType.SM_TYPE : CryptoType.ECDSA_TYPE);
 
         BCOSAccount bcosAccount =
                 (BCOSAccount)

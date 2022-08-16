@@ -4,6 +4,10 @@ import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.crypto.hash.Hash;
+import org.fisco.bcos.sdk.crypto.hash.Keccak256;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -301,15 +305,14 @@ public class BCOSStubConfig {
 
     public List<ResourceInfo> convertToResourceInfos() {
         List<ResourceInfo> resourceInfos = new ArrayList<>();
-        org.fisco.bcos.web3j.crypto.SHA3Digest sha3Digest =
-                new org.fisco.bcos.web3j.crypto.SHA3Digest();
+        Hash hash = new Keccak256();
         for (int i = 0; i < resources.size(); ++i) {
             ResourceInfo resourceInfo = new ResourceInfo();
             BCOSStubConfig.Resource resource = resources.get(i);
 
             resourceInfo.setName(resource.getName());
             resourceInfo.setStubType(this.type);
-            resourceInfo.setChecksum(sha3Digest.hash(resource.getValue()));
+            resourceInfo.setChecksum(hash.hash(resource.getValue()));
 
             resourceInfo.getProperties().put(resource.getName(), resource.getValue());
             resourceInfo
