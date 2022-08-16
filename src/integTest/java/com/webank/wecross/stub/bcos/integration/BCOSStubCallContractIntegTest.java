@@ -1,12 +1,17 @@
 package com.webank.wecross.stub.bcos.integration;
 
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
-
-import com.webank.wecross.stub.*;
+import com.webank.wecross.stub.Account;
+import com.webank.wecross.stub.BlockHeader;
+import com.webank.wecross.stub.BlockManager;
+import com.webank.wecross.stub.Connection;
+import com.webank.wecross.stub.Driver;
+import com.webank.wecross.stub.Path;
+import com.webank.wecross.stub.ResourceInfo;
+import com.webank.wecross.stub.StubConstant;
+import com.webank.wecross.stub.TransactionContext;
+import com.webank.wecross.stub.TransactionException;
+import com.webank.wecross.stub.TransactionRequest;
+import com.webank.wecross.stub.TransactionResponse;
 import com.webank.wecross.stub.bcos.AsyncCnsService;
 import com.webank.wecross.stub.bcos.AsyncToSync;
 import com.webank.wecross.stub.bcos.BCOSBaseStubFactory;
@@ -21,33 +26,34 @@ import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.BCOSStubException;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
-import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import com.webank.wecross.stub.bcos.performance.hellowecross.HelloWeCross;
 import com.webank.wecross.stub.bcos.preparation.ProxyContract;
 import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jBlockManager;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImplV26;
-
-import java.io.File;
-import java.nio.file.Files;
-import java.util.Base64;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.fisco.bcos.web3j.tx.gas.StaticGasProvider;
-import org.fisco.bcos.web3j.utils.Numeric;
+import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
+import org.fisco.bcos.sdk.utils.Numeric;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.util.Base64;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertNull;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 
 public class BCOSStubCallContractIntegTest {
 
@@ -62,6 +68,8 @@ public class BCOSStubCallContractIntegTest {
     private ResourceInfo resourceInfo = null;
     private BlockManager blockManager = null;
     private ConnectionEventHandlerImplMock connectionEventHandlerImplMock = new ConnectionEventHandlerImplMock();
+
+    private CryptoSuite cryptoSuite = null;
 
     private AsyncCnsService asyncCnsService = null;
 
@@ -152,14 +160,13 @@ public class BCOSStubCallContractIntegTest {
         BCOSAccount bcosAccount = (BCOSAccount) account;
         blockManager = new Web3jBlockManager(web3jWrapper);
         asyncCnsService = ((BCOSDriver) driver).getAsyncCnsService();
+        cryptoSuite = web3jWrapper.getClient().getCryptoSuite();
 
         helloWeCross =
                 HelloWeCross
                         .deploy(
-                                web3jWrapper.getWeb3j(),
-                                bcosAccount.getCredentials(),
-                                new StaticGasProvider(SignTransaction.gasPrice, SignTransaction.gasLimit))
-                        .send();
+                                web3jWrapper.getClient(),
+                                bcosAccount.getCredentials());
 
         logger.info(" HelloWeCross address: {}", helloWeCross.getContractAddress());
 
@@ -194,10 +201,10 @@ public class BCOSStubCallContractIntegTest {
 
     @Test
     public void deployContractTxGetTest() throws InterruptedException {
-        Optional<TransactionReceipt> transactionReceipt = helloWeCross.getTransactionReceipt();
+        TransactionReceipt transactionReceipt = helloWeCross.getDeployReceipt();
         AsyncToSync asyncToSync = new AsyncToSync();
 
-        driver.asyncGetTransaction(transactionReceipt.get().getTransactionHash(), transactionReceipt.get().getBlockNumber().longValue(), blockManager, true, connection, (e, transaction) -> {
+        driver.asyncGetTransaction(transactionReceipt.getTransactionHash(), Long.parseLong(transactionReceipt.getBlockNumber()), blockManager, true, connection, (e, transaction) -> {
             assertTrue(Objects.nonNull(transaction));
             assertTrue(Objects.isNull(e));
             assertEquals(account.getIdentity(), transaction.getAccountIdentity());
@@ -484,7 +491,7 @@ public class BCOSStubCallContractIntegTest {
             assertNotNull(response);
             assertTrue(((String)response).length() == 42);
             asyncToSync.getSemaphore().release();
-        });
+        }, cryptoSuite);
         asyncToSync.getSemaphore().acquire();
 
         assertTrue(Objects.nonNull(asyncCnsService.getAbiCache().get("HelloWorld")));
@@ -521,7 +528,7 @@ public class BCOSStubCallContractIntegTest {
             assertNotNull(response);
             assertTrue(((String)response).length() == 42);
             asyncToSync.getSemaphore().release();
-        });
+        }, cryptoSuite);
         asyncToSync.getSemaphore().acquire();
 
         assertTrue(Objects.nonNull(asyncCnsService.getAbiCache().get("TupleTest")));
@@ -578,7 +585,7 @@ public class BCOSStubCallContractIntegTest {
                         assertNotNull(response);
                         assertTrue(((String)response).length() == 42);
                         asyncToSync.getSemaphore().release();
-                    });
+                    }, cryptoSuite);
             asyncToSync.getSemaphore().acquire();
             assertTrue(Objects.nonNull(asyncCnsService.getAbiCache().get(baseName + i)));
         }

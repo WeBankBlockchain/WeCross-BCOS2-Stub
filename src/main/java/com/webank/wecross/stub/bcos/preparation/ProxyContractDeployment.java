@@ -1,9 +1,10 @@
 package com.webank.wecross.stub.bcos.preparation;
 
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
-import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
 
 public class ProxyContractDeployment {
 

@@ -103,7 +103,6 @@ public class RegisterCnsHandler implements CommandHandler {
             try {
                 CompilationResult.ContractMetadata metadata = null;
                 boolean sm = (cryptoSuite.getCryptoTypeConfig() == CryptoType.SM_TYPE);
-//                CryptoType
                 File sourceFile = File.createTempFile("BCOSContract-", "-" + contractName + ".sol");
                 try (OutputStream outputStream = new FileOutputStream(sourceFile)) {
                     outputStream.write(sourceContent.getBytes());

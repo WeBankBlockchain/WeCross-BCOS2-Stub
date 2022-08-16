@@ -5,11 +5,30 @@ import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.BCOSConnectionFactory;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
+import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
+import com.webank.wecross.stub.bcos.common.StatusCode;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperFactory;
+import org.fisco.bcos.sdk.client.Client;
+import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
+import org.fisco.bcos.sdk.contract.precompiled.model.PrecompiledResponse;
+import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.model.CryptoType;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
+import org.fisco.bcos.sdk.model.callback.TransactionCallback;
+import org.fisco.bcos.sdk.transaction.codec.encode.TransactionEncoderService;
+import org.fisco.bcos.sdk.transaction.model.po.RawTransaction;
+import org.fisco.bcos.sdk.utils.ObjectMapperFactory;
+import org.fisco.solc.compiler.CompilationResult;
+import org.fisco.solc.compiler.SolidityCompiler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
+
 import java.io.File;
 import java.math.BigInteger;
 import java.util.Objects;
@@ -17,21 +36,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import org.fisco.bcos.channel.client.TransactionSucCallback;
-import org.fisco.bcos.web3j.crypto.EncryptType;
-import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
-import org.fisco.bcos.web3j.precompile.cns.CnsService;
-import org.fisco.bcos.web3j.precompile.common.PrecompiledCommon;
-import org.fisco.bcos.web3j.precompile.common.PrecompiledResponse;
-import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
-import org.fisco.bcos.web3j.protocol.channel.StatusCode;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.fisco.solc.compiler.CompilationResult;
-import org.fisco.solc.compiler.SolidityCompiler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 public class ProxyContract {
 
@@ -57,8 +61,8 @@ public class ProxyContract {
 
         BCOSBaseStubFactory bcosBaseStubFactory =
                 isGM
-                        ? new BCOSBaseStubFactory(EncryptType.SM2_TYPE, "sm2p256v1", "GM_BCOS2.0")
-                        : new BCOSBaseStubFactory(EncryptType.ECDSA_TYPE, "secp256k1", "BCOS2.0");
+                        ? new BCOSBaseStubFactory(CryptoType.SM_TYPE, "sm2p256v1", "GM_BCOS2.0")
+                        : new BCOSBaseStubFactory(CryptoType.ECDSA_TYPE, "secp256k1", "BCOS2.0");
 
         account =
                 (BCOSAccount)
@@ -123,11 +127,14 @@ public class ProxyContract {
 
         logger.info("cnsName: {}, cnsVersion: {}", cnsName, cnsVersion);
 
+        AbstractWeb3jWrapper web3jWrapper = connection.getWeb3jWrapper();
+        Client client = web3jWrapper.getClient();
+
         /** First compile the contract source code */
         SolidityCompiler.Result res =
                 SolidityCompiler.compile(
                         solFile,
-                        EncryptType.encryptType == EncryptType.SM2_TYPE,
+                        client.getCryptoSuite().getCryptoTypeConfig() == CryptoType.SM_TYPE,
                         true,
                         SolidityCompiler.Options.ABI,
                         SolidityCompiler.Options.BIN,
@@ -149,7 +156,6 @@ public class ProxyContract {
         BigInteger chainID =
                 new BigInteger(connection.getProperties().get(BCOSConstant.BCOS_CHAIN_ID));
 
-        AbstractWeb3jWrapper web3jWrapper = connection.getWeb3jWrapper();
         BigInteger blockNumber = web3jWrapper.getBlockNumber();
 
         logger.info(
@@ -161,19 +167,22 @@ public class ProxyContract {
                 metadata.bin,
                 metadata.abi);
 
-        String signTx =
-                SignTransaction.sign(
-                        account.getCredentials(),
+        RawTransaction rawTransaction =
+                SignTransaction.buildTransaction(
                         null,
                         groupID,
                         chainID,
                         blockNumber,
                         metadata.bin);
+        CryptoKeyPair credentials = account.getCredentials();
+
+        TransactionEncoderService transactionEncoderService = new TransactionEncoderService(client.getCryptoSuite());
+        String signTx = transactionEncoderService.encodeAndSign(rawTransaction, credentials);
 
         CompletableFuture<String> completableFuture = new CompletableFuture<>();
         web3jWrapper.sendTransaction(
                 signTx,
-                new TransactionSucCallback() {
+                new TransactionCallback() {
                     @Override
                     public void onResponse(TransactionReceipt receipt) {
                         if (!receipt.isStatusOK()) {
@@ -196,16 +205,20 @@ public class ProxyContract {
             throw new Exception("Failed to deploy proxy contract.");
         }
 
-        CnsService cnsService = new CnsService(web3jWrapper.getWeb3j(), account.getCredentials());
-        String result = cnsService.registerCns(cnsName, cnsVersion, contractAddress, metadata.abi);
+        org.fisco.bcos.sdk.contract.precompiled.cns.CnsService cnsService = new org.fisco.bcos.sdk.contract.precompiled.cns.CnsService(client, account.getCredentials());
+        String result = cnsService.registerCNS(cnsName, cnsVersion, contractAddress, metadata.abi).getMessage();
 
         PrecompiledResponse precompiledResponse =
                 ObjectMapperFactory.getObjectMapper().readValue(result, PrecompiledResponse.class);
-        if (precompiledResponse.getCode() != PrecompiledCommon.Success) {
+        if (precompiledResponse.getCode() != BCOSStatusCode.Success) {
             throw new RuntimeException(" registerCns failed, error message: " + result);
         }
 
-        CnsInfo cnsInfo = new CnsInfo(cnsName, cnsVersion, contractAddress, metadata.abi);
+        CnsInfo cnsInfo = new CnsInfo();
+        cnsInfo.setName(cnsName);
+        cnsInfo.setVersion(cnsVersion);
+        cnsInfo.setAddress(contractAddress);
+        cnsInfo.setAbi(metadata.abi);
         return cnsInfo;
     }
 
