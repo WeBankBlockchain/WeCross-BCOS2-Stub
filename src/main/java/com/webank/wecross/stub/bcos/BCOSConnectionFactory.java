@@ -22,7 +22,7 @@ public class BCOSConnectionFactory {
 
 
     public static BCOSConnection build(BCOSStubConfig bcosStubConfig,
-                                       AbstractWeb3jWrapper web3jWrapper) throws Exception {
+                                       AbstractWeb3jWrapper web3jWrapper){
         ScheduledExecutorService scheduledExecutorService =
                 new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
         return build(bcosStubConfig, web3jWrapper, scheduledExecutorService);
@@ -31,7 +31,7 @@ public class BCOSConnectionFactory {
 
     public static BCOSConnection build(BCOSStubConfig bcosStubConfig,
                                        AbstractWeb3jWrapper web3jWrapper,
-                                       ScheduledExecutorService executorService) throws Exception {
+                                       ScheduledExecutorService executorService) {
 
         logger.info(" bcosStubConfig: {}, version: {} ", bcosStubConfig, web3jWrapper.getVersion());
         CryptoSuite cryptoSuite = bcosStubConfig.getChannelService().isGmConnectEnable() ?

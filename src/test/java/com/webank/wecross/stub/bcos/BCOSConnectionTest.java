@@ -29,6 +29,7 @@ import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
 import org.fisco.bcos.sdk.client.protocol.response.Call;
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.model.CryptoType;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.fisco.bcos.sdk.transaction.codec.encode.TransactionEncoderService;
 import org.fisco.bcos.sdk.transaction.model.po.RawTransaction;
@@ -88,11 +89,12 @@ public class BCOSConnectionTest {
     @Test
     public void handleUnknownTypeTest() {
         AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperImplMock();
+        CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.ECDSA_TYPE);
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
                         new ScheduledThreadPoolExecutor(
-                                1, new CustomizableThreadFactory(this.getClass().getName())));
+                                1, new CustomizableThreadFactory(this.getClass().getName())), cryptoSuite);
         Request request = new Request();
         request.setType(2000);
         connection.asyncSend(
@@ -104,11 +106,12 @@ public class BCOSConnectionTest {
     @Test
     public void handleGetBlockNumberTest() {
         AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperImplMock();
+        CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.ECDSA_TYPE);
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
                         new ScheduledThreadPoolExecutor(
-                                1, new CustomizableThreadFactory(this.getClass().getName())));
+                                1, new CustomizableThreadFactory(this.getClass().getName())), cryptoSuite);
         Request request = new Request();
         request.setType(BCOSRequestType.GET_BLOCK_NUMBER);
         connection.asyncSend(
@@ -123,11 +126,12 @@ public class BCOSConnectionTest {
     @Test
     public void handleFailedGetBlockNumberTest() {
         AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
+        CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.ECDSA_TYPE);
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
                         new ScheduledThreadPoolExecutor(
-                                1, new CustomizableThreadFactory(this.getClass().getName())));
+                                1, new CustomizableThreadFactory(this.getClass().getName())), cryptoSuite);
         Request request = new Request();
         request.setType(BCOSRequestType.GET_BLOCK_NUMBER);
         connection.asyncSend(
@@ -142,11 +146,12 @@ public class BCOSConnectionTest {
     public void handleGetBlockTest() {
 
         AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperImplMock();
+        CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.ECDSA_TYPE);
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
                         new ScheduledThreadPoolExecutor(
-                                1, new CustomizableThreadFactory(this.getClass().getName())));
+                                1, new CustomizableThreadFactory(this.getClass().getName())), cryptoSuite);
         Request request = new Request();
         request.setType(BCOSRequestType.GET_BLOCK_BY_NUMBER);
 
@@ -189,11 +194,12 @@ public class BCOSConnectionTest {
     @Test
     public void handleFailedGetBlockTest() {
         AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
+        CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.ECDSA_TYPE);
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
                         new ScheduledThreadPoolExecutor(
-                                1, new CustomizableThreadFactory(this.getClass().getName())));
+                                1, new CustomizableThreadFactory(this.getClass().getName())), cryptoSuite);
         Request request = new Request();
         request.setType(BCOSRequestType.GET_BLOCK_BY_NUMBER);
 
@@ -210,12 +216,12 @@ public class BCOSConnectionTest {
     public void handleCallTest() throws IOException {
 
         AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperImplMock();
-        CryptoSuite cryptoSuite = web3jWrapper.getClient().getCryptoSuite();
+        CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.ECDSA_TYPE);
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
                         new ScheduledThreadPoolExecutor(
-                                1, new CustomizableThreadFactory(this.getClass().getName())));
+                                1, new CustomizableThreadFactory(this.getClass().getName())), cryptoSuite);
 
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
@@ -264,12 +270,12 @@ public class BCOSConnectionTest {
     public void handleFailedCallTest() throws IOException {
 
         AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
-        CryptoSuite cryptoSuite = web3jWrapper.getClient().getCryptoSuite();
+        CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.ECDSA_TYPE);
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
                         new ScheduledThreadPoolExecutor(
-                                1, new CustomizableThreadFactory(this.getClass().getName())));
+                                1, new CustomizableThreadFactory(this.getClass().getName())), cryptoSuite);
 
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
@@ -298,12 +304,12 @@ public class BCOSConnectionTest {
     public void handleFailedCallTest0() throws IOException {
 
         AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperCallNotSucStatus();
-        CryptoSuite cryptoSuite = web3jWrapper.getClient().getCryptoSuite();
+        CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.ECDSA_TYPE);
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
                         new ScheduledThreadPoolExecutor(
-                                1, new CustomizableThreadFactory(this.getClass().getName())));
+                                1, new CustomizableThreadFactory(this.getClass().getName())), cryptoSuite);
 
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
@@ -331,12 +337,12 @@ public class BCOSConnectionTest {
     public void handleSendTransactionTest() throws IOException {
 
         AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperImplMock();
-        CryptoSuite cryptoSuite = web3jWrapper.getClient().getCryptoSuite();
+        CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.ECDSA_TYPE);
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
                         new ScheduledThreadPoolExecutor(
-                                1, new CustomizableThreadFactory(this.getClass().getName())));
+                                1, new CustomizableThreadFactory(this.getClass().getName())), cryptoSuite);
         Request request = new Request();
         request.setType(BCOSRequestType.SEND_TRANSACTION);
 
@@ -395,12 +401,12 @@ public class BCOSConnectionTest {
     public void handleFailedSendTransactionTest() throws IOException, InterruptedException {
 
         AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
-        CryptoSuite cryptoSuite = web3jWrapper.getClient().getCryptoSuite();
+        CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.ECDSA_TYPE);
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
                         new ScheduledThreadPoolExecutor(
-                                1, new CustomizableThreadFactory(this.getClass().getName())));
+                                1, new CustomizableThreadFactory(this.getClass().getName())), cryptoSuite);
         Request request = new Request();
         request.setType(BCOSRequestType.SEND_TRANSACTION);
 
@@ -448,12 +454,12 @@ public class BCOSConnectionTest {
     public void handleFailedSendTransactionTest0() throws IOException, InterruptedException {
 
         AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperWithNullMock();
-        CryptoSuite cryptoSuite = web3jWrapper.getClient().getCryptoSuite();
+        CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.ECDSA_TYPE);
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
                         new ScheduledThreadPoolExecutor(
-                                1, new CustomizableThreadFactory(this.getClass().getName())));
+                                1, new CustomizableThreadFactory(this.getClass().getName())), cryptoSuite);
         Request request = new Request();
         request.setType(BCOSRequestType.SEND_TRANSACTION);
 
@@ -504,11 +510,12 @@ public class BCOSConnectionTest {
         request.setData(hash.getBytes(StandardCharsets.UTF_8));
 
         AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
+        CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.ECDSA_TYPE);
         BCOSConnection connection =
                 new BCOSConnection(
                         web3jWrapper,
                         new ScheduledThreadPoolExecutor(
-                                1, new CustomizableThreadFactory(this.getClass().getName())));
+                                1, new CustomizableThreadFactory(this.getClass().getName())), cryptoSuite);
 
         connection.asyncSend(
                 request,

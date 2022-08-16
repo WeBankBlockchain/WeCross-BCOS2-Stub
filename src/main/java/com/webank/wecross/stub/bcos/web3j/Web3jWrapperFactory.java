@@ -19,11 +19,14 @@ public class Web3jWrapperFactory {
 
         Client client = Web3jUtility.initClient(bcosStubConfig.getChannelService());
         NodeVersion.ClientVersion nodeVersion = client.getNodeVersion().getNodeVersion();
+
         logger.info("NodeVersion: {}", nodeVersion);
+
         checkConfig(nodeVersion, bcosStubConfig.getType());
 
         EnumNodeVersion.Version version =
                 EnumNodeVersion.getClassVersion(nodeVersion.getSupportedVersion());
+
         if (!FeatureSupport.isSupportVersion(version)) {
             throw new UnsupportedOperationException(
                     "Unsupported BCOS version, version: " + nodeVersion);

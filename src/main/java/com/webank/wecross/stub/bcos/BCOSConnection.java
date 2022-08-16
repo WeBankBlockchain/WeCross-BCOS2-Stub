@@ -72,6 +72,8 @@ public class BCOSConnection implements Connection {
             AbstractWeb3jWrapper web3jWrapper,
             ScheduledExecutorService scheduledExecutorService) {
         this.web3jWrapper = web3jWrapper;
+        this.cryptoSuite = web3jWrapper.getClient().getCryptoSuite();
+        this.functionEncoder = new FunctionEncoder(cryptoSuite);
         this.scheduledExecutorService = scheduledExecutorService;
         this.objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         this.scheduledExecutorService.scheduleAtFixedRate(
@@ -83,8 +85,26 @@ public class BCOSConnection implements Connection {
                 10000,
                 30000,
                 TimeUnit.MILLISECONDS);
-        this.cryptoSuite = web3jWrapper.getClient().getCryptoSuite();
+    }
+
+    public BCOSConnection(
+            AbstractWeb3jWrapper web3jWrapper,
+            ScheduledExecutorService scheduledExecutorService,
+            CryptoSuite cryptoSuite) {
+        this.web3jWrapper = web3jWrapper;
+        this.cryptoSuite = cryptoSuite;
         this.functionEncoder = new FunctionEncoder(cryptoSuite);
+        this.scheduledExecutorService = scheduledExecutorService;
+        this.objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        this.scheduledExecutorService.scheduleAtFixedRate(
+                () -> {
+                    if (Objects.nonNull(eventHandler)) {
+                        noteOnResourcesChange();
+                    }
+                },
+                10000,
+                30000,
+                TimeUnit.MILLISECONDS);
     }
 
     private void noteOnResourcesChange() {

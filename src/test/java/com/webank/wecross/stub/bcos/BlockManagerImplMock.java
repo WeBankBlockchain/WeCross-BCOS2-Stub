@@ -4,10 +4,11 @@ import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.bcos.contract.BlockUtility;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
+import org.fisco.bcos.sdk.utils.ObjectMapperFactory;
+
 import java.io.IOException;
 import java.math.BigInteger;
-import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
 
 public class BlockManagerImplMock implements BlockManager {
 
@@ -18,12 +19,8 @@ public class BlockManagerImplMock implements BlockManager {
     }
 
     public long getBlockNumber() {
-        try {
-            BigInteger blockNumber = web3jWrapper.getBlockNumber();
-            return blockNumber.longValue();
-        } catch (IOException e) {
-            return -1;
-        }
+        BigInteger blockNumber = web3jWrapper.getBlockNumber();
+        return blockNumber.longValue();
     }
 
     public byte[] getBlockHeader(long l) {
@@ -37,14 +34,18 @@ public class BlockManagerImplMock implements BlockManager {
     }
 
     @Override
-    public void start() {}
+    public void start() {
+    }
 
     @Override
-    public void stop() {}
+    public void stop() {
+    }
 
     @Override
-    public void asyncGetBlockNumber(GetBlockNumberCallback callback) {}
+    public void asyncGetBlockNumber(GetBlockNumberCallback callback) {
+    }
 
     @Override
-    public void asyncGetBlock(long blockNumber, GetBlockCallback callback) {}
+    public void asyncGetBlock(long blockNumber, GetBlockCallback callback) {
+    }
 }
