@@ -1,11 +1,10 @@
 package com.webank.wecross.stub.bcos.performance.hellowecross;
 
 import com.webank.wecross.stub.bcos.performance.PerformanceSuiteCallback;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import org.fisco.bcos.channel.client.TransactionSucCallback;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
+import org.fisco.bcos.sdk.model.callback.TransactionCallback;
 
 public class PureBCOSSendTransactionSuite extends PureBCOSSuite {
     private HelloWeCross helloWeCross;
@@ -17,15 +16,10 @@ public class PureBCOSSendTransactionSuite extends PureBCOSSuite {
         super(chainName, accountName, sm);
 
         helloWeCross =
-                HelloWeCross.deploy(
-                                getWeb3j(),
-                                getCredentials(),
-                                new BigInteger("30000000"),
-                                new BigInteger("30000000"))
-                        .send();
+                HelloWeCross.deploy(getClient(), getCredentials());
 
         ss.add("HelloWorld");
-        TransactionReceipt receipt = helloWeCross.set(ss).send();
+        TransactionReceipt receipt = helloWeCross.set(ss);
 
         if (!receipt.isStatusOK()) {
             throw new Exception("Contract Init failed, status: " + receipt.getStatus());
@@ -41,22 +35,18 @@ public class PureBCOSSendTransactionSuite extends PureBCOSSuite {
     public void call(PerformanceSuiteCallback callback) {
 
         try {
-            this.getWeb3j()
-                    .sendRawTransactionAndGetProof(
-                            helloWeCross.setSeq(ss),
-                            new TransactionSucCallback() {
+            helloWeCross.set(ss, new TransactionCallback() {
+                @Override
+                public void onResponse(TransactionReceipt receipt) {
+                    if (receipt.isStatusOK()) {
+                        callback.onSuccess("Success");
 
-                                @Override
-                                public void onResponse(TransactionReceipt response) {
-                                    if (response.isStatusOK()) {
-                                        callback.onSuccess("Success");
-
-                                    } else {
-                                        callback.onFailed(
-                                                "Failed! status: " + response.getStatus());
-                                    }
-                                }
-                            });
+                    } else {
+                        callback.onFailed(
+                                "Failed! status: " + receipt.getStatus());
+                    }
+                }
+            });
         } catch (Exception e) {
             callback.onFailed("Call failed: " + e);
         }

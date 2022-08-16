@@ -1,5 +1,7 @@
 package com.webank.wecross.stub.bcos.contract;
 
+import org.fisco.bcos.sdk.abi.FunctionEncoder;
+import org.fisco.bcos.sdk.abi.FunctionReturnDecoder;
 import org.fisco.bcos.sdk.abi.TypeReference;
 import org.fisco.bcos.sdk.abi.Utils;
 import org.fisco.bcos.sdk.abi.datatypes.DynamicArray;
@@ -12,6 +14,7 @@ import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple2;
 import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple3;
 import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple4;
 import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple6;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.fisco.bcos.sdk.utils.Numeric;
 
@@ -21,7 +24,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-s
 
 /**
  * Function object used across blockchain chain. Wecross requires that a cross-chain contract
@@ -39,18 +41,13 @@ public class FunctionUtility {
     public static final int MethodIDLength = 8;
     public static final int MethodIDWithHexPrefixLength = MethodIDLength + 2;
 
-    public static final String ProxySendTXMethodId =
-            FunctionEncoder.buildMethodId("sendTransaction(string,string,bytes)");
+    public static final String ProxySendTXMethod = "sendTransaction(string,string,bytes)";
 
-    public static final String ProxySendTransactionTXMethodId =
-            FunctionEncoder.buildMethodId(
-                    "sendTransaction(string,string,uint256,string,string,bytes)");
+    public static final String ProxySendTransactionTXMethod = "sendTransaction(string,string,uint256,string,string,bytes)";
 
-    public static final String ProxyCallWithTransactionIdMethodId =
-            FunctionEncoder.buildMethodId("constantCall(string,string,string,bytes)");
+    public static final String ProxyCallWithTransactionIdMethod = "constantCall(string,string,string,bytes)";
 
-    public static final String ProxyCallMethodId =
-            FunctionEncoder.buildMethodId("constantCall(string,bytes)");
+    public static final String ProxyCallMethod = "constantCall(string,bytes)";
 
     public static final List<TypeReference<?>> abiTypeReferenceOutputs =
             Collections.singletonList(new TypeReference<DynamicArray<Utf8String>>() {});
@@ -114,9 +111,9 @@ public class FunctionUtility {
      * @param abi
      * @return
      */
-    public static Function newConstantCallProxyFunction(
+    public static  Function newConstantCallProxyFunction(FunctionEncoder functionEncoder,
             String name, String methodSignature, String abi) {
-        String methodId = FunctionEncoder.buildMethodId(methodSignature);
+        String methodId = functionEncoder.buildMethodId(methodSignature);
         Function function =
                 new Function(
                         "constantCall",
@@ -168,9 +165,9 @@ public class FunctionUtility {
      * @param abi
      * @return
      */
-    public static Function newSendTransactionProxyFunction(
+    public static Function newSendTransactionProxyFunction(FunctionEncoder functionEncoder,
             String uid, String name, String methodSignature, String abi) {
-        String methodId = FunctionEncoder.buildMethodId(methodSignature);
+        String methodId = functionEncoder.buildMethodId(methodSignature);
         Function function =
                 new Function(
                         "sendTransaction",

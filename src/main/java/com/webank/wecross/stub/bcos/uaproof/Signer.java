@@ -1,56 +1,30 @@
 package com.webank.wecross.stub.bcos.uaproof;
 
-import com.google.common.primitives.Bytes;
-import com.webank.wecross.stub.bcos.verify.SM2Algorithm;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.security.InvalidParameterException;
+import com.webank.wedpr.crypto.CryptoResult;
+import com.webank.wedpr.crypto.NativeInterface;
 import org.bouncycastle.util.encoders.Hex;
-import org.fisco.bcos.web3j.crypto.ECDSASign;
-import org.fisco.bcos.web3j.crypto.ECDSASignature;
-import org.fisco.bcos.web3j.crypto.ECKeyPair;
-import org.fisco.bcos.web3j.crypto.EncryptType;
-import org.fisco.bcos.web3j.crypto.Keys;
-import org.fisco.bcos.web3j.crypto.SHA3Digest;
-import org.fisco.bcos.web3j.crypto.Sign;
-import org.fisco.bcos.web3j.utils.Numeric;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.crypto.exceptions.SignatureException;
+import org.fisco.bcos.sdk.model.CryptoType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public interface Signer {
+import java.security.InvalidParameterException;
 
-    byte[] sign(ECKeyPair ecKeyPair, byte[] srcData);
+public interface Signer {
 
     boolean verifyBySrcData(byte[] signData, byte[] srcData, String address);
 
     boolean verifyByHashData(byte[] signData, byte[] hashData, String address);
 
     static Signer newSigner(int encryptType) {
-        return (EncryptType.SM2_TYPE == encryptType) ? new SM2Signer() : new ECDSASigner();
+        return (CryptoType.SM_TYPE == encryptType) ? new SM2Signer() : new ECDSASigner();
     }
 
     class ECDSASigner implements Signer {
 
         private static final int ECDSA_PRIVATE_KEY_SIZE = 32;
-
-        private ECDSASign ecdsaSign = new ECDSASign();
-
-        @Override
-        public byte[] sign(ECKeyPair ecKeyPair, byte[] srcData) {
-            Sign.SignatureData signatureData = ecdsaSign.secp256SignMessage(srcData, ecKeyPair);
-
-            byte[] r = signatureData.getR();
-            byte[] s = signatureData.getS();
-            byte v = signatureData.getV();
-
-            byte[] result = new byte[r.length + r.length + 1];
-
-            System.arraycopy(r, 0, result, 0, r.length);
-            System.arraycopy(s, 0, result, r.length, s.length);
-            result[r.length + s.length] = v;
-
-            return result;
-        }
+        private CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.ECDSA_TYPE);
 
         @Override
         public boolean verifyBySrcData(byte[] signData, byte[] srcData, String address) {
@@ -63,26 +37,23 @@ public interface Signer {
         }
 
         boolean verify(byte[] signData, byte[] data, String address, boolean dataIsHash) {
-            byte[] r = new byte[ECDSA_PRIVATE_KEY_SIZE];
-            byte[] s = new byte[ECDSA_PRIVATE_KEY_SIZE];
-            byte v;
+            byte[] hash = data;
+            if (!dataIsHash) {
+                hash = cryptoSuite.hash(data);
+            }
 
-            System.arraycopy(signData, 0, r, 0, r.length);
-            System.arraycopy(signData, r.length, s, 0, s.length);
-            v = signData[r.length + s.length];
+            String message = Hex.toHexString(hash);
+            String signatrue = Hex.toHexString(signData);
 
-            SHA3Digest sha3Digest = new SHA3Digest();
-            byte[] hash = dataIsHash ? data : sha3Digest.hash(data);
+            CryptoResult recoverResult = NativeInterface.secp256k1RecoverPublicKey(message, signatrue);
 
-            Sign.SignatureData signatureData = new Sign.SignatureData(v, r, s);
+            // call secp256k1RecoverPublicKey failed
+            if (recoverResult.wedprErrorMessage != null && !recoverResult.wedprErrorMessage.isEmpty()) {
+                throw new SignatureException(
+                        "Verify with secp256k1 failed:" + recoverResult.wedprErrorMessage);
+            }
 
-            ECDSASignature sig =
-                    new ECDSASignature(
-                            Numeric.toBigInt(signatureData.getR()),
-                            Numeric.toBigInt(signatureData.getS()));
-
-            BigInteger k = Sign.recoverFromSignature(signatureData.getV(), sig, hash);
-            return Keys.getAddress(k).equals(Numeric.cleanHexPrefix(address));
+            return address.equals(cryptoSuite.getKeyPairFactory().getAddress(recoverResult.publicKey));
         }
     }
 
@@ -90,30 +61,19 @@ public interface Signer {
 
         private static final Logger logger = LoggerFactory.getLogger(SM2Signer.class);
         private static final int SM2_PUBLIC_KEY_SIZE = 32 * 2;
-
-        @Override
-        public byte[] sign(ECKeyPair ecKeyPair, byte[] srcData) {
-            try {
-                byte[] sign = SM2Algorithm.sign(srcData, ecKeyPair.getPrivateKey());
-                byte[] pub = Numeric.toBytesPadded(ecKeyPair.getPublicKey(), SM2_PUBLIC_KEY_SIZE);
-                return Bytes.concat(sign, pub);
-            } catch (IOException e) {
-                logger.error("e: ", e);
-                throw new RuntimeException(e.getCause());
-            }
-        }
+        private CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.SM_TYPE);
 
         @Override
         public boolean verifyBySrcData(byte[] signData, byte[] srcData, String address) {
-            return verify(signData, srcData, address);
+            return verify(signData, srcData, address, false);
         }
 
         @Override
         public boolean verifyByHashData(byte[] signData, byte[] hashData, String address) {
-            return verify(signData, hashData, address);
+            return verify(signData, hashData, address, true);
         }
 
-        boolean verify(byte[] signData, byte[] data, String address) {
+        boolean verify(byte[] signData, byte[] data, String address, boolean dataIsHash) {
             if (signData.length < SM2_PUBLIC_KEY_SIZE) {
                 throw new InvalidParameterException(
                         "the length of sign data is too short, data: " + Hex.toHexString(signData));
@@ -122,19 +82,19 @@ public interface Signer {
             byte[] pub = new byte[SM2_PUBLIC_KEY_SIZE];
             System.arraycopy(signData, 0, sign, 0, sign.length);
             System.arraycopy(signData, sign.length, pub, 0, pub.length);
-            try {
-                return SM2Algorithm.verify(
-                                data,
-                                sign,
-                                Hex.toHexString(pub, 0, 32),
-                                Hex.toHexString(pub, 32, 32))
-                        && Keys.getAddress(Numeric.toHexStringNoPrefix(pub))
-                                .equals(Numeric.cleanHexPrefix(address));
-            } catch (Exception e) {
-                logger.error("e: ", e);
-                e.printStackTrace();
-                throw new RuntimeException(e.getCause());
+
+            byte[] hash = data;
+            if (!dataIsHash) {
+                hash = cryptoSuite.hash(data);
             }
+
+            String message = Hex.toHexString(hash);
+            String signatrue = Hex.toHexString(signData);
+
+            boolean verify = cryptoSuite.verify(Hex.toHexString(pub), message, signatrue);
+            String addressFromPub = cryptoSuite.getKeyPairFactory().getAddress(Hex.toHexString(pub));
+
+            return verify && addressFromPub.equals(address);
         }
     }
 }

@@ -84,6 +84,7 @@ public class BCOSDriver implements Driver {
     private ABIDefinitionFactory abiDefinitionFactory;
     private FunctionEncoder functionEncoder;
     private TransactionEncoderService transactionEncoderService;
+    private Signer signer;
 
     public BCOSDriver(CryptoSuite cryptoSuite) {
         objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
@@ -92,6 +93,7 @@ public class BCOSDriver implements Driver {
         this.abiDefinitionFactory = new ABIDefinitionFactory(cryptoSuite);
         this.functionEncoder = new FunctionEncoder(cryptoSuite);
         this.transactionEncoderService = new TransactionEncoderService(cryptoSuite);
+        this.signer = Signer.newSigner(cryptoSuite.getCryptoTypeConfig());
     }
 
     public AsyncCnsService getAsyncCnsService() {
@@ -148,9 +150,8 @@ public class BCOSDriver implements Driver {
                             if (extendedRawTransaction
                                     .getData()
                                     .startsWith(
-                                            Numeric.cleanHexPrefix(
-                                                    FunctionUtility
-                                                            .ProxySendTransactionTXMethodId))) {
+                                            Numeric.cleanHexPrefix(functionEncoder.buildMethodId(
+                                                    FunctionUtility.ProxySendTransactionTXMethod)))) {
                                 Tuple6<String, String, BigInteger, String, String, byte[]>
                                         sendTransactionProxyFunctionInput =
                                                 FunctionUtility
@@ -172,8 +173,8 @@ public class BCOSDriver implements Driver {
                         } else {
                             if (transactionParams
                                     .getData()
-                                    .startsWith(
-                                            FunctionUtility.ProxyCallWithTransactionIdMethodId)) {
+                                    .startsWith(functionEncoder.buildMethodId(
+                                            FunctionUtility.ProxyCallWithTransactionIdMethod))) {
                                 Tuple4<String, String, String, byte[]>
                                         constantCallProxyFunctionInput =
                                                 FunctionUtility.getConstantCallProxyFunctionInput(
@@ -374,6 +375,7 @@ public class BCOSDriver implements Driver {
                                     || "0".equals(transactionID)) {
                                 function =
                                         FunctionUtility.newConstantCallProxyFunction(
+                                                functionEncoder,
                                                 path.getResource(),
                                                 functions.get(0).getMethodSignatureAsString(),
                                                 encodedArgs);
@@ -659,6 +661,7 @@ public class BCOSDriver implements Driver {
                                                     function =
                                                             FunctionUtility
                                                                     .newSendTransactionProxyFunction(
+                                                                            functionEncoder,
                                                                             uid,
                                                                             path.getResource(),
                                                                             functions
@@ -1125,7 +1128,7 @@ public class BCOSDriver implements Driver {
 
             String proxyInput = receipt.getInput();
             String proxyOutput = receipt.getOutput();
-            if (proxyInput.startsWith(FunctionUtility.ProxySendTXMethodId)) {
+            if (proxyInput.startsWith(functionEncoder.buildMethodId(FunctionUtility.ProxySendTXMethod))) {
                 Tuple3<String, String, byte[]> proxyResult =
                         FunctionUtility.getSendTransactionProxyWithoutTxIdFunctionInput(proxyInput);
                 resource = proxyResult.getValue2();
@@ -1136,7 +1139,7 @@ public class BCOSDriver implements Driver {
                 if (logger.isDebugEnabled()) {
                     logger.debug("  resource: {}, methodId: {}", resource, methodId);
                 }
-            } else if (proxyInput.startsWith(FunctionUtility.ProxySendTransactionTXMethodId)) {
+            } else if (proxyInput.startsWith(functionEncoder.buildMethodId(FunctionUtility.ProxySendTransactionTXMethod))) {
                 Tuple6<String, String, BigInteger, String, String, byte[]> proxyInputResult =
                         FunctionUtility.getSendTransactionProxyFunctionInput(proxyInput);
 
@@ -1378,7 +1381,7 @@ public class BCOSDriver implements Driver {
     @Override
     public boolean accountVerify(String identity, byte[] signBytes, byte[] message) {
         // TODO identity should be pubkey not addrss
-        boolean verify = cryptoSuite.verify(identity, message, signBytes);
+        boolean verify = signer.verifyBySrcData(signBytes, message, identity);
         return verify;
     }
 
