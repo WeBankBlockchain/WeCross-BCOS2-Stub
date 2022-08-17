@@ -1,7 +1,7 @@
 package com.webank.wecross.stub.bcos.contract;
 
-import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
-import org.fisco.bcos.web3j.tuples.generated.Tuple2;
+import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple2;
+import org.fisco.bcos.sdk.client.protocol.response.Call;
 import org.junit.Assert;
 import org.junit.Test;
 
