@@ -18,7 +18,7 @@ public class BlockManagerImplMock implements BlockManager {
         this.web3jWrapper = web3jWrapper;
     }
 
-    public long getBlockNumber() {
+    public long getBlockNumber() throws IOException {
         BigInteger blockNumber = web3jWrapper.getBlockNumber();
         return blockNumber.longValue();
     }

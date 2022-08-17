@@ -9,25 +9,28 @@ import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.fisco.bcos.sdk.model.callback.TransactionCallback;
 
+import java.io.IOException;
 import java.math.BigInteger;
 
-/** Wrapper interface for JavaSDK */
+/**
+ * Wrapper interface for JavaSDK
+ */
 public interface Web3jWrapper {
-    BcosBlock.Block getBlockByNumber(long blockNumber);
+    BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException;
 
-    BcosBlockHeader.BlockHeader getBlockHeaderByNumber(long blockNumber);
+    BcosBlockHeader.BlockHeader getBlockHeaderByNumber(long blockNumber) throws IOException;
 
-    BigInteger getBlockNumber();
+    BigInteger getBlockNumber() throws IOException;
 
-    void sendTransaction(String signedTransactionData, TransactionCallback callback);
+    void sendTransaction(String signedTransactionData, TransactionCallback callback) throws IOException;
 
-    TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(String transactionHash);
+    TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(String transactionHash) throws IOException;
 
-    TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(String transactionHash);
+    TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(String transactionHash) throws IOException;
 
-    TransactionReceipt getTransactionReceipt(String transactionHash);
+    TransactionReceipt getTransactionReceipt(String transactionHash) throws IOException;
 
-    JsonTransactionResponse getTransaction(String transactionHash);
+    JsonTransactionResponse getTransaction(String transactionHash) throws IOException;
 
-    Call.CallOutput call(String accountAddress, String contractAddress, String data);
+    Call.CallOutput call(String accountAddress, String contractAddress, String data) throws IOException;
 }

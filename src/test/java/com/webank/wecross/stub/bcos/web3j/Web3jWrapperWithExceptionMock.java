@@ -1,6 +1,5 @@
 package com.webank.wecross.stub.bcos.web3j;
 
-import lombok.SneakyThrows;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
 import org.fisco.bcos.sdk.client.protocol.response.Call;
@@ -18,45 +17,37 @@ public class Web3jWrapperWithExceptionMock extends AbstractWeb3jWrapper {
         super(null);
     }
 
-    @SneakyThrows
     @Override
-    public BcosBlock.Block getBlockByNumber(long blockNumber){
+    public BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException {
         throw new IOException(" IOException");
     }
 
-    @SneakyThrows
-    public BcosBlockHeader.BlockHeader getBlockHeaderByNumber(long blockNumber){
+    public BcosBlockHeader.BlockHeader getBlockHeaderByNumber(long blockNumber) throws IOException {
         throw new IOException(" IOException");
     }
 
-    @SneakyThrows
     @Override
-    public BigInteger getBlockNumber(){
+    public BigInteger getBlockNumber() throws IOException {
         throw new IOException(" IOException");
     }
 
-
-    @SneakyThrows
     @Override
-    public void sendTransaction(String signedTransactionData, TransactionCallback callback) {
+    public void sendTransaction(String signedTransactionData, TransactionCallback callback) throws IOException {
         throw new IOException(" IOException");
     }
 
-    @SneakyThrows
     @Override
-    public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(String transactionHash) {
+    public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(String transactionHash) throws IOException {
         throw new IOException(" IOException");
     }
 
-    @SneakyThrows
     @Override
-    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(String transactionHash) {
+    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(String transactionHash) throws IOException {
         throw new IOException(" IOException");
     }
 
-    @SneakyThrows
     @Override
-    public Call.CallOutput call(String accountAddress, String contractAddress, String data) {
+    public Call.CallOutput call(String accountAddress, String contractAddress, String data) throws IOException {
         throw new IOException(" IOException");
     }
 

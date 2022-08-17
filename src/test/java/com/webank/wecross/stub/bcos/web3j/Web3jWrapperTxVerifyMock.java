@@ -1,6 +1,6 @@
 package com.webank.wecross.stub.bcos.web3j;
 
-import lombok.SneakyThrows;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
@@ -32,8 +32,7 @@ public class Web3jWrapperTxVerifyMock extends Web3jWrapperImplMock {
     private TransactionWithProof.TransactionAndProof transAndProof0 = null;
     private TransactionReceiptWithProof.ReceiptAndProof receiptAndProof0 = null;
 
-    @SneakyThrows
-    public Web3jWrapperTxVerifyMock(){
+    public Web3jWrapperTxVerifyMock() throws JsonProcessingException {
         block = ObjectMapperFactory.getObjectMapper().readValue(blockJson, BcosBlock.Block.class);
         transAndProof =
                 ObjectMapperFactory.getObjectMapper()
@@ -57,20 +56,17 @@ public class Web3jWrapperTxVerifyMock extends Web3jWrapperImplMock {
                                 TransactionReceiptWithProof.ReceiptAndProof.class);
     }
 
-    @SneakyThrows
     @Override
     public BcosBlock.Block getBlockByNumber(long blockNumber){
         return block;
     }
 
-    @SneakyThrows
     @Override
     public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(
             String transactionHash){
         return receiptAndProof;
     }
 
-    @SneakyThrows
     @Override
     public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(String transactionHash) {
         return transAndProof;
