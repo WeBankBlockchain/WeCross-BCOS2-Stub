@@ -9,6 +9,9 @@ import org.fisco.bcos.sdk.crypto.keystore.PEMKeyStore;
 import org.fisco.bcos.sdk.model.CryptoType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.io.support.ResourcePatternResolver;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -110,9 +113,7 @@ public class BCOSAccountFactory {
     }
 
     public BCOSAccount build(String name, String accountPath)
-            throws IOException, CertificateException, UnrecoverableKeyException,
-                    NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException,
-                    InvalidKeySpecException {
+            throws IOException {
         String accountConfigFile = accountPath + File.separator + "account.toml";
         logger.debug("Loading account.toml: {}", accountConfigFile);
 
@@ -135,8 +136,10 @@ public class BCOSAccountFactory {
     }
 
     // load pem account file
-    public CryptoKeyPair loadPemAccount(String accountFile) {
-        PEMKeyStore keyTool = new PEMKeyStore(accountFile);
+    public CryptoKeyPair loadPemAccount(String accountFile) throws IOException {
+        ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        Resource pemResources = resolver.getResource(accountFile);
+        PEMKeyStore keyTool = new PEMKeyStore(pemResources.getInputStream());
         CryptoKeyPair cryptoKeyPair = cryptoSuite.getKeyPairFactory().createKeyPair(keyTool.getKeyPair());
         logger.info(" credentials address: {}", cryptoKeyPair.getAddress());
         return cryptoKeyPair;
@@ -151,8 +154,10 @@ public class BCOSAccountFactory {
     }
 
     // load p12 account file
-    public CryptoKeyPair loadP12Account(String accountFile, String password) {
-        P12KeyStore keyTool = new P12KeyStore(accountFile, password);
+    public CryptoKeyPair loadP12Account(String accountFile, String password) throws IOException {
+        ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        Resource p12Resources = resolver.getResource(accountFile);
+        P12KeyStore keyTool = new P12KeyStore(p12Resources.getInputStream(), password);
         CryptoKeyPair cryptoKeyPair = cryptoSuite.getKeyPairFactory().createKeyPair(keyTool.getKeyPair());
         logger.info(" credentials address: {}", cryptoKeyPair.getAddress());
         return cryptoKeyPair;
