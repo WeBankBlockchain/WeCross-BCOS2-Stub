@@ -10,12 +10,7 @@ import org.fisco.bcos.sdk.utils.Numeric;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @projectName: bcos2-stub
- * @package: com.webank.wecross.stub.bcos.common
- * @className: ReceiptEncoder
- * @date: 2022/8/2 16:43
- */
+
 public class ReceiptEncoder {
     public static String encode(TransactionReceipt transactionReceipt, EnumNodeVersion.Version version) {
         List<RlpType> values = asRlpValues(transactionReceipt, version);

@@ -17,12 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigInteger;
 import java.util.List;
 
-/**
- * @projectName: bcos2-stub
- * @package: com.webank.wecross.stub.bcos.common
- * @className: MerkleProofUtility
- * @date: 2022/8/2 16:03
- */
+
 public class MerkleProofUtility {
     private static final Logger logger = LoggerFactory.getLogger(MerkleProofUtility.class);
 
@@ -79,7 +74,7 @@ public class MerkleProofUtility {
                 RlpEncoder.encode(RlpString.create(Numeric.decodeQuantity(transactionReceipt.getTransactionIndex())));
 
         if (!transactionReceipt.getGasUsed().startsWith("0x")) {
-            transactionReceipt.setGasUsed("0x" + transactionReceipt.getGasUsed());
+            transactionReceipt.setGasUsed("0x" + Numeric.decodeQuantity(transactionReceipt.getGasUsed()).toString(16));
         }
 
         if (classVersion != null && classVersion.getMinor() >= 9) {
@@ -150,7 +145,7 @@ public class MerkleProofUtility {
             String supportedVersion, CryptoSuite cryptoSuite) {
 
         if (!transactionReceipt.getGasUsed().startsWith("0x")) {
-            transactionReceipt.setGasUsed("0x" + transactionReceipt.getGasUsed());
+            transactionReceipt.setGasUsed("0x" + Numeric.decodeQuantity(transactionReceipt.getGasUsed()).toString(16));
         }
 
         EnumNodeVersion.Version classVersion = null;
