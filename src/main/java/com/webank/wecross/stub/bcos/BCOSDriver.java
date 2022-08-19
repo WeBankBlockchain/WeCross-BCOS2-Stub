@@ -763,7 +763,7 @@ public class BCOSDriver implements Driver {
                                                                     }
 
                                                                     blockManager.asyncGetBlock(
-                                                                            Long.valueOf(receipt.getBlockNumber()),
+                                                                            Numeric.decodeQuantity(receipt.getBlockNumber()).longValue(),
                                                                             (blockException,
                                                                                     block) -> {
                                                                                 try {
@@ -796,7 +796,7 @@ public class BCOSDriver implements Driver {
 
                                                                                     transactionResponse
                                                                                             .setBlockNumber(
-                                                                                                    Long.valueOf(receipt.getBlockNumber()));
+                                                                                                    Numeric.decodeQuantity(receipt.getBlockNumber()).longValue());
                                                                                     transactionResponse
                                                                                             .setHash(
                                                                                                     receipt
@@ -1062,9 +1062,9 @@ public class BCOSDriver implements Driver {
                     }
 
                     if (blockNumber
-                            != Long.valueOf(proof.getReceiptAndProof()
+                            != Numeric.decodeQuantity(proof.getReceiptAndProof()
                                     .getReceipt()
-                                    .getBlockNumber())) {
+                                    .getBlockNumber()).longValue()) {
                         callback.onResponse(
                                 new Exception("Transaction hash does not match the block number"),
                                 null);
@@ -1132,7 +1132,7 @@ public class BCOSDriver implements Driver {
             transaction.getTransactionResponse().setHash(transactionHash);
             transaction
                     .getTransactionResponse()
-                    .setBlockNumber(Long.valueOf(receipt.getBlockNumber()));
+                    .setBlockNumber(Numeric.decodeQuantity(receipt.getBlockNumber()).longValue());
 
             String proxyInput = receipt.getInput();
             String proxyOutput = receipt.getOutput();
