@@ -1,6 +1,6 @@
 package com.webank.wecross.stub.bcos.contract;
 
-import com.webank.wecross.stub.ObjectMapperFactory;
+import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;

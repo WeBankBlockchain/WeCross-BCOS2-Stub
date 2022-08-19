@@ -2,10 +2,10 @@ package com.webank.wecross.stub.bcos;
 
 import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.BlockManager;
+import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
 import com.webank.wecross.stub.bcos.contract.BlockUtility;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
-import org.fisco.bcos.sdk.utils.ObjectMapperFactory;
 
 import java.io.IOException;
 import java.math.BigInteger;

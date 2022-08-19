@@ -6,7 +6,6 @@ import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
-import com.webank.wecross.stub.ObjectMapperFactory;
 import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.ResourceInfo;
@@ -20,6 +19,7 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.BCOSStubException;
+import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
@@ -44,7 +44,6 @@ import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.model.CryptoType;
 import org.fisco.bcos.sdk.transaction.codec.encode.TransactionEncoderService;
 import org.fisco.bcos.sdk.transaction.model.po.RawTransaction;
-import org.fisco.bcos.sdk.transaction.signer.TransactionSignerServcie;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
@@ -134,7 +133,7 @@ public class BCOSDriverTest {
     @Test
     public void decodeCallTransactionRequestTest() throws Exception {
         String func = "func";
-        String[] params = new String[] {"a", "b", "c"};
+        String[] params = new String[]{"a", "b", "c"};
 
         TransactionRequest request = new TransactionRequest(func, params);
         Function function = FunctionUtility.newDefaultFunction(func, params);
@@ -155,7 +154,7 @@ public class BCOSDriverTest {
     @Test
     public void decodeSendTransactionTransactionRequestTest() throws Exception {
         String func = "func";
-        String[] params = new String[] {"a", "b", "c"};
+        String[] params = new String[]{"a", "b", "c"};
 
         TransactionRequest request = new TransactionRequest(func, params);
         Function function = FunctionUtility.newDefaultFunction(func, params);
@@ -185,7 +184,7 @@ public class BCOSDriverTest {
     @Test
     public void decodeProxySendTransactionTransactionRequestTest() throws Exception {
         String func = "set";
-        String[] params = new String[] {"a"};
+        String[] params = new String[]{"a"};
 
         String abi =
                 "[{\"constant\":false,\"inputs\":[{\"name\":\"n\",\"type\":\"string\"}],\"name\":\"set\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"get\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]";
@@ -227,7 +226,7 @@ public class BCOSDriverTest {
     @Test
     public void decodeProxyCallTransactionRequestTest() throws Exception {
         String func = "set";
-        String[] params = new String[] {"a"};
+        String[] params = new String[]{"a"};
 
         String abi =
                 "[{\"constant\":false,\"inputs\":[{\"name\":\"n\",\"type\":\"string\"}],\"name\":\"set\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"get\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]";
@@ -369,7 +368,7 @@ public class BCOSDriverTest {
 
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
-        String[] params = new String[] {"abc", "def", "hig", "xxxxx"};
+        String[] params = new String[]{"abc", "def", "hig", "xxxxx"};
 
         TransactionRequest transactionRequest = createTransactionRequest(funName, params);
 
