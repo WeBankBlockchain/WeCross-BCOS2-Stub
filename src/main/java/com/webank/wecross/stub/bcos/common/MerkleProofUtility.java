@@ -14,6 +14,7 @@ import org.fisco.bcos.sdk.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -36,7 +37,7 @@ public class MerkleProofUtility {
             String transactionRoot, TransactionWithProof.TransactionAndProof transAndProof, CryptoSuite cryptoSuite) {
         // transaction index
         JsonTransactionResponse transaction = transAndProof.getTransaction();
-        String index = transaction.getTransactionIndex();
+        BigInteger index = Numeric.decodeQuantity(transaction.getTransactionIndex());
         String input =
                 Numeric.toHexString(RlpEncoder.encode(RlpString.create(index)))
                         + transaction.getHash().substring(2);
@@ -73,8 +74,9 @@ public class MerkleProofUtility {
         TransactionReceipt transactionReceipt = receiptAndProof.getReceipt();
 
         // transaction index
+
         byte[] byteIndex =
-                RlpEncoder.encode(RlpString.create(transactionReceipt.getTransactionIndex()));
+                RlpEncoder.encode(RlpString.create(Numeric.decodeQuantity(transactionReceipt.getTransactionIndex())));
 
         if (!transactionReceipt.getGasUsed().startsWith("0x")) {
             transactionReceipt.setGasUsed("0x" + transactionReceipt.getGasUsed());
@@ -88,9 +90,8 @@ public class MerkleProofUtility {
         }
 
         String receiptRlp = ReceiptEncoder.encode(transactionReceipt, classVersion);
-        String rlpHash = cryptoSuite.hash(receiptRlp);
+        String rlpHash = Numeric.toHexString(cryptoSuite.hash(Numeric.hexStringToByteArray(receiptRlp)));
         String input = Numeric.toHexString(byteIndex) + rlpHash.substring(2);
-
         String proof = Merkle.calculateMerkleRoot(receiptAndProof.getReceiptProof(), input, cryptoSuite);
 
         logger.debug(
@@ -119,7 +120,7 @@ public class MerkleProofUtility {
             String transactionRoot,
             List<MerkleProofUnit> txProof, CryptoSuite cryptoSuite) {
         String input =
-                Numeric.toHexString(RlpEncoder.encode(RlpString.create(index)))
+                Numeric.toHexString(RlpEncoder.encode(RlpString.create(Numeric.decodeQuantity(index))))
                         + transactionHash.substring(2);
         String proof = Merkle.calculateMerkleRoot(txProof, input, cryptoSuite);
 
@@ -167,11 +168,9 @@ public class MerkleProofUtility {
 
         // transaction index
         byte[] byteIndex =
-                RlpEncoder.encode(RlpString.create(transactionReceipt.getTransactionIndex()));
-
+                RlpEncoder.encode(RlpString.create(Numeric.decodeQuantity(transactionReceipt.getTransactionIndex())));
         String receiptRlp = ReceiptEncoder.encode(transactionReceipt, classVersion);
-        //String rlpHash = Hash.sha3(receiptRlp);
-        String rlpHash = cryptoSuite.hash(receiptRlp);
+        String rlpHash = Numeric.toHexString(cryptoSuite.hash(Numeric.hexStringToByteArray(receiptRlp)));
         String input = Numeric.toHexString(byteIndex) + rlpHash.substring(2);
 
         String proof = Merkle.calculateMerkleRoot(receiptProof, input, cryptoSuite);
