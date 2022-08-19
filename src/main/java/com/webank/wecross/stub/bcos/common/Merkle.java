@@ -2,6 +2,7 @@ package com.webank.wecross.stub.bcos.common;
 
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.model.MerkleProofUnit;
+import org.fisco.bcos.sdk.utils.Numeric;
 
 import java.util.Arrays;
 import java.util.List;
@@ -22,7 +23,9 @@ public class Merkle {
             String left = splicing(merkleProofUnit.getLeft());
             String right = splicing(merkleProofUnit.getRight());
             String input = splicing("0x", left, result.substring(2), right);
-            result = cryptoSuite.hash(input);
+            byte[] inputByte=cryptoSuite.hash(Numeric.hexStringToByteArray(input));
+            result = Numeric.toHexString(inputByte);
+
         }
         return result;
     }
