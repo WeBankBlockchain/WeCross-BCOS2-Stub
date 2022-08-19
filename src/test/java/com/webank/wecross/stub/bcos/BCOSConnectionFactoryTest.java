@@ -6,9 +6,8 @@ import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
+import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImplMock;
-import org.fisco.bcos.sdk.crypto.CryptoSuite;
-import org.fisco.bcos.sdk.model.CryptoType;
 import org.junit.Test;
 
 import java.util.List;
@@ -25,13 +24,11 @@ public class BCOSConnectionFactoryTest {
             BCOSStubConfigParser bcosStubConfigParser =
                     new BCOSStubConfigParser("./", "stub-sample-ut.toml");
             BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
-            CryptoSuite cryptoSuite = bcosStubConfig.getChannelService().isGmConnectEnable() ?
-                    new CryptoSuite(CryptoType.SM_TYPE) : new CryptoSuite(CryptoType.ECDSA_TYPE);
-
+            AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperImplMock();
             Connection connection =
-                    BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperImplMock());
+                    BCOSConnectionFactory.build(bcosStubConfig, web3jWrapper);
 
-            Driver driver = new BCOSDriver(cryptoSuite);
+            Driver driver = new BCOSDriver(web3jWrapper.getCryptoSuite());
             List<ResourceInfo> resources = driver.getResources(connection);
             assertTrue(resources.size() == 4);
             ResourceInfo resourceInfo = resources.get(0);
