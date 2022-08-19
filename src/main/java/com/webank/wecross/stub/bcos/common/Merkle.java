@@ -7,12 +7,7 @@ import org.fisco.bcos.sdk.utils.Numeric;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * @projectName: bcos2-stub
- * @package: com.webank.wecross.stub.bcos.common
- * @className: Merkle
- * @date: 2022/8/2 16:16
- */
+
 public class Merkle {
     public static String calculateMerkleRoot(List<MerkleProofUnit> merkleProofUnits, String hash, CryptoSuite cryptoSuite) {
         if (merkleProofUnits == null) {
