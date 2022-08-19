@@ -1,10 +1,10 @@
 package com.webank.wecross.stub.bcos.web3j;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
-import org.fisco.bcos.sdk.utils.ObjectMapperFactory;
 
 
 public class Web3jWrapperTxVerifyMock extends Web3jWrapperImplMock {

@@ -3,6 +3,7 @@ package com.webank.wecross.stub.bcos.web3j;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
 import org.fisco.bcos.sdk.client.protocol.response.Call;
@@ -10,7 +11,6 @@ import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.fisco.bcos.sdk.model.callback.TransactionCallback;
-import org.fisco.bcos.sdk.utils.ObjectMapperFactory;
 
 import java.math.BigInteger;
 
@@ -44,12 +44,12 @@ public class Web3jWrapperImplMock extends AbstractWeb3jWrapper {
 
     @Override
     public void sendTransaction(String signedTransactionData, TransactionCallback callback) throws JsonProcessingException {
-        String str =
+        String transactionReceiptJson =
                 "{\"blockHash\":\"0xd9e9241be0853aacc88b1ff921eb598af0080a100514e192e9a449f577b3a2ef\",\"blockNumber\":\"0x9\",\"contractAddress\":\"0x0000000000000000000000000000000000000000\",\"from\":\"0x35039a08bd5aa848fe9ce1c49bf1e3c2ba640434\",\"gasUsed\":\"0x802c\",\"input\":\"0x4ed3885e000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000016100000000000000000000000000000000000000000000000000000000000000\",\"logs\":[],\"logsBloom\":\"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"output\":\"0x\",\"root\":\"0x70e6fa150a77f34c71ad9e9923734a740e0bd0a3eeb3cf9a804c43e6012b16bd\",\"status\":\"0x0\",\"to\":\"0x7ba8711a62d7e1377988efff0cb9de45c6353169\",\"transactionHash\":\"0x8b3946912d1133f9fb0722a7b607db2456d468386c2e86b035e81ef91d94eb90\",\"transactionIndex\":\"0x0\",\"receiptProof\":[{\"left\":[],\"right\":[]}],\"txProof\":[{\"left\":[],\"right\":[]}]}";
         ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
         objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         TransactionReceipt transactionReceipt =
-                objectMapper.readValue(str, TransactionReceipt.class);
+                objectMapper.readValue(transactionReceiptJson, TransactionReceipt.class);
         callback.onResponse(transactionReceipt);
     }
 

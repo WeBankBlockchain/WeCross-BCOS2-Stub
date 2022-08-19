@@ -1,18 +1,18 @@
 package com.webank.wecross.stub.bcos.contract;
 
-import static junit.framework.TestCase.assertTrue;
-
-import com.webank.wecross.stub.ObjectMapperFactory;
 import com.webank.wecross.stub.bcos.common.MerkleProofUtility;
+import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
-import java.io.IOException;
-
 import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
+
+import static junit.framework.TestCase.assertTrue;
 
 public class ProofVerifierUtilityTest {
     private String blockJson =
