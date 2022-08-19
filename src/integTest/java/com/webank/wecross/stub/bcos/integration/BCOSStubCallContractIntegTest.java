@@ -160,7 +160,7 @@ public class BCOSStubCallContractIntegTest {
         BCOSAccount bcosAccount = (BCOSAccount) account;
         blockManager = new Web3jBlockManager(web3jWrapper);
         asyncCnsService = ((BCOSDriver) driver).getAsyncCnsService();
-        cryptoSuite = web3jWrapper.getClient().getCryptoSuite();
+        cryptoSuite = web3jWrapper.getCryptoSuite();
 
         helloWeCross =
                 HelloWeCross

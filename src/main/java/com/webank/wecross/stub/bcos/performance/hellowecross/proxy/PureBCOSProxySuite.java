@@ -27,7 +27,7 @@ public abstract class PureBCOSProxySuite extends PureBCOSSuite {
             String chainName, String accountName, boolean sm, String contractName)
             throws Exception {
         super(chainName, accountName, sm);
-        this.cnsInfo = CnsService.queryProxyCnsInfo(new Web3jWrapperImplV26(getClient()), this.getCryptoSuite());
+        this.cnsInfo = CnsService.queryProxyCnsInfo(new Web3jWrapperImplV26(getClient()));
         this.abiCodecJsonWrapper = new ABICodecJsonWrapper();
         this.contractName = contractName;
 

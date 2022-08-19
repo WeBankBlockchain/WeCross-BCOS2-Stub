@@ -138,7 +138,7 @@ public class TwoPCContractDeployment {
                     tps,
                     fromIndex,
                     toIndex,
-                    web3jWrapper.getClient().getCryptoSuite());
+                    web3jWrapper.getCryptoSuite());
 
         } catch (Exception e) {
             logger.error("e: ", e);

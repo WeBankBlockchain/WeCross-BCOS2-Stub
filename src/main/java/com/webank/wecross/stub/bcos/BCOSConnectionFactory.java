@@ -7,8 +7,6 @@ import com.webank.wecross.stub.bcos.preparation.CnsService;
 import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperFactory;
 import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
-import org.fisco.bcos.sdk.crypto.CryptoSuite;
-import org.fisco.bcos.sdk.model.CryptoType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
@@ -22,7 +20,7 @@ public class BCOSConnectionFactory {
 
 
     public static BCOSConnection build(BCOSStubConfig bcosStubConfig,
-                                       AbstractWeb3jWrapper web3jWrapper){
+                                       AbstractWeb3jWrapper web3jWrapper) {
         ScheduledExecutorService scheduledExecutorService =
                 new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
         return build(bcosStubConfig, web3jWrapper, scheduledExecutorService);
@@ -34,9 +32,6 @@ public class BCOSConnectionFactory {
                                        ScheduledExecutorService executorService) {
 
         logger.info(" bcosStubConfig: {}, version: {} ", bcosStubConfig, web3jWrapper.getVersion());
-        CryptoSuite cryptoSuite = bcosStubConfig.getChannelService().isGmConnectEnable() ?
-                new CryptoSuite(CryptoType.SM_TYPE) : new CryptoSuite(CryptoType.ECDSA_TYPE);
-
         BCOSConnection bcosConnection = new BCOSConnection(web3jWrapper, executorService);
         bcosConnection.setResourceInfoList(bcosStubConfig.convertToResourceInfos());
 
@@ -50,13 +45,13 @@ public class BCOSConnectionFactory {
             bcosConnection.addProperty(BCOSConstant.BCOS_NODE_VERSION, web3jWrapper.getVersion());
         }
 
-        CnsInfo proxyCnsInfo = CnsService.queryProxyCnsInfo(web3jWrapper, cryptoSuite);
+        CnsInfo proxyCnsInfo = CnsService.queryProxyCnsInfo(web3jWrapper);
         if (Objects.nonNull(proxyCnsInfo)) {
             bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_NAME, proxyCnsInfo.getAddress());
             bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_ABI, proxyCnsInfo.getAbi());
         }
 
-        CnsInfo hubCnsInfo = CnsService.queryHubCnsInfo(web3jWrapper, cryptoSuite);
+        CnsInfo hubCnsInfo = CnsService.queryHubCnsInfo(web3jWrapper);
         if (Objects.nonNull(hubCnsInfo)) {
             bcosConnection.addProperty(BCOSConstant.BCOS_HUB_NAME, hubCnsInfo.getAddress());
         }
