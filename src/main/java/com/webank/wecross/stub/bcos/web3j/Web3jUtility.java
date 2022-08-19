@@ -36,9 +36,9 @@ public class Web3jUtility {
 
         //threadPool
         Map<String, Object> threadPool = new HashMap<>();
-        threadPool.put("channelProcessorThreadSize", channelServiceConfig.getThreadNum());
-        threadPool.put("receiptProcessorThreadSize", channelServiceConfig.getThreadNum());
-        threadPool.put("maxBlockingQueueSize", channelServiceConfig.getQueueCapacity());
+        threadPool.put("channelProcessorThreadSize", String.valueOf(channelServiceConfig.getThreadNum()));
+        threadPool.put("receiptProcessorThreadSize", String.valueOf(channelServiceConfig.getThreadNum()));
+        threadPool.put("maxBlockingQueueSize", String.valueOf(channelServiceConfig.getQueueCapacity()));
 
         //configProperty
         ConfigProperty configProperty = new ConfigProperty();

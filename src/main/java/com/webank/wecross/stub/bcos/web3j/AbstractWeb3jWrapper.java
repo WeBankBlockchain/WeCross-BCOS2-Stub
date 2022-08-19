@@ -8,19 +8,24 @@ import org.fisco.bcos.sdk.client.protocol.response.BcosTransaction;
 import org.fisco.bcos.sdk.client.protocol.response.BcosTransactionReceipt;
 import org.fisco.bcos.sdk.client.protocol.response.BlockNumber;
 import org.fisco.bcos.sdk.client.protocol.response.Call;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.model.CryptoType;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.fisco.bcos.sdk.model.callback.TransactionCallback;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Objects;
 
 public abstract class AbstractWeb3jWrapper implements Web3jWrapper {
 
     private Client client;
     private String version;
+    private CryptoSuite cryptoSuite;
 
     public AbstractWeb3jWrapper(Client client) {
         this.client = client;
+        this.cryptoSuite = Objects.nonNull(client) ? client.getCryptoSuite() : new CryptoSuite(CryptoType.ECDSA_TYPE);
     }
 
     @Override
@@ -73,5 +78,13 @@ public abstract class AbstractWeb3jWrapper implements Web3jWrapper {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    public CryptoSuite getCryptoSuite() {
+        return cryptoSuite;
+    }
+
+    public void setCryptoSuite(CryptoSuite cryptoSuite) {
+        this.cryptoSuite = cryptoSuite;
     }
 }

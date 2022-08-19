@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.StatusCode;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
+import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
 import org.fisco.bcos.sdk.abi.FunctionEncoder;
 import org.fisco.bcos.sdk.abi.TypeReference;
 import org.fisco.bcos.sdk.abi.datatypes.Function;
@@ -27,24 +27,28 @@ public class CnsService {
 
     public static final int MAX_VERSION_LENGTH = 40;
 
-    public static CnsInfo queryProxyCnsInfo(Web3jWrapper web3jWrapper, CryptoSuite cryptoSuite) {
-        return queryCnsInfo(web3jWrapper, BCOSConstant.BCOS_PROXY_NAME, cryptoSuite);
+    public static CnsInfo queryProxyCnsInfo(AbstractWeb3jWrapper web3jWrapper) {
+        return queryCnsInfo(web3jWrapper, BCOSConstant.BCOS_PROXY_NAME);
     }
 
-    public static CnsInfo queryHubCnsInfo(Web3jWrapper web3jWrapper, CryptoSuite cryptoSuite) {
-        return queryCnsInfo(web3jWrapper, BCOSConstant.BCOS_HUB_NAME, cryptoSuite);
+    public static CnsInfo queryHubCnsInfo(AbstractWeb3jWrapper web3jWrapper) {
+        return queryCnsInfo(web3jWrapper, BCOSConstant.BCOS_HUB_NAME);
     }
 
-    /** query cns to get address,abi of hub contract */
-    private static CnsInfo queryCnsInfo(Web3jWrapper web3jWrapper, String name, CryptoSuite cryptoSuite) {
+    /**
+     * query cns to get address,abi of hub contract
+     */
+    private static CnsInfo queryCnsInfo(AbstractWeb3jWrapper web3jWrapper, String name) {
         /** function selectByName(string memory cnsName) public returns(string memory) */
+        CryptoSuite cryptoSuite = web3jWrapper.getCryptoSuite();
         FunctionEncoder functionEncoder = new FunctionEncoder(cryptoSuite);
 
         Function function =
                 new Function(
                         BCOSConstant.CNS_METHOD_SELECTBYNAME,
                         Arrays.<Type>asList(new Utf8String(name)),
-                        Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}));
+                        Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {
+                        }));
         try {
             Call.CallOutput callOutput =
                     web3jWrapper.call(
