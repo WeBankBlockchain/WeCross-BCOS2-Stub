@@ -5,8 +5,6 @@ import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.BCOSConnectionFactory;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
-import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
-import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
 import com.webank.wecross.stub.bcos.common.StatusCode;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
@@ -15,9 +13,11 @@ import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jWrapperFactory;
 import org.fisco.bcos.sdk.client.Client;
 import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
-import org.fisco.bcos.sdk.contract.precompiled.model.PrecompiledResponse;
+import org.fisco.bcos.sdk.contract.precompiled.cns.CnsService;
 import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
 import org.fisco.bcos.sdk.model.CryptoType;
+import org.fisco.bcos.sdk.model.PrecompiledRetCode;
+import org.fisco.bcos.sdk.model.RetCode;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.fisco.bcos.sdk.model.callback.TransactionCallback;
 import org.fisco.bcos.sdk.transaction.codec.encode.TransactionEncoderService;
@@ -205,13 +205,11 @@ public class ProxyContract {
             throw new Exception("Failed to deploy proxy contract.");
         }
 
-        org.fisco.bcos.sdk.contract.precompiled.cns.CnsService cnsService = new org.fisco.bcos.sdk.contract.precompiled.cns.CnsService(client, account.getCredentials());
-        String result = cnsService.registerCNS(cnsName, cnsVersion, contractAddress, metadata.abi).getMessage();
+        CnsService cnsService = new CnsService(client, account.getCredentials());
+        RetCode retCode = cnsService.registerCNS(cnsName, cnsVersion, contractAddress, metadata.abi);
 
-        PrecompiledResponse precompiledResponse =
-                ObjectMapperFactory.getObjectMapper().readValue(result, PrecompiledResponse.class);
-        if (precompiledResponse.getCode() != BCOSStatusCode.Success) {
-            throw new RuntimeException(" registerCns failed, error message: " + result);
+        if (retCode.getCode() < PrecompiledRetCode.CODE_SUCCESS.getCode()) {
+            throw new RuntimeException(" registerCns failed, error message: " + retCode);
         }
 
         CnsInfo cnsInfo = new CnsInfo();
