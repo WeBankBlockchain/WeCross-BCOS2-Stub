@@ -18,8 +18,8 @@ public class Merkle {
             String left = splicing(merkleProofUnit.getLeft());
             String right = splicing(merkleProofUnit.getRight());
             String input = splicing("0x", left, result.substring(2), right);
-            byte[] inputByte=cryptoSuite.hash(Numeric.hexStringToByteArray(input));
-            result = Numeric.toHexString(inputByte);
+            byte[] inputHash=cryptoSuite.hash(Numeric.hexStringToByteArray(input));
+            result = Numeric.toHexString(inputHash);
 
         }
         return result;
