@@ -1382,13 +1382,12 @@ public class BCOSDriver implements Driver {
         }
 
         CryptoKeyPair credentials = ((BCOSAccount) account).getCredentials();
-        SignatureResult sign = cryptoSuite.sign(message, credentials);
-        return sign.getSignatureBytes();
+        byte[] sign = signer.sign(credentials, message);
+        return sign;
     }
 
     @Override
     public boolean accountVerify(String identity, byte[] signBytes, byte[] message) {
-        // TODO identity should be pubkey not addrss
         boolean verify = signer.verifyBySrcData(signBytes, message, identity);
         return verify;
     }

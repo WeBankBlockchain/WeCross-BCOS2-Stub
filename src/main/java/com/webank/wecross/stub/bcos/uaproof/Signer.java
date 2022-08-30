@@ -5,6 +5,10 @@ import com.webank.wedpr.crypto.NativeInterface;
 import org.bouncycastle.util.encoders.Hex;
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.crypto.exceptions.SignatureException;
+import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.crypto.signature.ECDSASignatureResult;
+import org.fisco.bcos.sdk.crypto.signature.SM2SignatureResult;
+import org.fisco.bcos.sdk.crypto.signature.SignatureResult;
 import org.fisco.bcos.sdk.model.CryptoType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import java.security.InvalidParameterException;
 
 public interface Signer {
+
+    byte[] sign(CryptoKeyPair keyPair, byte[] srcData);
 
     boolean verifyBySrcData(byte[] signData, byte[] srcData, String address);
 
@@ -25,6 +31,23 @@ public interface Signer {
 
         private static final int ECDSA_PRIVATE_KEY_SIZE = 32;
         private CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.ECDSA_TYPE);
+
+        @Override
+        public byte[] sign(CryptoKeyPair keyPair, byte[] srcData) {
+            byte[] hash = cryptoSuite.hash(srcData);
+            ECDSASignatureResult sign = (ECDSASignatureResult) cryptoSuite.sign(hash, keyPair);
+
+            byte[] r = sign.getR();
+            byte[] s = sign.getS();
+            byte v = sign.getV();
+
+            byte[] result = new byte[r.length + r.length + 1];
+            System.arraycopy(r, 0, result, 0, r.length);
+            System.arraycopy(s, 0, result, r.length, s.length);
+            result[r.length + s.length] = v;
+
+            return result;
+        }
 
         @Override
         public boolean verifyBySrcData(byte[] signData, byte[] srcData, String address) {
@@ -64,6 +87,23 @@ public interface Signer {
         private CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.SM_TYPE);
 
         @Override
+        public byte[] sign(CryptoKeyPair keyPair, byte[] srcData) {
+            byte[] hash = cryptoSuite.hash(srcData);
+            SM2SignatureResult sign = (SM2SignatureResult) cryptoSuite.sign(hash, keyPair);
+
+            byte[] r = sign.getR();
+            byte[] s = sign.getS();
+            byte[] pub = sign.getPub();
+
+            byte[] result = new byte[r.length + r.length + pub.length];
+            System.arraycopy(r, 0, result, 0, r.length);
+            System.arraycopy(s, 0, result, r.length, s.length);
+            System.arraycopy(pub, 0, result, r.length + s.length, pub.length);
+
+            return result;
+        }
+
+        @Override
         public boolean verifyBySrcData(byte[] signData, byte[] srcData, String address) {
             return verify(signData, srcData, address, false);
         }
@@ -80,8 +120,8 @@ public interface Signer {
             }
             byte[] sign = new byte[signData.length - SM2_PUBLIC_KEY_SIZE];
             byte[] pub = new byte[SM2_PUBLIC_KEY_SIZE];
-            System.arraycopy(signData, 0, sign, 0, sign.length);
-            System.arraycopy(signData, sign.length, pub, 0, pub.length);
+            System.arraycopy(signData, 0, sign, 0, signData.length - SM2_PUBLIC_KEY_SIZE);
+            System.arraycopy(signData, sign.length, pub, 0, SM2_PUBLIC_KEY_SIZE);
 
             byte[] hash = data;
             if (!dataIsHash) {
@@ -89,10 +129,11 @@ public interface Signer {
             }
 
             String message = Hex.toHexString(hash);
-            String signatrue = Hex.toHexString(signData);
+            String signatrue = Hex.toHexString(sign);
+            String hexPubKey = Hex.toHexString(pub);
 
-            boolean verify = cryptoSuite.verify(Hex.toHexString(pub), message, signatrue);
-            String addressFromPub = cryptoSuite.getKeyPairFactory().getAddress(Hex.toHexString(pub));
+            boolean verify = cryptoSuite.verify(hexPubKey, message, signatrue);
+            String addressFromPub = cryptoSuite.getKeyPairFactory().getAddress(hexPubKey);
 
             return verify && addressFromPub.equals(address);
         }
