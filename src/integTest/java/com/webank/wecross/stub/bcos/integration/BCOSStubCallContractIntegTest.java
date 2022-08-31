@@ -31,6 +31,7 @@ import com.webank.wecross.stub.bcos.performance.hellowecross.HelloWeCross;
 import com.webank.wecross.stub.bcos.preparation.ProxyContract;
 import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
 import com.webank.wecross.stub.bcos.web3j.Web3jBlockManager;
+import org.fisco.bcos.sdk.abi.wrapper.ABICodecJsonWrapper;
 import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
@@ -137,6 +138,12 @@ public class BCOSStubCallContractIntegTest {
         System.setProperty("jdk.tls.namedGroups", "secp256k1");
 
         /** load stub.toml config */
+        try {
+            connection = BCOSConnectionFactory.build("./chains/bcos/", "stub.toml");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         BCOSStubConfigParser bcosStubConfigParser =
                 new BCOSStubConfigParser("./chains/bcos/", "stub.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
@@ -147,11 +154,6 @@ public class BCOSStubCallContractIntegTest {
 
         driver = stubFactory.newDriver();
         account = stubFactory.newAccount("IntegBCOSAccount", "classpath:/accounts/bcos");
-        try {
-            connection = BCOSConnectionFactory.build("./chains/bcos/", "stub.toml");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
         connection.setConnectionEventHandler(connectionEventHandlerImplMock);
 
@@ -204,7 +206,7 @@ public class BCOSStubCallContractIntegTest {
         TransactionReceipt transactionReceipt = helloWeCross.getDeployReceipt();
         AsyncToSync asyncToSync = new AsyncToSync();
 
-        driver.asyncGetTransaction(transactionReceipt.getTransactionHash(), Long.parseLong(transactionReceipt.getBlockNumber()), blockManager, true, connection, (e, transaction) -> {
+        driver.asyncGetTransaction(transactionReceipt.getTransactionHash(), Numeric.decodeQuantity(transactionReceipt.getBlockNumber()).longValue(), blockManager, true, connection, (e, transaction) -> {
             assertTrue(Objects.nonNull(transaction));
             assertTrue(Objects.isNull(e));
             assertEquals(account.getIdentity(), transaction.getAccountIdentity());
@@ -222,7 +224,7 @@ public class BCOSStubCallContractIntegTest {
 
         params[0] = "a.b.HelloWeCross";
         params[1] = "1.1" + System.currentTimeMillis();
-        params[2] = Base64.getEncoder().encodeToString(Numeric.hexStringToByteArray(HelloWeCross.BINARY));
+        params[2] = ABICodecJsonWrapper.Base64EncodedDataPrefix + Base64.getEncoder().encodeToString(Numeric.hexStringToByteArray(HelloWeCross.BINARY));
         params[3] = HelloWeCross.ABI;
 
         Path path = Path.decode("a.b.WeCrossProxy");

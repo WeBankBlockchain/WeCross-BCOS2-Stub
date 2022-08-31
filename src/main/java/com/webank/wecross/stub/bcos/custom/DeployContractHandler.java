@@ -59,11 +59,11 @@ public class DeployContractHandler implements CommandHandler {
     }
 
     /**
-     * @param path rule id
-     * @param args command args
-     * @param account if needs to sign
+     * @param path         rule id
+     * @param args         command args
+     * @param account      if needs to sign
      * @param blockManager if needs to verify transaction
-     * @param connection chain connection
+     * @param connection   chain connection
      * @param callback
      */
     @Override
@@ -231,7 +231,7 @@ public class DeployContractHandler implements CommandHandler {
         proxyPath.setResource(BCOSConstant.BCOS_PROXY_NAME);
 
         /* Binary data needs to be base64 encoded */
-        String base64Bin = Base64.getEncoder().encodeToString(Numeric.hexStringToByteArray(bin));
+        String base64Bin = ABICodecJsonWrapper.Base64EncodedDataPrefix + Base64.getEncoder().encodeToString(Numeric.hexStringToByteArray(bin));
 
         TransactionRequest transactionRequest =
                 new TransactionRequest(
