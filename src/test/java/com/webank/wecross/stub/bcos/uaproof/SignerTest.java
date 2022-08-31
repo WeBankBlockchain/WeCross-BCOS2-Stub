@@ -4,6 +4,7 @@ import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
 import org.fisco.bcos.sdk.crypto.signature.SignatureResult;
 import org.fisco.bcos.sdk.model.CryptoType;
+import org.fisco.bcos.sdk.utils.Hex;
 import org.fisco.bcos.sdk.utils.Numeric;
 import org.junit.Test;
 
@@ -29,9 +30,8 @@ public class SignerTest {
         CryptoKeyPair credentials = cryptoSuite.getCryptoKeyPair();
         String message =
                 "{\"proof\":null,\"uaPub\":\"5d614e4cc8dcb73b4326a933a8236bafc36c3219f1f22cac257b755e1d7ecff2ab5f2842b434cacee34d0a79a701b5f4c5c850c43e8f5c5e06af8dcdcfc53c8f\",\"caPub\":\"5d614e4cc8dcb73b4326a933a8236bafc36c3219f1f22cac257b755e1d7ecff2ab5f2842b434cacee34d0a79a701b5f4c5c850c43e8f5c5e06af8dcdcfc53c8f\",\"uaSig\":\"f4df220abbf913abd6228dd31888c1a14a716a64d42186d975f6ae23f23ce279526675411e8a1cb257f358eabf4ffc99e6dfc78c36f9feceaae3de5946e24b5e01\",\"caSig\":\"f4df220abbf913abd6228dd31888c1a14a716a64d42186d975f6ae23f23ce279526675411e8a1cb257f358eabf4ffc99e6dfc78c36f9feceaae3de5946e24b5e01\",\"timestamp\":1600866010281}";
-
-        SignatureResult sign  = cryptoSuite.sign( message.getBytes(),credentials);
-        boolean verify = signer.verifyBySrcData(sign.getSignatureBytes(), message.getBytes(), credentials.getAddress());
+        byte[] sign = signer.sign(credentials, message.getBytes());
+        boolean verify = signer.verifyBySrcData(sign, message.getBytes(), credentials.getAddress());
         assertTrue(verify);
     }
 
@@ -62,9 +62,10 @@ public class SignerTest {
 
         String message =
                 "{\"proof\":null,\"uaPub\":\"5d614e4cc8dcb73b4326a933a8236bafc36c3219f1f22cac257b755e1d7ecff2ab5f2842b434cacee34d0a79a701b5f4c5c850c43e8f5c5e06af8dcdcfc53c8f\",\"caPub\":\"5d614e4cc8dcb73b4326a933a8236bafc36c3219f1f22cac257b755e1d7ecff2ab5f2842b434cacee34d0a79a701b5f4c5c850c43e8f5c5e06af8dcdcfc53c8f\",\"uaSig\":\"f4df220abbf913abd6228dd31888c1a14a716a64d42186d975f6ae23f23ce279526675411e8a1cb257f358eabf4ffc99e6dfc78c36f9feceaae3de5946e24b5e01\",\"caSig\":\"f4df220abbf913abd6228dd31888c1a14a716a64d42186d975f6ae23f23ce279526675411e8a1cb257f358eabf4ffc99e6dfc78c36f9feceaae3de5946e24b5e01\",\"timestamp\":1600866010281}";
-        SignatureResult sign  = cryptoSuite.sign( message.getBytes(),credentials);
+
+        byte[] sign = signer.sign(credentials, message.getBytes());
         boolean verify =
-                signer.verifyBySrcData(sign.getSignatureBytes(), message.getBytes(),  credentials.getAddress());
+                signer.verifyBySrcData(sign, message.getBytes(),  credentials.getAddress());
 
         assertTrue(verify);
     }
@@ -78,11 +79,10 @@ public class SignerTest {
         String message = "0a5fb1021730931b390ed3f282daf1304f86eafe4a4b74398c258e2437dcb353";
         byte[] sign =
                 Numeric.hexStringToByteArray(
-                        "b10e39d7b9d4318f664b18e0f3c1360342d3ce56d3e0cd72969a37fd332d522e283a89f6d36fbc942a1ed77737c399092639ad0b353aea3c14cf2c0d2a92a33d"
-                                + "e3bb34b225d90ecd5b162e51ba2a962ec412454682eaf1cf2feb16e134bde5196fd6d22d66a41a45bbf1ab12c6613bfd32e40ee4ebadc6a6de73da02f3efb3f1");
+                        "df9354adf11089d5107ae0ecf1ad2d379c208d76ce39109887240bf0e6c79e7fcdfda045f71a87fb3a5f42e292e5e6f71f827060fad39634c9eb0f3de7bac067"
+                                + "4253897f9cd7f90d6b85cc6e12cae85e0cf7e7ed06a3f198c8178e2dd1bede737df436c94dda2c4b84cc9d2cba637f8a5ab26c63796d56b09792b7b0a1b16ab0");
         String publicKey =
-                "e3bb34b225d90ecd5b162e51ba2a962ec412454682eaf1cf2feb16e134bde5196fd6d22d66a41a45bbf1ab12c6613bfd32e40ee4ebadc6a6de73da02f3efb3f1";
-
+                "4253897f9cd7f90d6b85cc6e12cae85e0cf7e7ed06a3f198c8178e2dd1bede737df436c94dda2c4b84cc9d2cba637f8a5ab26c63796d56b09792b7b0a1b16ab0";
         boolean verify =
                 signer.verifyBySrcData(
                         sign, Numeric.hexStringToByteArray(message), credentials.getAddress(publicKey));
