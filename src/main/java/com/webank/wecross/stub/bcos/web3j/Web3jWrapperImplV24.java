@@ -13,7 +13,7 @@ public class Web3jWrapperImplV24 extends Web3jWrapperImplV20 {
 
     @Override
     public void sendTransaction(String signedTransactionData, TransactionCallback callback){
-        getClient().sendRawTransactionAndGetReceiptAsync(signedTransactionData, callback);
+        getClient().sendRawTransactionAndGetReceiptWithProofAsync(signedTransactionData, callback);
     }
 
     @Override
