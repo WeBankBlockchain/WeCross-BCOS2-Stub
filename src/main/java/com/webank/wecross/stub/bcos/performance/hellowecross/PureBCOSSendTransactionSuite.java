@@ -15,8 +15,7 @@ public class PureBCOSSendTransactionSuite extends PureBCOSSuite {
             throws Exception {
         super(chainName, accountName, sm);
 
-        helloWeCross =
-                HelloWeCross.deploy(getClient(), getCredentials());
+        helloWeCross = HelloWeCross.deploy(getClient(), getCredentials());
 
         ss.add("HelloWorld");
         TransactionReceipt receipt = helloWeCross.set(ss);
@@ -35,18 +34,19 @@ public class PureBCOSSendTransactionSuite extends PureBCOSSuite {
     public void call(PerformanceSuiteCallback callback) {
 
         try {
-            helloWeCross.set(ss, new TransactionCallback() {
-                @Override
-                public void onResponse(TransactionReceipt receipt) {
-                    if (receipt.isStatusOK()) {
-                        callback.onSuccess("Success");
+            helloWeCross.set(
+                    ss,
+                    new TransactionCallback() {
+                        @Override
+                        public void onResponse(TransactionReceipt receipt) {
+                            if (receipt.isStatusOK()) {
+                                callback.onSuccess("Success");
 
-                    } else {
-                        callback.onFailed(
-                                "Failed! status: " + receipt.getStatus());
-                    }
-                }
-            });
+                            } else {
+                                callback.onFailed("Failed! status: " + receipt.getStatus());
+                            }
+                        }
+                    });
         } catch (Exception e) {
             callback.onFailed("Call failed: " + e);
         }

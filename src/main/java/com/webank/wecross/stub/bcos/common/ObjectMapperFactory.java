@@ -1,6 +1,5 @@
 package com.webank.wecross.stub.bcos.common;
 
-
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,7 +28,8 @@ public class ObjectMapperFactory {
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         SimpleModule simpleModule = new SimpleModule();
-        simpleModule.addSerializer(BcosBlock.TransactionResult.class, new ResultTransactionSerialize());
+        simpleModule.addSerializer(
+                BcosBlock.TransactionResult.class, new ResultTransactionSerialize());
         objectMapper.registerModule(simpleModule);
 
         return objectMapper;

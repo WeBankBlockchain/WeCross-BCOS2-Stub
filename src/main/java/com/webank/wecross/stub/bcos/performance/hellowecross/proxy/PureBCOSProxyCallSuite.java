@@ -32,7 +32,9 @@ public class PureBCOSProxyCallSuite extends PureBCOSProxySuite {
         try {
 
             TransactionReceipt receipt =
-                    getWeCrossProxy().constantCall(getContractName(), Numeric.hexStringToByteArray(methodId));
+                    getWeCrossProxy()
+                            .constantCall(
+                                    getContractName(), Numeric.hexStringToByteArray(methodId));
 
             if (logger.isTraceEnabled()) {
                 logger.trace(" result: {} " + receipt);

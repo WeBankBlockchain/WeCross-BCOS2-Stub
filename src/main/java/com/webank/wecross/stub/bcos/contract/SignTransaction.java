@@ -3,8 +3,6 @@ package com.webank.wecross.stub.bcos.contract;
 import java.math.BigInteger;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
-
-import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
 import org.fisco.bcos.sdk.service.GroupManagerService;
 import org.fisco.bcos.sdk.transaction.model.po.RawTransaction;
 import org.slf4j.Logger;

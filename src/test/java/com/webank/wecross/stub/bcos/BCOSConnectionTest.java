@@ -1,5 +1,9 @@
 package com.webank.wecross.stub.bcos;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.webank.wecross.stub.Block;
@@ -23,6 +27,12 @@ import com.webank.wecross.stub.bcos.contract.BlockUtility;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import org.fisco.bcos.sdk.abi.FunctionEncoder;
 import org.fisco.bcos.sdk.abi.datatypes.Function;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
@@ -35,17 +45,6 @@ import org.fisco.bcos.sdk.transaction.model.po.RawTransaction;
 import org.fisco.bcos.sdk.utils.Numeric;
 import org.junit.Test;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
-
-import java.io.IOException;
-import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
 
 public class BCOSConnectionTest {
     @Test
@@ -97,8 +96,9 @@ public class BCOSConnectionTest {
         request.setType(2000);
         connection.asyncSend(
                 request,
-                response -> assertEquals(
-                        response.getErrorCode(), BCOSStatusCode.UnrecognizedRequestType));
+                response ->
+                        assertEquals(
+                                response.getErrorCode(), BCOSStatusCode.UnrecognizedRequestType));
     }
 
     @Test
@@ -218,7 +218,7 @@ public class BCOSConnectionTest {
 
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
-        String[] params = new String[]{"abc", "def", "hig"};
+        String[] params = new String[] {"abc", "def", "hig"};
         Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         FunctionEncoder functionEncoder = new FunctionEncoder(clientWrapper.getCryptoSuite());
@@ -271,7 +271,7 @@ public class BCOSConnectionTest {
 
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
-        String[] params = new String[]{"abc", "def", "hig"};
+        String[] params = new String[] {"abc", "def", "hig"};
         Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         FunctionEncoder functionEncoder = new FunctionEncoder(clientWrapper.getCryptoSuite());
@@ -288,8 +288,9 @@ public class BCOSConnectionTest {
         request.setData(ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transactionParams));
         connection.asyncSend(
                 request,
-                response -> assertEquals(
-                        response.getErrorCode(), BCOSStatusCode.HandleCallRequestFailed));
+                response ->
+                        assertEquals(
+                                response.getErrorCode(), BCOSStatusCode.HandleCallRequestFailed));
     }
 
     @Test
@@ -304,7 +305,7 @@ public class BCOSConnectionTest {
 
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
-        String[] params = new String[]{"abc", "def", "hig"};
+        String[] params = new String[] {"abc", "def", "hig"};
         Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         FunctionEncoder functionEncoder = new FunctionEncoder(clientWrapper.getCryptoSuite());
@@ -320,8 +321,7 @@ public class BCOSConnectionTest {
         request.setType(BCOSRequestType.CALL);
         request.setData(ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transactionParams));
         connection.asyncSend(
-                request,
-                response -> assertEquals(response.getErrorCode(), BCOSStatusCode.Success));
+                request, response -> assertEquals(response.getErrorCode(), BCOSStatusCode.Success));
     }
 
     @Test
@@ -339,7 +339,7 @@ public class BCOSConnectionTest {
 
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
-        String[] params = new String[]{"abc", "def", "hig"};
+        String[] params = new String[] {"abc", "def", "hig"};
 
         Function function = FunctionUtility.newDefaultFunction(funName, params);
 
@@ -353,7 +353,8 @@ public class BCOSConnectionTest {
                         BigInteger.valueOf(1),
                         BigInteger.valueOf(1),
                         abi);
-        TransactionEncoderService transactionEncoderService = new TransactionEncoderService(cryptoSuite);
+        TransactionEncoderService transactionEncoderService =
+                new TransactionEncoderService(cryptoSuite);
         CryptoKeyPair credentials = cryptoSuite.getCryptoKeyPair();
         String sign = transactionEncoderService.encodeAndSign(rawTransaction, credentials);
 
@@ -373,8 +374,7 @@ public class BCOSConnectionTest {
                     try {
                         transactionReceipt =
                                 ObjectMapperFactory.getObjectMapper()
-                                        .readValue(
-                                                response.getData(), TransactionReceipt.class);
+                                        .readValue(response.getData(), TransactionReceipt.class);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -403,7 +403,7 @@ public class BCOSConnectionTest {
 
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
-        String[] params = new String[]{"abc", "def", "hig"};
+        String[] params = new String[] {"abc", "def", "hig"};
 
         Function function = FunctionUtility.newDefaultFunction(funName, params);
 
@@ -417,7 +417,8 @@ public class BCOSConnectionTest {
                         BigInteger.valueOf(1),
                         BigInteger.valueOf(1),
                         abi);
-        TransactionEncoderService transactionEncoderService = new TransactionEncoderService(cryptoSuite);
+        TransactionEncoderService transactionEncoderService =
+                new TransactionEncoderService(cryptoSuite);
         CryptoKeyPair credentials = cryptoSuite.getCryptoKeyPair();
         String sign = transactionEncoderService.encodeAndSign(rawTransaction, credentials);
 
@@ -434,8 +435,7 @@ public class BCOSConnectionTest {
                 request,
                 response -> {
                     assertEquals(
-                            response.getErrorCode(),
-                            BCOSStatusCode.HandleSendTransactionFailed);
+                            response.getErrorCode(), BCOSStatusCode.HandleSendTransactionFailed);
                     asyncToSync.getSemaphore().release();
                 });
         asyncToSync.getSemaphore().acquire();
@@ -456,7 +456,7 @@ public class BCOSConnectionTest {
 
         String address = "0x6db416c8ac6b1fe7ed08771de419b71c084ee5969029346806324601f2e3f0d0";
         String funName = "funcName";
-        String[] params = new String[]{"abc", "def", "hig"};
+        String[] params = new String[] {"abc", "def", "hig"};
 
         Function function = FunctionUtility.newDefaultFunction(funName, params);
 
@@ -470,7 +470,8 @@ public class BCOSConnectionTest {
                         BigInteger.valueOf(1),
                         BigInteger.valueOf(1),
                         abi);
-        TransactionEncoderService transactionEncoderService = new TransactionEncoderService(cryptoSuite);
+        TransactionEncoderService transactionEncoderService =
+                new TransactionEncoderService(cryptoSuite);
         CryptoKeyPair credentials = cryptoSuite.getCryptoKeyPair();
         String sign = transactionEncoderService.encodeAndSign(rawTransaction, credentials);
 
@@ -509,6 +510,7 @@ public class BCOSConnectionTest {
 
         connection.asyncSend(
                 request,
-                response -> assertEquals(response.getErrorCode(), BCOSStatusCode.UnclassifiedError));
+                response ->
+                        assertEquals(response.getErrorCode(), BCOSStatusCode.UnclassifiedError));
     }
 }

@@ -6,6 +6,9 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
 import com.webank.wecross.stub.bcos.common.StatusCode;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import org.fisco.bcos.sdk.abi.FunctionEncoder;
 import org.fisco.bcos.sdk.abi.TypeReference;
 import org.fisco.bcos.sdk.abi.datatypes.Function;
@@ -16,10 +19,6 @@ import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
 
 public class CnsService {
 
@@ -35,9 +34,7 @@ public class CnsService {
         return queryCnsInfo(clientWrapper, BCOSConstant.BCOS_HUB_NAME);
     }
 
-    /**
-     * query cns to get address,abi of hub contract
-     */
+    /** query cns to get address,abi of hub contract */
     private static CnsInfo queryCnsInfo(AbstractClientWrapper clientWrapper, String name) {
         /** function selectByName(string memory cnsName) public returns(string memory) */
         CryptoSuite cryptoSuite = clientWrapper.getCryptoSuite();
@@ -47,8 +44,7 @@ public class CnsService {
                 new Function(
                         BCOSConstant.CNS_METHOD_SELECTBYNAME,
                         Arrays.<Type>asList(new Utf8String(name)),
-                        Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {
-                        }));
+                        Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}));
         try {
             Call.CallOutput callOutput =
                     clientWrapper.call(

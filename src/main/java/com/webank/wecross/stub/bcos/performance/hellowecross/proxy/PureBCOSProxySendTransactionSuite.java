@@ -4,7 +4,6 @@ import com.webank.wecross.stub.bcos.performance.PerformanceSuiteCallback;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-
 import org.fisco.bcos.sdk.abi.wrapper.ABIDefinition;
 import org.fisco.bcos.sdk.abi.wrapper.ABIObject;
 import org.fisco.bcos.sdk.abi.wrapper.ABIObjectFactory;
@@ -45,21 +44,24 @@ public class PureBCOSProxySendTransactionSuite extends PureBCOSProxySuite {
     @Override
     public void call(PerformanceSuiteCallback callback) {
         try {
-            getWeCrossProxy().sendTransaction(UUID.randomUUID().toString(), getContractName(), Numeric.hexStringToByteArray(methodId + abi),
-                    new TransactionCallback() {
-                        @Override
-                        public void onResponse(TransactionReceipt receipt) {
-                            if (logger.isDebugEnabled()) {
-                                logger.debug(" receipt: {}", receipt);
-                            }
-                            if (receipt.isStatusOK()) {
-                                callback.onSuccess("Success");
-                            } else {
-                                callback.onFailed(
-                                        "Failed! status: " + receipt.getStatus());
-                            }
-                        }
-                    });
+            getWeCrossProxy()
+                    .sendTransaction(
+                            UUID.randomUUID().toString(),
+                            getContractName(),
+                            Numeric.hexStringToByteArray(methodId + abi),
+                            new TransactionCallback() {
+                                @Override
+                                public void onResponse(TransactionReceipt receipt) {
+                                    if (logger.isDebugEnabled()) {
+                                        logger.debug(" receipt: {}", receipt);
+                                    }
+                                    if (receipt.isStatusOK()) {
+                                        callback.onSuccess("Success");
+                                    } else {
+                                        callback.onFailed("Failed! status: " + receipt.getStatus());
+                                    }
+                                }
+                            });
         } catch (Exception e) {
             callback.onFailed("Call failed: " + e);
         }

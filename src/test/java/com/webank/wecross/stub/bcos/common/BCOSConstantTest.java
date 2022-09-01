@@ -1,11 +1,10 @@
 package com.webank.wecross.stub.bcos.common;
 
-import com.webank.wecross.stub.bcos.client.ClientDefaultConfig;
-import org.junit.Test;
-
-import java.io.IOException;
-
 import static junit.framework.TestCase.assertEquals;
+
+import com.webank.wecross.stub.bcos.client.ClientDefaultConfig;
+import java.io.IOException;
+import org.junit.Test;
 
 public class BCOSConstantTest {
 

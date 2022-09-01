@@ -1,7 +1,15 @@
 package com.webank.wecross.stub.bcos.account;
 
+import static com.webank.wecross.stub.bcos.common.BCOSConstant.BCOS_ACCOUNT;
+import static com.webank.wecross.stub.bcos.common.BCOSConstant.BCOS_SM_ACCOUNT;
+
 import com.webank.wecross.stub.bcos.config.BCOSAccountConfig;
 import com.webank.wecross.stub.bcos.config.BCOSAccountConfigParser;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.security.KeyPair;
+import java.util.Map;
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
 import org.fisco.bcos.sdk.crypto.keystore.P12KeyStore;
@@ -12,21 +20,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.security.KeyPair;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.security.spec.InvalidKeySpecException;
-import java.util.Map;
-
-import static com.webank.wecross.stub.bcos.common.BCOSConstant.BCOS_ACCOUNT;
-import static com.webank.wecross.stub.bcos.common.BCOSConstant.BCOS_SM_ACCOUNT;
 
 public class BCOSAccountFactory {
 
@@ -112,8 +105,7 @@ public class BCOSAccountFactory {
         }
     }
 
-    public BCOSAccount build(String name, String accountPath)
-            throws IOException {
+    public BCOSAccount build(String name, String accountPath) throws IOException {
         String accountConfigFile = accountPath + File.separator + "account.toml";
         logger.debug("Loading account.toml: {}", accountConfigFile);
 
@@ -140,7 +132,8 @@ public class BCOSAccountFactory {
         ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         Resource pemResources = resolver.getResource(accountFile);
         PEMKeyStore keyTool = new PEMKeyStore(pemResources.getInputStream());
-        CryptoKeyPair cryptoKeyPair = cryptoSuite.getKeyPairFactory().createKeyPair(keyTool.getKeyPair());
+        CryptoKeyPair cryptoKeyPair =
+                cryptoSuite.getKeyPairFactory().createKeyPair(keyTool.getKeyPair());
         logger.info(" credentials address: {}", cryptoKeyPair.getAddress());
         return cryptoKeyPair;
     }
@@ -158,7 +151,8 @@ public class BCOSAccountFactory {
         ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         Resource p12Resources = resolver.getResource(accountFile);
         P12KeyStore keyTool = new P12KeyStore(p12Resources.getInputStream(), password);
-        CryptoKeyPair cryptoKeyPair = cryptoSuite.getKeyPairFactory().createKeyPair(keyTool.getKeyPair());
+        CryptoKeyPair cryptoKeyPair =
+                cryptoSuite.getKeyPairFactory().createKeyPair(keyTool.getKeyPair());
         logger.info(" credentials address: {}", cryptoKeyPair.getAddress());
         return cryptoKeyPair;
     }

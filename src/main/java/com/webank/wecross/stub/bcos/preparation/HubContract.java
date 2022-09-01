@@ -10,6 +10,13 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
+import java.io.File;
+import java.math.BigInteger;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import org.fisco.bcos.sdk.client.Client;
 import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
 import org.fisco.bcos.sdk.contract.precompiled.cns.CnsService;
@@ -27,14 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
-
-import java.io.File;
-import java.math.BigInteger;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 public class HubContract {
 
@@ -81,7 +80,8 @@ public class HubContract {
         ScheduledExecutorService scheduledExecutorService =
                 new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
         connection =
-                BCOSConnectionFactory.build(bcosStubConfig, clientWrapper, scheduledExecutorService);
+                BCOSConnectionFactory.build(
+                        bcosStubConfig, clientWrapper, scheduledExecutorService);
 
         if (account == null) {
             throw new Exception("Account " + accountName + " not found");
@@ -160,15 +160,11 @@ public class HubContract {
                 metadata.abi);
 
         RawTransaction rawTransaction =
-                SignTransaction.buildTransaction(
-                        null,
-                        groupID,
-                        chainID,
-                        blockNumber,
-                        metadata.bin);
+                SignTransaction.buildTransaction(null, groupID, chainID, blockNumber, metadata.bin);
         CryptoKeyPair credentials = account.getCredentials();
 
-        TransactionEncoderService transactionEncoderService = new TransactionEncoderService(client.getCryptoSuite());
+        TransactionEncoderService transactionEncoderService =
+                new TransactionEncoderService(client.getCryptoSuite());
         String signTx = transactionEncoderService.encodeAndSign(rawTransaction, credentials);
 
         CompletableFuture<String> completableFuture = new CompletableFuture<>();
@@ -197,7 +193,8 @@ public class HubContract {
             throw new Exception("Failed to deploy hub contract.");
         }
         CnsService cnsService = new CnsService(client, account.getCredentials());
-        RetCode retCode = cnsService.registerCNS(cnsName, cnsVersion, contractAddress, metadata.abi);
+        RetCode retCode =
+                cnsService.registerCNS(cnsName, cnsVersion, contractAddress, metadata.abi);
 
         if (retCode.getCode() < PrecompiledRetCode.CODE_SUCCESS.getCode()) {
             throw new RuntimeException(" registerCns failed, error message: " + retCode);

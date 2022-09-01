@@ -1,17 +1,16 @@
 package com.webank.wecross.stub.bcos.contract;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
+
 import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
+import java.io.IOException;
+import java.util.Objects;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Objects;
-
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
 
 public class TransactionProofTest {
     @Test
@@ -36,7 +35,8 @@ public class TransactionProofTest {
         TransactionWithProof.TransactionAndProof transAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(
-                                transactionAndProofJson0, TransactionWithProof.TransactionAndProof.class);
+                                transactionAndProofJson0,
+                                TransactionWithProof.TransactionAndProof.class);
         TransactionReceiptWithProof.ReceiptAndProof receiptAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(

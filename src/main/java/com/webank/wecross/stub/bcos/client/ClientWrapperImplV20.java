@@ -17,12 +17,14 @@ public class ClientWrapperImplV20 extends AbstractClientWrapper {
     }
 
     @Override
-    public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(String transactionHash) {
+    public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(
+            String transactionHash) {
         throw new UnsupportedOperationException("UnsupportedOperationException");
     }
 
     @Override
-    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(String transactionHash) {
+    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(
+            String transactionHash) {
         throw new UnsupportedOperationException("UnsupportedOperationException");
     }
 }

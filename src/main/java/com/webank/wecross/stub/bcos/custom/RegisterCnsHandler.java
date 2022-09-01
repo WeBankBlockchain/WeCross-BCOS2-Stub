@@ -9,6 +9,10 @@ import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.bcos.AsyncCnsService;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.preparation.CnsService;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.util.Objects;
 import org.fisco.bcos.sdk.abi.datatypes.Address;
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.model.CryptoType;
@@ -17,11 +21,6 @@ import org.fisco.solc.compiler.CompilationResult;
 import org.fisco.solc.compiler.SolidityCompiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.util.Objects;
 
 public class RegisterCnsHandler implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RegisterCnsHandler.class);
@@ -36,9 +35,7 @@ public class RegisterCnsHandler implements CommandHandler {
         this.asyncCnsService = asyncCnsService;
     }
 
-    /**
-     * @param args version || address || abi
-     */
+    /** @param args version || address || abi */
     @Override
     public void handle(
             Path path,

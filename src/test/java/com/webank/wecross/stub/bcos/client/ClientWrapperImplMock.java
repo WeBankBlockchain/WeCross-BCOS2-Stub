@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
+import java.math.BigInteger;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
 import org.fisco.bcos.sdk.client.protocol.response.Call;
@@ -11,8 +12,6 @@ import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.fisco.bcos.sdk.model.callback.TransactionCallback;
-
-import java.math.BigInteger;
 
 public class ClientWrapperImplMock extends AbstractClientWrapper {
     public ClientWrapperImplMock() {
@@ -29,12 +28,13 @@ public class ClientWrapperImplMock extends AbstractClientWrapper {
     }
 
     @Override
-    public BigInteger getBlockNumber(){
+    public BigInteger getBlockNumber() {
         return BigInteger.valueOf(11111);
     }
 
     @Override
-    public BcosBlockHeader.BlockHeader getBlockHeaderByNumber(long blockNumber) throws JsonProcessingException {
+    public BcosBlockHeader.BlockHeader getBlockHeaderByNumber(long blockNumber)
+            throws JsonProcessingException {
         String headerJson =
                 "{\"dbHash\": \"0x0000000000000000000000000000000000000000000000000000000000000000\",\"extraData\": [],\"gasLimit\": \"0x0\",\"gasUsed\": \"0x0\",\"hash\": \"0x99576e7567d258bd6426ddaf953ec0c953778b2f09a078423103c6555aa4362d\",\"logsBloom\": \"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"number\": 1,\"parentHash\": \"0x64ba7bf5c6b5a83854774475bf8511d5e9bb38d8a962a859b52aa9c9fba0c685\",\"receiptsRoot\": \"0x049389563053748a0fd2b256260b9e8c76a427b543bee18f3a221d80d1553da8\",\"sealer\": \"0x2\",\"sealerList\": [\"11e1be251ca08bb44f36fdeedfaeca40894ff80dfd80084607a75509edeaf2a9c6fee914f1e9efda571611cf4575a1577957edfd2baa9386bd63eb034868625f\",\"78a313b426c3de3267d72b53c044fa9fe70c2a27a00af7fea4a549a7d65210ed90512fc92b6194c14766366d434235c794289d66deff0796f15228e0e14a9191\",\"95b7ff064f91de76598f90bc059bec1834f0d9eeb0d05e1086d49af1f9c2f321062d011ee8b0df7644bd54c4f9ca3d8515a3129bbb9d0df8287c9fa69552887e\",\"b8acb51b9fe84f88d670646be36f31c52e67544ce56faf3dc8ea4cf1b0ebff0864c6b218fdcd9cf9891ebd414a995847911bd26a770f429300085f37e1131f36\"],\"signatureList\": [{\"index\": \"0x2\",\"signature\": \"0xae098aabc63a53b8dcb57da9a87f13aebf231bfe1704da88f125cee6b4b30ee0609d0720a97bed1900b96bc3e7a63584158340b5b7f802945241f61731f9358900\"}, { \"index\": \"0x0\", \"signature\": \"0x411cb93f816549eba82c3bf8c03fa637036dcdee65667b541d0da06a6eaea80d16e6ca52bf1b08f77b59a834bffbc124c492ea7a1601d0c4fb257d97dc97cea600\"},{\"index\": \"0x3\",\"signature\": \"0xb5b41e49c0b2bf758322ecb5c86dc3a3a0f9b98891b5bbf50c8613a241f05f595ce40d0bb212b6faa32e98546754835b057b9be0b29b9d0c8ae8b38f7487b8d001\"}], \"stateRoot\": \"0xce8a92c9311e9e0b77842c86adf8fcf91cbab8fb5daefc85b21f501ca8b1f682\",\"timestamp\": \"0x173ad8703d6\",\"transactionsRoot\": \"0xb563f70188512a085b5607cac0c35480336a566de736c83410a062c9acc785ad\"}";
         ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
@@ -43,7 +43,8 @@ public class ClientWrapperImplMock extends AbstractClientWrapper {
     }
 
     @Override
-    public void sendTransaction(String signedTransactionData, TransactionCallback callback) throws JsonProcessingException {
+    public void sendTransaction(String signedTransactionData, TransactionCallback callback)
+            throws JsonProcessingException {
         String transactionReceiptJson =
                 "{\"blockHash\":\"0xd9e9241be0853aacc88b1ff921eb598af0080a100514e192e9a449f577b3a2ef\",\"blockNumber\":\"0x9\",\"contractAddress\":\"0x0000000000000000000000000000000000000000\",\"from\":\"0x35039a08bd5aa848fe9ce1c49bf1e3c2ba640434\",\"gasUsed\":\"0x802c\",\"input\":\"0x4ed3885e000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000016100000000000000000000000000000000000000000000000000000000000000\",\"logs\":[],\"logsBloom\":\"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"output\":\"0x\",\"root\":\"0x70e6fa150a77f34c71ad9e9923734a740e0bd0a3eeb3cf9a804c43e6012b16bd\",\"status\":\"0x0\",\"to\":\"0x7ba8711a62d7e1377988efff0cb9de45c6353169\",\"transactionHash\":\"0x8b3946912d1133f9fb0722a7b607db2456d468386c2e86b035e81ef91d94eb90\",\"transactionIndex\":\"0x0\",\"receiptProof\":[{\"left\":[],\"right\":[]}],\"txProof\":[{\"left\":[],\"right\":[]}]}";
         ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
@@ -54,7 +55,8 @@ public class ClientWrapperImplMock extends AbstractClientWrapper {
     }
 
     @Override
-    public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(String transactionHash) throws JsonProcessingException {
+    public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(
+            String transactionHash) throws JsonProcessingException {
 
         String blockJson =
                 "{\"dbHash\":\"0x70e6fa150a77f34c71ad9e9923734a740e0bd0a3eeb3cf9a804c43e6012b16bd\",\"extraData\":[],\"gasLimit\":\"0x0\",\"gasUsed\":\"0x0\",\"hash\":\"0xd9e9241be0853aacc88b1ff921eb598af0080a100514e192e9a449f577b3a2ef\",\"logsBloom\":\"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"number\":\"0x9\",\"parentHash\":\"0x4ee40e592d4f7243faba04d69d6c8e158c1e2663398484d83bf27827bdbb3117\",\"receiptsRoot\":\"0xe6caae405e8ae50737cd7a39c9d1cba83335594bf180af40538c970b87ae7bf8\",\"sealer\":\"0x1\",\"sealerList\":[\"2ddbc04bea0d57eeb09c2828e3eeca6e392f5d25515210eb4f338aae49233a0fdfcb5f7f6229830729a42c518118645a0e936f353e2795d966494fd494af124d\",\"8d08802246badaa9bf3eed5ba56d6c4b6811dbc0c22dd3aa17ddc566e38470a1fd078eab763c6546f7946e71279c1e466540433ac6b1463f6a60dcd85d2b7004\",\"924d8a3da3ec715a7dda5f860c53e1d1706bc6c7033e18cfa0a093ec07114fda05236a9951dc6fd88baaa1af80490627beb7db826072ee49dca9335190414428\",\"a53da8b4819cd99afac393b961078bd680eb28311d941e5f051b82ebaf6e916c51655dbf6237aa2598d7a364e8714343b1d28109de98f2c7dcdcda60621651c9\"],\"stateRoot\":\"0x70e6fa150a77f34c71ad9e9923734a740e0bd0a3eeb3cf9a804c43e6012b16bd\",\"timestamp\":\"0x17152c9a056\",\"transactions\":[\"0x8b3946912d1133f9fb0722a7b607db2456d468386c2e86b035e81ef91d94eb90\"],\"transactionsRoot\":\"0x1c816600c113c0639c88ea96d269645bb52fe5a73f64e3496864d2ad2ceec6c0\"}";
@@ -76,7 +78,8 @@ public class ClientWrapperImplMock extends AbstractClientWrapper {
         TransactionWithProof.TransactionAndProof transAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(
-                                transactionAndProofJson0, TransactionWithProof.TransactionAndProof.class);
+                                transactionAndProofJson0,
+                                TransactionWithProof.TransactionAndProof.class);
         TransactionReceiptWithProof.ReceiptAndProof receiptAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(
@@ -87,7 +90,8 @@ public class ClientWrapperImplMock extends AbstractClientWrapper {
     }
 
     @Override
-    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(String transactionHash) throws JsonProcessingException {
+    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(
+            String transactionHash) throws JsonProcessingException {
         String blockJson =
                 "{\"dbHash\":\"0x70e6fa150a77f34c71ad9e9923734a740e0bd0a3eeb3cf9a804c43e6012b16bd\",\"extraData\":[],\"gasLimit\":\"0x0\",\"gasUsed\":\"0x0\",\"hash\":\"0xd9e9241be0853aacc88b1ff921eb598af0080a100514e192e9a449f577b3a2ef\",\"logsBloom\":\"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"number\":\"0x9\",\"parentHash\":\"0x4ee40e592d4f7243faba04d69d6c8e158c1e2663398484d83bf27827bdbb3117\",\"receiptsRoot\":\"0xe6caae405e8ae50737cd7a39c9d1cba83335594bf180af40538c970b87ae7bf8\",\"sealer\":\"0x1\",\"sealerList\":[\"2ddbc04bea0d57eeb09c2828e3eeca6e392f5d25515210eb4f338aae49233a0fdfcb5f7f6229830729a42c518118645a0e936f353e2795d966494fd494af124d\",\"8d08802246badaa9bf3eed5ba56d6c4b6811dbc0c22dd3aa17ddc566e38470a1fd078eab763c6546f7946e71279c1e466540433ac6b1463f6a60dcd85d2b7004\",\"924d8a3da3ec715a7dda5f860c53e1d1706bc6c7033e18cfa0a093ec07114fda05236a9951dc6fd88baaa1af80490627beb7db826072ee49dca9335190414428\",\"a53da8b4819cd99afac393b961078bd680eb28311d941e5f051b82ebaf6e916c51655dbf6237aa2598d7a364e8714343b1d28109de98f2c7dcdcda60621651c9\"],\"stateRoot\":\"0x70e6fa150a77f34c71ad9e9923734a740e0bd0a3eeb3cf9a804c43e6012b16bd\",\"timestamp\":\"0x17152c9a056\",\"transactions\":[\"0x8b3946912d1133f9fb0722a7b607db2456d468386c2e86b035e81ef91d94eb90\"],\"transactionsRoot\":\"0x1c816600c113c0639c88ea96d269645bb52fe5a73f64e3496864d2ad2ceec6c0\"}";
         String transactionAndProofJson =
@@ -108,7 +112,8 @@ public class ClientWrapperImplMock extends AbstractClientWrapper {
         TransactionWithProof.TransactionAndProof transAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(
-                                transactionAndProofJson0, TransactionWithProof.TransactionAndProof.class);
+                                transactionAndProofJson0,
+                                TransactionWithProof.TransactionAndProof.class);
         TransactionReceiptWithProof.ReceiptAndProof receiptAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(

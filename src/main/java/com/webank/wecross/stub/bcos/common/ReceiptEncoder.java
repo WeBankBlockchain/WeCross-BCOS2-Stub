@@ -1,5 +1,7 @@
 package com.webank.wecross.stub.bcos.common;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.fisco.bcos.sdk.rlp.RlpEncoder;
 import org.fisco.bcos.sdk.rlp.RlpList;
@@ -7,19 +9,17 @@ import org.fisco.bcos.sdk.rlp.RlpString;
 import org.fisco.bcos.sdk.rlp.RlpType;
 import org.fisco.bcos.sdk.utils.Numeric;
 
-import java.util.ArrayList;
-import java.util.List;
-
-
 public class ReceiptEncoder {
-    public static String encode(TransactionReceipt transactionReceipt, EnumNodeVersion.Version version) {
+    public static String encode(
+            TransactionReceipt transactionReceipt, EnumNodeVersion.Version version) {
         List<RlpType> values = asRlpValues(transactionReceipt, version);
         RlpList rlpList = new RlpList(values);
         byte[] rlpBytes = RlpEncoder.encode(rlpList);
         return Numeric.toHexString(rlpBytes);
     }
 
-    private static List<RlpType> asRlpValues(TransactionReceipt transactionReceipt, EnumNodeVersion.Version version) {
+    private static List<RlpType> asRlpValues(
+            TransactionReceipt transactionReceipt, EnumNodeVersion.Version version) {
         List<RlpType> result = new ArrayList<>();
         // bytes
         result.add(RlpString.create(Numeric.hexStringToByteArray(transactionReceipt.getRoot())));

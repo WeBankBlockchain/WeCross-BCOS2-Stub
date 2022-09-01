@@ -8,7 +8,8 @@ import org.fisco.bcos.sdk.model.callback.TransactionCallback;
 public class ClientWrapperWithNullMock extends ClientWrapperImplMock {
 
     @Override
-    public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(String transactionHash) {
+    public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(
+            String transactionHash) {
         TransactionReceiptWithProof.ReceiptAndProof receiptAndProof =
                 new TransactionReceiptWithProof.ReceiptAndProof();
         return receiptAndProof;
@@ -21,8 +22,10 @@ public class ClientWrapperWithNullMock extends ClientWrapperImplMock {
     }
 
     @Override
-    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(String transactionHash) {
-        TransactionWithProof.TransactionAndProof transAndProof = new TransactionWithProof.TransactionAndProof();
+    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(
+            String transactionHash) {
+        TransactionWithProof.TransactionAndProof transAndProof =
+                new TransactionWithProof.TransactionAndProof();
         return transAndProof;
     }
 }

@@ -7,8 +7,7 @@ public class TransactionPair {
     private TransactionReceipt receipt;
     private JsonTransactionResponse transaction;
 
-    public TransactionPair() {
-    }
+    public TransactionPair() {}
 
     public TransactionPair(JsonTransactionResponse transaction, TransactionReceipt receipt) {
         this.receipt = receipt;

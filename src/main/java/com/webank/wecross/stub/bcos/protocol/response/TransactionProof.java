@@ -8,8 +8,7 @@ public class TransactionProof {
     private TransactionWithProof.TransactionAndProof transAndProof;
     private TransactionReceiptWithProof.ReceiptAndProof receiptAndProof;
 
-    public TransactionProof() {
-    }
+    public TransactionProof() {}
 
     public TransactionProof(
             TransactionWithProof.TransactionAndProof transAndProof,

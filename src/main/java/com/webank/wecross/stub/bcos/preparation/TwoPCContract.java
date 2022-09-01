@@ -6,12 +6,11 @@ import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.client.ClientBlockManager;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
+import java.util.Objects;
+import java.util.concurrent.Semaphore;
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Objects;
-import java.util.concurrent.Semaphore;
 
 public class TwoPCContract {
 
@@ -61,7 +60,13 @@ public class TwoPCContract {
     }
 
     public void deploy2PCContract(
-            String contractName, String version, String contractContent, int tps, int from, int to, CryptoSuite cryptoSuite)
+            String contractName,
+            String version,
+            String contractContent,
+            int tps,
+            int from,
+            int to,
+            CryptoSuite cryptoSuite)
             throws Exception {
 
         logger.info(
@@ -106,7 +111,8 @@ public class TwoPCContract {
                                                     + " successfully, address: "
                                                     + (String) response);
                                 }
-                            }, cryptoSuite);
+                            },
+                    cryptoSuite);
         }
 
         semaphore.acquire(to - from + 1);

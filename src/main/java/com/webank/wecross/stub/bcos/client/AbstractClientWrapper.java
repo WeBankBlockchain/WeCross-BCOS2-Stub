@@ -1,5 +1,8 @@
 package com.webank.wecross.stub.bcos.client;
 
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Objects;
 import org.fisco.bcos.sdk.client.Client;
 import org.fisco.bcos.sdk.client.protocol.model.JsonTransactionResponse;
 import org.fisco.bcos.sdk.client.protocol.request.Transaction;
@@ -13,10 +16,6 @@ import org.fisco.bcos.sdk.model.CryptoType;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.fisco.bcos.sdk.model.callback.TransactionCallback;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.Objects;
-
 public abstract class AbstractClientWrapper implements ClientWrapper {
 
     private Client client;
@@ -25,7 +24,10 @@ public abstract class AbstractClientWrapper implements ClientWrapper {
 
     public AbstractClientWrapper(Client client) {
         this.client = client;
-        this.cryptoSuite = Objects.nonNull(client) ? client.getCryptoSuite() : new CryptoSuite(CryptoType.ECDSA_TYPE);
+        this.cryptoSuite =
+                Objects.nonNull(client)
+                        ? client.getCryptoSuite()
+                        : new CryptoSuite(CryptoType.ECDSA_TYPE);
     }
 
     @Override
@@ -41,13 +43,15 @@ public abstract class AbstractClientWrapper implements ClientWrapper {
     }
 
     @Override
-    public void sendTransaction(String signedTransactionData, TransactionCallback callback) throws IOException {
+    public void sendTransaction(String signedTransactionData, TransactionCallback callback)
+            throws IOException {
         client.sendRawTransactionAndGetReceiptAsync(signedTransactionData, callback);
     }
 
     @Override
     public TransactionReceipt getTransactionReceipt(String transactionHash) {
-        BcosTransactionReceipt bcosTransactionReceipt = client.getTransactionReceipt(transactionHash);
+        BcosTransactionReceipt bcosTransactionReceipt =
+                client.getTransactionReceipt(transactionHash);
         return bcosTransactionReceipt.getResult();
     }
 
@@ -58,7 +62,8 @@ public abstract class AbstractClientWrapper implements ClientWrapper {
     }
 
     @Override
-    public Call.CallOutput call(String accountAddress, String contractAddress, String data) throws IOException {
+    public Call.CallOutput call(String accountAddress, String contractAddress, String data)
+            throws IOException {
         Transaction transaction = new Transaction(accountAddress, contractAddress, data);
         Call call = client.call(transaction);
         return call.getResult();

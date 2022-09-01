@@ -54,7 +54,8 @@ public class ClientWrapperFactory {
         return new ClientWrapperImplV20(client);
     }
 
-    private static void checkConfig(NodeVersion.ClientVersion version, String stubType) throws Exception {
+    private static void checkConfig(NodeVersion.ClientVersion version, String stubType)
+            throws Exception {
         boolean isGMStub = stubType.toLowerCase().contains("gm");
         boolean isGMNode = version.getVersion().toLowerCase().contains("gm");
 

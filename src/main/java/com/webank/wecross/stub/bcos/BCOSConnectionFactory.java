@@ -6,32 +6,31 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.preparation.CnsService;
+import java.util.Objects;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
-import java.util.Objects;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-
 public class BCOSConnectionFactory {
     private static final Logger logger = LoggerFactory.getLogger(BCOSConnectionFactory.class);
 
-
-    public static BCOSConnection build(BCOSStubConfig bcosStubConfig,
-                                       AbstractClientWrapper clientWrapper) {
+    public static BCOSConnection build(
+            BCOSStubConfig bcosStubConfig, AbstractClientWrapper clientWrapper) {
         ScheduledExecutorService scheduledExecutorService =
                 new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
         return build(bcosStubConfig, clientWrapper, scheduledExecutorService);
     }
 
+    public static BCOSConnection build(
+            BCOSStubConfig bcosStubConfig,
+            AbstractClientWrapper clientWrapper,
+            ScheduledExecutorService executorService) {
 
-    public static BCOSConnection build(BCOSStubConfig bcosStubConfig,
-                                       AbstractClientWrapper clientWrapper,
-                                       ScheduledExecutorService executorService) {
-
-        logger.info(" bcosStubConfig: {}, version: {} ", bcosStubConfig, clientWrapper.getVersion());
+        logger.info(
+                " bcosStubConfig: {}, version: {} ", bcosStubConfig, clientWrapper.getVersion());
         BCOSConnection bcosConnection = new BCOSConnection(clientWrapper, executorService);
         bcosConnection.setResourceInfoList(bcosStubConfig.convertToResourceInfos());
 
@@ -58,16 +57,15 @@ public class BCOSConnectionFactory {
         return bcosConnection;
     }
 
-    public static BCOSConnection build(String stubConfigPath,
-                                       String configName) throws Exception {
+    public static BCOSConnection build(String stubConfigPath, String configName) throws Exception {
         ScheduledExecutorService scheduledExecutorService =
                 new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
         return build(stubConfigPath, configName, scheduledExecutorService);
     }
 
-    public static BCOSConnection build(String stubConfigPath,
-                                       String configName,
-                                       ScheduledExecutorService executorService) throws Exception {
+    public static BCOSConnection build(
+            String stubConfigPath, String configName, ScheduledExecutorService executorService)
+            throws Exception {
         logger.info(" stubConfigPath: {} ", stubConfigPath);
 
         BCOSStubConfigParser bcosStubConfigParser =

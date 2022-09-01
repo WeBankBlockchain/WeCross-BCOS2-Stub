@@ -1,5 +1,11 @@
 package com.webank.wecross.stub.bcos.contract;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import org.fisco.bcos.sdk.abi.FunctionEncoder;
 import org.fisco.bcos.sdk.abi.FunctionReturnDecoder;
 import org.fisco.bcos.sdk.abi.TypeReference;
@@ -14,16 +20,8 @@ import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple2;
 import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple3;
 import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple4;
 import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple6;
-import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.fisco.bcos.sdk.utils.Numeric;
-
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
 
 /**
  * Function object used across blockchain chain. Wecross requires that a cross-chain contract
@@ -43,9 +41,11 @@ public class FunctionUtility {
 
     public static final String ProxySendTXMethod = "sendTransaction(string,string,bytes)";
 
-    public static final String ProxySendTransactionTXMethod = "sendTransaction(string,string,uint256,string,string,bytes)";
+    public static final String ProxySendTransactionTXMethod =
+            "sendTransaction(string,string,uint256,string,string,bytes)";
 
-    public static final String ProxyCallWithTransactionIdMethod = "constantCall(string,string,string,bytes)";
+    public static final String ProxyCallWithTransactionIdMethod =
+            "constantCall(string,string,string,bytes)";
 
     public static final String ProxyCallMethod = "constantCall(string,bytes)";
 
@@ -72,7 +72,8 @@ public class FunctionUtility {
                 Arrays.asList(
                         (0 == params.length)
                                 ? DynamicArray.empty("string[]")
-                                : new DynamicArray<>(Utils.typeMap(Arrays.asList(params), Utf8String.class))),
+                                : new DynamicArray<>(
+                                        Utils.typeMap(Arrays.asList(params), Utf8String.class))),
                 abiTypeReferenceOutputs);
     }
 
@@ -96,8 +97,7 @@ public class FunctionUtility {
                                 new Utf8String(id),
                                 new Utf8String(path),
                                 new Utf8String(methodSignature),
-                                new DynamicBytes(
-                                        Numeric.hexStringToByteArray(abi))),
+                                new DynamicBytes(Numeric.hexStringToByteArray(abi))),
                         Collections.<TypeReference<?>>emptyList());
         return function;
     }
@@ -111,16 +111,15 @@ public class FunctionUtility {
      * @param abi
      * @return
      */
-    public static  Function newConstantCallProxyFunction(FunctionEncoder functionEncoder,
-            String name, String methodSignature, String abi) {
+    public static Function newConstantCallProxyFunction(
+            FunctionEncoder functionEncoder, String name, String methodSignature, String abi) {
         String methodId = functionEncoder.buildMethodId(methodSignature);
         Function function =
                 new Function(
                         "constantCall",
                         Arrays.<Type>asList(
                                 new Utf8String(name),
-                                new DynamicBytes(
-                                        Numeric.hexStringToByteArray(methodId + abi))),
+                                new DynamicBytes(Numeric.hexStringToByteArray(methodId + abi))),
                         Collections.<TypeReference<?>>emptyList());
         return function;
     }
@@ -149,8 +148,7 @@ public class FunctionUtility {
                                 new Uint256(seq),
                                 new Utf8String(path),
                                 new Utf8String(methodSignature),
-                                new DynamicBytes(
-                                        Numeric.hexStringToByteArray(abi))),
+                                new DynamicBytes(Numeric.hexStringToByteArray(abi))),
                         Collections.<TypeReference<?>>emptyList());
         return function;
     }
@@ -165,8 +163,12 @@ public class FunctionUtility {
      * @param abi
      * @return
      */
-    public static Function newSendTransactionProxyFunction(FunctionEncoder functionEncoder,
-            String uid, String name, String methodSignature, String abi) {
+    public static Function newSendTransactionProxyFunction(
+            FunctionEncoder functionEncoder,
+            String uid,
+            String name,
+            String methodSignature,
+            String abi) {
         String methodId = functionEncoder.buildMethodId(methodSignature);
         Function function =
                 new Function(
@@ -174,8 +176,7 @@ public class FunctionUtility {
                         Arrays.<Type>asList(
                                 new Utf8String(uid),
                                 new Utf8String(name),
-                                new DynamicBytes(
-                                        Numeric.hexStringToByteArray(methodId + abi))),
+                                new DynamicBytes(Numeric.hexStringToByteArray(methodId + abi))),
                         Collections.<TypeReference<?>>emptyList());
         return function;
     }

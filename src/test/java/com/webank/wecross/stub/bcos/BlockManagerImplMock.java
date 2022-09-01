@@ -5,10 +5,9 @@ import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.bcos.client.ClientWrapper;
 import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
 import com.webank.wecross.stub.bcos.contract.BlockUtility;
-import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
-
 import java.io.IOException;
 import java.math.BigInteger;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
 
 public class BlockManagerImplMock implements BlockManager {
 
@@ -34,18 +33,14 @@ public class BlockManagerImplMock implements BlockManager {
     }
 
     @Override
-    public void start() {
-    }
+    public void start() {}
 
     @Override
-    public void stop() {
-    }
+    public void stop() {}
 
     @Override
-    public void asyncGetBlockNumber(GetBlockNumberCallback callback) {
-    }
+    public void asyncGetBlockNumber(GetBlockNumberCallback callback) {}
 
     @Override
-    public void asyncGetBlock(long blockNumber, GetBlockCallback callback) {
-    }
+    public void asyncGetBlock(long blockNumber, GetBlockCallback callback) {}
 }

@@ -1,6 +1,10 @@
 package com.webank.wecross.stub.bcos.contract;
 
+import static junit.framework.TestCase.assertEquals;
+
 import com.webank.wecross.stub.bcos.common.ExtendedTransactionDecoder;
+import java.io.IOException;
+import java.math.BigInteger;
 import org.fisco.bcos.sdk.abi.FunctionEncoder;
 import org.fisco.bcos.sdk.abi.datatypes.Function;
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
@@ -10,11 +14,6 @@ import org.fisco.bcos.sdk.transaction.codec.encode.TransactionEncoderService;
 import org.fisco.bcos.sdk.transaction.model.po.RawTransaction;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.math.BigInteger;
-
-import static junit.framework.TestCase.assertEquals;
-
 public class TransactionSignTest {
 
     @Test
@@ -23,7 +22,7 @@ public class TransactionSignTest {
         BigInteger blockNumber = BigInteger.valueOf(1111111);
 
         String funcName = "testFuncName";
-        String[] params = new String[]{"aaa", "bbbb", "ccc"};
+        String[] params = new String[] {"aaa", "bbbb", "ccc"};
         FunctionEncoder functionEncoder = new FunctionEncoder(cryptoSuite);
         Function function = FunctionUtility.newDefaultFunction(funcName, params);
         String abiData = functionEncoder.encode(function);
@@ -34,13 +33,14 @@ public class TransactionSignTest {
         BigInteger groupID = BigInteger.valueOf(111);
         BigInteger chainID = BigInteger.valueOf(222);
 
-        RawTransaction rawTransaction = SignTransaction.buildTransaction(to, groupID, chainID, blockNumber, abiData);
+        RawTransaction rawTransaction =
+                SignTransaction.buildTransaction(to, groupID, chainID, blockNumber, abiData);
         CryptoKeyPair credentials = cryptoSuite.getCryptoKeyPair();
-        TransactionEncoderService transactionEncoderService = new TransactionEncoderService(cryptoSuite);
+        TransactionEncoderService transactionEncoderService =
+                new TransactionEncoderService(cryptoSuite);
         String signTx = transactionEncoderService.encodeAndSign(rawTransaction, credentials);
 
-        RawTransaction decodeExtendedRawTransaction =
-                ExtendedTransactionDecoder.decode(signTx);
+        RawTransaction decodeExtendedRawTransaction = ExtendedTransactionDecoder.decode(signTx);
 
         assertEquals(SignTransaction.gasPrice, decodeExtendedRawTransaction.getGasPrice());
         assertEquals(SignTransaction.gasLimit, decodeExtendedRawTransaction.getGasLimit());

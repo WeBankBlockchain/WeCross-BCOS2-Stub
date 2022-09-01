@@ -1,5 +1,9 @@
 package com.webank.wecross.stub.bcos;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
+
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.ResourceInfo;
@@ -8,13 +12,8 @@ import com.webank.wecross.stub.bcos.client.ClientWrapperImplMock;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
-import org.junit.Test;
-
 import java.util.List;
-
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
+import org.junit.Test;
 
 public class BCOSConnectionFactoryTest {
     @Test
@@ -25,8 +24,7 @@ public class BCOSConnectionFactoryTest {
                     new BCOSStubConfigParser("./", "stub-sample-ut.toml");
             BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
             AbstractClientWrapper clientWrapper = new ClientWrapperImplMock();
-            Connection connection =
-                    BCOSConnectionFactory.build(bcosStubConfig, clientWrapper);
+            Connection connection = BCOSConnectionFactory.build(bcosStubConfig, clientWrapper);
 
             Driver driver = new BCOSDriver(clientWrapper.getCryptoSuite());
             List<ResourceInfo> resources = driver.getResources(connection);

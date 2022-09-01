@@ -1,12 +1,10 @@
 package com.webank.wecross.stub.bcos;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
+
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
-import org.fisco.bcos.sdk.crypto.CryptoSuite;
-import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
-import org.fisco.bcos.sdk.model.CryptoType;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -14,16 +12,17 @@ import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
-
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.model.CryptoType;
+import org.junit.Test;
 
 public class BCOSAccountFactoryTest {
     @Test
     public void loadPemTest()
             throws IOException, CertificateException, UnrecoverableKeyException,
-            NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException,
-            InvalidKeySpecException {
+                    NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException,
+                    InvalidKeySpecException {
         CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.SM_TYPE);
         BCOSAccountFactory bcosAccountFactory = BCOSAccountFactory.getInstance(cryptoSuite);
 
@@ -37,8 +36,8 @@ public class BCOSAccountFactoryTest {
     @Test
     public void loadP12Test()
             throws IOException, CertificateException, UnrecoverableKeyException,
-            NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException,
-            InvalidKeySpecException {
+                    NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException,
+                    InvalidKeySpecException {
         CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.ECDSA_TYPE);
         BCOSAccountFactory bcosAccountFactory = BCOSAccountFactory.getInstance(cryptoSuite);
 
@@ -52,8 +51,8 @@ public class BCOSAccountFactoryTest {
     @Test
     public void buildAccountTest()
             throws IOException, CertificateException, UnrecoverableKeyException,
-            NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException,
-            InvalidKeySpecException {
+                    NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException,
+                    InvalidKeySpecException {
         CryptoSuite cryptoSuite = new CryptoSuite(CryptoType.ECDSA_TYPE);
         BCOSAccountFactory bcosAccountFactory = BCOSAccountFactory.getInstance(cryptoSuite);
 

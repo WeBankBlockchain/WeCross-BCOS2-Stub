@@ -6,7 +6,6 @@ import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
 
-
 public class ClientWrapperTxVerifyMock extends ClientWrapperImplMock {
 
     private String blockJson =
@@ -37,7 +36,8 @@ public class ClientWrapperTxVerifyMock extends ClientWrapperImplMock {
         transAndProof =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(
-                                transactionAndProofJson, TransactionWithProof.TransactionAndProof.class);
+                                transactionAndProofJson,
+                                TransactionWithProof.TransactionAndProof.class);
         receiptAndProof =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(
@@ -48,7 +48,8 @@ public class ClientWrapperTxVerifyMock extends ClientWrapperImplMock {
         transAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(
-                                transactionAndProofJson0, TransactionWithProof.TransactionAndProof.class);
+                                transactionAndProofJson0,
+                                TransactionWithProof.TransactionAndProof.class);
         receiptAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(
@@ -57,18 +58,19 @@ public class ClientWrapperTxVerifyMock extends ClientWrapperImplMock {
     }
 
     @Override
-    public BcosBlock.Block getBlockByNumber(long blockNumber){
+    public BcosBlock.Block getBlockByNumber(long blockNumber) {
         return block;
     }
 
     @Override
     public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(
-            String transactionHash){
+            String transactionHash) {
         return receiptAndProof;
     }
 
     @Override
-    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(String transactionHash) {
+    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(
+            String transactionHash) {
         return transAndProof;
     }
 }

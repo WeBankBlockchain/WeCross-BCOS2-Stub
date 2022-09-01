@@ -12,6 +12,14 @@ import com.webank.wecross.stub.bcos.AsyncCnsService;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.preparation.CnsService;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.List;
+import java.util.Objects;
 import org.fisco.bcos.sdk.abi.wrapper.ABICodecJsonWrapper;
 import org.fisco.bcos.sdk.abi.wrapper.ABIDefinition;
 import org.fisco.bcos.sdk.abi.wrapper.ABIDefinitionFactory;
@@ -25,15 +33,6 @@ import org.fisco.solc.compiler.CompilationResult;
 import org.fisco.solc.compiler.SolidityCompiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.List;
-import java.util.Objects;
 
 public class DeployContractHandler implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(DeployContractHandler.class);
@@ -59,11 +58,11 @@ public class DeployContractHandler implements CommandHandler {
     }
 
     /**
-     * @param path         rule id
-     * @param args         command args
-     * @param account      if needs to sign
+     * @param path rule id
+     * @param args command args
+     * @param account if needs to sign
      * @param blockManager if needs to verify transaction
-     * @param connection   chain connection
+     * @param connection chain connection
      * @param callback
      */
     @Override
@@ -231,7 +230,9 @@ public class DeployContractHandler implements CommandHandler {
         proxyPath.setResource(BCOSConstant.BCOS_PROXY_NAME);
 
         /* Binary data needs to be base64 encoded */
-        String base64Bin = ABICodecJsonWrapper.Base64EncodedDataPrefix + Base64.getEncoder().encodeToString(Numeric.hexStringToByteArray(bin));
+        String base64Bin =
+                ABICodecJsonWrapper.Base64EncodedDataPrefix
+                        + Base64.getEncoder().encodeToString(Numeric.hexStringToByteArray(bin));
 
         TransactionRequest transactionRequest =
                 new TransactionRequest(

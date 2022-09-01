@@ -2,18 +2,16 @@ package com.webank.wecross.stub.bcos.uaproof;
 
 import com.webank.wedpr.crypto.CryptoResult;
 import com.webank.wedpr.crypto.NativeInterface;
+import java.security.InvalidParameterException;
 import org.bouncycastle.util.encoders.Hex;
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.crypto.exceptions.SignatureException;
 import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
 import org.fisco.bcos.sdk.crypto.signature.ECDSASignatureResult;
 import org.fisco.bcos.sdk.crypto.signature.SM2SignatureResult;
-import org.fisco.bcos.sdk.crypto.signature.SignatureResult;
 import org.fisco.bcos.sdk.model.CryptoType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.security.InvalidParameterException;
 
 public interface Signer {
 
@@ -68,15 +66,18 @@ public interface Signer {
             String message = Hex.toHexString(hash);
             String signatrue = Hex.toHexString(signData);
 
-            CryptoResult recoverResult = NativeInterface.secp256k1RecoverPublicKey(message, signatrue);
+            CryptoResult recoverResult =
+                    NativeInterface.secp256k1RecoverPublicKey(message, signatrue);
 
             // call secp256k1RecoverPublicKey failed
-            if (recoverResult.wedprErrorMessage != null && !recoverResult.wedprErrorMessage.isEmpty()) {
+            if (recoverResult.wedprErrorMessage != null
+                    && !recoverResult.wedprErrorMessage.isEmpty()) {
                 throw new SignatureException(
                         "Verify with secp256k1 failed:" + recoverResult.wedprErrorMessage);
             }
 
-            return address.equals(cryptoSuite.getKeyPairFactory().getAddress(recoverResult.publicKey));
+            return address.equals(
+                    cryptoSuite.getKeyPairFactory().getAddress(recoverResult.publicKey));
         }
     }
 

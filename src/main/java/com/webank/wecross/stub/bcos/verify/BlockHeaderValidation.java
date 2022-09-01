@@ -7,23 +7,25 @@ import com.webank.wecross.exception.WeCrossException;
 import com.webank.wecross.stub.bcos.common.BCOSBlockHeader;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-
 public class BlockHeaderValidation {
     private static final Logger logger = LoggerFactory.getLogger(BlockHeaderValidation.class);
 
     public static void verifyBlockHeader(
-            BCOSBlockHeader bcosBlockHeader, String blockVerifierString, String stubType,CryptoSuite cryptoSuite)
+            BCOSBlockHeader bcosBlockHeader,
+            String blockVerifierString,
+            String stubType,
+            CryptoSuite cryptoSuite)
             throws WeCrossException {
         String chainType = getChainTypeInBCOSVerifier(blockVerifierString);
         if (!stubType.equals(chainType)) {
@@ -62,7 +64,7 @@ public class BlockHeaderValidation {
                 for (String sealer : sealerList) {
                     byte[] signData = Numeric.hexStringToByteArray(signature.getSignature());
                     byte[] hashData = Numeric.hexStringToByteArray(blockHash);
-                    verifyFlag=cryptoSuite.verify(sealer,hashData,signData);
+                    verifyFlag = cryptoSuite.verify(sealer, hashData, signData);
                     if (verifyFlag) break;
                 }
                 finalizeFlag = finalizeFlag && verifyFlag;

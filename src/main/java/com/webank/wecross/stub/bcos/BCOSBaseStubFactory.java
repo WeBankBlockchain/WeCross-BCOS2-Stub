@@ -12,6 +12,14 @@ import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import com.webank.wecross.stub.bcos.custom.RegisterCnsHandler;
 import com.webank.wecross.stub.bcos.preparation.HubContractDeployment;
 import com.webank.wecross.stub.bcos.preparation.ProxyContractDeployment;
+import java.io.File;
+import java.io.FileWriter;
+import java.net.URL;
+import java.security.PrivateKey;
+import java.security.Security;
+import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemObject;
@@ -21,15 +29,6 @@ import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
-
-import java.io.File;
-import java.io.FileWriter;
-import java.net.URL;
-import java.security.PrivateKey;
-import java.security.Security;
-import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class BCOSBaseStubFactory implements StubFactory {
     private Logger logger = LoggerFactory.getLogger(BCOSBaseStubFactory.class);

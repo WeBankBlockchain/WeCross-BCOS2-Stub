@@ -3,7 +3,6 @@ package com.webank.wecross.stub.bcos.performance.hellowecross;
 import com.webank.wecross.stub.bcos.performance.PerformanceSuiteCallback;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,5 +1,11 @@
 package com.webank.wecross.stub.bcos.contract;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
 import org.fisco.bcos.sdk.abi.FunctionEncoder;
 import org.fisco.bcos.sdk.abi.FunctionReturnDecoder;
 import org.fisco.bcos.sdk.abi.datatypes.Function;
@@ -9,24 +15,17 @@ import org.fisco.bcos.sdk.model.CryptoType;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Objects;
-
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
-
 public class FunctionUtilityTest {
 
     private static final String[] params = new String[] {"aa", "bb", "cc"};
     private static final String[] emptyParams = new String[0];
     private static final String[] nonParams = null;
-    FunctionEncoder functionEncoder=new FunctionEncoder(new CryptoSuite(CryptoType.ECDSA_TYPE));
+    FunctionEncoder functionEncoder = new FunctionEncoder(new CryptoSuite(CryptoType.ECDSA_TYPE));
     private static String funcName = "funcName";
     private static String funcSignature = "funcName(string[])";
     private static String funcNoneParamsSignature = "funcName()";
     private static String funcMethodId;
-    private static String funcEmptyParamsMethodId ;
+    private static String funcEmptyParamsMethodId;
     private static String funcNoneParamsMethodId;
     private static Function function = FunctionUtility.newDefaultFunction(funcName, params);
     private static Function emptyParamsFunction =
@@ -38,7 +37,7 @@ public class FunctionUtilityTest {
     public void newFunctionTest() throws IOException {
         funcMethodId = functionEncoder.buildMethodId(funcSignature);
         funcEmptyParamsMethodId = functionEncoder.buildMethodId(funcSignature);
-        funcNoneParamsMethodId =functionEncoder.buildMethodId(funcNoneParamsSignature);
+        funcNoneParamsMethodId = functionEncoder.buildMethodId(funcNoneParamsSignature);
         String abi = functionEncoder.encode(function);
         assertTrue(abi.startsWith(funcMethodId));
         assertTrue(funcName.equals(function.getName()));

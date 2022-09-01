@@ -3,12 +3,11 @@ package com.webank.wecross.stub.bcos.preparation;
 import com.webank.wecross.stub.bcos.AsyncCnsService;
 import com.webank.wecross.stub.bcos.client.AbstractClientWrapper;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
+import java.io.File;
+import java.nio.file.Files;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-
-import java.io.File;
-import java.nio.file.Files;
 
 public class TwoPCContractDeployment {
     private static final Logger logger = LoggerFactory.getLogger(TwoPCContractDeployment.class);

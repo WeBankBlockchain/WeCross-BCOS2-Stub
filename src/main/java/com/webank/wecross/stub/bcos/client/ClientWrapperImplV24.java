@@ -12,19 +12,21 @@ public class ClientWrapperImplV24 extends ClientWrapperImplV20 {
     }
 
     @Override
-    public void sendTransaction(String signedTransactionData, TransactionCallback callback){
+    public void sendTransaction(String signedTransactionData, TransactionCallback callback) {
         getClient().sendRawTransactionAndGetReceiptWithProofAsync(signedTransactionData, callback);
     }
 
     @Override
-    public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(String transactionHash){
+    public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(
+            String transactionHash) {
         TransactionReceiptWithProof transactionReceiptWithProof =
                 getClient().getTransactionReceiptByHashWithProof(transactionHash);
         return transactionReceiptWithProof.getResult();
     }
 
     @Override
-    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(String transactionHash){
+    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(
+            String transactionHash) {
         TransactionWithProof transactionWithProof =
                 getClient().getTransactionByHashWithProof(transactionHash);
         return transactionWithProof.getResult();

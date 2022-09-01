@@ -1,15 +1,14 @@
 package com.webank.wecross.stub.bcos.common;
 
+import java.util.Arrays;
+import java.util.List;
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.model.MerkleProofUnit;
 import org.fisco.bcos.sdk.utils.Numeric;
 
-import java.util.Arrays;
-import java.util.List;
-
-
 public class Merkle {
-    public static String calculateMerkleRoot(List<MerkleProofUnit> merkleProofUnits, String hash, CryptoSuite cryptoSuite) {
+    public static String calculateMerkleRoot(
+            List<MerkleProofUnit> merkleProofUnits, String hash, CryptoSuite cryptoSuite) {
         if (merkleProofUnits == null) {
             return hash;
         }
@@ -18,9 +17,8 @@ public class Merkle {
             String left = splicing(merkleProofUnit.getLeft());
             String right = splicing(merkleProofUnit.getRight());
             String input = splicing("0x", left, result.substring(2), right);
-            byte[] inputHash=cryptoSuite.hash(Numeric.hexStringToByteArray(input));
+            byte[] inputHash = cryptoSuite.hash(Numeric.hexStringToByteArray(input));
             result = Numeric.toHexString(inputHash);
-
         }
         return result;
     }

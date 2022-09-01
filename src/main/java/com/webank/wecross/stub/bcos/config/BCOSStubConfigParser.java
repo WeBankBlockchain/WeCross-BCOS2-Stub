@@ -4,15 +4,14 @@ import com.moandjiezana.toml.Toml;
 import com.webank.wecross.stub.bcos.client.ClientDefaultConfig;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSToml;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Load and parser stub.toml configuration file for BCOS */
 public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
