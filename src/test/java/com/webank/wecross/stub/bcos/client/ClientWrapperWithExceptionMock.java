@@ -1,4 +1,4 @@
-package com.webank.wecross.stub.bcos.web3j;
+package com.webank.wecross.stub.bcos.client;
 
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
@@ -11,9 +11,9 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 
-public class Web3jWrapperWithExceptionMock extends AbstractWeb3jWrapper {
+public class ClientWrapperWithExceptionMock extends AbstractClientWrapper {
 
-    public Web3jWrapperWithExceptionMock() {
+    public ClientWrapperWithExceptionMock() {
         super(null);
     }
 

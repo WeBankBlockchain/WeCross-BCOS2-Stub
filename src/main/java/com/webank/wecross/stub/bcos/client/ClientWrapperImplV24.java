@@ -1,13 +1,13 @@
-package com.webank.wecross.stub.bcos.web3j;
+package com.webank.wecross.stub.bcos.client;
 
 import org.fisco.bcos.sdk.client.Client;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
 import org.fisco.bcos.sdk.model.callback.TransactionCallback;
 
-public class Web3jWrapperImplV24 extends Web3jWrapperImplV20 {
+public class ClientWrapperImplV24 extends ClientWrapperImplV20 {
 
-    public Web3jWrapperImplV24(Client client) {
+    public ClientWrapperImplV24(Client client) {
         super(client);
     }
 

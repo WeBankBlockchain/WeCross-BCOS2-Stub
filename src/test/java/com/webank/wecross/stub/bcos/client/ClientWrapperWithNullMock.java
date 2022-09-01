@@ -1,11 +1,11 @@
-package com.webank.wecross.stub.bcos.web3j;
+package com.webank.wecross.stub.bcos.client;
 
 import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
 import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.fisco.bcos.sdk.model.callback.TransactionCallback;
 
-public class Web3jWrapperWithNullMock extends Web3jWrapperImplMock {
+public class ClientWrapperWithNullMock extends ClientWrapperImplMock {
 
     @Override
     public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(String transactionHash) {

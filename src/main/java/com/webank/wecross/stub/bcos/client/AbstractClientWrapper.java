@@ -1,4 +1,4 @@
-package com.webank.wecross.stub.bcos.web3j;
+package com.webank.wecross.stub.bcos.client;
 
 import org.fisco.bcos.sdk.client.Client;
 import org.fisco.bcos.sdk.client.protocol.model.JsonTransactionResponse;
@@ -17,13 +17,13 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Objects;
 
-public abstract class AbstractWeb3jWrapper implements Web3jWrapper {
+public abstract class AbstractClientWrapper implements ClientWrapper {
 
     private Client client;
     private String version;
     private CryptoSuite cryptoSuite;
 
-    public AbstractWeb3jWrapper(Client client) {
+    public AbstractClientWrapper(Client client) {
         this.client = client;
         this.cryptoSuite = Objects.nonNull(client) ? client.getCryptoSuite() : new CryptoSuite(CryptoType.ECDSA_TYPE);
     }

@@ -1,4 +1,4 @@
-package com.webank.wecross.stub.bcos.web3j;
+package com.webank.wecross.stub.bcos.client;
 
 import com.webank.wecross.stub.bcos.common.FeatureSupport;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
@@ -8,16 +8,16 @@ import org.fisco.bcos.sdk.model.NodeVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Web3jWrapperFactory {
+public class ClientWrapperFactory {
 
-    private static final Logger logger = LoggerFactory.getLogger(Web3jWrapperFactory.class);
+    private static final Logger logger = LoggerFactory.getLogger(ClientWrapperFactory.class);
 
-    public static AbstractWeb3jWrapper createWeb3jWrapperInstance(BCOSStubConfig bcosStubConfig)
+    public static AbstractClientWrapper createClientWrapperInstance(BCOSStubConfig bcosStubConfig)
             throws Exception {
 
         logger.info("BCOSStubConfig: {}", bcosStubConfig);
 
-        Client client = Web3jUtility.initClient(bcosStubConfig.getChannelService());
+        Client client = ClientUtility.initClient(bcosStubConfig.getChannelService());
         NodeVersion.ClientVersion nodeVersion = client.getNodeVersion().getNodeVersion();
 
         logger.info("NodeVersion: {}", nodeVersion);
@@ -32,26 +32,26 @@ public class Web3jWrapperFactory {
                     "Unsupported BCOS version, version: " + nodeVersion);
         }
 
-        AbstractWeb3jWrapper web3jWrapper = createWeb3jWrapperInstance(version, client);
-        web3jWrapper.setVersion(nodeVersion.getSupportedVersion());
+        AbstractClientWrapper clientWrapper = createClientWrapperInstance(version, client);
+        clientWrapper.setVersion(nodeVersion.getSupportedVersion());
 
-        return web3jWrapper;
+        return clientWrapper;
     }
 
-    private static AbstractWeb3jWrapper createWeb3jWrapperInstance(
+    private static AbstractClientWrapper createClientWrapperInstance(
             EnumNodeVersion.Version version, Client client) {
 
         if (FeatureSupport.isSupportGetBlockHeader(version)) {
-            logger.info("new Web3jWrapperImplV26");
-            return new Web3jWrapperImplV26(client);
+            logger.info("new ClientWrapperImplV26");
+            return new ClientWrapperImplV26(client);
         } else if (FeatureSupport.isSupportGetTxProof(version)) {
-            logger.info("new Web3jWrapperImplV24");
-            return new Web3jWrapperImplV24(client);
+            logger.info("new ClientWrapperImplV24");
+            return new ClientWrapperImplV24(client);
         }
 
-        logger.info("new Web3jWrapperImplV20");
+        logger.info("new ClientWrapperImplV20");
         // default version
-        return new Web3jWrapperImplV20(client);
+        return new ClientWrapperImplV20(client);
     }
 
     private static void checkConfig(NodeVersion.ClientVersion version, String stubType) throws Exception {

@@ -1,8 +1,8 @@
 package com.webank.wecross.stub.bcos.preparation;
 
 import com.webank.wecross.stub.bcos.AsyncCnsService;
+import com.webank.wecross.stub.bcos.client.AbstractClientWrapper;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
-import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -130,7 +130,7 @@ public class TwoPCContractDeployment {
             }
 
             File file = resolver.getResource(contractPath).getFile();
-            AbstractWeb3jWrapper web3jWrapper = proxyContract.getConnection().getWeb3jWrapper();
+            AbstractClientWrapper clientWrapper = proxyContract.getConnection().getClientWrapper();
             twoPCContract.deploy2PCContract(
                     contractName,
                     version,
@@ -138,7 +138,7 @@ public class TwoPCContractDeployment {
                     tps,
                     fromIndex,
                     toIndex,
-                    web3jWrapper.getCryptoSuite());
+                    clientWrapper.getCryptoSuite());
 
         } catch (Exception e) {
             logger.error("e: ", e);

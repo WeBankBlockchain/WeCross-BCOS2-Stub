@@ -4,8 +4,8 @@ import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
+import com.webank.wecross.stub.bcos.client.ClientBlockManager;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
-import com.webank.wecross.stub.bcos.web3j.Web3jBlockManager;
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +20,7 @@ public class TwoPCContract {
     public TwoPCContract(BCOSAccount account, BCOSConnection connection) {
         this.account = account;
         this.connection = connection;
-        this.blockManager = new Web3jBlockManager(connection.getWeb3jWrapper());
+        this.blockManager = new ClientBlockManager(connection.getClientWrapper());
     }
 
     private BCOSAccount account;

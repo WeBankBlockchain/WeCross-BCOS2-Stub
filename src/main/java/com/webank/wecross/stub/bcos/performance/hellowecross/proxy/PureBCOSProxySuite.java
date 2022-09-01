@@ -1,9 +1,9 @@
 package com.webank.wecross.stub.bcos.performance.hellowecross.proxy;
 
+import com.webank.wecross.stub.bcos.client.ClientWrapperImplV26;
 import com.webank.wecross.stub.bcos.performance.hellowecross.HelloWeCross;
 import com.webank.wecross.stub.bcos.performance.hellowecross.PureBCOSSuite;
 import com.webank.wecross.stub.bcos.preparation.CnsService;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImplV26;
 import org.fisco.bcos.sdk.abi.wrapper.ABICodecJsonWrapper;
 import org.fisco.bcos.sdk.abi.wrapper.ABIDefinitionFactory;
 import org.fisco.bcos.sdk.abi.wrapper.ContractABIDefinition;
@@ -27,7 +27,7 @@ public abstract class PureBCOSProxySuite extends PureBCOSSuite {
             String chainName, String accountName, boolean sm, String contractName)
             throws Exception {
         super(chainName, accountName, sm);
-        this.cnsInfo = CnsService.queryProxyCnsInfo(new Web3jWrapperImplV26(getClient()));
+        this.cnsInfo = CnsService.queryProxyCnsInfo(new ClientWrapperImplV26(getClient()));
         this.abiCodecJsonWrapper = new ABICodecJsonWrapper();
         this.contractName = contractName;
 

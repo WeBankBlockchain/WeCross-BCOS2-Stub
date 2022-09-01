@@ -1,4 +1,4 @@
-package com.webank.wecross.stub.bcos.web3j;
+package com.webank.wecross.stub.bcos.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,8 +14,8 @@ import org.fisco.bcos.sdk.model.callback.TransactionCallback;
 
 import java.math.BigInteger;
 
-public class Web3jWrapperImplMock extends AbstractWeb3jWrapper {
-    public Web3jWrapperImplMock() {
+public class ClientWrapperImplMock extends AbstractClientWrapper {
+    public ClientWrapperImplMock() {
         super(null);
     }
 

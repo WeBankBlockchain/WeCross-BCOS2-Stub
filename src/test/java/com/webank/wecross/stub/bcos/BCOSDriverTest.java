@@ -15,6 +15,12 @@ import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
+import com.webank.wecross.stub.bcos.client.ClientDefaultConfig;
+import com.webank.wecross.stub.bcos.client.ClientWrapperCallNotSucStatus;
+import com.webank.wecross.stub.bcos.client.ClientWrapperImplMock;
+import com.webank.wecross.stub.bcos.client.ClientWrapperTxVerifyMock;
+import com.webank.wecross.stub.bcos.client.ClientWrapperWithExceptionMock;
+import com.webank.wecross.stub.bcos.client.ClientWrapperWithNullMock;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
@@ -25,12 +31,6 @@ import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
-import com.webank.wecross.stub.bcos.web3j.Web3jDefaultConfig;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperCallNotSucStatus;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImplMock;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperTxVerifyMock;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperWithExceptionMock;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperWithNullMock;
 import org.apache.commons.lang3.tuple.Pair;
 import org.fisco.bcos.sdk.abi.FunctionEncoder;
 import org.fisco.bcos.sdk.abi.datatypes.Function;
@@ -101,7 +101,7 @@ public class BCOSDriverTest {
 
         ScheduledExecutorService scheduledExecutorService =
                 new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
-        connection = BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperImplMock());
+        connection = BCOSConnectionFactory.build(bcosStubConfig, new ClientWrapperImplMock());
         ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
         connection
                 .getProperties()
@@ -115,16 +115,16 @@ public class BCOSDriverTest {
 
         connection.getProperties().put(BCOSConstant.BCOS_STUB_TYPE, "BCOS2.0");
         exceptionConnection =
-                BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperWithExceptionMock());
+                BCOSConnectionFactory.build(bcosStubConfig, new ClientWrapperWithExceptionMock());
         nonExistConnection =
-                BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperWithNullMock());
+                BCOSConnectionFactory.build(bcosStubConfig, new ClientWrapperWithNullMock());
         callNotOkStatusConnection =
-                BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperCallNotSucStatus());
+                BCOSConnectionFactory.build(bcosStubConfig, new ClientWrapperCallNotSucStatus());
         txVerifyConnection =
-                BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperTxVerifyMock());
+                BCOSConnectionFactory.build(bcosStubConfig, new ClientWrapperTxVerifyMock());
 
-        blockManager = new BlockManagerImplMock(new Web3jWrapperImplMock());
-        txVerifyBlockManager = new BlockManagerImplMock(new Web3jWrapperTxVerifyMock());
+        blockManager = new BlockManagerImplMock(new ClientWrapperImplMock());
+        txVerifyBlockManager = new BlockManagerImplMock(new ClientWrapperTxVerifyMock());
         resourceInfo = ((BCOSConnection) connection).getResourceInfoList().get(0);
 
         transactionContext = new TransactionContext(account, path, resourceInfo, blockManager);
@@ -161,8 +161,8 @@ public class BCOSDriverTest {
 
         RawTransaction rawTransaction = SignTransaction.buildTransaction(
                 "0x0",
-                BigInteger.valueOf(Web3jDefaultConfig.DEFAULT_GROUP_ID),
-                BigInteger.valueOf(Web3jDefaultConfig.DEFAULT_CHAIN_ID),
+                BigInteger.valueOf(ClientDefaultConfig.DEFAULT_GROUP_ID),
+                BigInteger.valueOf(ClientDefaultConfig.DEFAULT_CHAIN_ID),
                 BigInteger.valueOf(1111),
                 functionEncoder.encode(function)
         );
@@ -202,8 +202,8 @@ public class BCOSDriverTest {
 
         RawTransaction rawTransaction = SignTransaction.buildTransaction(
                 "0x0",
-                BigInteger.valueOf(Web3jDefaultConfig.DEFAULT_GROUP_ID),
-                BigInteger.valueOf(Web3jDefaultConfig.DEFAULT_CHAIN_ID),
+                BigInteger.valueOf(ClientDefaultConfig.DEFAULT_GROUP_ID),
+                BigInteger.valueOf(ClientDefaultConfig.DEFAULT_CHAIN_ID),
                 BigInteger.valueOf(1111),
                 functionEncoder.encode(function)
         );

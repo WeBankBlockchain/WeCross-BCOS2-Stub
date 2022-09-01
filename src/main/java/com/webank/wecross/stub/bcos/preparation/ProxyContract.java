@@ -4,13 +4,13 @@ import com.webank.wecross.stub.bcos.BCOSBaseStubFactory;
 import com.webank.wecross.stub.bcos.BCOSConnection;
 import com.webank.wecross.stub.bcos.BCOSConnectionFactory;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
+import com.webank.wecross.stub.bcos.client.AbstractClientWrapper;
+import com.webank.wecross.stub.bcos.client.ClientWrapperFactory;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.StatusCode;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
-import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperFactory;
 import org.fisco.bcos.sdk.client.Client;
 import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
 import org.fisco.bcos.sdk.contract.precompiled.cns.CnsService;
@@ -56,8 +56,8 @@ public class ProxyContract {
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
 
         boolean isGM = bcosStubConfig.getType().toLowerCase().contains("gm");
-        AbstractWeb3jWrapper web3jWrapper =
-                Web3jWrapperFactory.createWeb3jWrapperInstance(bcosStubConfig);
+        AbstractClientWrapper clientWrapper =
+                ClientWrapperFactory.createClientWrapperInstance(bcosStubConfig);
 
         BCOSBaseStubFactory bcosBaseStubFactory =
                 isGM
@@ -81,7 +81,7 @@ public class ProxyContract {
         ScheduledExecutorService scheduledExecutorService =
                 new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
         connection =
-                BCOSConnectionFactory.build(bcosStubConfig, web3jWrapper, scheduledExecutorService);
+                BCOSConnectionFactory.build(bcosStubConfig, clientWrapper, scheduledExecutorService);
         if (account == null) {
             throw new Exception("Account " + accountName + " not found");
         }
@@ -127,8 +127,8 @@ public class ProxyContract {
 
         logger.info("cnsName: {}, cnsVersion: {}", cnsName, cnsVersion);
 
-        AbstractWeb3jWrapper web3jWrapper = connection.getWeb3jWrapper();
-        Client client = web3jWrapper.getClient();
+        AbstractClientWrapper clientWrapper = connection.getClientWrapper();
+        Client client = clientWrapper.getClient();
 
         /** First compile the contract source code */
         SolidityCompiler.Result res =
@@ -156,7 +156,7 @@ public class ProxyContract {
         BigInteger chainID =
                 new BigInteger(connection.getProperties().get(BCOSConstant.BCOS_CHAIN_ID));
 
-        BigInteger blockNumber = web3jWrapper.getBlockNumber();
+        BigInteger blockNumber = clientWrapper.getBlockNumber();
 
         logger.info(
                 " groupID: {}, chainID: {}, blockNumber: {}, accountAddress: {}, bin: {}, abi: {}",
@@ -180,7 +180,7 @@ public class ProxyContract {
         String signTx = transactionEncoderService.encodeAndSign(rawTransaction, credentials);
 
         CompletableFuture<String> completableFuture = new CompletableFuture<>();
-        web3jWrapper.sendTransaction(
+        clientWrapper.sendTransaction(
                 signTx,
                 new TransactionCallback() {
                     @Override

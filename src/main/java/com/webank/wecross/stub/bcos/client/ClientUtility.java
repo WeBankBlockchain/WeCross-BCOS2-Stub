@@ -1,4 +1,4 @@
-package com.webank.wecross.stub.bcos.web3j;
+package com.webank.wecross.stub.bcos.client;
 
 import com.webank.wecross.exception.WeCrossException;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
@@ -16,9 +16,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Web3jUtility {
+public class ClientUtility {
 
-    private static final Logger logger = LoggerFactory.getLogger(Web3jUtility.class);
+    private static final Logger logger = LoggerFactory.getLogger(ClientUtility.class);
 
     public static Client initClient(BCOSStubConfig.ChannelService channelServiceConfig)
             throws Exception {

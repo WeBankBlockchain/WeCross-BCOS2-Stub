@@ -1,9 +1,9 @@
-package com.webank.wecross.stub.bcos.web3j;
+package com.webank.wecross.stub.bcos.client;
 
 import com.webank.wecross.stub.bcos.common.StatusCode;
 import org.fisco.bcos.sdk.client.protocol.response.Call;
 
-public class Web3jWrapperCallNotSucStatus extends Web3jWrapperImplMock {
+public class ClientWrapperCallNotSucStatus extends ClientWrapperImplMock {
     @Override
     public Call.CallOutput call(String accountAddress, String contractAddress, String data)
             {

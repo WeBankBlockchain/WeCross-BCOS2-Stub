@@ -1,13 +1,13 @@
-package com.webank.wecross.stub.bcos.web3j;
+package com.webank.wecross.stub.bcos.client;
 
 import org.fisco.bcos.sdk.client.Client;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
 
 import java.math.BigInteger;
 
-public class Web3jWrapperImplV26 extends Web3jWrapperImplV24 {
+public class ClientWrapperImplV26 extends ClientWrapperImplV24 {
 
-    public Web3jWrapperImplV26(Client client) {
+    public ClientWrapperImplV26(Client client) {
         super(client);
     }
 

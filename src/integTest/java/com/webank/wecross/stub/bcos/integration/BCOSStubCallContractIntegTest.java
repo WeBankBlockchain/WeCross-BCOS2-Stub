@@ -21,6 +21,8 @@ import com.webank.wecross.stub.bcos.BCOSDriver;
 import com.webank.wecross.stub.bcos.BCOSGMStubFactory;
 import com.webank.wecross.stub.bcos.BCOSStubFactory;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
+import com.webank.wecross.stub.bcos.client.AbstractClientWrapper;
+import com.webank.wecross.stub.bcos.client.ClientBlockManager;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.BCOSStubException;
@@ -29,8 +31,6 @@ import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import com.webank.wecross.stub.bcos.performance.hellowecross.HelloWeCross;
 import com.webank.wecross.stub.bcos.preparation.ProxyContract;
-import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
-import com.webank.wecross.stub.bcos.web3j.Web3jBlockManager;
 import org.fisco.bcos.sdk.abi.wrapper.ABICodecJsonWrapper;
 import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
@@ -157,17 +157,17 @@ public class BCOSStubCallContractIntegTest {
 
         connection.setConnectionEventHandler(connectionEventHandlerImplMock);
 
-        AbstractWeb3jWrapper web3jWrapper = ((BCOSConnection) connection).getWeb3jWrapper();
+        AbstractClientWrapper clientWrapper = ((BCOSConnection) connection).getClientWrapper();
 
         BCOSAccount bcosAccount = (BCOSAccount) account;
-        blockManager = new Web3jBlockManager(web3jWrapper);
+        blockManager = new ClientBlockManager(clientWrapper);
         asyncCnsService = ((BCOSDriver) driver).getAsyncCnsService();
-        cryptoSuite = web3jWrapper.getCryptoSuite();
+        cryptoSuite = clientWrapper.getCryptoSuite();
 
         helloWeCross =
                 HelloWeCross
                         .deploy(
-                                web3jWrapper.getClient(),
+                                clientWrapper.getClient(),
                                 bcosAccount.getCredentials());
 
         logger.info(" HelloWeCross address: {}", helloWeCross.getContractAddress());

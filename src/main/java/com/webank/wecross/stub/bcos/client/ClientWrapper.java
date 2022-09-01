@@ -1,4 +1,4 @@
-package com.webank.wecross.stub.bcos.web3j;
+package com.webank.wecross.stub.bcos.client;
 
 import org.fisco.bcos.sdk.client.protocol.model.JsonTransactionResponse;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
@@ -15,7 +15,7 @@ import java.math.BigInteger;
 /**
  * Wrapper interface for JavaSDK
  */
-public interface Web3jWrapper {
+public interface ClientWrapper {
     BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException;
 
     BcosBlockHeader.BlockHeader getBlockHeaderByNumber(long blockNumber) throws IOException;

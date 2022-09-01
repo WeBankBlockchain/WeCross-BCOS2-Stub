@@ -2,9 +2,9 @@ package com.webank.wecross.stub.bcos;
 
 import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.BlockManager;
+import com.webank.wecross.stub.bcos.client.ClientWrapper;
 import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
 import com.webank.wecross.stub.bcos.contract.BlockUtility;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
 
 import java.io.IOException;
@@ -12,20 +12,20 @@ import java.math.BigInteger;
 
 public class BlockManagerImplMock implements BlockManager {
 
-    private Web3jWrapper web3jWrapper;
+    private ClientWrapper clientWrapper;
 
-    public BlockManagerImplMock(Web3jWrapper web3jWrapper) {
-        this.web3jWrapper = web3jWrapper;
+    public BlockManagerImplMock(ClientWrapper clientWrapper) {
+        this.clientWrapper = clientWrapper;
     }
 
     public long getBlockNumber() throws IOException {
-        BigInteger blockNumber = web3jWrapper.getBlockNumber();
+        BigInteger blockNumber = clientWrapper.getBlockNumber();
         return blockNumber.longValue();
     }
 
     public byte[] getBlockHeader(long l) {
         try {
-            BcosBlock.Block block = web3jWrapper.getBlockByNumber(l);
+            BcosBlock.Block block = clientWrapper.getBlockByNumber(l);
             BlockHeader blockHeader = BlockUtility.convertToBlockHeader(block);
             return ObjectMapperFactory.getObjectMapper().writeValueAsBytes(blockHeader);
         } catch (IOException e) {

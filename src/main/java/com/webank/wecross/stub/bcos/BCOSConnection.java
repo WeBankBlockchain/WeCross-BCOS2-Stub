@@ -7,6 +7,7 @@ import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.Response;
+import com.webank.wecross.stub.bcos.client.AbstractClientWrapper;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
@@ -16,7 +17,6 @@ import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionPair;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
-import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
 import org.fisco.bcos.sdk.abi.FunctionEncoder;
 import org.fisco.bcos.sdk.abi.datatypes.Function;
 import org.fisco.bcos.sdk.client.protocol.model.JsonTransactionResponse;
@@ -58,7 +58,7 @@ public class BCOSConnection implements Connection {
 
     private ConnectionEventHandler eventHandler = null;
 
-    private final AbstractWeb3jWrapper web3jWrapper;
+    private final AbstractClientWrapper clientWrapper;
 
     private ScheduledExecutorService scheduledExecutorService;
 
@@ -69,10 +69,10 @@ public class BCOSConnection implements Connection {
     private FunctionEncoder functionEncoder;
 
     public BCOSConnection(
-            AbstractWeb3jWrapper web3jWrapper,
+            AbstractClientWrapper clientWrapper,
             ScheduledExecutorService scheduledExecutorService) {
-        this.web3jWrapper = web3jWrapper;
-        this.cryptoSuite = web3jWrapper.getCryptoSuite();
+        this.clientWrapper = clientWrapper;
+        this.cryptoSuite = clientWrapper.getCryptoSuite();
         this.functionEncoder = new FunctionEncoder(cryptoSuite);
         this.scheduledExecutorService = scheduledExecutorService;
         this.objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
@@ -108,8 +108,8 @@ public class BCOSConnection implements Connection {
         this.resourceInfoList = resourceInfoList;
     }
 
-    public AbstractWeb3jWrapper getWeb3jWrapper() {
-        return web3jWrapper;
+    public AbstractClientWrapper getClientWrapper() {
+        return clientWrapper;
     }
 
     public List<ResourceInfo> getResourcesCache() {
@@ -173,7 +173,7 @@ public class BCOSConnection implements Connection {
         String address = properties.get(BCOSConstant.BCOS_PROXY_NAME);
         try {
             Call.CallOutput callOutput =
-                    web3jWrapper.call(
+                    clientWrapper.call(
                             BCOSConstant.DEFAULT_ADDRESS,
                             address,
                             functionEncoder.encode(function));
@@ -253,7 +253,7 @@ public class BCOSConnection implements Connection {
                     objectMapper.readValue(request.getData(), TransactionParams.class);
 
             Call.CallOutput callOutput =
-                    web3jWrapper.call(
+                    clientWrapper.call(
                             transaction.getFrom(), transaction.getTo(), transaction.getData());
 
             if (logger.isDebugEnabled()) {
@@ -293,7 +293,7 @@ public class BCOSConnection implements Connection {
                         transaction.getData());
             }
 
-            web3jWrapper.sendTransaction(
+            clientWrapper.sendTransaction(
                     transaction.getData(),
                     new TransactionCallback() {
                         @Override
@@ -355,7 +355,7 @@ public class BCOSConnection implements Connection {
     public void handleAsyncGetBlockNumberRequest(Callback callback) {
         Response response = new Response();
         try {
-            BigInteger blockNumber = web3jWrapper.getBlockNumber();
+            BigInteger blockNumber = clientWrapper.getBlockNumber();
 
             response.setErrorCode(BCOSStatusCode.Success);
             response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
@@ -381,7 +381,7 @@ public class BCOSConnection implements Connection {
         try {
             // get transaction and transaction merkle proof
             TransactionWithProof.TransactionAndProof transAndProof =
-                    web3jWrapper.getTransactionByHashWithProof(txHash);
+                    clientWrapper.getTransactionByHashWithProof(txHash);
 
             if (Objects.isNull(transAndProof)
                     || Objects.isNull(transAndProof.getTransaction())
@@ -398,7 +398,7 @@ public class BCOSConnection implements Connection {
             }
 
             TransactionReceiptWithProof.ReceiptAndProof receiptAndProof =
-                    web3jWrapper.getTransactionReceiptByHashWithProof(txHash);
+                    clientWrapper.getTransactionReceiptByHashWithProof(txHash);
             if (Objects.isNull(receiptAndProof)
                     || Objects.isNull(receiptAndProof.getReceipt())
                     || Objects.isNull(
@@ -441,8 +441,8 @@ public class BCOSConnection implements Connection {
         String txHash = new String(request.getData(), StandardCharsets.UTF_8);
         Response response = new Response();
         try {
-            JsonTransactionResponse transaction = web3jWrapper.getTransaction(txHash);
-            TransactionReceipt transactionReceipt = web3jWrapper.getTransactionReceipt(txHash);
+            JsonTransactionResponse transaction = clientWrapper.getTransaction(txHash);
+            TransactionReceipt transactionReceipt = clientWrapper.getTransactionReceipt(txHash);
 
             if (Objects.isNull(transaction)
                     || Objects.isNull(transaction.getHash())
@@ -480,11 +480,11 @@ public class BCOSConnection implements Connection {
         Response response = new Response();
         try {
             BigInteger blockNumber = new BigInteger(request.getData());
-            BcosBlock.Block block = web3jWrapper.getBlockByNumber(blockNumber.longValue());
+            BcosBlock.Block block = clientWrapper.getBlockByNumber(blockNumber.longValue());
 
             try {
                 BcosBlockHeader.BlockHeader blockHeader =
-                        web3jWrapper.getBlockHeaderByNumber(blockNumber.longValue());
+                        clientWrapper.getBlockHeaderByNumber(blockNumber.longValue());
                 List<String> headerData = new ArrayList<>();
                 headerData.add(objectMapper.writeValueAsString(blockHeader));
                 block.setExtraData(headerData);
@@ -495,7 +495,7 @@ public class BCOSConnection implements Connection {
             } catch (UnsupportedOperationException e) {
                 logger.debug(
                         " UnsupportedOperationException getBlockHeaderByNumber, version: "
-                                + web3jWrapper.getVersion());
+                                + clientWrapper.getVersion());
             }
 
             response.setErrorCode(BCOSStatusCode.Success);

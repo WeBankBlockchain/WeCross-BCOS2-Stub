@@ -7,6 +7,11 @@ import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.TransactionRequest;
+import com.webank.wecross.stub.bcos.client.AbstractClientWrapper;
+import com.webank.wecross.stub.bcos.client.ClientWrapperCallNotSucStatus;
+import com.webank.wecross.stub.bcos.client.ClientWrapperImplMock;
+import com.webank.wecross.stub.bcos.client.ClientWrapperWithExceptionMock;
+import com.webank.wecross.stub.bcos.client.ClientWrapperWithNullMock;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
@@ -18,11 +23,6 @@ import com.webank.wecross.stub.bcos.contract.BlockUtility;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
-import com.webank.wecross.stub.bcos.web3j.AbstractWeb3jWrapper;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperCallNotSucStatus;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImplMock;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperWithExceptionMock;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperWithNullMock;
 import org.fisco.bcos.sdk.abi.FunctionEncoder;
 import org.fisco.bcos.sdk.abi.datatypes.Function;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
@@ -87,10 +87,10 @@ public class BCOSConnectionTest {
 
     @Test
     public void handleUnknownTypeTest() {
-        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperImplMock();
+        AbstractClientWrapper clientWrapper = new ClientWrapperImplMock();
         BCOSConnection connection =
                 new BCOSConnection(
-                        web3jWrapper,
+                        clientWrapper,
                         new ScheduledThreadPoolExecutor(
                                 1, new CustomizableThreadFactory(this.getClass().getName())));
         Request request = new Request();
@@ -103,10 +103,10 @@ public class BCOSConnectionTest {
 
     @Test
     public void handleGetBlockNumberTest() {
-        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperImplMock();
+        AbstractClientWrapper clientWrapper = new ClientWrapperImplMock();
         BCOSConnection connection =
                 new BCOSConnection(
-                        web3jWrapper,
+                        clientWrapper,
                         new ScheduledThreadPoolExecutor(
                                 1, new CustomizableThreadFactory(this.getClass().getName())));
         Request request = new Request();
@@ -122,10 +122,10 @@ public class BCOSConnectionTest {
 
     @Test
     public void handleFailedGetBlockNumberTest() {
-        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
+        AbstractClientWrapper clientWrapper = new ClientWrapperWithExceptionMock();
         BCOSConnection connection =
                 new BCOSConnection(
-                        web3jWrapper,
+                        clientWrapper,
                         new ScheduledThreadPoolExecutor(
                                 1, new CustomizableThreadFactory(this.getClass().getName())));
         Request request = new Request();
@@ -141,10 +141,10 @@ public class BCOSConnectionTest {
     @Test
     public void handleGetBlockTest() {
 
-        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperImplMock();
+        AbstractClientWrapper clientWrapper = new ClientWrapperImplMock();
         BCOSConnection connection =
                 new BCOSConnection(
-                        web3jWrapper,
+                        clientWrapper,
                         new ScheduledThreadPoolExecutor(
                                 1, new CustomizableThreadFactory(this.getClass().getName())));
         Request request = new Request();
@@ -155,7 +155,7 @@ public class BCOSConnectionTest {
         connection.asyncSend(
                 request,
                 response -> {
-                    assertTrue(Objects.nonNull(connection.getWeb3jWrapper()));
+                    assertTrue(Objects.nonNull(connection.getClientWrapper()));
                     assertEquals(response.getErrorCode(), 0);
 
                     Block block = null;
@@ -188,10 +188,10 @@ public class BCOSConnectionTest {
 
     @Test
     public void handleFailedGetBlockTest() {
-        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
+        AbstractClientWrapper clientWrapper = new ClientWrapperWithExceptionMock();
         BCOSConnection connection =
                 new BCOSConnection(
-                        web3jWrapper,
+                        clientWrapper,
                         new ScheduledThreadPoolExecutor(
                                 1, new CustomizableThreadFactory(this.getClass().getName())));
         Request request = new Request();
@@ -201,7 +201,7 @@ public class BCOSConnectionTest {
         connection.asyncSend(
                 request,
                 response -> {
-                    assertTrue(Objects.nonNull(connection.getWeb3jWrapper()));
+                    assertTrue(Objects.nonNull(connection.getClientWrapper()));
                     assertEquals(response.getErrorCode(), BCOSStatusCode.HandleGetBlockFailed);
                 });
     }
@@ -209,10 +209,10 @@ public class BCOSConnectionTest {
     @Test
     public void handleCallTest() throws IOException {
 
-        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperImplMock();
+        AbstractClientWrapper clientWrapper = new ClientWrapperImplMock();
         BCOSConnection connection =
                 new BCOSConnection(
-                        web3jWrapper,
+                        clientWrapper,
                         new ScheduledThreadPoolExecutor(
                                 1, new CustomizableThreadFactory(this.getClass().getName())));
 
@@ -221,7 +221,7 @@ public class BCOSConnectionTest {
         String[] params = new String[]{"abc", "def", "hig"};
         Function function = FunctionUtility.newDefaultFunction(funName, params);
 
-        FunctionEncoder functionEncoder = new FunctionEncoder(web3jWrapper.getCryptoSuite());
+        FunctionEncoder functionEncoder = new FunctionEncoder(clientWrapper.getCryptoSuite());
         String abi = functionEncoder.encode(function);
 
         TransactionRequest transactionRequest = new TransactionRequest(funName, params);
@@ -262,10 +262,10 @@ public class BCOSConnectionTest {
     @Test
     public void handleFailedCallTest() throws IOException {
 
-        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
+        AbstractClientWrapper clientWrapper = new ClientWrapperWithExceptionMock();
         BCOSConnection connection =
                 new BCOSConnection(
-                        web3jWrapper,
+                        clientWrapper,
                         new ScheduledThreadPoolExecutor(
                                 1, new CustomizableThreadFactory(this.getClass().getName())));
 
@@ -274,7 +274,7 @@ public class BCOSConnectionTest {
         String[] params = new String[]{"abc", "def", "hig"};
         Function function = FunctionUtility.newDefaultFunction(funName, params);
 
-        FunctionEncoder functionEncoder = new FunctionEncoder(web3jWrapper.getCryptoSuite());
+        FunctionEncoder functionEncoder = new FunctionEncoder(clientWrapper.getCryptoSuite());
         String abi = functionEncoder.encode(function);
 
         TransactionRequest transactionRequest = new TransactionRequest(funName, params);
@@ -295,10 +295,10 @@ public class BCOSConnectionTest {
     @Test
     public void handleFailedCallTest0() throws IOException {
 
-        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperCallNotSucStatus();
+        AbstractClientWrapper clientWrapper = new ClientWrapperCallNotSucStatus();
         BCOSConnection connection =
                 new BCOSConnection(
-                        web3jWrapper,
+                        clientWrapper,
                         new ScheduledThreadPoolExecutor(
                                 1, new CustomizableThreadFactory(this.getClass().getName())));
 
@@ -307,7 +307,7 @@ public class BCOSConnectionTest {
         String[] params = new String[]{"abc", "def", "hig"};
         Function function = FunctionUtility.newDefaultFunction(funName, params);
 
-        FunctionEncoder functionEncoder = new FunctionEncoder(web3jWrapper.getCryptoSuite());
+        FunctionEncoder functionEncoder = new FunctionEncoder(clientWrapper.getCryptoSuite());
         String abi = functionEncoder.encode(function);
 
         TransactionRequest transactionRequest = new TransactionRequest(funName, params);
@@ -327,11 +327,11 @@ public class BCOSConnectionTest {
     @Test
     public void handleSendTransactionTest() throws IOException {
 
-        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperImplMock();
-        CryptoSuite cryptoSuite = web3jWrapper.getCryptoSuite();
+        AbstractClientWrapper clientWrapper = new ClientWrapperImplMock();
+        CryptoSuite cryptoSuite = clientWrapper.getCryptoSuite();
         BCOSConnection connection =
                 new BCOSConnection(
-                        web3jWrapper,
+                        clientWrapper,
                         new ScheduledThreadPoolExecutor(
                                 1, new CustomizableThreadFactory(this.getClass().getName())));
         Request request = new Request();
@@ -391,11 +391,11 @@ public class BCOSConnectionTest {
     @Test
     public void handleFailedSendTransactionTest() throws IOException, InterruptedException {
 
-        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
-        CryptoSuite cryptoSuite = web3jWrapper.getCryptoSuite();
+        AbstractClientWrapper clientWrapper = new ClientWrapperWithExceptionMock();
+        CryptoSuite cryptoSuite = clientWrapper.getCryptoSuite();
         BCOSConnection connection =
                 new BCOSConnection(
-                        web3jWrapper,
+                        clientWrapper,
                         new ScheduledThreadPoolExecutor(
                                 1, new CustomizableThreadFactory(this.getClass().getName())));
         Request request = new Request();
@@ -444,11 +444,11 @@ public class BCOSConnectionTest {
     @Test
     public void handleFailedSendTransactionTest0() throws IOException, InterruptedException {
 
-        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperWithNullMock();
-        CryptoSuite cryptoSuite = web3jWrapper.getCryptoSuite();
+        AbstractClientWrapper clientWrapper = new ClientWrapperWithNullMock();
+        CryptoSuite cryptoSuite = clientWrapper.getCryptoSuite();
         BCOSConnection connection =
                 new BCOSConnection(
-                        web3jWrapper,
+                        clientWrapper,
                         new ScheduledThreadPoolExecutor(
                                 1, new CustomizableThreadFactory(this.getClass().getName())));
         Request request = new Request();
@@ -500,10 +500,10 @@ public class BCOSConnectionTest {
         request.setType(BCOSRequestType.GET_TRANSACTION_PROOF);
         request.setData(hash.getBytes(StandardCharsets.UTF_8));
 
-        AbstractWeb3jWrapper web3jWrapper = new Web3jWrapperWithExceptionMock();
+        AbstractClientWrapper clientWrapper = new ClientWrapperWithExceptionMock();
         BCOSConnection connection =
                 new BCOSConnection(
-                        web3jWrapper,
+                        clientWrapper,
                         new ScheduledThreadPoolExecutor(
                                 1, new CustomizableThreadFactory(this.getClass().getName())));
 
