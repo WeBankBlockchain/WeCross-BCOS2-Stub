@@ -2,6 +2,9 @@ package com.webank.wecross.stub.bcos.client;
 
 import com.webank.wecross.exception.WeCrossException;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import org.fisco.bcos.sdk.BcosSDK;
 import org.fisco.bcos.sdk.client.Client;
 import org.fisco.bcos.sdk.config.ConfigOption;
@@ -11,10 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class ClientUtility {
 
@@ -26,7 +25,10 @@ public class ClientUtility {
         // groupID
         int groupID = channelServiceConfig.getChain().getGroupID();
         // ssl connect type
-        int cryptoType = bcosStubConfig.getChannelService().isGmConnectEnable() ? CryptoType.SM_TYPE : CryptoType.ECDSA_TYPE;
+        int cryptoType =
+                bcosStubConfig.getChannelService().isGmConnectEnable()
+                        ? CryptoType.SM_TYPE
+                        : CryptoType.ECDSA_TYPE;
 
         // cryptoMaterial
         Map<String, Object> cryptoMaterial = buildCryptoMaterial(channelServiceConfig);
@@ -64,7 +66,7 @@ public class ClientUtility {
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         Map<String, Object> cryptoMaterial = new HashMap<>();
         if (channelServiceConfig.isGmConnectEnable()) {
-            //gm ssl
+            // gm ssl
             checkCertExistAndPut(
                     resolver, cryptoMaterial, channelServiceConfig.getGmCaCert(), "caCert");
             checkCertExistAndPut(
@@ -76,7 +78,7 @@ public class ClientUtility {
             checkCertExistAndPut(
                     resolver, cryptoMaterial, channelServiceConfig.getGmEnSslKey(), "enSslKey");
         } else {
-            //not gm ssl
+            // not gm ssl
             checkCertExistAndPut(
                     resolver, cryptoMaterial, channelServiceConfig.getCaCert(), "caCert");
             checkCertExistAndPut(
