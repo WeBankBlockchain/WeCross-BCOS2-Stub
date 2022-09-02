@@ -17,7 +17,7 @@ public class ClientWrapperFactory {
 
         logger.info("BCOSStubConfig: {}", bcosStubConfig);
 
-        Client client = ClientUtility.initClient(bcosStubConfig.getChannelService());
+        Client client = ClientUtility.initClient(bcosStubConfig);
         NodeVersion.ClientVersion nodeVersion = client.getNodeVersion().getNodeVersion();
 
         logger.info("NodeVersion: {}", nodeVersion);

@@ -2,12 +2,14 @@ package com.webank.wecross.stub.bcos.config;
 
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
-import java.util.ArrayList;
-import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 import org.fisco.bcos.sdk.crypto.hash.Hash;
 import org.fisco.bcos.sdk.crypto.hash.Keccak256;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /** Resolve the BCOS stub.toml to get BCOSConfig object */
 public class BCOSStubConfig {
@@ -20,6 +22,11 @@ public class BCOSStubConfig {
     private ChannelService channelService;
     /** BCOS resource list */
     private List<Resource> resources;
+
+
+    public boolean isGM() {
+        return StringUtils.startsWithIgnoreCase(type, "gm");
+    }
 
     public static class Chain {
         private int groupID;

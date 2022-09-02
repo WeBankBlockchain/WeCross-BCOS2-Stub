@@ -2,9 +2,6 @@ package com.webank.wecross.stub.bcos.client;
 
 import com.webank.wecross.exception.WeCrossException;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import org.fisco.bcos.sdk.BcosSDK;
 import org.fisco.bcos.sdk.client.Client;
 import org.fisco.bcos.sdk.config.ConfigOption;
@@ -15,22 +12,25 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
 public class ClientUtility {
 
     private static final Logger logger = LoggerFactory.getLogger(ClientUtility.class);
 
-    public static Client initClient(BCOSStubConfig.ChannelService channelServiceConfig)
-            throws Exception {
+    public static Client initClient(BCOSStubConfig bcosStubConfig) throws Exception {
+        BCOSStubConfig.ChannelService channelServiceConfig = bcosStubConfig.getChannelService();
+
         // groupID
         int groupID = channelServiceConfig.getChain().getGroupID();
         // cryptoType
-        int cryptoType =
-                channelServiceConfig.isGmConnectEnable()
-                        ? CryptoType.SM_TYPE
-                        : CryptoType.ECDSA_TYPE;
+        int cryptoType = bcosStubConfig.isGM() ? CryptoType.SM_TYPE : CryptoType.ECDSA_TYPE;
 
         // cryptoMaterial
-        Map<String, Object> cryptoMaterial = buildCryptoMaterial(channelServiceConfig);
+        Map<String, Object> cryptoMaterial = buildCryptoMaterial(channelServiceConfig, cryptoType);
 
         // network
         Map<String, Object> network = new HashMap<>();
@@ -60,11 +60,11 @@ public class ClientUtility {
     }
 
     private static Map<String, Object> buildCryptoMaterial(
-            BCOSStubConfig.ChannelService channelServiceConfig)
+            BCOSStubConfig.ChannelService channelServiceConfig, int cryptoType)
             throws WeCrossException, IOException {
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         Map<String, Object> cryptoMaterial = new HashMap<>();
-        if (channelServiceConfig.isGmConnectEnable()) {
+        if (Objects.equals(cryptoType, CryptoType.SM_TYPE)) {
             checkCertExistAndPut(
                     resolver, cryptoMaterial, channelServiceConfig.getGmCaCert(), "caCert");
             checkCertExistAndPut(

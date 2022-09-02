@@ -10,13 +10,6 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
-import java.io.File;
-import java.math.BigInteger;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import org.fisco.bcos.sdk.client.Client;
 import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
 import org.fisco.bcos.sdk.contract.precompiled.cns.CnsService;
@@ -34,6 +27,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
+
+import java.io.File;
+import java.math.BigInteger;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class HubContract {
 
@@ -54,7 +55,7 @@ public class HubContract {
                 new BCOSStubConfigParser(chainPath, "stub.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
 
-        boolean isSM = bcosStubConfig.getType().toLowerCase().contains("gm");
+        boolean isSM = bcosStubConfig.isGM();
 
         BCOSBaseStubFactory bcosBaseStubFactory =
                 isSM

@@ -134,25 +134,19 @@ public class BCOSStubCallContractIntegTest {
 
     @Before
     public void initializer() throws Exception {
-        System.setProperty("jdk.disabled.namedCurves", "");
 
         /** load stub.toml config */
-        try {
-            connection = BCOSConnectionFactory.build("./chains/bcos/", "stub.toml");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        connection = BCOSConnectionFactory.build("./chains/bcos/", "stub.toml");
 
         BCOSStubConfigParser bcosStubConfigParser =
                 new BCOSStubConfigParser("./chains/bcos/", "stub.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
-        String type = bcosStubConfig.getType();
-        logger.info(" === >> initial type:  {}", type);
+        boolean isGM = bcosStubConfig.isGM();
+        logger.info(" === >> initial type is GM:  {}", isGM);
 
-        BCOSBaseStubFactory stubFactory = type.toLowerCase().startsWith("gm")? new BCOSGMStubFactory() : new BCOSStubFactory();
-
+        BCOSBaseStubFactory stubFactory = isGM ? new BCOSGMStubFactory() : new BCOSStubFactory();
         driver = stubFactory.newDriver();
-        account = stubFactory.newAccount("IntegBCOSAccount", "classpath:/accounts/bcos");
+        account = stubFactory.newAccount("IntegBCOSAccount", isGM ? "classpath:/accounts/gm_bcos" : "classpath:/accounts/bcos");
 
         connection.setConnectionEventHandler(connectionEventHandlerImplMock);
 
