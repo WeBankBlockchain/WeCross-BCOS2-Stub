@@ -10,7 +10,7 @@
     caCert = 'ca.crt'
     sslCert = 'sdk.crt'
     sslKey = 'sdk.key'
-    gmConnectEnable = false
+    gmConnectEnable = false #ssl gm or not
     gmCaCert = 'gm/gmca.crt'
     gmSslCert = 'gm/gmsdk.crt'
     gmSslKey = 'gm/gmsdk.key'

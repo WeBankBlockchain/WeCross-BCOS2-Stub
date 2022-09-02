@@ -141,7 +141,7 @@ public class BCOSStubCallContractIntegTest {
         BCOSStubConfigParser bcosStubConfigParser =
                 new BCOSStubConfigParser("./chains/bcos/", "stub.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
-        boolean isGM = bcosStubConfig.isGM();
+        boolean isGM = bcosStubConfig.isGMStub();
         logger.info(" === >> initial type is GM:  {}", isGM);
 
         BCOSBaseStubFactory stubFactory = isGM ? new BCOSGMStubFactory() : new BCOSStubFactory();

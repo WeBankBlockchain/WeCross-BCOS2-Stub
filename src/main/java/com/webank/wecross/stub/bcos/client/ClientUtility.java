@@ -2,10 +2,6 @@ package com.webank.wecross.stub.bcos.client;
 
 import com.webank.wecross.exception.WeCrossException;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 import org.fisco.bcos.sdk.BcosSDK;
 import org.fisco.bcos.sdk.client.Client;
 import org.fisco.bcos.sdk.config.ConfigOption;
@@ -16,6 +12,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 public class ClientUtility {
 
     private static final Logger logger = LoggerFactory.getLogger(ClientUtility.class);
@@ -25,11 +25,11 @@ public class ClientUtility {
 
         // groupID
         int groupID = channelServiceConfig.getChain().getGroupID();
-        // cryptoType
-        int cryptoType = bcosStubConfig.isGM() ? CryptoType.SM_TYPE : CryptoType.ECDSA_TYPE;
+        // ssl connect type
+        int cryptoType = bcosStubConfig.getChannelService().isGmConnectEnable() ? CryptoType.SM_TYPE : CryptoType.ECDSA_TYPE;
 
         // cryptoMaterial
-        Map<String, Object> cryptoMaterial = buildCryptoMaterial(channelServiceConfig, cryptoType);
+        Map<String, Object> cryptoMaterial = buildCryptoMaterial(channelServiceConfig);
 
         // network
         Map<String, Object> network = new HashMap<>();
@@ -59,11 +59,12 @@ public class ClientUtility {
     }
 
     private static Map<String, Object> buildCryptoMaterial(
-            BCOSStubConfig.ChannelService channelServiceConfig, int cryptoType)
+            BCOSStubConfig.ChannelService channelServiceConfig)
             throws WeCrossException, IOException {
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         Map<String, Object> cryptoMaterial = new HashMap<>();
-        if (Objects.equals(cryptoType, CryptoType.SM_TYPE)) {
+        if (channelServiceConfig.isGmConnectEnable()) {
+            //gm ssl
             checkCertExistAndPut(
                     resolver, cryptoMaterial, channelServiceConfig.getGmCaCert(), "caCert");
             checkCertExistAndPut(
@@ -75,6 +76,7 @@ public class ClientUtility {
             checkCertExistAndPut(
                     resolver, cryptoMaterial, channelServiceConfig.getGmEnSslKey(), "enSslKey");
         } else {
+            //not gm ssl
             checkCertExistAndPut(
                     resolver, cryptoMaterial, channelServiceConfig.getCaCert(), "caCert");
             checkCertExistAndPut(
