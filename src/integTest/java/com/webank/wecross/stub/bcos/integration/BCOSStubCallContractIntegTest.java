@@ -134,6 +134,7 @@ public class BCOSStubCallContractIntegTest {
 
     @Before
     public void initializer() throws Exception {
+        System.setProperty("jdk.disabled.namedCurves", "");
 
         /** load stub.toml config */
         try {
