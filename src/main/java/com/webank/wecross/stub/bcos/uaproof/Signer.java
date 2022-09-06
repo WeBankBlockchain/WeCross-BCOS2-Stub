@@ -89,8 +89,7 @@ public interface Signer {
 
         @Override
         public byte[] sign(CryptoKeyPair keyPair, byte[] srcData) {
-            byte[] hash = cryptoSuite.hash(srcData);
-            SM2SignatureResult sign = (SM2SignatureResult) cryptoSuite.sign(hash, keyPair);
+            SM2SignatureResult sign = (SM2SignatureResult) cryptoSuite.sign(srcData, keyPair);
 
             byte[] r = sign.getR();
             byte[] s = sign.getS();
@@ -106,15 +105,15 @@ public interface Signer {
 
         @Override
         public boolean verifyBySrcData(byte[] signData, byte[] srcData, String address) {
-            return verify(signData, srcData, address, false);
+            return verify(signData, srcData, address);
         }
 
         @Override
         public boolean verifyByHashData(byte[] signData, byte[] hashData, String address) {
-            return verify(signData, hashData, address, true);
+            return verify(signData, hashData, address);
         }
 
-        boolean verify(byte[] signData, byte[] data, String address, boolean dataIsHash) {
+        boolean verify(byte[] signData, byte[] data, String address) {
             if (signData.length < SM2_PUBLIC_KEY_SIZE) {
                 throw new InvalidParameterException(
                         "the length of sign data is too short, data: " + Hex.toHexString(signData));
@@ -124,12 +123,7 @@ public interface Signer {
             System.arraycopy(signData, 0, sign, 0, signData.length - SM2_PUBLIC_KEY_SIZE);
             System.arraycopy(signData, sign.length, pub, 0, SM2_PUBLIC_KEY_SIZE);
 
-            byte[] hash = data;
-            if (!dataIsHash) {
-                hash = cryptoSuite.hash(data);
-            }
-
-            String message = Hex.toHexString(hash);
+            String message = Hex.toHexString(data);
             String signatrue = Hex.toHexString(sign);
             String hexPubKey = Hex.toHexString(pub);
 

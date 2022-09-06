@@ -78,10 +78,10 @@ public class SignerTest {
         String message = "0a5fb1021730931b390ed3f282daf1304f86eafe4a4b74398c258e2437dcb353";
         byte[] sign =
                 Numeric.hexStringToByteArray(
-                        "df9354adf11089d5107ae0ecf1ad2d379c208d76ce39109887240bf0e6c79e7fcdfda045f71a87fb3a5f42e292e5e6f71f827060fad39634c9eb0f3de7bac067"
-                                + "4253897f9cd7f90d6b85cc6e12cae85e0cf7e7ed06a3f198c8178e2dd1bede737df436c94dda2c4b84cc9d2cba637f8a5ab26c63796d56b09792b7b0a1b16ab0");
+                        "b10e39d7b9d4318f664b18e0f3c1360342d3ce56d3e0cd72969a37fd332d522e283a89f6d36fbc942a1ed77737c399092639ad0b353aea3c14cf2c0d2a92a33d"
+                                + "e3bb34b225d90ecd5b162e51ba2a962ec412454682eaf1cf2feb16e134bde5196fd6d22d66a41a45bbf1ab12c6613bfd32e40ee4ebadc6a6de73da02f3efb3f1");
         String publicKey =
-                "4253897f9cd7f90d6b85cc6e12cae85e0cf7e7ed06a3f198c8178e2dd1bede737df436c94dda2c4b84cc9d2cba637f8a5ab26c63796d56b09792b7b0a1b16ab0";
+                "e3bb34b225d90ecd5b162e51ba2a962ec412454682eaf1cf2feb16e134bde5196fd6d22d66a41a45bbf1ab12c6613bfd32e40ee4ebadc6a6de73da02f3efb3f1";
         boolean verify =
                 signer.verifyBySrcData(
                         sign,
