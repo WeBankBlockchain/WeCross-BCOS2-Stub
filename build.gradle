@@ -14,7 +14,7 @@ plugins {
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'com.webank.wecross'
-version '1.2.2'
+version '1.2.1'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -83,16 +83,26 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3:3.11'
     implementation 'com.google.guava:guava:30.1-jre'
     implementation 'org.yaml:snakeyaml:1.27'
+    implementation 'io.netty:netty-all:4.1.58.Final'
 
-    implementation ('org.fisco-bcos.java-sdk:fisco-bcos-java-sdk:2.9.1')
+    implementation ('org.fisco-bcos.java-sdk:fisco-bcos-java-sdk:2.8.1')  {
+        exclude group: "org.ethereum"
+        exclude group: "org.fisco-bcos", module: "tcnative"
+        exclude group: "io.netty", module: "netty-all"
+    }
+
     implementation 'org.fisco-bcos:solcJ:0.5.2.0'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
+    testImplementation 'io.netty:netty-all:4.1.58.Final'
+    testImplementation 'org.fisco-bcos:tcnative:2.0.34.0'
     testImplementation 'org.slf4j:slf4j-log4j12:1.7.36'
     testImplementation 'org.springframework.boot:spring-boot-starter-test:2.6.7'
 
     integTestImplementation 'junit:junit:4.12'
+    testImplementation 'io.netty:netty-all:4.1.58.Final'
+    testImplementation 'org.fisco-bcos:tcnative:2.0.34.0'
     integTestImplementation 'org.slf4j:slf4j-log4j12:1.7.36'
 }
 

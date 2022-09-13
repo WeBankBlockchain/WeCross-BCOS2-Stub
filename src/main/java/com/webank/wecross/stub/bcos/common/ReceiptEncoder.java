@@ -38,9 +38,9 @@ public class ReceiptEncoder {
 
         result.add(RlpString.create(Numeric.hexStringToByteArray(transactionReceipt.getOutput())));
         // gas used
-        if (version != null && version.getMinor() >= 9) {
-            result.add(RlpString.create(Numeric.toBigInt(transactionReceipt.getRemainGas())));
-        }
+//        if (version != null && version.getMinor() >= 9) {
+//            result.add(RlpString.create(Numeric.toBigInt(transactionReceipt.getRemainGas())));
+//        }
         // List
         List<TransactionReceipt.Logs> logs = transactionReceipt.getLogs();
         List<RlpType> logList = new ArrayList<>();

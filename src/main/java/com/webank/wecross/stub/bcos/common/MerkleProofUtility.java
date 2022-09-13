@@ -81,11 +81,11 @@ public class MerkleProofUtility {
                     "0x" + Numeric.decodeQuantity(transactionReceipt.getGasUsed()).toString(16));
         }
 
-        if (classVersion != null && classVersion.getMinor() >= 9) {
-            if (!transactionReceipt.getRemainGas().startsWith("0x")) {
-                transactionReceipt.setRemainGas("0x" + transactionReceipt.getRemainGas());
-            }
-        }
+//        if (classVersion != null && classVersion.getMinor() >= 9) {
+//            if (!transactionReceipt.getRemainGas().startsWith("0x")) {
+//                transactionReceipt.setRemainGas("0x" + transactionReceipt.getRemainGas());
+//            }
+//        }
 
         String receiptRlp = ReceiptEncoder.encode(transactionReceipt, classVersion);
         String rlpHash =
@@ -163,11 +163,11 @@ public class MerkleProofUtility {
         } catch (ChannelPrococolExceiption e) {
         }
 
-        if (classVersion != null && classVersion.getMinor() >= 9) {
-            if (!transactionReceipt.getRemainGas().startsWith("0x")) {
-                transactionReceipt.setRemainGas("0x" + transactionReceipt.getRemainGas());
-            }
-        }
+//        if (classVersion != null && classVersion.getMinor() >= 9) {
+//            if (!transactionReceipt.getRemainGas().startsWith("0x")) {
+//                transactionReceipt.setRemainGas("0x" + transactionReceipt.getRemainGas());
+//            }
+//        }
 
         // transaction index
         byte[] byteIndex =
