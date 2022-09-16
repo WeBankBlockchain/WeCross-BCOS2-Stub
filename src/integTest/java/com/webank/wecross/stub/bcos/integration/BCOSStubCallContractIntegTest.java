@@ -134,6 +134,7 @@ public class BCOSStubCallContractIntegTest {
 
     @Before
     public void initializer() throws Exception {
+        System.setProperty("jdk.tls.namedGroups", "SM2,secp256k1,x25519,secp256r1,secp384r1,secp521r1,x448");
 
         /** load stub.toml config */
         connection = BCOSConnectionFactory.build("./chains/bcos/", "stub.toml");
