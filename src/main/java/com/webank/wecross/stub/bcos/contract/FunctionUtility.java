@@ -6,19 +6,22 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import org.fisco.bcos.web3j.abi.FunctionEncoder;
-import org.fisco.bcos.web3j.abi.FunctionReturnDecoder;
-import org.fisco.bcos.web3j.abi.TypeReference;
-import org.fisco.bcos.web3j.abi.Utils;
-import org.fisco.bcos.web3j.abi.datatypes.DynamicArray;
-import org.fisco.bcos.web3j.abi.datatypes.DynamicBytes;
-import org.fisco.bcos.web3j.abi.datatypes.Function;
-import org.fisco.bcos.web3j.abi.datatypes.Type;
-import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
-import org.fisco.bcos.web3j.abi.datatypes.generated.Uint256;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.fisco.bcos.web3j.tuples.generated.*;
-import org.fisco.bcos.web3j.utils.Numeric;
+import org.fisco.bcos.sdk.abi.FunctionEncoder;
+import org.fisco.bcos.sdk.abi.FunctionReturnDecoder;
+import org.fisco.bcos.sdk.abi.TypeReference;
+import org.fisco.bcos.sdk.abi.Utils;
+import org.fisco.bcos.sdk.abi.datatypes.DynamicArray;
+import org.fisco.bcos.sdk.abi.datatypes.DynamicBytes;
+import org.fisco.bcos.sdk.abi.datatypes.Function;
+import org.fisco.bcos.sdk.abi.datatypes.Type;
+import org.fisco.bcos.sdk.abi.datatypes.Utf8String;
+import org.fisco.bcos.sdk.abi.datatypes.generated.Uint256;
+import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple2;
+import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple3;
+import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple4;
+import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple6;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
+import org.fisco.bcos.sdk.utils.Numeric;
 
 /**
  * Function object used across blockchain chain. Wecross requires that a cross-chain contract
@@ -36,18 +39,15 @@ public class FunctionUtility {
     public static final int MethodIDLength = 8;
     public static final int MethodIDWithHexPrefixLength = MethodIDLength + 2;
 
-    public static final String ProxySendTXMethodId =
-            FunctionEncoder.buildMethodId("sendTransaction(string,string,bytes)");
+    public static final String ProxySendTXMethod = "sendTransaction(string,string,bytes)";
 
-    public static final String ProxySendTransactionTXMethodId =
-            FunctionEncoder.buildMethodId(
-                    "sendTransaction(string,string,uint256,string,string,bytes)");
+    public static final String ProxySendTransactionTXMethod =
+            "sendTransaction(string,string,uint256,string,string,bytes)";
 
-    public static final String ProxyCallWithTransactionIdMethodId =
-            FunctionEncoder.buildMethodId("constantCall(string,string,string,bytes)");
+    public static final String ProxyCallWithTransactionIdMethod =
+            "constantCall(string,string,string,bytes)";
 
-    public static final String ProxyCallMethodId =
-            FunctionEncoder.buildMethodId("constantCall(string,bytes)");
+    public static final String ProxyCallMethod = "constantCall(string,bytes)";
 
     public static final List<TypeReference<?>> abiTypeReferenceOutputs =
             Collections.singletonList(new TypeReference<DynamicArray<Utf8String>>() {});
@@ -73,8 +73,7 @@ public class FunctionUtility {
                         (0 == params.length)
                                 ? DynamicArray.empty("string[]")
                                 : new DynamicArray<>(
-                                        org.fisco.bcos.web3j.abi.Utils.typeMap(
-                                                Arrays.asList(params), Utf8String.class))),
+                                        Utils.typeMap(Arrays.asList(params), Utf8String.class))),
                 abiTypeReferenceOutputs);
     }
 
@@ -95,11 +94,10 @@ public class FunctionUtility {
                 new Function(
                         "constantCall",
                         Arrays.<Type>asList(
-                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(id),
-                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(path),
-                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(methodSignature),
-                                new org.fisco.bcos.web3j.abi.datatypes.DynamicBytes(
-                                        Numeric.hexStringToByteArray(abi))),
+                                new Utf8String(id),
+                                new Utf8String(path),
+                                new Utf8String(methodSignature),
+                                new DynamicBytes(Numeric.hexStringToByteArray(abi))),
                         Collections.<TypeReference<?>>emptyList());
         return function;
     }
@@ -114,15 +112,14 @@ public class FunctionUtility {
      * @return
      */
     public static Function newConstantCallProxyFunction(
-            String name, String methodSignature, String abi) {
-        String methodId = FunctionEncoder.buildMethodId(methodSignature);
+            FunctionEncoder functionEncoder, String name, String methodSignature, String abi) {
+        String methodId = functionEncoder.buildMethodId(methodSignature);
         Function function =
                 new Function(
                         "constantCall",
                         Arrays.<Type>asList(
-                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(name),
-                                new org.fisco.bcos.web3j.abi.datatypes.DynamicBytes(
-                                        Numeric.hexStringToByteArray(methodId + abi))),
+                                new Utf8String(name),
+                                new DynamicBytes(Numeric.hexStringToByteArray(methodId + abi))),
                         Collections.<TypeReference<?>>emptyList());
         return function;
     }
@@ -146,13 +143,12 @@ public class FunctionUtility {
                 new Function(
                         "sendTransaction",
                         Arrays.<Type>asList(
-                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(uid),
-                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(tid),
+                                new Utf8String(uid),
+                                new Utf8String(tid),
                                 new Uint256(seq),
-                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(path),
-                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(methodSignature),
-                                new org.fisco.bcos.web3j.abi.datatypes.DynamicBytes(
-                                        Numeric.hexStringToByteArray(abi))),
+                                new Utf8String(path),
+                                new Utf8String(methodSignature),
+                                new DynamicBytes(Numeric.hexStringToByteArray(abi))),
                         Collections.<TypeReference<?>>emptyList());
         return function;
     }
@@ -168,16 +164,19 @@ public class FunctionUtility {
      * @return
      */
     public static Function newSendTransactionProxyFunction(
-            String uid, String name, String methodSignature, String abi) {
-        String methodId = FunctionEncoder.buildMethodId(methodSignature);
+            FunctionEncoder functionEncoder,
+            String uid,
+            String name,
+            String methodSignature,
+            String abi) {
+        String methodId = functionEncoder.buildMethodId(methodSignature);
         Function function =
                 new Function(
                         "sendTransaction",
                         Arrays.<Type>asList(
-                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(uid),
-                                new org.fisco.bcos.web3j.abi.datatypes.Utf8String(name),
-                                new org.fisco.bcos.web3j.abi.datatypes.DynamicBytes(
-                                        Numeric.hexStringToByteArray(methodId + abi))),
+                                new Utf8String(uid),
+                                new Utf8String(name),
+                                new DynamicBytes(Numeric.hexStringToByteArray(methodId + abi))),
                         Collections.<TypeReference<?>>emptyList());
         return function;
     }

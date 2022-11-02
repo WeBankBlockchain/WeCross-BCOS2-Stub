@@ -1,12 +1,15 @@
 package com.webank.wecross.stub.bcos.config;
 
 import com.moandjiezana.toml.Toml;
+import com.webank.wecross.stub.bcos.client.ClientDefaultConfig;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSToml;
-import com.webank.wecross.stub.bcos.web3j.Web3jDefaultConfig;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,11 +87,11 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         chain.setChainID(
                 Objects.nonNull(chainId)
                         ? chainId.intValue()
-                        : Web3jDefaultConfig.DEFAULT_CHAIN_ID);
+                        : ClientDefaultConfig.DEFAULT_CHAIN_ID);
         chain.setGroupID(
                 Objects.nonNull(groupId)
                         ? groupId.intValue()
-                        : Web3jDefaultConfig.DEFAULT_GROUP_ID);
+                        : ClientDefaultConfig.DEFAULT_GROUP_ID);
 
         return chain;
     }
@@ -129,17 +132,17 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         BCOSStubConfig.ChannelService channelServiceConfig = new BCOSStubConfig.ChannelService();
         channelServiceConfig.setTimeout(
                 Objects.isNull(timeout)
-                        ? Web3jDefaultConfig.CHANNEL_SERVICE_DEFAULT_TIMEOUT
+                        ? ClientDefaultConfig.CHANNEL_SERVICE_DEFAULT_TIMEOUT
                         : timeout.intValue());
 
         channelServiceConfig.setThreadNum(
                 Objects.isNull(threadNum)
-                        ? Web3jDefaultConfig.CHANNEL_SERVICE_DEFAULT_THREAD_NUMBER
+                        ? ClientDefaultConfig.CHANNEL_SERVICE_DEFAULT_THREAD_NUMBER
                         : threadNum.intValue());
 
         channelServiceConfig.setQueueCapacity(
                 Objects.isNull(threadQueueCapacity)
-                        ? Web3jDefaultConfig.CHANNEL_SERVICE_DEFAULT_THREAD_QUEUE_CAPACITY
+                        ? ClientDefaultConfig.CHANNEL_SERVICE_DEFAULT_THREAD_QUEUE_CAPACITY
                         : threadQueueCapacity.intValue());
 
         channelServiceConfig.setCaCert(caCertPath);

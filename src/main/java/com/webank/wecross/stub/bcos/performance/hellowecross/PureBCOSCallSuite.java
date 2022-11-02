@@ -1,10 +1,9 @@
 package com.webank.wecross.stub.bcos.performance.hellowecross;
 
 import com.webank.wecross.stub.bcos.performance.PerformanceSuiteCallback;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,13 +17,7 @@ public class PureBCOSCallSuite extends PureBCOSSuite {
 
     public PureBCOSCallSuite(String chainName, String accountName, boolean sm) throws Exception {
         super(chainName, accountName, sm);
-        helloWeCross =
-                HelloWeCross.deploy(
-                                getWeb3j(),
-                                getCredentials(),
-                                new BigInteger("30000000"),
-                                new BigInteger("30000000"))
-                        .send();
+        helloWeCross = HelloWeCross.deploy(getClient(), getCredentials());
 
         String s = "HelloWorld" + System.currentTimeMillis();
         logger.info(
@@ -33,7 +26,7 @@ public class PureBCOSCallSuite extends PureBCOSSuite {
                 s);
 
         ss.add(s);
-        TransactionReceipt receipt = helloWeCross.set(ss).send();
+        TransactionReceipt receipt = helloWeCross.set(ss);
 
         if (!receipt.isStatusOK()) {
             throw new Exception("Contract Init failed, status: " + receipt.getStatus());
@@ -48,7 +41,7 @@ public class PureBCOSCallSuite extends PureBCOSSuite {
     @Override
     public void call(PerformanceSuiteCallback callback) {
         try {
-            List<String> stringList = helloWeCross.get().send();
+            List<String> stringList = helloWeCross.get();
 
             if ((ss.size() == stringList.size()) && (ss.get(0).equals(stringList.get(0)))) {
                 callback.onSuccess("Success");

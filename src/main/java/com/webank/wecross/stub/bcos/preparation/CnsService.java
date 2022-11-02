@@ -1,21 +1,22 @@
 package com.webank.wecross.stub.bcos.preparation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.webank.wecross.stub.bcos.client.AbstractClientWrapper;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
+import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
+import com.webank.wecross.stub.bcos.common.StatusCode;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapper;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import org.fisco.bcos.web3j.abi.FunctionEncoder;
-import org.fisco.bcos.web3j.abi.TypeReference;
-import org.fisco.bcos.web3j.abi.datatypes.Function;
-import org.fisco.bcos.web3j.abi.datatypes.Type;
-import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
-import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
-import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
-import org.fisco.bcos.web3j.protocol.channel.StatusCode;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
+import org.fisco.bcos.sdk.abi.FunctionEncoder;
+import org.fisco.bcos.sdk.abi.TypeReference;
+import org.fisco.bcos.sdk.abi.datatypes.Function;
+import org.fisco.bcos.sdk.abi.datatypes.Type;
+import org.fisco.bcos.sdk.abi.datatypes.Utf8String;
+import org.fisco.bcos.sdk.client.protocol.response.Call;
+import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,17 +24,22 @@ public class CnsService {
 
     private static final Logger logger = LoggerFactory.getLogger(CnsService.class);
 
-    public static CnsInfo queryProxyCnsInfo(Web3jWrapper web3jWrapper) {
-        return queryCnsInfo(web3jWrapper, BCOSConstant.BCOS_PROXY_NAME);
+    public static final int MAX_VERSION_LENGTH = 40;
+
+    public static CnsInfo queryProxyCnsInfo(AbstractClientWrapper clientWrapper) {
+        return queryCnsInfo(clientWrapper, BCOSConstant.BCOS_PROXY_NAME);
     }
 
-    public static CnsInfo queryHubCnsInfo(Web3jWrapper web3jWrapper) {
-        return queryCnsInfo(web3jWrapper, BCOSConstant.BCOS_HUB_NAME);
+    public static CnsInfo queryHubCnsInfo(AbstractClientWrapper clientWrapper) {
+        return queryCnsInfo(clientWrapper, BCOSConstant.BCOS_HUB_NAME);
     }
 
     /** query cns to get address,abi of hub contract */
-    private static CnsInfo queryCnsInfo(Web3jWrapper web3jWrapper, String name) {
+    private static CnsInfo queryCnsInfo(AbstractClientWrapper clientWrapper, String name) {
         /** function selectByName(string memory cnsName) public returns(string memory) */
+        CryptoSuite cryptoSuite = clientWrapper.getCryptoSuite();
+        FunctionEncoder functionEncoder = new FunctionEncoder(cryptoSuite);
+
         Function function =
                 new Function(
                         BCOSConstant.CNS_METHOD_SELECTBYNAME,
@@ -41,10 +47,10 @@ public class CnsService {
                         Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}));
         try {
             Call.CallOutput callOutput =
-                    web3jWrapper.call(
+                    clientWrapper.call(
                             BCOSConstant.DEFAULT_ADDRESS,
                             BCOSConstant.CNS_PRECOMPILED_ADDRESS,
-                            FunctionEncoder.encode(function));
+                            functionEncoder.encode(function));
 
             if (logger.isTraceEnabled()) {
                 logger.trace(

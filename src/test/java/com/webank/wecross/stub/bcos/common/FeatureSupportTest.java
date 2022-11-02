@@ -2,8 +2,8 @@ package com.webank.wecross.stub.bcos.common;
 
 import static junit.framework.TestCase.assertTrue;
 
-import org.fisco.bcos.channel.protocol.ChannelPrococolExceiption;
-import org.fisco.bcos.fisco.EnumNodeVersion;
+import org.fisco.bcos.sdk.channel.model.ChannelPrococolExceiption;
+import org.fisco.bcos.sdk.channel.model.EnumNodeVersion;
 import org.junit.Test;
 
 public class FeatureSupportTest {

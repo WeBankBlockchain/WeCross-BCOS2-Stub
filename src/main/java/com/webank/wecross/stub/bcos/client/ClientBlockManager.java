@@ -1,30 +1,26 @@
-package com.webank.wecross.stub.bcos.web3j;
+package com.webank.wecross.stub.bcos.client;
 
 import com.webank.wecross.stub.Block;
 import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.bcos.contract.BlockUtility;
 import java.io.IOException;
 import java.math.BigInteger;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
 
-public class Web3jBlockManager implements BlockManager {
-    private Web3jWrapper web3jWrapper;
+public class ClientBlockManager implements BlockManager {
+    private ClientWrapper clientWrapper;
 
-    public Web3jBlockManager(Web3jWrapper web3jWrapper) {
-        this.web3jWrapper = web3jWrapper;
+    public ClientBlockManager(ClientWrapper clientWrapper) {
+        this.clientWrapper = clientWrapper;
     }
 
-    public long getBlockNumber() {
-        try {
-            BigInteger blockNumber = web3jWrapper.getBlockNumber();
-            return blockNumber.longValue();
-        } catch (IOException e) {
-            return -1;
-        }
+    public long getBlockNumber() throws IOException {
+        BigInteger blockNumber = clientWrapper.getBlockNumber();
+        return blockNumber.longValue();
     }
 
-    public Block getBlock(long l) throws IOException {
-        BcosBlock.Block block = web3jWrapper.getBlockByNumber(l);
+    public Block getBlock(long blockNumber) throws IOException {
+        BcosBlock.Block block = clientWrapper.getBlockByNumber(blockNumber);
         return BlockUtility.convertToBlock(block, false);
     }
 
@@ -37,7 +33,7 @@ public class Web3jBlockManager implements BlockManager {
     @Override
     public void asyncGetBlockNumber(GetBlockNumberCallback callback) {
         try {
-            BigInteger blockNumber = web3jWrapper.getBlockNumber();
+            BigInteger blockNumber = clientWrapper.getBlockNumber();
             callback.onResponse(null, blockNumber.longValue());
         } catch (Exception e) {
             callback.onResponse(e, -1);

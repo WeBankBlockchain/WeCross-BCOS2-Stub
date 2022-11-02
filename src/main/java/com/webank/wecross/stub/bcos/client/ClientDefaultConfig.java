@@ -1,6 +1,6 @@
-package com.webank.wecross.stub.bcos.web3j;
+package com.webank.wecross.stub.bcos.client;
 
-public class Web3jDefaultConfig {
+public class ClientDefaultConfig {
     /** default groupId and chainId */
     public static final int DEFAULT_GROUP_ID = 1;
 

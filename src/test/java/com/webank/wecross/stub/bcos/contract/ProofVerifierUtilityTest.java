@@ -2,13 +2,14 @@ package com.webank.wecross.stub.bcos.contract;
 
 import static junit.framework.TestCase.assertTrue;
 
+import com.webank.wecross.stub.bcos.common.MerkleProofUtility;
+import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
 import java.io.IOException;
-import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceiptWithProof;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionWithProof;
-import org.fisco.bcos.web3j.tx.MerkleProofUtility;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
+import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
+import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,13 +37,14 @@ public class ProofVerifierUtilityTest {
 
     private BcosBlock.Block block = null;
     private TransactionReceipt receipt = null;
-    private TransactionWithProof.TransAndProof transAndProof = null;
+    private TransactionWithProof.TransactionAndProof transAndProof = null;
     private TransactionReceiptWithProof.ReceiptAndProof receiptAndProof = null;
 
     private BcosBlock.Block block0 = null;
     private TransactionReceipt receipt0 = null;
-    private TransactionWithProof.TransAndProof transAndProof0 = null;
+    private TransactionWithProof.TransactionAndProof transAndProof0 = null;
     private TransactionReceiptWithProof.ReceiptAndProof receiptAndProof0 = null;
+    private CryptoSuite cryptoSuite = new CryptoSuite(0);
 
     @Before
     public void init() throws IOException {
@@ -50,7 +52,8 @@ public class ProofVerifierUtilityTest {
         transAndProof =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(
-                                transactionAndProofJson, TransactionWithProof.TransAndProof.class);
+                                transactionAndProofJson,
+                                TransactionWithProof.TransactionAndProof.class);
         receiptAndProof =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(
@@ -65,7 +68,8 @@ public class ProofVerifierUtilityTest {
         transAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(
-                                transactionAndProofJson0, TransactionWithProof.TransAndProof.class);
+                                transactionAndProofJson0,
+                                TransactionWithProof.TransactionAndProof.class);
         receiptAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
                         .readValue(
@@ -82,10 +86,12 @@ public class ProofVerifierUtilityTest {
     @Test
     public void verifyTransactionTest() {
         assertTrue(
-                MerkleProofUtility.verifyTransaction(block.getTransactionsRoot(), transAndProof));
+                MerkleProofUtility.verifyTransaction(
+                        block.getTransactionsRoot(), transAndProof, cryptoSuite));
 
         assertTrue(
-                MerkleProofUtility.verifyTransaction(block0.getTransactionsRoot(), transAndProof0));
+                MerkleProofUtility.verifyTransaction(
+                        block0.getTransactionsRoot(), transAndProof0, cryptoSuite));
     }
 
     @Test
@@ -93,11 +99,11 @@ public class ProofVerifierUtilityTest {
 
         assertTrue(
                 MerkleProofUtility.verifyTransactionReceipt(
-                        block.getReceiptsRoot(), receiptAndProof, null));
+                        block.getReceiptsRoot(), receiptAndProof, null, cryptoSuite));
 
         assertTrue(
                 MerkleProofUtility.verifyTransactionReceipt(
-                        block0.getReceiptsRoot(), receiptAndProof0, null));
+                        block0.getReceiptsRoot(), receiptAndProof0, null, cryptoSuite));
     }
 
     @Test
@@ -107,24 +113,34 @@ public class ProofVerifierUtilityTest {
                         receipt.getTransactionHash(),
                         receipt.getTransactionIndex(),
                         block.getTransactionsRoot(),
-                        receipt.getTxProof()));
+                        receipt.getTxProof(),
+                        cryptoSuite));
 
         assertTrue(
                 MerkleProofUtility.verifyTransaction(
                         receipt0.getTransactionHash(),
                         receipt0.getTransactionIndex(),
                         block0.getTransactionsRoot(),
-                        receipt0.getTxProof()));
+                        receipt0.getTxProof(),
+                        cryptoSuite));
     }
 
     @Test
     public void verifyTransactionReceiptWithProofTest() {
         assertTrue(
                 MerkleProofUtility.verifyTransactionReceipt(
-                        block.getReceiptsRoot(), receipt, receipt.getReceiptProof(), null));
+                        block.getReceiptsRoot(),
+                        receipt,
+                        receipt.getReceiptProof(),
+                        null,
+                        cryptoSuite));
 
         assertTrue(
                 MerkleProofUtility.verifyTransactionReceipt(
-                        block0.getReceiptsRoot(), receipt0, receipt0.getReceiptProof(), null));
+                        block0.getReceiptsRoot(),
+                        receipt0,
+                        receipt0.getReceiptProof(),
+                        null,
+                        cryptoSuite));
     }
 }

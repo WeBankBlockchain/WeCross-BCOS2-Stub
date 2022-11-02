@@ -1,14 +1,12 @@
 package com.webank.wecross.stub.bcos.contract;
 
-import java.io.IOException;
-import org.fisco.bcos.web3j.abi.TypeDecoder;
-import org.fisco.bcos.web3j.abi.datatypes.Utf8String;
-import org.fisco.bcos.web3j.precompile.common.PrecompiledCommon;
-import org.fisco.bcos.web3j.precompile.common.PrecompiledResponse;
-import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
-import org.fisco.bcos.web3j.tuples.generated.Tuple2;
-import org.fisco.bcos.web3j.tx.RevertResolver;
-import org.fisco.bcos.web3j.utils.Numeric;
+import org.fisco.bcos.sdk.abi.TypeDecoder;
+import org.fisco.bcos.sdk.abi.datatypes.Utf8String;
+import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple2;
+import org.fisco.bcos.sdk.model.PrecompiledRetCode;
+import org.fisco.bcos.sdk.model.RetCode;
+import org.fisco.bcos.sdk.transaction.codec.decode.RevertMessageParser;
+import org.fisco.bcos.sdk.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,24 +19,16 @@ public class RevertMessage {
      * @return
      */
     public static String getErrorMessage(String message) {
-        try {
-            int errorIndex = message.indexOf("error:");
-            if (errorIndex > 0) {
-                int errorCode = Integer.parseInt(message.substring(errorIndex + 6).trim());
-                errorCode = (errorCode > 0 ? -errorCode : errorCode);
-                String errorMessage = PrecompiledCommon.transferToJson(errorCode);
-                PrecompiledResponse precompiledResponse =
-                        ObjectMapperFactory.getObjectMapper()
-                                .readValue(errorMessage, PrecompiledResponse.class);
-                if (logger.isDebugEnabled()) {
-                    logger.debug(" errorCode: {}, errorMessage: {}", errorCode, errorMessage);
-                }
-                return precompiledResponse.getMsg();
-            }
-        } catch (IOException e) {
+        int errorIndex = message.indexOf("error:");
+        if (errorIndex > 0) {
+            int errorCode = Integer.parseInt(message.substring(errorIndex + 6).trim());
+            errorCode = (errorCode > 0 ? -errorCode : errorCode);
+            RetCode retCode = PrecompiledRetCode.getPrecompiledResponse(errorCode, "unknown error");
+
             if (logger.isDebugEnabled()) {
-                logger.debug("e: ", e);
+                logger.debug(" errorCode: {}, errorMessage: {}", errorCode, retCode);
             }
+            return retCode.getMessage();
         }
 
         return "";
@@ -55,11 +45,10 @@ public class RevertMessage {
         try {
             int revertLoop = 0;
 
-            while (RevertResolver.hasRevertMessage(
+            while (RevertMessageParser.hasRevertMessage(
                     status, Numeric.cleanHexPrefix(data).substring((128 + 8) * revertLoop))) {
                 revertLoop += 1;
             }
-
             if (revertLoop > 0) {
                 Utf8String utf8String =
                         TypeDecoder.decode(

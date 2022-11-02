@@ -1,14 +1,17 @@
-package com.webank.wecross.stub.bcos.web3j;
+package com.webank.wecross.stub.bcos.client;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import org.fisco.bcos.channel.client.TransactionSucCallback;
-import org.fisco.bcos.web3j.protocol.Web3j;
-import org.fisco.bcos.web3j.protocol.core.methods.response.*;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
+import org.fisco.bcos.sdk.client.protocol.response.Call;
+import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
+import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
+import org.fisco.bcos.sdk.model.callback.TransactionCallback;
 
-public class Web3jWrapperWithExceptionMock extends AbstractWeb3jWrapper {
+public class ClientWrapperWithExceptionMock extends AbstractClientWrapper {
 
-    public Web3jWrapperWithExceptionMock() {
+    public ClientWrapperWithExceptionMock() {
         super(null);
     }
 
@@ -27,7 +30,7 @@ public class Web3jWrapperWithExceptionMock extends AbstractWeb3jWrapper {
     }
 
     @Override
-    public void sendTransaction(String signedTransactionData, TransactionSucCallback callback)
+    public void sendTransaction(String signedTransactionData, TransactionCallback callback)
             throws IOException {
         throw new IOException(" IOException");
     }
@@ -39,8 +42,8 @@ public class Web3jWrapperWithExceptionMock extends AbstractWeb3jWrapper {
     }
 
     @Override
-    public TransactionWithProof.TransAndProof getTransactionByHashWithProof(String transactionHash)
-            throws IOException {
+    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(
+            String transactionHash) throws IOException {
         throw new IOException(" IOException");
     }
 
@@ -48,10 +51,5 @@ public class Web3jWrapperWithExceptionMock extends AbstractWeb3jWrapper {
     public Call.CallOutput call(String accountAddress, String contractAddress, String data)
             throws IOException {
         throw new IOException(" IOException");
-    }
-
-    @Override
-    public Web3j getWeb3j() {
-        return new MockWeb3j();
     }
 }
