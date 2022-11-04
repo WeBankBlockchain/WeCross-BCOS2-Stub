@@ -1,4 +1,5 @@
-pragma solidity >=0.5.0 <0.6.0;
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity >=0.6.0 <0.8.10;
 
 contract HelloWorld {
     string name = "HelloWorld!";
@@ -19,7 +20,11 @@ contract HelloWorld {
         return s;
     }
 
-    function get2(string memory s1, string memory s2) public pure returns (string memory) {
+    function get2(string memory s1, string memory s2)
+    public
+    pure
+    returns (string memory)
+    {
         return string(abi.encodePacked(s1, s2));
     }
 }

@@ -9,7 +9,7 @@ import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.custom.CommandHandlerDispatcher;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
-import com.webank.wecross.stub.bcos.custom.RegisterCnsHandler;
+import com.webank.wecross.stub.bcos.custom.LinkBfsHandler;
 import com.webank.wecross.stub.bcos.preparation.HubContractDeployment;
 import com.webank.wecross.stub.bcos.preparation.ProxyContractDeployment;
 import java.io.File;
@@ -24,8 +24,8 @@ import org.apache.commons.io.FileUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
-import org.fisco.bcos.sdk.crypto.CryptoSuite;
-import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.v3.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.v3.crypto.keypair.CryptoKeyPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
@@ -76,27 +76,27 @@ public class BCOSBaseStubFactory implements StubFactory {
         logger.info("New driver type:{}", this.cryptoSuite.getCryptoTypeConfig());
 
         /** Initializes the cns service */
-        AsyncCnsService asyncCnsService = new AsyncCnsService();
+        AsyncBfsService asyncBfsService = new AsyncBfsService();
 
         /** Initializes the custom command dispatcher */
-        RegisterCnsHandler registerCnsHandler = new RegisterCnsHandler();
-        registerCnsHandler.setAsyncCnsService(asyncCnsService);
+        LinkBfsHandler linkBfsHandler = new LinkBfsHandler();
+        linkBfsHandler.setAsyncBfsService(asyncBfsService);
 
         DeployContractHandler deployContractHandler = new DeployContractHandler();
-        deployContractHandler.setAsyncCnsService(asyncCnsService);
+        deployContractHandler.setAsyncCnsService(asyncBfsService);
 
         CommandHandlerDispatcher commandHandlerDispatcher = new CommandHandlerDispatcher();
         commandHandlerDispatcher.registerCommandHandler(
-                BCOSConstant.CUSTOM_COMMAND_REGISTER, registerCnsHandler);
+                BCOSConstant.CUSTOM_COMMAND_REGISTER, linkBfsHandler);
         commandHandlerDispatcher.registerCommandHandler(
                 BCOSConstant.CUSTOM_COMMAND_DEPLOY, deployContractHandler);
 
         /** Initializes the bcos driver */
         BCOSDriver driver = new BCOSDriver(this.cryptoSuite);
-        driver.setAsyncCnsService(asyncCnsService);
+        driver.setAsyncBfsService(asyncBfsService);
         driver.setCommandHandlerDispatcher(commandHandlerDispatcher);
 
-        asyncCnsService.setBcosDriver(driver);
+        asyncBfsService.setBcosDriver(driver);
 
         return driver;
     }
@@ -238,7 +238,7 @@ public class BCOSBaseStubFactory implements StubFactory {
                             + "    groupId = 1 # default 1\n"
                             + "    chainId = 1 # default 1\n"
                             + "\n"
-                            + "[channelService]\n"
+                            + "[chainRpcService]\n"
                             + "    caCert = 'ca.crt'\n"
                             + "    sslCert = 'sdk.crt'\n"
                             + "    sslKey = 'sdk.key'\n"

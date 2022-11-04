@@ -1,27 +1,29 @@
 package com.webank.wecross.stub.bcos.contract;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import org.fisco.bcos.sdk.abi.FunctionEncoder;
-import org.fisco.bcos.sdk.abi.FunctionReturnDecoder;
-import org.fisco.bcos.sdk.abi.TypeReference;
-import org.fisco.bcos.sdk.abi.Utils;
-import org.fisco.bcos.sdk.abi.datatypes.DynamicArray;
-import org.fisco.bcos.sdk.abi.datatypes.DynamicBytes;
-import org.fisco.bcos.sdk.abi.datatypes.Function;
-import org.fisco.bcos.sdk.abi.datatypes.Type;
-import org.fisco.bcos.sdk.abi.datatypes.Utf8String;
-import org.fisco.bcos.sdk.abi.datatypes.generated.Uint256;
-import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple2;
-import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple3;
-import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple4;
-import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple6;
-import org.fisco.bcos.sdk.model.TransactionReceipt;
-import org.fisco.bcos.sdk.utils.Numeric;
+import org.fisco.bcos.sdk.v3.codec.Utils;
+import org.fisco.bcos.sdk.v3.codec.abi.FunctionEncoder;
+import org.fisco.bcos.sdk.v3.codec.abi.FunctionReturnDecoder;
+import org.fisco.bcos.sdk.v3.codec.datatypes.DynamicArray;
+import org.fisco.bcos.sdk.v3.codec.datatypes.DynamicBytes;
+import org.fisco.bcos.sdk.v3.codec.datatypes.Function;
+import org.fisco.bcos.sdk.v3.codec.datatypes.Type;
+import org.fisco.bcos.sdk.v3.codec.datatypes.TypeReference;
+import org.fisco.bcos.sdk.v3.codec.datatypes.Utf8String;
+import org.fisco.bcos.sdk.v3.codec.datatypes.generated.Uint256;
+import org.fisco.bcos.sdk.v3.codec.datatypes.generated.tuples.generated.Tuple2;
+import org.fisco.bcos.sdk.v3.codec.datatypes.generated.tuples.generated.Tuple3;
+import org.fisco.bcos.sdk.v3.codec.datatypes.generated.tuples.generated.Tuple4;
+import org.fisco.bcos.sdk.v3.codec.datatypes.generated.tuples.generated.Tuple6;
+import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
+import org.fisco.bcos.sdk.v3.utils.Numeric;
 
 /**
  * Function object used across blockchain chain. Wecross requires that a cross-chain contract
@@ -89,17 +91,15 @@ public class FunctionUtility {
      * @return
      */
     public static Function newConstantCallProxyFunction(
-            String id, String path, String methodSignature, String abi) {
-        Function function =
-                new Function(
-                        "constantCall",
-                        Arrays.<Type>asList(
-                                new Utf8String(id),
-                                new Utf8String(path),
-                                new Utf8String(methodSignature),
-                                new DynamicBytes(Numeric.hexStringToByteArray(abi))),
-                        Collections.<TypeReference<?>>emptyList());
-        return function;
+            String id, String path, String methodSignature, byte[] abi) {
+        return new Function(
+                "constantCall",
+                Arrays.asList(
+                        new Utf8String(id),
+                        new Utf8String(path),
+                        new Utf8String(methodSignature),
+                        new DynamicBytes(abi)),
+                Collections.emptyList());
     }
 
     /**
@@ -112,16 +112,18 @@ public class FunctionUtility {
      * @return
      */
     public static Function newConstantCallProxyFunction(
-            FunctionEncoder functionEncoder, String name, String methodSignature, String abi) {
-        String methodId = functionEncoder.buildMethodId(methodSignature);
-        Function function =
-                new Function(
-                        "constantCall",
-                        Arrays.<Type>asList(
-                                new Utf8String(name),
-                                new DynamicBytes(Numeric.hexStringToByteArray(methodId + abi))),
-                        Collections.<TypeReference<?>>emptyList());
-        return function;
+            FunctionEncoder functionEncoder, String name, String methodSignature, byte[] abi)
+            throws IOException {
+        byte[] methodId = functionEncoder.buildMethodId(methodSignature);
+        ByteArrayOutputStream params = new ByteArrayOutputStream();
+        params.write(methodId);
+        if (abi != null && abi.length != 0) {
+            params.write(abi);
+        }
+        return new Function(
+                "constantCall",
+                Arrays.<Type>asList(new Utf8String(name), new DynamicBytes(params.toByteArray())),
+                Collections.emptyList());
     }
 
     /**
@@ -138,19 +140,17 @@ public class FunctionUtility {
      * @return
      */
     public static Function newSendTransactionProxyFunction(
-            String uid, String tid, long seq, String path, String methodSignature, String abi) {
-        Function function =
-                new Function(
-                        "sendTransaction",
-                        Arrays.<Type>asList(
-                                new Utf8String(uid),
-                                new Utf8String(tid),
-                                new Uint256(seq),
-                                new Utf8String(path),
-                                new Utf8String(methodSignature),
-                                new DynamicBytes(Numeric.hexStringToByteArray(abi))),
-                        Collections.<TypeReference<?>>emptyList());
-        return function;
+            String uid, String tid, long seq, String path, String methodSignature, byte[] abi) {
+        return new Function(
+                "sendTransaction",
+                Arrays.asList(
+                        new Utf8String(uid),
+                        new Utf8String(tid),
+                        new Uint256(seq),
+                        new Utf8String(path),
+                        new Utf8String(methodSignature),
+                        new DynamicBytes(abi)),
+                Collections.emptyList());
     }
 
     /**
@@ -168,17 +168,21 @@ public class FunctionUtility {
             String uid,
             String name,
             String methodSignature,
-            String abi) {
-        String methodId = functionEncoder.buildMethodId(methodSignature);
-        Function function =
-                new Function(
-                        "sendTransaction",
-                        Arrays.<Type>asList(
-                                new Utf8String(uid),
-                                new Utf8String(name),
-                                new DynamicBytes(Numeric.hexStringToByteArray(methodId + abi))),
-                        Collections.<TypeReference<?>>emptyList());
-        return function;
+            byte[] abi)
+            throws IOException {
+        byte[] methodId = functionEncoder.buildMethodId(methodSignature);
+        ByteArrayOutputStream params = new ByteArrayOutputStream();
+        params.write(methodId);
+        if (abi != null && abi.length != 0) {
+            params.write(abi);
+        }
+        return new Function(
+                "sendTransaction",
+                Arrays.asList(
+                        new Utf8String(uid),
+                        new Utf8String(name),
+                        new DynamicBytes(params.toByteArray())),
+                Collections.emptyList());
     }
 
     /**
@@ -193,15 +197,16 @@ public class FunctionUtility {
         final Function function =
                 new Function(
                         "constantCall",
-                        Arrays.<Type>asList(),
-                        Arrays.<TypeReference<?>>asList(
+                        Collections.emptyList(),
+                        Arrays.asList(
                                 new TypeReference<Utf8String>() {},
                                 new TypeReference<Utf8String>() {},
                                 new TypeReference<Utf8String>() {},
                                 new TypeReference<DynamicBytes>() {}));
-        List<Type> results = FunctionReturnDecoder.decode(data, function.getOutputParameters());
+        FunctionReturnDecoder functionReturnDecoder = new FunctionReturnDecoder();
+        List<Type> results = functionReturnDecoder.decode(data, function.getOutputParameters());
 
-        return new Tuple4<String, String, String, byte[]>(
+        return new Tuple4<>(
                 (String) results.get(0).getValue(),
                 (String) results.get(1).getValue(),
                 (String) results.get(2).getValue(),
@@ -219,14 +224,14 @@ public class FunctionUtility {
         final Function function =
                 new Function(
                         "constantCall",
-                        Arrays.<Type>asList(),
-                        Arrays.<TypeReference<?>>asList(
+                        Collections.emptyList(),
+                        Arrays.asList(
                                 new TypeReference<Utf8String>() {},
                                 new TypeReference<DynamicBytes>() {}));
-        List<Type> results = FunctionReturnDecoder.decode(data, function.getOutputParameters());
+        FunctionReturnDecoder functionReturnDecoder = new FunctionReturnDecoder();
+        List<Type> results = functionReturnDecoder.decode(data, function.getOutputParameters());
 
-        return new Tuple2<String, byte[]>(
-                (String) results.get(0).getValue(), (byte[]) results.get(1).getValue());
+        return new Tuple2<>((String) results.get(0).getValue(), (byte[]) results.get(1).getValue());
     }
 
     /**
@@ -242,15 +247,16 @@ public class FunctionUtility {
         final Function function =
                 new Function(
                         "sendTransaction",
-                        Arrays.<Type>asList(),
-                        Arrays.<TypeReference<?>>asList(
+                        Collections.emptyList(),
+                        Arrays.asList(
                                 new TypeReference<Utf8String>() {},
                                 new TypeReference<Utf8String>() {},
                                 new TypeReference<Uint256>() {},
                                 new TypeReference<Utf8String>() {},
                                 new TypeReference<Utf8String>() {},
                                 new TypeReference<DynamicBytes>() {}));
-        List<Type> results = FunctionReturnDecoder.decode(data, function.getOutputParameters());
+        FunctionReturnDecoder functionReturnDecoder = new FunctionReturnDecoder();
+        List<Type> results = functionReturnDecoder.decode(data, function.getOutputParameters());
 
         return new Tuple6<>(
                 (String) results.get(0).getValue(),
@@ -274,12 +280,13 @@ public class FunctionUtility {
         final Function function =
                 new Function(
                         "sendTransaction",
-                        Arrays.<Type>asList(),
-                        Arrays.<TypeReference<?>>asList(
+                        Collections.emptyList(),
+                        Arrays.asList(
                                 new TypeReference<Utf8String>() {},
                                 new TypeReference<Utf8String>() {},
                                 new TypeReference<DynamicBytes>() {}));
-        List<Type> results = FunctionReturnDecoder.decode(data, function.getOutputParameters());
+        FunctionReturnDecoder functionReturnDecoder = new FunctionReturnDecoder();
+        List<Type> results = functionReturnDecoder.decode(data, function.getOutputParameters());
 
         return new Tuple3<>(
                 (String) results.get(0).getValue(),
@@ -355,8 +362,9 @@ public class FunctionUtility {
             return null;
         }
 
+        FunctionReturnDecoder functionReturnDecoder = new FunctionReturnDecoder();
         List<Type> outputTypes =
-                FunctionReturnDecoder.decode(
+                functionReturnDecoder.decode(
                         output, Utils.convert(FunctionUtility.abiTypeReferenceOutputs));
         List<String> outputArgs = FunctionUtility.convertToStringList(outputTypes);
         return outputArgs.toArray(new String[0]);
@@ -367,8 +375,9 @@ public class FunctionUtility {
             return null;
         }
 
+        FunctionReturnDecoder functionReturnDecoder = new FunctionReturnDecoder();
         List<Type> outputTypes =
-                FunctionReturnDecoder.decode(
+                functionReturnDecoder.decode(
                         output,
                         Utils.convert(
                                 Collections.singletonList(new TypeReference<Utf8String>() {})));

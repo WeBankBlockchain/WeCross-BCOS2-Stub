@@ -6,7 +6,7 @@
     groupId = 111 # default 1
     chainId = 123 # default 1
 
-[channelService]
+[chainRpcService]
     caCert = 'ca.crt'
     sslCert = 'sdk.crt'
     sslKey = 'sdk.key'

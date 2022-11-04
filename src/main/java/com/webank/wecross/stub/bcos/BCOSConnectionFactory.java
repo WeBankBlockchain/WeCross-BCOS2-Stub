@@ -5,11 +5,11 @@ import com.webank.wecross.stub.bcos.client.ClientWrapperFactory;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
-import com.webank.wecross.stub.bcos.preparation.CnsService;
+import com.webank.wecross.stub.bcos.preparation.BfsServiceWrapper;
 import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
+import org.fisco.bcos.sdk.v3.contract.precompiled.bfs.BFSInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
@@ -44,13 +44,13 @@ public class BCOSConnectionFactory {
             bcosConnection.addProperty(BCOSConstant.BCOS_NODE_VERSION, clientWrapper.getVersion());
         }
 
-        CnsInfo proxyCnsInfo = CnsService.queryProxyCnsInfo(clientWrapper);
+        BFSInfo proxyCnsInfo = BfsServiceWrapper.queryProxyBFSInfo(clientWrapper);
         if (Objects.nonNull(proxyCnsInfo)) {
             bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_NAME, proxyCnsInfo.getAddress());
             bcosConnection.addProperty(BCOSConstant.BCOS_PROXY_ABI, proxyCnsInfo.getAbi());
         }
 
-        CnsInfo hubCnsInfo = CnsService.queryHubCnsInfo(clientWrapper);
+        BFSInfo hubCnsInfo = BfsServiceWrapper.queryHubBFSInfo(clientWrapper);
         if (Objects.nonNull(hubCnsInfo)) {
             bcosConnection.addProperty(BCOSConstant.BCOS_HUB_NAME, hubCnsInfo.getAddress());
         }

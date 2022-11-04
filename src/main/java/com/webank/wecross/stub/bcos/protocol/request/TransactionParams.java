@@ -16,6 +16,7 @@ public class TransactionParams {
 
     public TransactionParams(TransactionRequest transactionRequest, String data, SUB_TYPE type) {
         this.transactionRequest = transactionRequest;
+        // call is input, sendTx
         this.data = data;
         this.subType = type;
     }

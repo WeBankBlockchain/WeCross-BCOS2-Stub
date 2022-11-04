@@ -12,6 +12,7 @@ import com.webank.wecross.stub.Request;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.bcos.client.AbstractClientWrapper;
+import com.webank.wecross.stub.bcos.client.ClientDefaultConfig;
 import com.webank.wecross.stub.bcos.client.ClientWrapperCallNotSucStatus;
 import com.webank.wecross.stub.bcos.client.ClientWrapperImplMock;
 import com.webank.wecross.stub.bcos.client.ClientWrapperWithExceptionMock;
@@ -20,12 +21,10 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
-import com.webank.wecross.stub.bcos.common.StatusCode;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.BlockUtility;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
-import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -33,16 +32,18 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import org.fisco.bcos.sdk.abi.FunctionEncoder;
-import org.fisco.bcos.sdk.abi.datatypes.Function;
-import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
-import org.fisco.bcos.sdk.client.protocol.response.Call;
-import org.fisco.bcos.sdk.crypto.CryptoSuite;
-import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
-import org.fisco.bcos.sdk.model.TransactionReceipt;
-import org.fisco.bcos.sdk.transaction.codec.encode.TransactionEncoderService;
-import org.fisco.bcos.sdk.transaction.model.po.RawTransaction;
-import org.fisco.bcos.sdk.utils.Numeric;
+import org.fisco.bcos.sdk.jni.common.JniException;
+import org.fisco.bcos.sdk.jni.utilities.tx.TransactionBuilderJniObj;
+import org.fisco.bcos.sdk.jni.utilities.tx.TxPair;
+import org.fisco.bcos.sdk.v3.client.protocol.response.BcosBlock;
+import org.fisco.bcos.sdk.v3.client.protocol.response.Call;
+import org.fisco.bcos.sdk.v3.codec.abi.FunctionEncoder;
+import org.fisco.bcos.sdk.v3.codec.datatypes.Function;
+import org.fisco.bcos.sdk.v3.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.v3.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
+import org.fisco.bcos.sdk.v3.utils.Hex;
+import org.fisco.bcos.sdk.v3.utils.Numeric;
 import org.junit.Test;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
@@ -59,10 +60,10 @@ public class BCOSConnectionTest {
         BlockHeader blockHeader = BlockUtility.convertToBlockHeader(block);
 
         assertEquals(blockHeader.getHash(), block.getHash());
-        assertEquals(blockHeader.getPrevHash(), block.getParentHash());
+        assertEquals(blockHeader.getPrevHash(), block.getParentInfo().get(0).getBlockHash());
         assertEquals(blockHeader.getReceiptRoot(), block.getReceiptsRoot());
         assertEquals(blockHeader.getStateRoot(), block.getStateRoot());
-        assertEquals(blockHeader.getNumber(), block.getNumber().intValue());
+        assertEquals(blockHeader.getNumber(), block.getNumber());
         assertEquals(blockHeader.getTransactionRoot(), block.getTransactionsRoot());
     }
 
@@ -222,8 +223,7 @@ public class BCOSConnectionTest {
         Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         FunctionEncoder functionEncoder = new FunctionEncoder(clientWrapper.getCryptoSuite());
-        String abi = functionEncoder.encode(function);
-
+        String abi = Hex.toHexString(functionEncoder.encode(function));
         TransactionRequest transactionRequest = new TransactionRequest(funName, params);
         TransactionParams transactionParams =
                 new TransactionParams(transactionRequest, abi, TransactionParams.SUB_TYPE.CALL);
@@ -246,7 +246,7 @@ public class BCOSConnectionTest {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    assertEquals(callOutput.getStatus(), StatusCode.Success);
+                    assertEquals(callOutput.getStatus(), 0);
 
                     String data = callOutput.getOutput();
 
@@ -275,7 +275,7 @@ public class BCOSConnectionTest {
         Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         FunctionEncoder functionEncoder = new FunctionEncoder(clientWrapper.getCryptoSuite());
-        String abi = functionEncoder.encode(function);
+        String abi = Hex.toHexString(functionEncoder.encode(function));
 
         TransactionRequest transactionRequest = new TransactionRequest(funName, params);
         TransactionParams transactionParams =
@@ -309,7 +309,7 @@ public class BCOSConnectionTest {
         Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         FunctionEncoder functionEncoder = new FunctionEncoder(clientWrapper.getCryptoSuite());
-        String abi = functionEncoder.encode(function);
+        String abi = Hex.toHexString(functionEncoder.encode(function));
 
         TransactionRequest transactionRequest = new TransactionRequest(funName, params);
         TransactionParams transactionParams =
@@ -325,7 +325,7 @@ public class BCOSConnectionTest {
     }
 
     @Test
-    public void handleSendTransactionTest() throws IOException {
+    public void handleSendTransactionTest() throws IOException, JniException {
 
         AbstractClientWrapper clientWrapper = new ClientWrapperImplMock();
         CryptoSuite cryptoSuite = clientWrapper.getCryptoSuite();
@@ -344,19 +344,21 @@ public class BCOSConnectionTest {
         Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         FunctionEncoder functionEncoder = new FunctionEncoder(cryptoSuite);
-        String abi = functionEncoder.encode(function);
+        String abi = Hex.toHexString(functionEncoder.encode(function));
 
-        RawTransaction rawTransaction =
-                SignTransaction.buildTransaction(
-                        address,
-                        BigInteger.valueOf(1),
-                        BigInteger.valueOf(1),
-                        BigInteger.valueOf(1),
-                        abi);
-        TransactionEncoderService transactionEncoderService =
-                new TransactionEncoderService(cryptoSuite);
         CryptoKeyPair credentials = cryptoSuite.getCryptoKeyPair();
-        String sign = transactionEncoderService.encodeAndSign(rawTransaction, credentials);
+        TxPair signedTransaction =
+                TransactionBuilderJniObj.createSignedTransaction(
+                        credentials.getJniKeyPair(),
+                        ClientDefaultConfig.DEFAULT_GROUP_ID,
+                        ClientDefaultConfig.DEFAULT_CHAIN_ID,
+                        address,
+                        Hex.toHexString(functionEncoder.encode(function)),
+                        abi,
+                        1111,
+                        0);
+
+        String sign = signedTransaction.getSignedTx();
 
         TransactionRequest transactionRequest = new TransactionRequest();
         transactionRequest.setMethod(funName);
@@ -383,13 +385,14 @@ public class BCOSConnectionTest {
                     assertEquals(
                             transactionReceipt.getTransactionHash(),
                             "0x8b3946912d1133f9fb0722a7b607db2456d468386c2e86b035e81ef91d94eb90");
-                    assertFalse(transactionReceipt.getTxProof().isEmpty());
+                    assertFalse(transactionReceipt.getTransactionProof().isEmpty());
                     assertFalse(transactionReceipt.getReceiptProof().isEmpty());
                 });
     }
 
     @Test
-    public void handleFailedSendTransactionTest() throws IOException, InterruptedException {
+    public void handleFailedSendTransactionTest()
+            throws IOException, InterruptedException, JniException {
 
         AbstractClientWrapper clientWrapper = new ClientWrapperWithExceptionMock();
         CryptoSuite cryptoSuite = clientWrapper.getCryptoSuite();
@@ -408,19 +411,21 @@ public class BCOSConnectionTest {
         Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         FunctionEncoder functionEncoder = new FunctionEncoder(cryptoSuite);
-        String abi = functionEncoder.encode(function);
+        String abi = Hex.toHexString(functionEncoder.encode(function));
 
-        RawTransaction rawTransaction =
-                SignTransaction.buildTransaction(
-                        address,
-                        BigInteger.valueOf(1),
-                        BigInteger.valueOf(1),
-                        BigInteger.valueOf(1),
-                        abi);
-        TransactionEncoderService transactionEncoderService =
-                new TransactionEncoderService(cryptoSuite);
         CryptoKeyPair credentials = cryptoSuite.getCryptoKeyPair();
-        String sign = transactionEncoderService.encodeAndSign(rawTransaction, credentials);
+        TxPair signedTransaction =
+                TransactionBuilderJniObj.createSignedTransaction(
+                        credentials.getJniKeyPair(),
+                        ClientDefaultConfig.DEFAULT_GROUP_ID,
+                        ClientDefaultConfig.DEFAULT_CHAIN_ID,
+                        address,
+                        Hex.toHexString(functionEncoder.encode(function)),
+                        abi,
+                        1111,
+                        0);
+
+        String sign = signedTransaction.getSignedTx();
 
         TransactionRequest transactionRequest = new TransactionRequest();
         transactionRequest.setMethod(funName);
@@ -442,7 +447,8 @@ public class BCOSConnectionTest {
     }
 
     @Test
-    public void handleFailedSendTransactionTest0() throws IOException, InterruptedException {
+    public void handleFailedSendTransactionTest0()
+            throws IOException, InterruptedException, JniException {
 
         AbstractClientWrapper clientWrapper = new ClientWrapperWithNullMock();
         CryptoSuite cryptoSuite = clientWrapper.getCryptoSuite();
@@ -461,19 +467,21 @@ public class BCOSConnectionTest {
         Function function = FunctionUtility.newDefaultFunction(funName, params);
 
         FunctionEncoder functionEncoder = new FunctionEncoder(cryptoSuite);
-        String abi = functionEncoder.encode(function);
+        String abi = Hex.toHexString(functionEncoder.encode(function));
 
-        RawTransaction rawTransaction =
-                SignTransaction.buildTransaction(
-                        address,
-                        BigInteger.valueOf(1),
-                        BigInteger.valueOf(1),
-                        BigInteger.valueOf(1),
-                        abi);
-        TransactionEncoderService transactionEncoderService =
-                new TransactionEncoderService(cryptoSuite);
         CryptoKeyPair credentials = cryptoSuite.getCryptoKeyPair();
-        String sign = transactionEncoderService.encodeAndSign(rawTransaction, credentials);
+        TxPair signedTransaction =
+                TransactionBuilderJniObj.createSignedTransaction(
+                        credentials.getJniKeyPair(),
+                        ClientDefaultConfig.DEFAULT_GROUP_ID,
+                        ClientDefaultConfig.DEFAULT_CHAIN_ID,
+                        address,
+                        Hex.toHexString(functionEncoder.encode(function)),
+                        abi,
+                        1111,
+                        0);
+
+        String sign = signedTransaction.getSignedTx();
 
         TransactionRequest transactionRequest = new TransactionRequest();
         transactionRequest.setMethod(funName);

@@ -2,9 +2,9 @@ package com.webank.wecross.stub.bcos.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
-import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
-import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
-import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
+import org.fisco.bcos.sdk.v3.client.protocol.model.JsonTransactionResponse;
+import org.fisco.bcos.sdk.v3.client.protocol.response.BcosBlock;
+import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
 
 public class ClientWrapperTxVerifyMock extends ClientWrapperImplMock {
 
@@ -24,37 +24,29 @@ public class ClientWrapperTxVerifyMock extends ClientWrapperImplMock {
             "{\"receiptProof\":[{\"left\":[\"803fb462c75987b2001a83dbed279aeecec047b1f9bc9c56e195a74932fbaae0b1\",\"01e9fe05b4c30ed7eb927e24b788016114c1c31bf3771181c4d83bb3416c04ba09\"],\"right\":[\"03495a1e82c707f19aa55f2135b1dfddf992f39f6a614a910e001b9c00685e66d5\",\"04cf051dd6960c184742948ee3f10883c3bf11f51da6ed6c67eacd37972338ebde\"]},{\"left\":[],\"right\":[]}],\"transactionReceipt\":{\"blockHash\":\"0x83eab142175649d0bc5a93bda004d02f165cd5aaf10ec988e72d8873b8c6de95\",\"blockNumber\":\"0x23\",\"contractAddress\":\"0x0000000000000000000000000000000000000000\",\"from\":\"0x65d168d7499e72d45ed02de1c05a5197448612c6\",\"gasUsed\":\"0x10a88\",\"input\":\"0x3fe8e3f50000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000003b9aca00000000000000000000000000000000000000000000000000000000000000000a3565386331356434323200000000000000000000000000000000000000000000\",\"logs\":[],\"logsBloom\":\"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"output\":\"0x0000000000000000000000000000000000000000000000000000000000000000\",\"root\":\"0x9abce0e65719f06ee104abf1539e42beef25c164f889420eab9c055cc95de03c\",\"status\":\"0x0\",\"to\":\"0x0000000000000000000000000000000000005002\",\"transactionHash\":\"0x633a3386a189455354c058af6606d705697f3b216ad555958dc680f68cc4e99d\",\"transactionIndex\":\"0x2\"}}";
 
     private BcosBlock.Block block = null;
-    private TransactionWithProof.TransactionAndProof transAndProof = null;
-    private TransactionReceiptWithProof.ReceiptAndProof receiptAndProof = null;
+    private JsonTransactionResponse transAndProof = null;
+    private TransactionReceipt receiptAndProof = null;
 
     private BcosBlock.Block block0 = null;
-    private TransactionWithProof.TransactionAndProof transAndProof0 = null;
-    private TransactionReceiptWithProof.ReceiptAndProof receiptAndProof0 = null;
+    private JsonTransactionResponse transAndProof0 = null;
+    private TransactionReceipt receiptAndProof0 = null;
 
     public ClientWrapperTxVerifyMock() throws JsonProcessingException {
         block = ObjectMapperFactory.getObjectMapper().readValue(blockJson, BcosBlock.Block.class);
         transAndProof =
                 ObjectMapperFactory.getObjectMapper()
-                        .readValue(
-                                transactionAndProofJson,
-                                TransactionWithProof.TransactionAndProof.class);
+                        .readValue(transactionAndProofJson, JsonTransactionResponse.class);
         receiptAndProof =
                 ObjectMapperFactory.getObjectMapper()
-                        .readValue(
-                                transactionReceiptAndProofJson,
-                                TransactionReceiptWithProof.ReceiptAndProof.class);
+                        .readValue(transactionReceiptAndProofJson, TransactionReceipt.class);
 
         block0 = ObjectMapperFactory.getObjectMapper().readValue(blockJson0, BcosBlock.Block.class);
         transAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
-                        .readValue(
-                                transactionAndProofJson0,
-                                TransactionWithProof.TransactionAndProof.class);
+                        .readValue(transactionAndProofJson0, JsonTransactionResponse.class);
         receiptAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
-                        .readValue(
-                                transactionReceiptAndProofJson0,
-                                TransactionReceiptWithProof.ReceiptAndProof.class);
+                        .readValue(transactionReceiptAndProofJson0, TransactionReceipt.class);
     }
 
     @Override
@@ -63,14 +55,12 @@ public class ClientWrapperTxVerifyMock extends ClientWrapperImplMock {
     }
 
     @Override
-    public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(
-            String transactionHash) {
+    public TransactionReceipt getTransactionReceiptByHashWithProof(String transactionHash) {
         return receiptAndProof;
     }
 
     @Override
-    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(
-            String transactionHash) {
+    public JsonTransactionResponse getTransactionByHashWithProof(String transactionHash) {
         return transAndProof;
     }
 }

@@ -12,7 +12,7 @@ import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
-import com.webank.wecross.stub.bcos.AsyncCnsService;
+import com.webank.wecross.stub.bcos.AsyncBfsService;
 import com.webank.wecross.stub.bcos.AsyncToSync;
 import com.webank.wecross.stub.bcos.BCOSBaseStubFactory;
 import com.webank.wecross.stub.bcos.BCOSConnection;
@@ -29,13 +29,12 @@ import com.webank.wecross.stub.bcos.common.BCOSStubException;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
-import com.webank.wecross.stub.bcos.performance.hellowecross.HelloWeCross;
 import com.webank.wecross.stub.bcos.preparation.ProxyContract;
-import org.fisco.bcos.sdk.abi.wrapper.ABICodecJsonWrapper;
-import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
-import org.fisco.bcos.sdk.crypto.CryptoSuite;
-import org.fisco.bcos.sdk.model.TransactionReceipt;
-import org.fisco.bcos.sdk.utils.Numeric;
+import org.fisco.bcos.sdk.v3.codec.wrapper.ContractCodecJsonWrapper;
+import org.fisco.bcos.sdk.v3.contract.precompiled.bfs.BFSInfo;
+import org.fisco.bcos.sdk.v3.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
+import org.fisco.bcos.sdk.v3.utils.Numeric;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,7 +60,7 @@ public class BCOSStubCallContractIntegTest {
     private static final Logger logger =
             LoggerFactory.getLogger(BCOSStubCallContractIntegTest.class);
 
-    private HelloWeCross helloWeCross = null;
+    private HelloWorld helloWeCross = null;
 
     private Driver driver = null;
     private Account account = null;
@@ -72,13 +71,13 @@ public class BCOSStubCallContractIntegTest {
 
     private CryptoSuite cryptoSuite = null;
 
-    private AsyncCnsService asyncCnsService = null;
+    private AsyncBfsService asyncBfsService = null;
 
-    public HelloWeCross getHelloWeCross() {
+    public HelloWorld getHelloWeCross() {
         return helloWeCross;
     }
 
-    public void setHelloWeCross(HelloWeCross helloWeCross) {
+    public void setHelloWeCross(HelloWorld helloWeCross) {
         this.helloWeCross = helloWeCross;
     }
 
@@ -155,16 +154,16 @@ public class BCOSStubCallContractIntegTest {
 
         BCOSAccount bcosAccount = (BCOSAccount) account;
         blockManager = new ClientBlockManager(clientWrapper);
-        asyncCnsService = ((BCOSDriver) driver).getAsyncCnsService();
+        asyncBfsService = ((BCOSDriver) driver).getAsyncBfsService();
         cryptoSuite = clientWrapper.getCryptoSuite();
 
         helloWeCross =
-                HelloWeCross
+                HelloWorld
                         .deploy(
                                 clientWrapper.getClient(),
                                 bcosAccount.getCredentials());
 
-        logger.info(" HelloWeCross address: {}", helloWeCross.getContractAddress());
+        logger.info(" HelloWorld address: {}", helloWeCross.getContractAddress());
 
         resourceInfo = ((BCOSConnection) connection).getResourceInfoList().get(0);
         resourceInfo.getProperties().put(resourceInfo.getName(), helloWeCross.getContractAddress());
@@ -190,9 +189,9 @@ public class BCOSStubCallContractIntegTest {
         ProxyContract proxyContract = new ProxyContract();
         proxyContract.setAccount((BCOSAccount) account);
         proxyContract.setConnection((BCOSConnection)connection);
-        CnsInfo cnsInfo = proxyContract.deployContractAndRegisterCNS(file, "WeCrossProxy", "WeCrossProxy", String.valueOf(System.currentTimeMillis()));
-        connection.getProperties().put(BCOSConstant.BCOS_PROXY_NAME, cnsInfo.getAddress());
-        connection.getProperties().put(BCOSConstant.BCOS_PROXY_ABI, cnsInfo.getAbi());
+        BFSInfo bfsInfo = proxyContract.deployContractAndLinkBFS(file, "WeCrossProxy", "WeCrossProxy");
+        connection.getProperties().put(BCOSConstant.BCOS_PROXY_NAME, bfsInfo.getAddress());
+        connection.getProperties().put(BCOSConstant.BCOS_PROXY_ABI, bfsInfo.getAbi());
     }
 
     @Test
@@ -216,10 +215,10 @@ public class BCOSStubCallContractIntegTest {
     public void deployContractByProxyTest() throws Exception {
         String[] params = new String[4] ;
 
-        params[0] = "a.b.HelloWeCross";
+        params[0] = "a.b.HelloWorld";
         params[1] = "1.1" + System.currentTimeMillis();
-        params[2] = ABICodecJsonWrapper.Base64EncodedDataPrefix + Base64.getEncoder().encodeToString(Numeric.hexStringToByteArray(HelloWeCross.BINARY));
-        params[3] = HelloWeCross.ABI;
+        params[2] = HelloWorld.BINARY;
+        params[3] = HelloWorld.ABI;
 
         Path path = Path.decode("a.b.WeCrossProxy");
         TransactionRequest transactionRequest =
@@ -475,7 +474,7 @@ public class BCOSStubCallContractIntegTest {
         AsyncToSync asyncToSync = new AsyncToSync();
 
         DeployContractHandler commandHandler = new DeployContractHandler();
-        commandHandler.setAsyncCnsService(asyncCnsService);
+        commandHandler.setAsyncCnsService(asyncBfsService);
 
         commandHandler.handle(Path.decode("a.b.HelloWorld"),
                 args,
@@ -490,7 +489,7 @@ public class BCOSStubCallContractIntegTest {
         }, cryptoSuite);
         asyncToSync.getSemaphore().acquire();
 
-        assertTrue(Objects.nonNull(asyncCnsService.getAbiCache().get("HelloWorld")));
+        assertTrue(Objects.nonNull(asyncBfsService.getAbiCache().get("HelloWorld")));
     }
 
     public void deployTupleTestContract() throws Exception {
@@ -517,7 +516,7 @@ public class BCOSStubCallContractIntegTest {
         AsyncToSync asyncToSync = new AsyncToSync();
 
         DeployContractHandler commandHandler = new DeployContractHandler();
-        commandHandler.setAsyncCnsService(asyncCnsService);
+        commandHandler.setAsyncCnsService(asyncBfsService);
 
         commandHandler.handle(Path.decode("a.b.TupleTest"), args, account, blockManager, connection, (error, response) -> {
             assertNull(error);
@@ -527,13 +526,13 @@ public class BCOSStubCallContractIntegTest {
         }, cryptoSuite);
         asyncToSync.getSemaphore().acquire();
 
-        assertTrue(Objects.nonNull(asyncCnsService.getAbiCache().get("TupleTest")));
+        assertTrue(Objects.nonNull(asyncBfsService.getAbiCache().get("TupleTest")));
     }
 
     @Test
-    public void cnsServiceTest() throws InterruptedException {
+    public void bfsServiceTest() throws InterruptedException {
         AsyncToSync asyncToSync = new AsyncToSync();
-        asyncCnsService.selectByName(BCOSConstant.BCOS_PROXY_NAME, connection, driver, (exception, infoList) -> {
+        asyncBfsService.readlink(BCOSConstant.BCOS_PROXY_NAME, connection, driver, (exception, infoList) -> {
             Assert.assertTrue(Objects.isNull(exception));
             Assert.assertTrue(!Objects.isNull(infoList));
             asyncToSync.getSemaphore().release();
@@ -556,7 +555,7 @@ public class BCOSStubCallContractIntegTest {
         contractBytes = Files.readAllBytes(file.toPath());
 
         DeployContractHandler commandHandler = new DeployContractHandler();
-        commandHandler.setAsyncCnsService(asyncCnsService);
+        commandHandler.setAsyncCnsService(asyncBfsService);
 
         for (int i = 0; i < 3; i++) {
             String constructorParams = "constructor params";
@@ -583,7 +582,7 @@ public class BCOSStubCallContractIntegTest {
                         asyncToSync.getSemaphore().release();
                     }, cryptoSuite);
             asyncToSync.getSemaphore().acquire();
-            assertTrue(Objects.nonNull(asyncCnsService.getAbiCache().get(baseName + i)));
+            assertTrue(Objects.nonNull(asyncBfsService.getAbiCache().get(baseName + i)));
         }
     }
 

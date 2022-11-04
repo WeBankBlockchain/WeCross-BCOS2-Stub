@@ -7,10 +7,8 @@ import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.client.AbstractClientWrapper;
 import com.webank.wecross.stub.bcos.client.ClientWrapperFactory;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
-import com.webank.wecross.stub.bcos.common.StatusCode;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
-import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import java.io.File;
 import java.math.BigInteger;
 import java.util.Objects;
@@ -18,17 +16,18 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import org.fisco.bcos.sdk.client.Client;
-import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
-import org.fisco.bcos.sdk.contract.precompiled.cns.CnsService;
-import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
-import org.fisco.bcos.sdk.model.CryptoType;
-import org.fisco.bcos.sdk.model.PrecompiledRetCode;
-import org.fisco.bcos.sdk.model.RetCode;
-import org.fisco.bcos.sdk.model.TransactionReceipt;
-import org.fisco.bcos.sdk.model.callback.TransactionCallback;
-import org.fisco.bcos.sdk.transaction.codec.encode.TransactionEncoderService;
-import org.fisco.bcos.sdk.transaction.model.po.RawTransaction;
+import org.fisco.bcos.sdk.jni.utilities.tx.TransactionBuilderJniObj;
+import org.fisco.bcos.sdk.jni.utilities.tx.TxPair;
+import org.fisco.bcos.sdk.v3.client.Client;
+import org.fisco.bcos.sdk.v3.contract.precompiled.bfs.BFSInfo;
+import org.fisco.bcos.sdk.v3.contract.precompiled.bfs.BFSService;
+import org.fisco.bcos.sdk.v3.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.v3.model.CryptoType;
+import org.fisco.bcos.sdk.v3.model.PrecompiledRetCode;
+import org.fisco.bcos.sdk.v3.model.RetCode;
+import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
+import org.fisco.bcos.sdk.v3.model.TransactionReceiptStatus;
+import org.fisco.bcos.sdk.v3.model.callback.TransactionCallback;
 import org.fisco.solc.compiler.CompilationResult;
 import org.fisco.solc.compiler.SolidityCompiler;
 import org.slf4j.Logger;
@@ -122,10 +121,10 @@ public class ProxyContract {
      * @param solFile, String contractName
      * @return
      */
-    public CnsInfo deployContractAndRegisterCNS(
-            File solFile, String contractName, String cnsName, String cnsVersion) throws Exception {
+    public BFSInfo deployContractAndLinkBFS(File solFile, String contractName, String linkName)
+            throws Exception {
 
-        logger.info("cnsName: {}, cnsVersion: {}", cnsName, cnsVersion);
+        logger.info("linkName: {}", linkName);
 
         AbstractClientWrapper clientWrapper = connection.getClientWrapper();
         Client client = clientWrapper.getClient();
@@ -150,11 +149,9 @@ public class ProxyContract {
 
         /** deploy the contract by sendTransaction */
         // groupId
-        BigInteger groupID =
-                new BigInteger(connection.getProperties().get(BCOSConstant.BCOS_GROUP_ID));
+        String groupID = connection.getProperties().get(BCOSConstant.BCOS_GROUP_ID);
         // chainId
-        BigInteger chainID =
-                new BigInteger(connection.getProperties().get(BCOSConstant.BCOS_CHAIN_ID));
+        String chainID = connection.getProperties().get(BCOSConstant.BCOS_CHAIN_ID);
 
         BigInteger blockNumber = clientWrapper.getBlockNumber();
 
@@ -167,13 +164,19 @@ public class ProxyContract {
                 metadata.bin,
                 metadata.abi);
 
-        RawTransaction rawTransaction =
-                SignTransaction.buildTransaction(null, groupID, chainID, blockNumber, metadata.bin);
         CryptoKeyPair credentials = account.getCredentials();
 
-        TransactionEncoderService transactionEncoderService =
-                new TransactionEncoderService(client.getCryptoSuite());
-        String signTx = transactionEncoderService.encodeAndSign(rawTransaction, credentials);
+        TxPair signedTransaction =
+                TransactionBuilderJniObj.createSignedTransaction(
+                        credentials.getJniKeyPair(),
+                        groupID,
+                        chainID,
+                        "",
+                        metadata.abi,
+                        metadata.abi,
+                        blockNumber.longValue(),
+                        0);
+        String signTx = signedTransaction.getSignedTx();
 
         CompletableFuture<String> completableFuture = new CompletableFuture<>();
         clientWrapper.sendTransaction(
@@ -185,7 +188,9 @@ public class ProxyContract {
                             logger.error(
                                     " deploy contract failed, error status: {}, error message: {} ",
                                     receipt.getStatus(),
-                                    StatusCode.getStatusMessage(receipt.getStatus()));
+                                    TransactionReceiptStatus.getStatusMessage(
+                                                    receipt.getStatus(), "Unknown error")
+                                            .getMessage());
                             completableFuture.complete(null);
                         } else {
                             logger.info(
@@ -201,20 +206,18 @@ public class ProxyContract {
             throw new Exception("Failed to deploy proxy contract.");
         }
 
-        CnsService cnsService = new CnsService(client, account.getCredentials());
-        RetCode retCode =
-                cnsService.registerCNS(cnsName, cnsVersion, contractAddress, metadata.abi);
+        BfsServiceWrapper bfsServiceWrapper = new BfsServiceWrapper();
+        BFSService bfsService = new BFSService(client, credentials.generateKeyPair());
+        RetCode retCode = bfsService.link(linkName, "latest", contractAddress, metadata.abi);
 
         if (retCode.getCode() < PrecompiledRetCode.CODE_SUCCESS.getCode()) {
             throw new RuntimeException(" registerCns failed, error message: " + retCode);
         }
 
-        CnsInfo cnsInfo = new CnsInfo();
-        cnsInfo.setName(cnsName);
-        cnsInfo.setVersion(cnsVersion);
-        cnsInfo.setAddress(contractAddress);
-        cnsInfo.setAbi(metadata.abi);
-        return cnsInfo;
+        BFSInfo bfsInfo = new BFSInfo("latest", "link");
+        bfsInfo.setAddress(contractAddress);
+        bfsInfo.setAbi(metadata.abi);
+        return bfsInfo;
     }
 
     public void deploy() throws Exception {
@@ -224,11 +227,10 @@ public class ProxyContract {
             PathMatchingResourcePatternResolver resolver =
                     new PathMatchingResourcePatternResolver();
             File file = resolver.getResource("classpath:" + proxyContractFile).getFile();
-            String version = String.valueOf(System.currentTimeMillis() / 1000);
-
-            deployContractAndRegisterCNS(file, "WeCrossProxy", "WeCrossProxy", version);
+            deployContractAndLinkBFS(file, "WeCrossProxy", "WeCrossProxy");
             System.out.println(
-                    "SUCCESS: WeCrossProxy:" + version + " has been deployed! chain: " + chainPath);
+                    "SUCCESS: WeCrossProxy: /apps/WeCrossProxy/latest has been deployed! chain: "
+                            + chainPath);
         } else {
             System.out.println(
                     "SUCCESS: WeCrossProxy has already been deployed! chain: " + chainPath);
@@ -241,11 +243,11 @@ public class ProxyContract {
 
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         File file = resolver.getResource("classpath:" + proxyContractFile).getFile();
-        String version = String.valueOf(System.currentTimeMillis() / 1000);
 
-        deployContractAndRegisterCNS(file, "WeCrossProxy", "WeCrossProxy", version);
+        deployContractAndLinkBFS(file, "WeCrossProxy", "WeCrossProxy");
 
         System.out.println(
-                "SUCCESS: WeCrossProxy:" + version + " has been upgraded! chain: " + chainPath);
+                "SUCCESS: WeCrossProxy: /apps/WeCrossProxy/latest has been upgraded! chain: "
+                        + chainPath);
     }
 }

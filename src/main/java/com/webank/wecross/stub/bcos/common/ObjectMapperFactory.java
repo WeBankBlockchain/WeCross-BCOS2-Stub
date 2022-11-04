@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
+import org.fisco.bcos.sdk.v3.client.protocol.response.BcosBlock;
 
 public class ObjectMapperFactory {
     private static final ObjectMapper DEFAULT_OBJECT_MAPPER = getObjectMapper();

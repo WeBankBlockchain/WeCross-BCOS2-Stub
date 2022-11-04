@@ -1,7 +1,7 @@
 package com.webank.wecross.stub.bcos;
 
 import com.webank.wecross.stub.Stub;
-import org.fisco.bcos.sdk.model.CryptoType;
+import org.fisco.bcos.sdk.v3.model.CryptoType;
 
 @Stub("BCOS2.0")
 public class BCOSStubFactory extends BCOSBaseStubFactory {
@@ -19,13 +19,14 @@ public class BCOSStubFactory extends BCOSBaseStubFactory {
         System.out.println(
                 "    java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.normal.preparation.HubContractDeployment");
         System.out.println("For chain performance test, please run the command for more info:");
-        System.out.println(
-                "    Pure:    java -cp conf/:lib/*:plugin/* "
-                        + com.webank.wecross.stub.bcos.performance.hellowecross.PerformanceTest
-                                .class.getName());
-        System.out.println(
-                "    Proxy:   java -cp conf/:lib/*:plugin/* "
-                        + com.webank.wecross.stub.bcos.performance.hellowecross.proxy
-                                .PerformanceTest.class.getName());
+        //        System.out.println(
+        //                "    Pure:    java -cp conf/:lib/*:plugin/* "
+        //                        +
+        // com.webank.wecross.stub.bcos.performance.hellowecross.PerformanceTest
+        //                                .class.getName());
+        //        System.out.println(
+        //                "    Proxy:   java -cp conf/:lib/*:plugin/* "
+        //                        + com.webank.wecross.stub.bcos.performance.hellowecross.proxy
+        //                                .PerformanceTest.class.getName());
     }
 }

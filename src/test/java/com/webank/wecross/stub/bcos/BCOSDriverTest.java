@@ -34,7 +34,6 @@ import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
-import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -43,18 +42,20 @@ import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import org.apache.commons.lang3.tuple.Pair;
-import org.fisco.bcos.sdk.abi.FunctionEncoder;
-import org.fisco.bcos.sdk.abi.datatypes.Function;
-import org.fisco.bcos.sdk.abi.wrapper.ABICodecJsonWrapper;
-import org.fisco.bcos.sdk.abi.wrapper.ABIDefinition;
-import org.fisco.bcos.sdk.abi.wrapper.ABIDefinitionFactory;
-import org.fisco.bcos.sdk.abi.wrapper.ABIObject;
-import org.fisco.bcos.sdk.abi.wrapper.ABIObjectFactory;
-import org.fisco.bcos.sdk.abi.wrapper.ContractABIDefinition;
-import org.fisco.bcos.sdk.crypto.CryptoSuite;
-import org.fisco.bcos.sdk.model.CryptoType;
-import org.fisco.bcos.sdk.transaction.codec.encode.TransactionEncoderService;
-import org.fisco.bcos.sdk.transaction.model.po.RawTransaction;
+import org.fisco.bcos.sdk.jni.utilities.tx.TransactionBuilderJniObj;
+import org.fisco.bcos.sdk.jni.utilities.tx.TxPair;
+import org.fisco.bcos.sdk.v3.codec.abi.FunctionEncoder;
+import org.fisco.bcos.sdk.v3.codec.datatypes.Function;
+import org.fisco.bcos.sdk.v3.codec.wrapper.ABIDefinition;
+import org.fisco.bcos.sdk.v3.codec.wrapper.ABIDefinitionFactory;
+import org.fisco.bcos.sdk.v3.codec.wrapper.ABIObject;
+import org.fisco.bcos.sdk.v3.codec.wrapper.ABIObjectFactory;
+import org.fisco.bcos.sdk.v3.codec.wrapper.ContractABIDefinition;
+import org.fisco.bcos.sdk.v3.codec.wrapper.ContractCodecJsonWrapper;
+import org.fisco.bcos.sdk.v3.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.v3.model.CryptoType;
+import org.fisco.bcos.sdk.v3.transaction.codec.encode.TransactionEncoderService;
+import org.fisco.bcos.sdk.v3.utils.Hex;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
@@ -143,13 +144,15 @@ public class BCOSDriverTest {
 
         TransactionParams transaction =
                 new TransactionParams(
-                        request, functionEncoder.encode(function), TransactionParams.SUB_TYPE.CALL);
+                        request,
+                        Hex.toHexString(functionEncoder.encode(function)),
+                        TransactionParams.SUB_TYPE.CALL);
 
         byte[] data = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction);
 
         Pair<Boolean, TransactionRequest> booleanTransactionRequestPair =
                 driver.decodeTransactionRequest(Request.newRequest(BCOSRequestType.CALL, data));
-        assertTrue(booleanTransactionRequestPair.getKey() == true);
+        assertEquals(true, (boolean) booleanTransactionRequestPair.getKey());
         assertEquals(booleanTransactionRequestPair.getValue().getMethod(), func);
         assertEquals(booleanTransactionRequestPair.getValue().getArgs().length, params.length);
     }
@@ -162,15 +165,18 @@ public class BCOSDriverTest {
         TransactionRequest request = new TransactionRequest(func, params);
         Function function = FunctionUtility.newDefaultFunction(func, params);
 
-        RawTransaction rawTransaction =
-                SignTransaction.buildTransaction(
+        TxPair signedTransaction =
+                TransactionBuilderJniObj.createSignedTransaction(
+                        account.getCredentials().getJniKeyPair(),
+                        ClientDefaultConfig.DEFAULT_GROUP_ID,
+                        ClientDefaultConfig.DEFAULT_CHAIN_ID,
                         "0x0",
-                        BigInteger.valueOf(ClientDefaultConfig.DEFAULT_GROUP_ID),
-                        BigInteger.valueOf(ClientDefaultConfig.DEFAULT_CHAIN_ID),
-                        BigInteger.valueOf(1111),
-                        functionEncoder.encode(function));
-        String signTx =
-                transactionEncoderService.encodeAndSign(rawTransaction, account.getCredentials());
+                        Hex.toHexString(functionEncoder.encode(function)),
+                        "",
+                        1111,
+                        0);
+
+        String signTx = signedTransaction.getSignedTx();
 
         TransactionParams transaction =
                 new TransactionParams(request, signTx, TransactionParams.SUB_TYPE.SEND_TX);
@@ -180,7 +186,7 @@ public class BCOSDriverTest {
         Pair<Boolean, TransactionRequest> booleanTransactionRequestPair =
                 driver.decodeTransactionRequest(
                         Request.newRequest(BCOSRequestType.SEND_TRANSACTION, data));
-        assertTrue(booleanTransactionRequestPair.getKey() == true);
+        assertTrue(booleanTransactionRequestPair.getKey());
         assertEquals(booleanTransactionRequestPair.getValue().getMethod(), func);
         assertEquals(booleanTransactionRequestPair.getValue().getArgs().length, params.length);
     }
@@ -196,24 +202,26 @@ public class BCOSDriverTest {
         ContractABIDefinition contractABIDefinition = abiDefinitionFactory.loadABI(abi);
         ABIDefinition abiDefinition = contractABIDefinition.getFunctions().get("set").get(0);
         ABIObject inputObject = ABIObjectFactory.createInputObject(abiDefinition);
-        ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
+        ContractCodecJsonWrapper abiCodecJsonWrapper = new ContractCodecJsonWrapper();
         ABIObject encoded = abiCodecJsonWrapper.encode(inputObject, Arrays.asList(params));
 
         TransactionRequest request = new TransactionRequest(func, params);
         Function function =
                 FunctionUtility.newSendTransactionProxyFunction(
-                        "1", "1", 1, "a.b.Hello", "set(string)", encoded.encode());
+                        "1", "1", 1, "a.b.Hello", "set(string)", encoded.encode(false));
 
-        RawTransaction rawTransaction =
-                SignTransaction.buildTransaction(
+        TxPair signedTransaction =
+                TransactionBuilderJniObj.createSignedTransaction(
+                        account.getCredentials().getJniKeyPair(),
+                        ClientDefaultConfig.DEFAULT_GROUP_ID,
+                        ClientDefaultConfig.DEFAULT_CHAIN_ID,
                         "0x0",
-                        BigInteger.valueOf(ClientDefaultConfig.DEFAULT_GROUP_ID),
-                        BigInteger.valueOf(ClientDefaultConfig.DEFAULT_CHAIN_ID),
-                        BigInteger.valueOf(1111),
-                        functionEncoder.encode(function));
-        String signTx =
-                transactionEncoderService.encodeAndSign(rawTransaction, account.getCredentials());
+                        Hex.toHexString(functionEncoder.encode(function)),
+                        "",
+                        1111,
+                        0);
 
+        String signTx = signedTransaction.getSignedTx();
         TransactionParams transaction =
                 new TransactionParams(request, signTx, TransactionParams.SUB_TYPE.SEND_TX_BY_PROXY);
         transaction.setAbi(abi);
@@ -239,26 +247,26 @@ public class BCOSDriverTest {
         ContractABIDefinition contractABIDefinition = abiDefinitionFactory.loadABI(abi);
         ABIDefinition abiDefinition = contractABIDefinition.getFunctions().get("set").get(0);
         ABIObject inputObject = ABIObjectFactory.createInputObject(abiDefinition);
-        ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
+        ContractCodecJsonWrapper abiCodecJsonWrapper = new ContractCodecJsonWrapper();
         ABIObject encoded = abiCodecJsonWrapper.encode(inputObject, Arrays.asList(params));
 
         Function function =
                 FunctionUtility.newConstantCallProxyFunction(
-                        "1", "a.b.Hello", "set(string)", encoded.encode());
+                        "1", "a.b.Hello", "set(string)", encoded.encode(false));
 
         TransactionRequest request = new TransactionRequest(func, params);
 
         TransactionParams transaction =
                 new TransactionParams(
                         request,
-                        functionEncoder.encode(function),
+                        Hex.toHexString(functionEncoder.encode(function)),
                         TransactionParams.SUB_TYPE.CALL_BY_PROXY);
         transaction.setAbi(abi);
 
         byte[] data = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction);
         Pair<Boolean, TransactionRequest> booleanTransactionRequestPair =
                 driver.decodeTransactionRequest(Request.newRequest(BCOSRequestType.CALL, data));
-        assertTrue(booleanTransactionRequestPair.getKey() == true);
+        assertEquals(true, (boolean) booleanTransactionRequestPair.getKey());
         assertEquals(booleanTransactionRequestPair.getValue().getMethod(), func);
         assertEquals(booleanTransactionRequestPair.getValue().getArgs().length, params.length);
         assertEquals(booleanTransactionRequestPair.getValue().getArgs()[0], params[0]);

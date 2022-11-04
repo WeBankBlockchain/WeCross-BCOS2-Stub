@@ -7,8 +7,8 @@ import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
-import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
+import org.fisco.bcos.sdk.v3.client.protocol.response.BcosBlock;
+import org.fisco.bcos.sdk.v3.client.protocol.response.BcosBlockHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,14 +22,14 @@ public class BlockUtility {
      * @return
      */
     public static BlockHeader convertToBlockHeader(BcosBlock.Block block) throws IOException {
-        List<String> headerExtraData = block.getExtraData();
-        if (!headerExtraData.isEmpty() && (block.getNumber().longValue() != 0)) {
+        String headerExtraData = block.getExtraData();
+        if (!headerExtraData.isEmpty() && (block.getNumber() != 0)) {
             return convertToBlockHeaderWithSignature(block);
         }
         BlockHeader blockHeader = new BlockHeader();
         blockHeader.setHash(block.getHash());
-        blockHeader.setPrevHash(block.getParentHash());
-        blockHeader.setNumber(block.getNumber().longValue());
+        blockHeader.setPrevHash(block.getParentInfo().get(0).getBlockHash());
+        blockHeader.setNumber(block.getNumber());
         blockHeader.setReceiptRoot(block.getReceiptsRoot());
         blockHeader.setStateRoot(block.getStateRoot());
         blockHeader.setTransactionRoot(block.getTransactionsRoot());
@@ -44,15 +44,15 @@ public class BlockUtility {
      */
     public static BlockHeader convertToBlockHeaderWithSignature(BcosBlock.Block block)
             throws IOException {
-        List<String> headerExtraData = block.getExtraData();
+        String headerExtraData = block.getExtraData();
         BcosBlockHeader.BlockHeader bcosHeader =
                 ObjectMapperFactory.getObjectMapper()
-                        .readValue(headerExtraData.get(0), BcosBlockHeader.BlockHeader.class);
+                        .readValue(headerExtraData, BcosBlockHeader.BlockHeader.class);
 
         BCOSBlockHeader stubBlockHeader = new BCOSBlockHeader();
         stubBlockHeader.setHash(bcosHeader.getHash());
-        stubBlockHeader.setPrevHash(bcosHeader.getParentHash());
-        stubBlockHeader.setNumber(bcosHeader.getNumber().longValue());
+        stubBlockHeader.setPrevHash(bcosHeader.getParentInfo().get(0).getBlockHash());
+        stubBlockHeader.setNumber(bcosHeader.getNumber());
         stubBlockHeader.setReceiptRoot(bcosHeader.getReceiptsRoot());
         stubBlockHeader.setStateRoot(bcosHeader.getStateRoot());
         stubBlockHeader.setTransactionRoot(bcosHeader.getTransactionsRoot());

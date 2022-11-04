@@ -12,9 +12,9 @@ import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
-import org.fisco.bcos.sdk.crypto.CryptoSuite;
-import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
-import org.fisco.bcos.sdk.model.CryptoType;
+import org.fisco.bcos.sdk.v3.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.v3.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.v3.model.CryptoType;
 import org.junit.Test;
 
 public class BCOSAccountFactoryTest {

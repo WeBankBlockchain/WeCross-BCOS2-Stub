@@ -1,17 +1,14 @@
 package com.webank.wecross.stub.bcos.client;
 
-import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
-import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
-import org.fisco.bcos.sdk.model.TransactionReceipt;
-import org.fisco.bcos.sdk.model.callback.TransactionCallback;
+import org.fisco.bcos.sdk.v3.client.protocol.model.JsonTransactionResponse;
+import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
+import org.fisco.bcos.sdk.v3.model.callback.TransactionCallback;
 
 public class ClientWrapperWithNullMock extends ClientWrapperImplMock {
 
     @Override
-    public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(
-            String transactionHash) {
-        TransactionReceiptWithProof.ReceiptAndProof receiptAndProof =
-                new TransactionReceiptWithProof.ReceiptAndProof();
+    public TransactionReceipt getTransactionReceiptByHashWithProof(String transactionHash) {
+        TransactionReceipt receiptAndProof = new TransactionReceipt();
         return receiptAndProof;
     }
 
@@ -22,10 +19,8 @@ public class ClientWrapperWithNullMock extends ClientWrapperImplMock {
     }
 
     @Override
-    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(
-            String transactionHash) {
-        TransactionWithProof.TransactionAndProof transAndProof =
-                new TransactionWithProof.TransactionAndProof();
+    public JsonTransactionResponse getTransactionByHashWithProof(String transactionHash) {
+        JsonTransactionResponse transAndProof = new JsonTransactionResponse();
         return transAndProof;
     }
 }

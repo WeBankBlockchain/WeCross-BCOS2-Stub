@@ -1,6 +1,6 @@
 package com.webank.wecross.stub.bcos.preparation;
 
-import com.webank.wecross.stub.bcos.AsyncCnsService;
+import com.webank.wecross.stub.bcos.AsyncBfsService;
 import com.webank.wecross.stub.bcos.client.AbstractClientWrapper;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import java.io.File;
@@ -112,9 +112,9 @@ public class TwoPCContractDeployment {
             int fromIndex,
             int toIndex) {
         try {
-            AsyncCnsService asyncCnsService = new AsyncCnsService();
+            AsyncBfsService asyncBfsService = new AsyncBfsService();
             DeployContractHandler deployContractHandler = new DeployContractHandler();
-            deployContractHandler.setAsyncCnsService(asyncCnsService);
+            deployContractHandler.setAsyncCnsService(asyncBfsService);
 
             ProxyContract proxyContract = new ProxyContract(null, chainName, accountName);
             TwoPCContract twoPCContract =

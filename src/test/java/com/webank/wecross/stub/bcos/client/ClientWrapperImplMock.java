@@ -5,13 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
 import java.math.BigInteger;
-import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
-import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
-import org.fisco.bcos.sdk.client.protocol.response.Call;
-import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
-import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
-import org.fisco.bcos.sdk.model.TransactionReceipt;
-import org.fisco.bcos.sdk.model.callback.TransactionCallback;
+import org.fisco.bcos.sdk.v3.client.protocol.model.JsonTransactionResponse;
+import org.fisco.bcos.sdk.v3.client.protocol.response.BcosBlock;
+import org.fisco.bcos.sdk.v3.client.protocol.response.BcosBlockHeader;
+import org.fisco.bcos.sdk.v3.client.protocol.response.Call;
+import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
+import org.fisco.bcos.sdk.v3.model.callback.TransactionCallback;
+import org.fisco.bcos.sdk.v3.utils.Hex;
 
 public class ClientWrapperImplMock extends AbstractClientWrapper {
     public ClientWrapperImplMock() {
@@ -55,8 +55,8 @@ public class ClientWrapperImplMock extends AbstractClientWrapper {
     }
 
     @Override
-    public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(
-            String transactionHash) throws JsonProcessingException {
+    public TransactionReceipt getTransactionReceiptByHashWithProof(String transactionHash)
+            throws JsonProcessingException {
 
         String blockJson =
                 "{\"dbHash\":\"0x70e6fa150a77f34c71ad9e9923734a740e0bd0a3eeb3cf9a804c43e6012b16bd\",\"extraData\":[],\"gasLimit\":\"0x0\",\"gasUsed\":\"0x0\",\"hash\":\"0xd9e9241be0853aacc88b1ff921eb598af0080a100514e192e9a449f577b3a2ef\",\"logsBloom\":\"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"number\":\"0x9\",\"parentHash\":\"0x4ee40e592d4f7243faba04d69d6c8e158c1e2663398484d83bf27827bdbb3117\",\"receiptsRoot\":\"0xe6caae405e8ae50737cd7a39c9d1cba83335594bf180af40538c970b87ae7bf8\",\"sealer\":\"0x1\",\"sealerList\":[\"2ddbc04bea0d57eeb09c2828e3eeca6e392f5d25515210eb4f338aae49233a0fdfcb5f7f6229830729a42c518118645a0e936f353e2795d966494fd494af124d\",\"8d08802246badaa9bf3eed5ba56d6c4b6811dbc0c22dd3aa17ddc566e38470a1fd078eab763c6546f7946e71279c1e466540433ac6b1463f6a60dcd85d2b7004\",\"924d8a3da3ec715a7dda5f860c53e1d1706bc6c7033e18cfa0a093ec07114fda05236a9951dc6fd88baaa1af80490627beb7db826072ee49dca9335190414428\",\"a53da8b4819cd99afac393b961078bd680eb28311d941e5f051b82ebaf6e916c51655dbf6237aa2598d7a364e8714343b1d28109de98f2c7dcdcda60621651c9\"],\"stateRoot\":\"0x70e6fa150a77f34c71ad9e9923734a740e0bd0a3eeb3cf9a804c43e6012b16bd\",\"timestamp\":\"0x17152c9a056\",\"transactions\":[\"0x8b3946912d1133f9fb0722a7b607db2456d468386c2e86b035e81ef91d94eb90\"],\"transactionsRoot\":\"0x1c816600c113c0639c88ea96d269645bb52fe5a73f64e3496864d2ad2ceec6c0\"}";
@@ -75,23 +75,19 @@ public class ClientWrapperImplMock extends AbstractClientWrapper {
 
         BcosBlock.Block block0 =
                 ObjectMapperFactory.getObjectMapper().readValue(blockJson0, BcosBlock.Block.class);
-        TransactionWithProof.TransactionAndProof transAndProof0 =
+        JsonTransactionResponse transAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
-                        .readValue(
-                                transactionAndProofJson0,
-                                TransactionWithProof.TransactionAndProof.class);
-        TransactionReceiptWithProof.ReceiptAndProof receiptAndProof0 =
+                        .readValue(transactionAndProofJson0, JsonTransactionResponse.class);
+        TransactionReceipt receiptAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
-                        .readValue(
-                                transactionReceiptAndProofJson0,
-                                TransactionReceiptWithProof.ReceiptAndProof.class);
+                        .readValue(transactionReceiptAndProofJson0, TransactionReceipt.class);
 
         return receiptAndProof0;
     }
 
     @Override
-    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(
-            String transactionHash) throws JsonProcessingException {
+    public JsonTransactionResponse getTransactionByHashWithProof(String transactionHash)
+            throws JsonProcessingException {
         String blockJson =
                 "{\"dbHash\":\"0x70e6fa150a77f34c71ad9e9923734a740e0bd0a3eeb3cf9a804c43e6012b16bd\",\"extraData\":[],\"gasLimit\":\"0x0\",\"gasUsed\":\"0x0\",\"hash\":\"0xd9e9241be0853aacc88b1ff921eb598af0080a100514e192e9a449f577b3a2ef\",\"logsBloom\":\"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"number\":\"0x9\",\"parentHash\":\"0x4ee40e592d4f7243faba04d69d6c8e158c1e2663398484d83bf27827bdbb3117\",\"receiptsRoot\":\"0xe6caae405e8ae50737cd7a39c9d1cba83335594bf180af40538c970b87ae7bf8\",\"sealer\":\"0x1\",\"sealerList\":[\"2ddbc04bea0d57eeb09c2828e3eeca6e392f5d25515210eb4f338aae49233a0fdfcb5f7f6229830729a42c518118645a0e936f353e2795d966494fd494af124d\",\"8d08802246badaa9bf3eed5ba56d6c4b6811dbc0c22dd3aa17ddc566e38470a1fd078eab763c6546f7946e71279c1e466540433ac6b1463f6a60dcd85d2b7004\",\"924d8a3da3ec715a7dda5f860c53e1d1706bc6c7033e18cfa0a093ec07114fda05236a9951dc6fd88baaa1af80490627beb7db826072ee49dca9335190414428\",\"a53da8b4819cd99afac393b961078bd680eb28311d941e5f051b82ebaf6e916c51655dbf6237aa2598d7a364e8714343b1d28109de98f2c7dcdcda60621651c9\"],\"stateRoot\":\"0x70e6fa150a77f34c71ad9e9923734a740e0bd0a3eeb3cf9a804c43e6012b16bd\",\"timestamp\":\"0x17152c9a056\",\"transactions\":[\"0x8b3946912d1133f9fb0722a7b607db2456d468386c2e86b035e81ef91d94eb90\"],\"transactionsRoot\":\"0x1c816600c113c0639c88ea96d269645bb52fe5a73f64e3496864d2ad2ceec6c0\"}";
         String transactionAndProofJson =
@@ -109,25 +105,18 @@ public class ClientWrapperImplMock extends AbstractClientWrapper {
 
         BcosBlock.Block block0 =
                 ObjectMapperFactory.getObjectMapper().readValue(blockJson0, BcosBlock.Block.class);
-        TransactionWithProof.TransactionAndProof transAndProof0 =
+        JsonTransactionResponse transAndProof0 =
                 ObjectMapperFactory.getObjectMapper()
-                        .readValue(
-                                transactionAndProofJson0,
-                                TransactionWithProof.TransactionAndProof.class);
-        TransactionReceiptWithProof.ReceiptAndProof receiptAndProof0 =
-                ObjectMapperFactory.getObjectMapper()
-                        .readValue(
-                                transactionReceiptAndProofJson0,
-                                TransactionReceiptWithProof.ReceiptAndProof.class);
+                        .readValue(transactionAndProofJson0, JsonTransactionResponse.class);
         return transAndProof0;
     }
 
     @Override
-    public Call.CallOutput call(String accountAddress, String contractAddress, String data) {
+    public Call.CallOutput call(String accountAddress, String contractAddress, byte[] data) {
         Call.CallOutput callOutput = new Call.CallOutput();
-        callOutput.setCurrentBlockNumber("0x1111");
-        callOutput.setStatus("0x0");
-        callOutput.setOutput(data.substring(10));
+        callOutput.setBlockNumber(1111);
+        callOutput.setStatus(0);
+        callOutput.setOutput(Hex.toHexStringWithPrefix(data).substring(10));
         return callOutput;
     }
 }

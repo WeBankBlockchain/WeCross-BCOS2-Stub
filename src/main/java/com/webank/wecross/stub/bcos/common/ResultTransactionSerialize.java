@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import java.io.IOException;
-import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
+import org.fisco.bcos.sdk.v3.client.protocol.response.BcosBlock;
 
 public class ResultTransactionSerialize extends JsonSerializer<BcosBlock.TransactionResult> {
 

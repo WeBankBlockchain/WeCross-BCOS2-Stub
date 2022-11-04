@@ -15,19 +15,19 @@ public class BCOSStubConfigParserTest {
                 new BCOSStubConfigParser("./", "stub-sample-ut.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
         assertEquals(bcosStubConfig.getType(), "BCOS-UT");
-        BCOSStubConfig.ChannelService channelService = bcosStubConfig.getChannelService();
-        assertTrue(Objects.nonNull(channelService.getChain()));
-        assertEquals(channelService.getChain().getChainID(), 123);
-        assertEquals(channelService.getChain().getGroupID(), 111);
-        assertEquals(channelService.getTimeout(), 111100);
-        assertEquals(channelService.getCaCert(), "./" + File.separator + "ca.crt");
-        assertEquals(channelService.getSslCert(), "./" + File.separator + "sdk.crt");
-        assertEquals(channelService.getSslKey(), "./" + File.separator + "sdk.key");
+        BCOSStubConfig.ChainRpcService chainRpcService = bcosStubConfig.getChannelService();
+        assertTrue(Objects.nonNull(chainRpcService.getChain()));
+        assertEquals(chainRpcService.getChain().getChainID(), 123);
+        assertEquals(chainRpcService.getChain().getGroupID(), 111);
+        assertEquals(chainRpcService.getTimeout(), 111100);
+        assertEquals(chainRpcService.getCaCert(), "./" + File.separator + "ca.crt");
+        assertEquals(chainRpcService.getSslCert(), "./" + File.separator + "sdk.crt");
+        assertEquals(chainRpcService.getSslKey(), "./" + File.separator + "sdk.key");
 
-        assertEquals(channelService.getConnectionsStr().size(), 1);
+        assertEquals(chainRpcService.getConnectionsStr().size(), 1);
 
-        assertEquals(channelService.getThreadNum(), 8);
-        assertEquals(channelService.getQueueCapacity(), 5000);
+        assertEquals(chainRpcService.getThreadNum(), 8);
+        assertEquals(chainRpcService.getQueueCapacity(), 5000);
 
         assertEquals(bcosStubConfig.getResources().size(), 2);
         assertEquals(bcosStubConfig.getResources().get(0).getName(), "HelloWeCross");

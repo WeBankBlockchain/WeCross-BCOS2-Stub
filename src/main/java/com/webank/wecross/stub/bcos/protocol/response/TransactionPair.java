@@ -1,7 +1,7 @@
 package com.webank.wecross.stub.bcos.protocol.response;
 
-import org.fisco.bcos.sdk.client.protocol.model.JsonTransactionResponse;
-import org.fisco.bcos.sdk.model.TransactionReceipt;
+import org.fisco.bcos.sdk.v3.client.protocol.model.JsonTransactionResponse;
+import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
 
 public class TransactionPair {
     private TransactionReceipt receipt;

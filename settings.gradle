@@ -8,5 +8,5 @@ pluginManagement {
     }
 }
 */
-rootProject.name = 'bcos2-stub'
+rootProject.name = 'bcos3-stub'
 
