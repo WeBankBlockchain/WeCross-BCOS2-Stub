@@ -3,8 +3,8 @@
     type = 'BCOS-UT' # BCOS
 
 [chain]
-    groupId = 111 # default 1
-    chainId = 123 # default 1
+    groupId = "group0" # default group0
+    chainId = "chain0" # default chain0
 
 [chainRpcService]
     caCert = 'ca.crt'

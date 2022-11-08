@@ -63,7 +63,7 @@ public class BCOSBaseStubFactory implements StubFactory {
     }
 
     /**
-     * The stub type, BCOS2.0 or GM_BCOS2.0
+     * The stub type, BCOS3.0 or GM_BCOS3.0
      *
      * @return
      */
@@ -232,7 +232,7 @@ public class BCOSBaseStubFactory implements StubFactory {
                             + "'\n"
                             + "    type = '"
                             + getStubType()
-                            + "' # BCOS2.0 or GM_BCOS2.0\n"
+                            + "' # BCOS3.0 or GM_BCOS3.0\n"
                             + "\n"
                             + "[chain]\n"
                             + "    groupId = 1 # default 1\n"
@@ -242,7 +242,7 @@ public class BCOSBaseStubFactory implements StubFactory {
                             + "    caCert = 'ca.crt'\n"
                             + "    sslCert = 'sdk.crt'\n"
                             + "    sslKey = 'sdk.key'\n"
-                            + (("BCOS2.0".equals(getStubType()))
+                            + (("BCOS3.0".equals(getStubType()))
                                     ? "    gmConnectEnable = false\n"
                                     : "    gmConnectEnable = true\n")
                             + "    gmCaCert = 'gm/gmca.crt'\n"

@@ -111,13 +111,11 @@ public class BCOSDriverTest {
                 .getProperties()
                 .put(
                         "VERIFIER",
-                        "{\"chainType\":\"BCOS2.0\",\"pubKey\":["
-                                + "\"11e1be251ca08bb44f36fdeedfaeca40894ff80dfd80084607a75509edeaf2a9c6fee914f1e9efda571611cf4575a1577957edfd2baa9386bd63eb034868625f\","
-                                + "\"78a313b426c3de3267d72b53c044fa9fe70c2a27a00af7fea4a549a7d65210ed90512fc92b6194c14766366d434235c794289d66deff0796f15228e0e14a9191\","
-                                + "\"95b7ff064f91de76598f90bc059bec1834f0d9eeb0d05e1086d49af1f9c2f321062d011ee8b0df7644bd54c4f9ca3d8515a3129bbb9d0df8287c9fa69552887e\","
-                                + "\"b8acb51b9fe84f88d670646be36f31c52e67544ce56faf3dc8ea4cf1b0ebff0864c6b218fdcd9cf9891ebd414a995847911bd26a770f429300085f37e1131f36\"]}");
+                        "{\"chainType\":\"BCOS3.0\",\"pubKey\":["
+                                + "\"ffa9aa23918afcfa5c20a07177e83731c46f153b3ce33b98cb3c4b61c767d06296ef9c1b7f7c6737c3077a6ec61c1a86d665475629cecd1c209b3f9a3b8688dc\","
+                                + "\"97af395f31cd52868162c790c2248e23f65c85a64cd0581d323515f6afffc0138279292a55f7bd706f8f1602f142b12a3407a45334eb0cf7daeb064dcec69369\"]}");
 
-        connection.getProperties().put(BCOSConstant.BCOS_STUB_TYPE, "BCOS2.0");
+        connection.getProperties().put(BCOSConstant.BCOS_STUB_TYPE, "BCOS3.0");
         exceptionConnection =
                 BCOSConnectionFactory.build(bcosStubConfig, new ClientWrapperWithExceptionMock());
         nonExistConnection =
@@ -309,19 +307,19 @@ public class BCOSDriverTest {
                     BlockHeader blockHeader = block.getBlockHeader();
                     assertEquals(
                             blockHeader.getHash(),
-                            "0x99576e7567d258bd6426ddaf953ec0c953778b2f09a078423103c6555aa4362d");
+                            "0xc403e7f3255c7822e86075c1b97c4de359a511030794af8f8c74692e1b494e03");
                     assertEquals(
                             blockHeader.getPrevHash(),
-                            "0x64ba7bf5c6b5a83854774475bf8511d5e9bb38d8a962a859b52aa9c9fba0c685");
+                            "0x84a1387f18dc03ee329050715819566d8962225b8cee25ce5db5f2d863f3ec3a");
                     assertEquals(
                             blockHeader.getReceiptRoot(),
-                            "0x049389563053748a0fd2b256260b9e8c76a427b543bee18f3a221d80d1553da8");
+                            "0x121775bcc0ef53db7fd984d012d7a855990bd873f493564e5de0b3b43745e297");
                     assertEquals(
                             blockHeader.getStateRoot(),
-                            "0xce8a92c9311e9e0b77842c86adf8fcf91cbab8fb5daefc85b21f501ca8b1f682");
+                            "0x71eb54a4996de36cb36ba52136f9a2e87f6c40627b3ab9c87ca9fb641073f013");
                     assertEquals(
                             blockHeader.getTransactionRoot(),
-                            "0xb563f70188512a085b5607cac0c35480336a566de736c83410a062c9acc785ad");
+                            "0xaddb42e1db5ef2625c610506b46c745d2418263463b5beb537cf5c10e8d387dd");
                 });
     }
 
@@ -346,19 +344,19 @@ public class BCOSDriverTest {
                     assertTrue(!block.transactionsHashes.isEmpty());
                     assertEquals(
                             blockHeader.getHash(),
-                            "0x99576e7567d258bd6426ddaf953ec0c953778b2f09a078423103c6555aa4362d");
+                            "0xc403e7f3255c7822e86075c1b97c4de359a511030794af8f8c74692e1b494e03");
                     assertEquals(
                             blockHeader.getPrevHash(),
-                            "0x64ba7bf5c6b5a83854774475bf8511d5e9bb38d8a962a859b52aa9c9fba0c685");
+                            "0x84a1387f18dc03ee329050715819566d8962225b8cee25ce5db5f2d863f3ec3a");
                     assertEquals(
                             blockHeader.getReceiptRoot(),
-                            "0x049389563053748a0fd2b256260b9e8c76a427b543bee18f3a221d80d1553da8");
+                            "0x121775bcc0ef53db7fd984d012d7a855990bd873f493564e5de0b3b43745e297");
                     assertEquals(
                             blockHeader.getStateRoot(),
-                            "0xce8a92c9311e9e0b77842c86adf8fcf91cbab8fb5daefc85b21f501ca8b1f682");
+                            "0x71eb54a4996de36cb36ba52136f9a2e87f6c40627b3ab9c87ca9fb641073f013");
                     assertEquals(
                             blockHeader.getTransactionRoot(),
-                            "0xb563f70188512a085b5607cac0c35480336a566de736c83410a062c9acc785ad");
+                            "0xaddb42e1db5ef2625c610506b46c745d2418263463b5beb537cf5c10e8d387dd");
                 });
     }
 

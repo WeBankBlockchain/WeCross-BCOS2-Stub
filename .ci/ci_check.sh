@@ -53,7 +53,7 @@ bash nodes/127.0.0.1/start_all.sh
 mkdir -p src/integTest/resources/chains/bcos
 cp -r nodes/127.0.0.1/sdk/* src/integTest/resources/chains/bcos
 cp src/test/resources/stub.toml src/integTest/resources/chains/bcos/
-sed -i.bak 's/BCOS2/GM_BCOS2/g' src/integTest/resources/chains/bcos/stub.toml
+sed -i.bak 's/BCOS3/GM_BCOS3/g' src/integTest/resources/chains/bcos/stub.toml
 
 cat src/integTest/resources/chains/bcos/stub.toml
 mkdir -p src/integTest/resources/accounts
@@ -87,7 +87,7 @@ bash nodes/127.0.0.1/start_all.sh
 mkdir -p src/integTest/resources/chains/bcos
 cp -r nodes/127.0.0.1/sdk/* src/integTest/resources/chains/bcos
 cp src/test/resources/stub.toml src/integTest/resources/chains/bcos/
-sed -i.bak -e 's/BCOS2/GM_BCOS2/g' -e 's/gmConnectEnable = false/gmConnectEnable = true/g' src/integTest/resources/chains/bcos/stub.toml
+sed -i.bak -e 's/BCOS3/GM_BCOS3/g' -e 's/gmConnectEnable = false/gmConnectEnable = true/g' src/integTest/resources/chains/bcos/stub.toml
 
 cat src/integTest/resources/chains/bcos/stub.toml
 mkdir -p src/integTest/resources/accounts

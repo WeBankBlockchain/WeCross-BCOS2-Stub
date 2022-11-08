@@ -3,16 +3,16 @@ package com.webank.wecross.stub.bcos;
 import com.webank.wecross.stub.Stub;
 import org.fisco.bcos.sdk.v3.model.CryptoType;
 
-@Stub("GM_BCOS2.0")
+@Stub("GM_BCOS3.0")
 public class BCOSGMStubFactory extends BCOSBaseStubFactory {
 
     public BCOSGMStubFactory() {
-        super(CryptoType.SM_TYPE, "sm2p256v1", "GM_BCOS2.0");
+        super(CryptoType.SM_TYPE, "sm2p256v1", "GM_BCOS3.0");
     }
 
     public static void main(String[] args) throws Exception {
         System.out.println(
-                "This is BCOS2.0 Guomi Stub Plugin. Please copy this file to router/plugin/");
+                "This is BCOS3.0 Guomi Stub Plugin. Please copy this file to router/plugin/");
         System.out.println("For deploy WeCrossProxy:");
         System.out.println(
                 "    java -cp conf/:lib/*:plugin/* com.webank.wecross.stub.bcos.guomi.preparation.ProxyContractDeployment");

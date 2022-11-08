@@ -9,11 +9,9 @@ import org.fisco.bcos.sdk.v3.client.protocol.response.Call;
 import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
 import org.fisco.bcos.sdk.v3.model.callback.TransactionCallback;
 
-public class ClientWrapperWithExceptionMock extends AbstractClientWrapper {
+public class ClientWrapperWithExceptionMock extends ClientWrapperImplMock {
 
-    public ClientWrapperWithExceptionMock() {
-        super(null);
-    }
+    public ClientWrapperWithExceptionMock() {}
 
     @Override
     public BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException {

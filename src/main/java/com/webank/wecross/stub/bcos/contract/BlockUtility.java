@@ -23,7 +23,9 @@ public class BlockUtility {
      */
     public static BlockHeader convertToBlockHeader(BcosBlock.Block block) throws IOException {
         String headerExtraData = block.getExtraData();
-        if (!headerExtraData.isEmpty() && (block.getNumber() != 0)) {
+        if (!headerExtraData.isEmpty()
+                && !"0x".equalsIgnoreCase(headerExtraData)
+                && (block.getNumber() != 0)) {
             return convertToBlockHeaderWithSignature(block);
         }
         BlockHeader blockHeader = new BlockHeader();

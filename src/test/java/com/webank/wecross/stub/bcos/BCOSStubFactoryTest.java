@@ -37,7 +37,7 @@ public class BCOSStubFactoryTest {
         assertEquals(
                 bcosAccount.getCredentials().getAddress(),
                 "0x4c9e341a015ce8200060a028ce45dfea8bf33e15");
-        assertEquals(bcosAccount.getType(), "BCOS2.0");
+        assertEquals(bcosAccount.getType(), "BCOS3.0");
         assertEquals(bcosAccount.getName(), "bcos");
     }
 
@@ -50,10 +50,10 @@ public class BCOSStubFactoryTest {
     @Test
     public void BCOSSubFactoryTypeTest() {
         System.out.println(bcosSubFactory.getStubType());
-        assertTrue(bcosSubFactory.getStubType().equals("BCOS2.0"));
+        assertTrue(bcosSubFactory.getStubType().equals("BCOS3.0"));
         assertTrue(bcosSubFactory.getAlg().equals("secp256k1"));
 
-        // assertTrue(bcosgmStubFactory.getStubType().equals("GM_BCOS2.0"));
+        // assertTrue(bcosgmStubFactory.getStubType().equals("GM_BCOS3.0"));
         // assertTrue(bcosgmStubFactory.getAlg().equals("sm2p256v1"));
     }
 }

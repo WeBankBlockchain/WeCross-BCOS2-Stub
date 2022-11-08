@@ -20,7 +20,7 @@ public class ClientWrapperImpl extends AbstractClientWrapper {
     @Override
     public BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException {
         BcosBlock blockByNumber =
-                getClient().getBlockByNumber(BigInteger.valueOf(blockNumber), false, false);
+                getClient().getBlockByNumber(BigInteger.valueOf(blockNumber), false, true);
         return blockByNumber.getBlock();
     }
 

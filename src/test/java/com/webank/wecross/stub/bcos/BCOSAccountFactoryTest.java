@@ -63,6 +63,6 @@ public class BCOSAccountFactoryTest {
 
         assertEquals(bcosAccount0.getName(), "bcos");
 
-        assertEquals(bcosAccount0.getType(), "BCOS2.0");
+        assertEquals(bcosAccount0.getType(), "BCOS3.0");
     }
 }

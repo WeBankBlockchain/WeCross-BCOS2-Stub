@@ -59,8 +59,8 @@ public class ProxyContract {
 
         BCOSBaseStubFactory bcosBaseStubFactory =
                 isGMStub
-                        ? new BCOSBaseStubFactory(CryptoType.SM_TYPE, "sm2p256v1", "GM_BCOS2.0")
-                        : new BCOSBaseStubFactory(CryptoType.ECDSA_TYPE, "secp256k1", "BCOS2.0");
+                        ? new BCOSBaseStubFactory(CryptoType.SM_TYPE, "sm2p256v1", "GM_BCOS3.0")
+                        : new BCOSBaseStubFactory(CryptoType.ECDSA_TYPE, "secp256k1", "BCOS3.0");
 
         account =
                 (BCOSAccount)
@@ -153,13 +153,13 @@ public class ProxyContract {
         // chainId
         String chainID = connection.getProperties().get(BCOSConstant.BCOS_CHAIN_ID);
 
-        BigInteger blockNumber = clientWrapper.getBlockNumber();
+        BigInteger blockLimit = client.getBlockLimit();
 
         logger.info(
-                " groupID: {}, chainID: {}, blockNumber: {}, accountAddress: {}, bin: {}, abi: {}",
+                " groupID: {}, chainID: {}, blockLimit: {}, accountAddress: {}, bin: {}, abi: {}",
                 chainID,
                 groupID,
-                blockNumber,
+                blockLimit,
                 account.getCredentials().getAddress(),
                 metadata.bin,
                 metadata.abi);
@@ -172,9 +172,9 @@ public class ProxyContract {
                         groupID,
                         chainID,
                         "",
+                        metadata.bin,
                         metadata.abi,
-                        metadata.abi,
-                        blockNumber.longValue(),
+                        blockLimit.longValue(),
                         0);
         String signTx = signedTransaction.getSignedTx();
 
@@ -201,12 +201,11 @@ public class ProxyContract {
                     }
                 });
 
-        String contractAddress = completableFuture.get(10, TimeUnit.SECONDS);
+        String contractAddress = completableFuture.get(1000, TimeUnit.SECONDS);
         if (Objects.isNull(contractAddress)) {
             throw new Exception("Failed to deploy proxy contract.");
         }
 
-        BfsServiceWrapper bfsServiceWrapper = new BfsServiceWrapper();
         BFSService bfsService = new BFSService(client, credentials.generateKeyPair());
         RetCode retCode = bfsService.link(linkName, "latest", contractAddress, metadata.abi);
 

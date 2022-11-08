@@ -17,8 +17,8 @@ public class BCOSStubConfigParserTest {
         assertEquals(bcosStubConfig.getType(), "BCOS-UT");
         BCOSStubConfig.ChainRpcService chainRpcService = bcosStubConfig.getChannelService();
         assertTrue(Objects.nonNull(chainRpcService.getChain()));
-        assertEquals(chainRpcService.getChain().getChainID(), 123);
-        assertEquals(chainRpcService.getChain().getGroupID(), 111);
+        assertEquals(chainRpcService.getChain().getChainID(), "chain0");
+        assertEquals(chainRpcService.getChain().getGroupID(), "group0");
         assertEquals(chainRpcService.getTimeout(), 111100);
         assertEquals(chainRpcService.getCaCert(), "./" + File.separator + "ca.crt");
         assertEquals(chainRpcService.getSslCert(), "./" + File.separator + "sdk.crt");

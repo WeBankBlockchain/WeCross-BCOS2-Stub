@@ -11,13 +11,11 @@ import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.bcos.AsyncBfsService;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
-import com.webank.wecross.stub.bcos.preparation.BfsServiceWrapper;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 import org.fisco.bcos.sdk.v3.codec.wrapper.ABIDefinition;
@@ -29,7 +27,6 @@ import org.fisco.bcos.sdk.v3.codec.wrapper.ContractCodecJsonWrapper;
 import org.fisco.bcos.sdk.v3.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.v3.model.CryptoType;
 import org.fisco.bcos.sdk.v3.utils.Hex;
-import org.fisco.bcos.sdk.v3.utils.Numeric;
 import org.fisco.solc.compiler.CompilationResult;
 import org.fisco.solc.compiler.SolidityCompiler;
 import org.slf4j.Logger;
@@ -84,15 +81,6 @@ public class DeployContractHandler implements CommandHandler {
         String cnsName = (String) args[0];
         String sourceContent = (String) args[1];
         String className = (String) args[2];
-        String version = (String) args[3];
-
-        /* Parameter calibration */
-        if (version.length() > BfsServiceWrapper.MAX_VERSION_LENGTH) {
-            callback.onResponse(
-                    new Exception("The length of version field must be less than or equal to 40"),
-                    null);
-            return;
-        }
 
         Driver driver = getAsyncCnsService().getBcosDriver();
         /* constructor params */
@@ -195,7 +183,6 @@ public class DeployContractHandler implements CommandHandler {
 
         deployContractAndRegisterLink(
                 path,
-                version,
                 metadata.bin + Hex.toHexString(paramsABI),
                 metadata.abi,
                 account,
@@ -219,7 +206,6 @@ public class DeployContractHandler implements CommandHandler {
 
     private void deployContractAndRegisterLink(
             Path path,
-            String version,
             String bin,
             String abi,
             Account account,
@@ -232,13 +218,13 @@ public class DeployContractHandler implements CommandHandler {
         proxyPath.setResource(BCOSConstant.BCOS_PROXY_NAME);
 
         /* Binary data needs to be base64 encoded */
-        String base64Bin = Base64.getEncoder().encodeToString(Numeric.hexStringToByteArray(bin));
+        //        String base64Bin =
+        // Base64.getEncoder().encodeToString(Numeric.hexStringToByteArray(bin));
 
         TransactionRequest transactionRequest =
                 new TransactionRequest(
                         BCOSConstant.PROXY_METHOD_DEPLOY,
-                        Arrays.asList(path.toString(), version, base64Bin, abi)
-                                .toArray(new String[0]));
+                        Arrays.asList(path.toString(), bin, abi).toArray(new String[0]));
 
         TransactionContext transactionContext =
                 new TransactionContext(account, proxyPath, new ResourceInfo(), blockManager);
@@ -265,9 +251,8 @@ public class DeployContractHandler implements CommandHandler {
                     }
 
                     logger.info(
-                            " deployAndRegisterLink successfully, name: {}, version: {}, res: {} ",
+                            " deployAndRegisterLink successfully, name: {}, res: {} ",
                             path.getResource(),
-                            version,
                             res);
 
                     asyncBfsService.addAbiToCache(path.getResource(), abi);

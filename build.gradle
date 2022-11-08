@@ -8,7 +8,7 @@ plugins {
 
     id 'org.ajoberstar.grgit' version '4.0.1'
     id 'com.github.sherter.google-java-format' version '0.8'
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
 }
 
 apply plugin: 'com.github.johnrengelman.shadow'
@@ -94,6 +94,7 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.slf4j:slf4j-log4j12:2.0.3'
     testImplementation 'org.springframework.boot:spring-boot-starter-test:2.7.5'
+    testImplementation 'org.mockito:mockito-core:4.8.0'
 
     integTestImplementation 'junit:junit:4.13.2'
     integTestImplementation 'org.slf4j:slf4j-log4j12:2.0.3'

@@ -73,8 +73,9 @@ public class FunctionUtility {
                 funcName,
                 Arrays.asList(
                         (0 == params.length)
-                                ? DynamicArray.empty("string[]")
+                                ? new DynamicArray<>(Utf8String.class, Collections.emptyList())
                                 : new DynamicArray<>(
+                                        Utf8String.class,
                                         Utils.typeMap(Arrays.asList(params), Utf8String.class))),
                 abiTypeReferenceOutputs);
     }
@@ -325,16 +326,16 @@ public class FunctionUtility {
      * @return
      */
     public static String[] decodeDefaultInput(String input) {
-        if (Objects.isNull(input) || input.length() < MethodIDWithHexPrefixLength) {
+        if (Objects.isNull(input) || input.length() < MethodIDLength) {
             return null;
         }
 
         // function funcName() public returns(string[])
-        if (input.length() == MethodIDWithHexPrefixLength) {
-            return null;
+        if (input.length() == MethodIDLength) {
+            return new String[0];
         }
 
-        return decodeDefaultOutput(input.substring(MethodIDWithHexPrefixLength));
+        return decodeDefaultOutput(input.substring(MethodIDLength));
     }
 
     /**
@@ -358,7 +359,7 @@ public class FunctionUtility {
      * @return
      */
     public static String[] decodeDefaultOutput(String output) {
-        if (Objects.isNull(output) || output.length() < MethodIDWithHexPrefixLength) {
+        if (Objects.isNull(output) || output.length() < MethodIDLength) {
             return null;
         }
 
@@ -371,7 +372,7 @@ public class FunctionUtility {
     }
 
     public static String decodeOutputAsString(String output) {
-        if (Objects.isNull(output) || output.length() < MethodIDWithHexPrefixLength) {
+        if (Objects.isNull(output) || output.length() < MethodIDLength) {
             return null;
         }
 

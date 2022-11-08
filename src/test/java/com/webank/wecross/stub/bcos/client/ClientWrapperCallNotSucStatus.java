@@ -9,7 +9,7 @@ public class ClientWrapperCallNotSucStatus extends ClientWrapperImplMock {
         Call.CallOutput callOutput = new Call.CallOutput();
         callOutput.setBlockNumber(1111);
         callOutput.setStatus(16);
-        callOutput.setOutput(Hex.toHexStringWithPrefix(data).substring(10));
+        callOutput.setOutput(Hex.toHexString(data).substring(8));
         return callOutput;
     }
 }

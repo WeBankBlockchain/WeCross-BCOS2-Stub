@@ -58,8 +58,8 @@ public class HubContract {
 
         BCOSBaseStubFactory bcosBaseStubFactory =
                 isGMStub
-                        ? new BCOSBaseStubFactory(CryptoType.SM_TYPE, "sm2p256v1", "GM_BCOS2.0")
-                        : new BCOSBaseStubFactory(CryptoType.ECDSA_TYPE, "secp256k1", "BCOS2.0");
+                        ? new BCOSBaseStubFactory(CryptoType.SM_TYPE, "sm2p256v1", "GM_BCOS3.0")
+                        : new BCOSBaseStubFactory(CryptoType.ECDSA_TYPE, "secp256k1", "BCOS3.0");
 
         AbstractClientWrapper clientWrapper =
                 ClientWrapperFactory.createClientWrapperInstance(bcosStubConfig);
@@ -146,13 +146,13 @@ public class HubContract {
         // chainId
         String chainID = connection.getProperties().get(BCOSConstant.BCOS_CHAIN_ID);
 
-        BigInteger blockNumber = clientWrapper.getBlockNumber();
+        BigInteger blockLimit = client.getBlockLimit();
 
         logger.info(
-                " groupID: {}, chainID: {}, blockNumber: {}, accountAddress: {}, bin: {}, abi: {}",
+                " groupID: {}, chainID: {}, blockLimit: {}, accountAddress: {}, bin: {}, abi: {}",
                 chainID,
                 groupID,
-                blockNumber,
+                blockLimit,
                 account.getCredentials().getAddress(),
                 metadata.bin,
                 metadata.abi);
@@ -167,7 +167,7 @@ public class HubContract {
                         "",
                         metadata.abi,
                         metadata.abi,
-                        blockNumber.longValue(),
+                        blockLimit.longValue(),
                         0);
         String signTx = signedTransaction.getSignedTx();
 
