@@ -35,6 +35,7 @@ import com.webank.wecross.stub.bcos.uaproof.Signer;
 import com.webank.wecross.stub.bcos.verify.BlockHeaderValidation;
 import com.webank.wecross.stub.bcos.verify.MerkleValidation;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -672,8 +673,7 @@ public class BCOSDriver implements Driver {
                                     path,
                                     abi);
                         }
-                        sendTxWithEncodedRequest(
-                                context, connection, callback, functions, req);
+                        sendTxWithEncodedRequest(context, connection, callback, functions, req);
 
                     } catch (BCOSStubException e) {
                         logger.warn(" e: ", e);
@@ -986,12 +986,12 @@ public class BCOSDriver implements Driver {
             String proxyInput = receipt.getInput();
             String proxyOutput = receipt.getOutput();
             if (proxyInput.startsWith(
-                    Hex.toHexString(
+                    Hex.toHexStringWithPrefix(
                             functionEncoder.buildMethodId(FunctionUtility.ProxySendTXMethod)))) {
                 Tuple3<String, String, byte[]> proxyResult =
                         FunctionUtility.getSendTransactionProxyWithoutTxIdFunctionInput(proxyInput);
                 resource = proxyResult.getValue2();
-                input = Numeric.toHexString(proxyResult.getValue3());
+                input = Hex.toHexString(proxyResult.getValue3());
                 methodId = input.substring(0, FunctionUtility.MethodIDLength);
                 input = input.substring(FunctionUtility.MethodIDLength);
 
@@ -999,7 +999,7 @@ public class BCOSDriver implements Driver {
                     logger.debug("  resource: {}, methodId: {}", resource, methodId);
                 }
             } else if (proxyInput.startsWith(
-                    Hex.toHexString(
+                    Hex.toHexStringWithPrefix(
                             functionEncoder.buildMethodId(
                                     FunctionUtility.ProxySendTransactionTXMethod)))) {
                 Tuple6<String, String, BigInteger, String, String, byte[]> proxyInputResult =
@@ -1060,7 +1060,7 @@ public class BCOSDriver implements Driver {
                                 abiDefinitionFactory
                                         .loadABI(abi)
                                         .getMethodIDToFunctions()
-                                        .get(finalMethodId);
+                                        .get(ByteBuffer.wrap(Hex.decode(finalMethodId)));
 
                         if (Objects.isNull(function)) {
                             logger.warn(

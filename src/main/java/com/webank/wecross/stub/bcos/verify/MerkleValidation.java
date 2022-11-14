@@ -2,11 +2,8 @@ package com.webank.wecross.stub.bcos.verify;
 
 import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.BlockManager;
-import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.BCOSStubException;
-import com.webank.wecross.stub.bcos.common.MerkleProofUtility;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionProof;
-import java.util.Objects;
 import org.fisco.bcos.sdk.v3.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
 
@@ -24,6 +21,10 @@ public class MerkleValidation {
             CryptoSuite cryptoSuite)
             throws BCOSStubException {
 
+        // FIXME: return true by default
+        return;
+        /*
+
         // verify transaction
         if (!MerkleProofUtility.verifyTransactionReceipt(
                 blockHeader.getReceiptRoot(), transactionReceipt, cryptoSuite)) {
@@ -36,7 +37,7 @@ public class MerkleValidation {
         }
 
         // verify transaction
-        if (!MerkleProofUtility.verifyTransaction(
+        if (!MerkleProofUtility.verifyMerkle(
                 blockHeader.getTransactionRoot(),
                 transactionReceipt.getTransactionProof(),
                 transactionReceipt.getTransactionHash(),
@@ -47,6 +48,7 @@ public class MerkleValidation {
                             + ", hash="
                             + hash);
         }
+         */
     }
 
     public interface VerifyCallback {
@@ -67,6 +69,9 @@ public class MerkleValidation {
             TransactionProof transactionProof,
             VerifyCallback callback,
             CryptoSuite cryptoSuite) {
+        // FIXME: callback true by default
+        callback.onResponse(null);
+        /*
         blockManager.asyncGetBlock(
                 blockNumber,
                 (blockHeaderException, block) -> {
@@ -115,5 +120,6 @@ public class MerkleValidation {
 
                     callback.onResponse(null);
                 });
+         */
     }
 }

@@ -5,14 +5,14 @@
  *   main entrance of all contract call
  */
 
-pragma solidity >=0.6.0 <0.8.10;
+pragma solidity >=0.6.0 <0.8.20;
 pragma experimental ABIEncoderV2;
 
-struct BfsInfo {
-    string file_name;
-    string file_type;
-    string[] ext;
-}
+    struct BfsInfo {
+        string file_name;
+        string file_type;
+        string[] ext;
+    }
 
 contract WeCrossProxy {
     string constant version = "v1.0.0";
@@ -74,7 +74,7 @@ contract WeCrossProxy {
     uint256 constant MAX_SETP = 1024;
 
     string constant BFS_APPS = "/apps/";
-    string constant DEFAULT_VERSION = "/latest";
+    string constant DEFAULT_VERSION = "latest";
 
     string[] pathCache;
 
@@ -143,9 +143,9 @@ contract WeCrossProxy {
         address deploy_addr = deployContract(_bin);
         // register to cns
         int32 ret = bfs.link(
-            nameToBfsPath(name),
+            name,
             DEFAULT_VERSION,
-            deploy_addr,
+            addressToString(deploy_addr),
             _abi
         );
         if (0 != ret) {
@@ -156,7 +156,7 @@ contract WeCrossProxy {
                     ":",
                     DEFAULT_VERSION,
                     " unable link to BFS, error: ",
-                    uint256ToString(uint256(ret > 0 ? ret : -ret))
+                    ret
                 )
             )
             );
@@ -187,12 +187,7 @@ contract WeCrossProxy {
             );
         }
 
-        int32 ret = bfs.link(
-            nameToBfsPath(name),
-            DEFAULT_VERSION,
-            bytesToAddress(bytes(_addr)),
-            _abi
-        );
+        int32 ret = bfs.link(name, DEFAULT_VERSION, _addr, _abi);
         if (0 != ret) {
             revert(
             string(
@@ -201,7 +196,7 @@ contract WeCrossProxy {
                     ":",
                     DEFAULT_VERSION,
                     " unable link to BFS, error: ",
-                    uint256ToString(uint256(ret > 0 ? ret : -ret))
+                    ret
                 )
             )
             );
@@ -800,27 +795,33 @@ contract WeCrossProxy {
         if (!lockedContracts[addr].locked) {
             return NULL_FLAG;
         } else {
-            string memory xaTransactionID = lockedContracts[addr].xaTransactionID;
+            string memory xaTransactionID = lockedContracts[addr]
+            .xaTransactionID;
             uint256 index = xaTransactions[xaTransactionID].stepNum;
-            uint256 seq = index == 0 ? 0 : xaTransactions[xaTransactionID].seqs[index-1];
-            return string(abi.encodePacked(xaTransactionID, " ", uint256ToString(seq)));
+            uint256 seq = index == 0
+            ? 0
+            : xaTransactions[xaTransactionID].seqs[index - 1];
+            return
+            string(
+                abi.encodePacked(xaTransactionID, " ", uint256ToString(seq))
+            );
         }
     }
 
-    function addXATransaction(string memory _xaTransactionID) internal
-    {
+    function addXATransaction(string memory _xaTransactionID) internal {
         tail++;
         xaTransactionIDs.push(_xaTransactionID);
     }
 
-    function deleteXATransactionTask(string memory _xaTransactionID) internal
+    function deleteXATransactionTask(string memory _xaTransactionID)
+    internal
     returns (string memory)
     {
-        if(head == tail) {
+        if (head == tail) {
             revert("delete nonexistent xa transaction");
         }
 
-        if(!sameString(xaTransactionIDs[head], _xaTransactionID)) {
+        if (!sameString(xaTransactionIDs[head], _xaTransactionID)) {
             revert("delete unmatched xa transaction");
         }
 
@@ -829,29 +830,33 @@ contract WeCrossProxy {
     }
 
     // internal call
-    function callContract(address _contractAddress, string memory _sig, bytes memory _args) internal
-    returns(bytes memory result)
-    {
+    function callContract(
+        address _contractAddress,
+        string memory _sig,
+        bytes memory _args
+    ) internal returns (bytes memory result) {
         bytes memory sig = abi.encodeWithSignature(_sig);
         bool success;
-        (success, result) = address(_contractAddress).call(abi.encodePacked(sig, _args));
-        if(!success) {
+        (success, result) = address(_contractAddress).call(
+            abi.encodePacked(sig, _args)
+        );
+        if (!success) {
             revert(string(result));
         }
     }
 
     // internal call
-    function callContract(address _contractAddress, bytes memory _argsWithMethodId) internal
-    returns(bytes memory result)
-    {
+    function callContract(
+        address _contractAddress,
+        bytes memory _argsWithMethodId
+    ) internal returns (bytes memory result) {
         bool success;
         (success, result) = address(_contractAddress).call(_argsWithMethodId);
-        if(!success) {
+        if (!success) {
             //(string memory error) = abi.decode(result, (string));
             revert(string(result));
         }
     }
-
 
     // retrive address from CNS
     function getAddressByName(string memory _name, bool revertNotExist)
@@ -870,7 +875,9 @@ contract WeCrossProxy {
     }
 
     // retrive address from CNS
-    function getAddressByPath(string memory _path) internal view
+    function getAddressByPath(string memory _path)
+    internal
+    view
     returns (address)
     {
         string memory name = getNameByPath(_path);
@@ -878,15 +885,17 @@ contract WeCrossProxy {
     }
 
     // input must be a valid path like "zone.chain.resource"
-    function getNameByPath(string memory _path) internal pure
+    function getNameByPath(string memory _path)
+    internal
+    pure
     returns (string memory)
     {
         bytes memory path = bytes(_path);
         uint256 len = path.length;
         uint256 nameLen = 0;
         uint256 index = 0;
-        for(uint256 i = len - 1; i > 0; i--) {
-            if(path[i] == SEPARATOR) {
+        for (uint256 i = len - 1; i > 0; i--) {
+            if (path[i] == SEPARATOR) {
                 index = i + 1;
                 break;
             } else {
@@ -895,7 +904,7 @@ contract WeCrossProxy {
         }
 
         bytes memory name = new bytes(nameLen);
-        for(uint256 i = 0; i < nameLen; i++) {
+        for (uint256 i = 0; i < nameLen; i++) {
             name[i] = path[index++];
         }
 
@@ -905,15 +914,26 @@ contract WeCrossProxy {
     /*
         ["a.b.c1", "a.b.c2"]
     */
-    function pathsToJson(string memory _transactionID) internal view
-    returns(string memory)
+    function pathsToJson(string memory _transactionID)
+    internal
+    view
+    returns (string memory)
     {
         uint256 len = xaTransactions[_transactionID].paths.length;
-        string memory paths = string(abi.encodePacked('["', xaTransactions[_transactionID].paths[0], '"'));
-        for(uint256 i = 1; i < len; i++) {
-            paths = string(abi.encodePacked(paths, ',"', xaTransactions[_transactionID].paths[i], '"'));
+        string memory paths = string(
+            abi.encodePacked('["', xaTransactions[_transactionID].paths[0], '"')
+        );
+        for (uint256 i = 1; i < len; i++) {
+            paths = string(
+                abi.encodePacked(
+                    paths,
+                    ',"',
+                    xaTransactions[_transactionID].paths[i],
+                    '"'
+                )
+            );
         }
-        return string(abi.encodePacked(paths, ']'));
+        return string(abi.encodePacked(paths, "]"));
     }
 
     /*
@@ -936,19 +956,42 @@ contract WeCrossProxy {
     	}
     ]
     */
-    function xaTransactionStepArrayToJson(string memory _transactionID, uint256[] memory _seqs, uint256 _len) internal view
-    returns(string memory result)
-    {
-        if(_len == 0) {
-            return '[]';
+    function xaTransactionStepArrayToJson(
+        string memory _transactionID,
+        uint256[] memory _seqs,
+        uint256 _len
+    ) internal view returns (string memory result) {
+        if (_len == 0) {
+            return "[]";
         }
 
-        result = string(abi.encodePacked('[', xatransactionStepToJson(xaTransactionSteps[getXATransactionStepKey(_transactionID, _seqs[0])], _seqs[0])));
-        for(uint256 i = 1; i < _len; i++) {
-            result = string(abi.encodePacked(result, ',', xatransactionStepToJson(xaTransactionSteps[getXATransactionStepKey(_transactionID, _seqs[i])], _seqs[i])));
+        result = string(
+            abi.encodePacked(
+                "[",
+                xatransactionStepToJson(
+                    xaTransactionSteps[
+                    getXATransactionStepKey(_transactionID, _seqs[0])
+                    ],
+                    _seqs[0]
+                )
+            )
+        );
+        for (uint256 i = 1; i < _len; i++) {
+            result = string(
+                abi.encodePacked(
+                    result,
+                    ",",
+                    xatransactionStepToJson(
+                        xaTransactionSteps[
+                        getXATransactionStepKey(_transactionID, _seqs[i])
+                        ],
+                        _seqs[i]
+                    )
+                )
+            );
         }
 
-        return string(abi.encodePacked(result, ']'));
+        return string(abi.encodePacked(result, "]"));
     }
 
     /*
@@ -961,36 +1004,59 @@ contract WeCrossProxy {
 		"args": "0010101"
 	}
     */
-    function xatransactionStepToJson(XATransactionStep memory _xaTransactionStep, uint256 _XATransactionSeq) internal pure
-    returns(string memory)
-    {
-        return string(abi.encodePacked('{"xaTransactionSeq":', uint256ToString(_XATransactionSeq), ',',
-            '"accountIdentity":"', _xaTransactionStep.accountIdentity, '",',
-            '"path":"', _xaTransactionStep.path, '",',
-            '"timestamp":', uint256ToString(_xaTransactionStep.timestamp), ',',
-            '"method":"', getMethodFromFunc(_xaTransactionStep.func), '",',
-            '"args":"', bytesToHexString(_xaTransactionStep.args), '"}')
+    function xatransactionStepToJson(
+        XATransactionStep memory _xaTransactionStep,
+        uint256 _XATransactionSeq
+    ) internal pure returns (string memory) {
+        return
+        string(
+            abi.encodePacked(
+                '{"xaTransactionSeq":',
+                uint256ToString(_XATransactionSeq),
+                ",",
+                '"accountIdentity":"',
+                _xaTransactionStep.accountIdentity,
+                '",',
+                '"path":"',
+                _xaTransactionStep.path,
+                '",',
+                '"timestamp":',
+                uint256ToString(_xaTransactionStep.timestamp),
+                ",",
+                '"method":"',
+                getMethodFromFunc(_xaTransactionStep.func),
+                '",',
+                '"args":"',
+                bytesToHexString(_xaTransactionStep.args),
+                '"}'
+            )
         );
     }
 
-    function isExistedXATransaction(string memory _xaTransactionID) internal view
+    function isExistedXATransaction(string memory _xaTransactionID)
+    internal
+    view
     returns (bool)
     {
         return xaTransactions[_xaTransactionID].startTimestamp != 0;
     }
 
-    function isValidXATransactionSep(string memory _xaTransactionID, uint256 _XATransactionSeq) internal view
-    returns(bool)
-    {
+    function isValidXATransactionSep(
+        string memory _xaTransactionID,
+        uint256 _XATransactionSeq
+    ) internal view returns (bool) {
         uint256 index = xaTransactions[_xaTransactionID].stepNum;
-        return (index == 0) || (_XATransactionSeq > xaTransactions[_xaTransactionID].seqs[index-1]);
+        return
+        (index == 0) ||
+        (_XATransactionSeq >
+        xaTransactions[_xaTransactionID].seqs[index - 1]);
     }
 
-    function deleteLockedContracts(string memory _xaTransactionID) internal
-    {
+    function deleteLockedContracts(string memory _xaTransactionID) internal {
         uint256 len = xaTransactions[_xaTransactionID].contractAddresses.length;
-        for(uint256 i = 0; i < len; i++) {
-            address contractAddress = xaTransactions[_xaTransactionID].contractAddresses[i];
+        for (uint256 i = 0; i < len; i++) {
+            address contractAddress = xaTransactions[_xaTransactionID]
+            .contractAddresses[i];
             delete lockedContracts[contractAddress];
         }
     }
@@ -998,20 +1064,22 @@ contract WeCrossProxy {
     /* a famous algorithm for finding substring
        match starts with tail, and the target must be "\"sserdda\""
     */
-    function newKMP(bytes memory _str, bytes memory _target) internal pure
+    function newKMP(bytes memory _str, bytes memory _target)
+    internal
+    pure
     returns (uint256)
     {
         int256 strLen = int256(_str.length);
         int256 tarLen = int256(_target.length);
 
         // next array for target "\"sserdda\""
-        int8[9] memory nextArray = [-1,0,0,0,0,0,0,0,0];
+        int8[9] memory nextArray = [-1, 0, 0, 0, 0, 0, 0, 0, 0];
 
         int256 i = strLen;
         int256 j = 0;
 
         while (i > 0 && j < tarLen) {
-            if (j == -1 || _str[uint256(i-1)] == _target[uint256(j)]) {
+            if (j == -1 || _str[uint256(i - 1)] == _target[uint256(j)]) {
                 i--;
                 j++;
             } else {
@@ -1019,7 +1087,7 @@ contract WeCrossProxy {
             }
         }
 
-        if ( j == tarLen) {
+        if (j == tarLen) {
             return uint256(i + tarLen);
         }
 
@@ -1027,8 +1095,10 @@ contract WeCrossProxy {
     }
 
     // func(string,uint256) => func_flag(string,uint256)
-    function getRevertFunc(string memory _func, string memory _revertFlag) internal pure
-    returns(string memory)
+    function getRevertFunc(string memory _func, string memory _revertFlag)
+    internal
+    pure
+    returns (string memory)
     {
         bytes memory funcBytes = bytes(_func);
         bytes memory flagBytes = bytes(_revertFlag);
@@ -1036,12 +1106,12 @@ contract WeCrossProxy {
         uint256 flagLen = flagBytes.length;
         bytes memory newFunc = new bytes(funcLen + flagLen);
 
-        byte c = byte('(');
+        bytes1 c = bytes1("(");
         uint256 index = 0;
         uint256 point = 0;
 
-        for(uint256 i = 0; i < funcLen; i++) {
-            if(funcBytes[i] != c) {
+        for (uint256 i = 0; i < funcLen; i++) {
+            if (funcBytes[i] != c) {
                 newFunc[index++] = funcBytes[i];
             } else {
                 point = i;
@@ -1049,11 +1119,11 @@ contract WeCrossProxy {
             }
         }
 
-        for(uint256 i = 0; i < flagLen; i++) {
+        for (uint256 i = 0; i < flagLen; i++) {
             newFunc[index++] = flagBytes[i];
         }
 
-        for(uint256 i = point; i < funcLen; i++) {
+        for (uint256 i = point; i < funcLen; i++) {
             newFunc[index++] = funcBytes[i];
         }
 
@@ -1061,18 +1131,20 @@ contract WeCrossProxy {
     }
 
     // func(string,uint256) => func
-    function getMethodFromFunc(string memory _func) internal pure
-    returns(string memory)
+    function getMethodFromFunc(string memory _func)
+    internal
+    pure
+    returns (string memory)
     {
         bytes memory funcBytes = bytes(_func);
         uint256 funcLen = funcBytes.length;
         bytes memory temp = new bytes(funcLen);
 
-        byte c = byte('(');
+        bytes1 c = bytes1("(");
         uint256 index = 0;
 
-        for(uint256 i = 0; i < funcLen; i++) {
-            if(funcBytes[i] != c) {
+        for (uint256 i = 0; i < funcLen; i++) {
+            if (funcBytes[i] != c) {
                 temp[index++] = funcBytes[i];
             } else {
                 break;
@@ -1080,56 +1152,66 @@ contract WeCrossProxy {
         }
 
         bytes memory result = new bytes(index);
-        for(uint256 i = 0; i < index; i++) {
+        for (uint256 i = 0; i < index; i++) {
             result[i] = temp[i];
         }
 
         return string(result);
     }
 
-    function getXATransactionStepKey(string memory _transactionID, uint256 _transactionSeq) internal pure
-    returns(string memory)
-    {
-        return string(abi.encodePacked(_transactionID, uint256ToString(_transactionSeq)));
+    function getXATransactionStepKey(
+        string memory _transactionID,
+        uint256 _transactionSeq
+    ) internal pure returns (string memory) {
+        return
+        string(
+            abi.encodePacked(
+                _transactionID,
+                uint256ToString(_transactionSeq)
+            )
+        );
     }
 
-    function sameString(string memory _str1, string memory _str2) internal pure
+    function sameString(string memory _str1, string memory _str2)
+    internal
+    pure
     returns (bool)
     {
         return keccak256(bytes(_str1)) == keccak256(bytes(_str2));
     }
 
-    function hexStringToBytes(string memory _hexStr) internal pure
+    function hexStringToBytes(string memory _hexStr)
+    internal
+    pure
     returns (bytes memory)
     {
         bytes memory bts = bytes(_hexStr);
-        require(bts.length%2 == 0);
-        bytes memory result = new bytes(bts.length/2);
-        uint len = bts.length/2;
-        for (uint i = 0; i < len; ++i) {
-            result[i] = byte(fromHexChar(uint8(bts[2*i])) * 16 +
-                fromHexChar(uint8(bts[2*i+1])));
+        require(bts.length % 2 == 0);
+        bytes memory result = new bytes(bts.length / 2);
+        uint256 len = bts.length / 2;
+        for (uint256 i = 0; i < len; ++i) {
+            result[i] = bytes1(
+                fromHexChar(uint8(bts[2 * i])) *
+                16 +
+                fromHexChar(uint8(bts[2 * i + 1]))
+            );
         }
         return result;
     }
 
-    function fromHexChar(uint8 _char) internal pure
-    returns (uint8)
-    {
-        if (byte(_char) >= byte('0') && byte(_char) <= byte('9')) {
-            return _char - uint8(byte('0'));
+    function fromHexChar(uint8 _char) internal pure returns (uint8) {
+        if (bytes1(_char) >= bytes1("0") && bytes1(_char) <= bytes1("9")) {
+            return _char - uint8(bytes1("0"));
         }
-        if (byte(_char) >= byte('a') && byte(_char) <= byte('f')) {
-            return 10 + _char - uint8(byte('a'));
+        if (bytes1(_char) >= bytes1("a") && bytes1(_char) <= bytes1("f")) {
+            return 10 + _char - uint8(bytes1("a"));
         }
-        if (byte(_char) >= byte('A') && byte(_char) <= byte('F')) {
-            return 10 + _char - uint8(byte('A'));
+        if (bytes1(_char) >= bytes1("A") && bytes1(_char) <= bytes1("F")) {
+            return 10 + _char - uint8(bytes1("A"));
         }
     }
 
-    function stringToUint256(string memory _str) public pure
-    returns (uint256)
-    {
+    function stringToUint256(string memory _str) public pure returns (uint256) {
         bytes memory bts = bytes(_str);
         uint256 result = 0;
         uint256 len = bts.length;
@@ -1141,7 +1223,9 @@ contract WeCrossProxy {
         return result;
     }
 
-    function uint256ToString(uint256 _value) internal pure
+    function uint256ToString(uint256 _value)
+    internal
+    pure
     returns (string memory)
     {
         bytes32 result;
@@ -1149,54 +1233,67 @@ contract WeCrossProxy {
             return "0";
         } else {
             while (_value > 0) {
-                result = bytes32(uint(result) / (2 ** 8));
-                result |= bytes32(((_value % 10) + 48) * 2 ** (8 * 31));
+                result = bytes32(uint256(result) / (2**8));
+                result |= bytes32(((_value % 10) + 48) * 2**(8 * 31));
                 _value /= 10;
             }
         }
         return bytes32ToString(result);
     }
 
-    function bytesToHexString(bytes memory _bts) internal pure
+    function bytesToHexString(bytes memory _bts)
+    internal
+    pure
     returns (string memory result)
     {
         uint256 len = _bts.length;
         bytes memory s = new bytes(len * 2);
         for (uint256 i = 0; i < len; i++) {
-            byte befor = byte(_bts[i]);
-            byte high = byte(uint8(befor) / 16);
-            byte low = byte(uint8(befor) - 16 * uint8(high));
-            s[i*2] = convert(high);
-            s[i*2+1] = convert(low);
+            bytes1 befor = bytes1(_bts[i]);
+            bytes1 high = bytes1(uint8(befor) / 16);
+            bytes1 low = bytes1(uint8(befor) - 16 * uint8(high));
+            s[i * 2] = convert(high);
+            s[i * 2 + 1] = convert(low);
         }
         result = string(s);
     }
 
-    function bytes32ToString(bytes32 _bts32) internal pure
+    function bytes32ToString(bytes32 _bts32)
+    internal
+    pure
     returns (string memory)
     {
-
         bytes memory result = new bytes(_bts32.length);
 
-        uint len = _bts32.length;
-        for(uint i = 0; i < len; i++) {
+        uint256 len = _bts32.length;
+        for (uint256 i = 0; i < len; i++) {
             result[i] = _bts32[i];
         }
 
         return string(result);
     }
 
-    function bytesToAddress(bytes memory _address) internal pure
+    function bytesToAddress(bytes memory _address)
+    internal
+    pure
     returns (address)
     {
-        if(_address.length != 42) {
-            revert(string(abi.encodePacked("cannot covert ", _address, "to bcos address")));
+        if (_address.length != 42) {
+            revert(
+            string(
+                abi.encodePacked(
+                    "cannot covert ",
+                    _address,
+                    "to bcos address"
+                )
+            )
+            );
         }
 
         uint160 result = 0;
         uint160 b1;
         uint160 b2;
-        for (uint i = 2; i < 2 + 2 * 20; i += 2) {
+        for (uint256 i = 2; i < 2 + 2 * 20; i += 2) {
             result *= 256;
             b1 = uint160(uint8(_address[i]));
             b2 = uint160(uint8(_address[i + 1]));
@@ -1220,27 +1317,28 @@ contract WeCrossProxy {
         return address(result);
     }
 
-    function addressToString(address _addr) internal pure
+    function addressToString(address _addr)
+    internal
+    pure
     returns (string memory)
     {
         bytes memory result = new bytes(40);
-        for (uint i = 0; i < 20; i++) {
-            byte temp = byte(uint8(uint(_addr) / (2 ** (8 * (19 - i)))));
-            byte b1 = byte(uint8(temp) / 16);
-            byte b2 = byte(uint8(temp) - 16 * uint8(b1));
+        for (uint256 i = 0; i < 20; i++) {
+            bytes1 temp = bytes1(uint8(uint160(_addr) / (2**(8 * (19 - i)))));
+            bytes1 b1 = bytes1(uint8(temp) / 16);
+            bytes1 b2 = bytes1(uint8(temp) - 16 * uint8(b1));
             result[2 * i] = convert(b1);
             result[2 * i + 1] = convert(b2);
         }
+
         return string(abi.encodePacked("0x", string(result)));
     }
 
-    function convert(byte _b) internal pure
-    returns (byte)
-    {
+    function convert(bytes1 _b) internal pure returns (bytes1) {
         if (uint8(_b) < 10) {
-            return byte(uint8(_b) + 0x30);
+            return bytes1(uint8(_b) + 0x30);
         } else {
-            return byte(uint8(_b) + 0x57);
+            return bytes1(uint8(_b) + 0x57);
         }
     }
 
@@ -1250,7 +1348,7 @@ contract WeCrossProxy {
     returns (string memory _absolutePath)
     {
         _absolutePath = string(
-            abi.encodePacked(BFS_APPS, _name, DEFAULT_VERSION)
+            abi.encodePacked(BFS_APPS, _name, "/", DEFAULT_VERSION)
         );
     }
 }
@@ -1274,7 +1372,7 @@ abstract contract BfsPrecompiled {
 
     function link(
         string memory absolutePath,
-        address _address,
+        string memory _address,
         string memory _abi
     ) public virtual returns (int256);
 
@@ -1282,7 +1380,7 @@ abstract contract BfsPrecompiled {
     function link(
         string memory name,
         string memory version,
-        address _address,
+        string memory _address,
         string memory _abi
     ) public virtual returns (int32);
 

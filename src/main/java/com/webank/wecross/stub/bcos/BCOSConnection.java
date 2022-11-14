@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.fisco.bcos.sdk.v3.client.exceptions.ClientException;
 import org.fisco.bcos.sdk.v3.client.protocol.model.JsonTransactionResponse;
 import org.fisco.bcos.sdk.v3.client.protocol.response.BcosBlock;
 import org.fisco.bcos.sdk.v3.client.protocol.response.BcosBlockHeader;
@@ -411,6 +412,11 @@ public class BCOSConnection implements Connection {
         } catch (UnsupportedOperationException e) {
             response.setErrorCode(BCOSStatusCode.UnsupportedRPC);
             response.setErrorMessage(e.getMessage());
+            callback.onResponse(response);
+        } catch (ClientException e) {
+            // FIXME: sdk 3.0 if cannot get transaction will throw exception
+            response.setErrorCode(BCOSStatusCode.TransactionReceiptProofNotExist);
+            response.setErrorMessage("Transaction proof not found, tx hash: " + txHash);
             callback.onResponse(response);
         } catch (Exception e) {
             response.setErrorMessage(e.getMessage());

@@ -1,107 +1,97 @@
 #!/bin/bash
 set -e
+default_tag=v3.0.1
+LOG_INFO() {
+    local content=${1}
+    echo -e "\033[32m ${content}\033[0m"
+}
 
-# gradle build check
-bash gradlew build
+get_sed_cmd()
+{
+  local sed_cmd="sed -i"
+  if [ "$(uname)" == "Darwin" ];then
+        sed_cmd="sed -i .bkp"
+  fi
+  echo "$sed_cmd"
+}
 
-# Non SM node test
-echo " Not SM NODE ============>>>> "
-echo " Not SM NODE ============>>>> "
-echo " Not SM NODE ============>>>> "
+download_build_chain()
+{
+  tag=$(curl -sS "https://gitee.com/api/v5/repos/FISCO-BCOS/FISCO-BCOS/tags" | grep -oe "\"name\":\"v[2-9]*\.[0-9]*\.[0-9]*\"" | cut -d \" -f 4 | sort -V | tail -n 1)
+  LOG_INFO "--- current tag: $tag"
+  if [[ -z ${tag} ]]; then
+    LOG_INFO "tag is empty, use default tag: ${default_tag}"
+    tag="${default_tag}"
+  fi
+  curl -#LO "https://github.com/FISCO-BCOS/FISCO-BCOS/releases/download/${tag}/build_chain.sh" && chmod u+x build_chain.sh
+}
 
-# download build_chain.sh to build fisco-bcos block chain
-curl -LO https://github.com/FISCO-BCOS/FISCO-BCOS/releases/download/v2.8.0/build_chain.sh && chmod u+x build_chain.sh
-echo "127.0.0.1:4 agency1 1,2,3" > ipconf
-bash build_chain.sh -f ipconf
-./nodes/127.0.0.1/fisco-bcos -v
-cat nodes/127.0.0.1/node0/config.ini | egrep sm_crypto
+prepare_environment()
+{
+    ## prepare resources for integration test
+    pwd
+    ls -a
+    local node_type="${1}"
+    # integration testing
+    mkdir -p src/integTest/resources/chains/bcos
+    cp -r nodes/127.0.0.1/sdk/* src/integTest/resources/chains/bcos
+    cp src/test/resources/stub.toml src/integTest/resources/chains/bcos/
+    cp -r src/test/resources/accounts src/integTest/resources/
+    mkdir -p src/integTest/resources/solidity
+    cp -r src/test/resources/contract/* src/integTest/resources/solidity/
+    cp -r src/main/resources/* src/integTest/resources/solidity/
 
-bash nodes/127.0.0.1/start_all.sh
-# integration testing
-mkdir -p src/integTest/resources/chains/bcos
-cp -r nodes/127.0.0.1/sdk/* src/integTest/resources/chains/bcos
-cp src/test/resources/stub.toml src/integTest/resources/chains/bcos/
-cp -r src/test/resources/accounts src/integTest/resources/
-cp -r src/test/resources/contract src/integTest/resources/
-mkdir -p src/integTest/resources/solidity
-cp src/main/resources/* src/integTest/resources/solidity
-cp src/test/resources/contract/* src/integTest/resources/solidity
+    if [ "${node_type}" == "sm" ];then
+       sed_cmd=$(get_sed_cmd)
+       $sed_cmd 's/useSMCrypto = "false"/useSMCrypto = "true"/g' ./src/integration-test/resources/config.toml
+    fi
+}
 
-bash gradlew integTest
-bash gradlew jacocoTestReport
+build_node()
+{
+  local node_type="${1}"
+  if [ "${node_type}" == "sm" ];then
+      bash -x build_chain.sh -l 127.0.0.1:4 -s
+  else
+      bash -x build_chain.sh -l 127.0.0.1:4
+  fi
+  ./nodes/127.0.0.1/fisco-bcos -v
+  ./nodes/127.0.0.1/start_all.sh
+}
 
-# clean
-bash nodes/127.0.0.1/stop_all.sh
-bash nodes/127.0.0.1/stop_all.sh
-bash nodes/127.0.0.1/stop_all.sh
-rm -rf nodes
+check_standard_node()
+{
+  build_node
+  prepare_environment
+  ## run integration test
+  bash gradlew test --info
+  bash gradlew integTest --info
+}
 
-# SM node test
-echo " SM NODE ============>>>> "
-echo " SM NODE ============>>>> "
-echo " SM NODE ============>>>> "
+check_sm_node()
+{
+  build_node sm
+  prepare_environment sm
+  ## run integration test
+  bash gradlew test --info
+  bash gradlew integTest --info
+}
 
-# download build_chain.sh to build fisco-bcos block chain
-curl -LO https://github.com/FISCO-BCOS/FISCO-BCOS/releases/download/v2.6.0/build_chain.sh && chmod u+x build_chain.sh
-echo "127.0.0.1:4 agency1 1,2,3" > ipconf
-bash build_chain.sh -f ipconf -g
-./nodes/127.0.0.1/fisco-bcos -v
-cat nodes/127.0.0.1/node0/config.ini | egrep sm_crypto
+check_basic()
+{
+# check code format
+bash gradlew verifyGoogleJavaFormat
+# build
+bash gradlew build assemble
+}
 
-bash nodes/127.0.0.1/start_all.sh
-# integration testing
-mkdir -p src/integTest/resources/chains/bcos
-cp -r nodes/127.0.0.1/sdk/* src/integTest/resources/chains/bcos
-cp src/test/resources/stub.toml src/integTest/resources/chains/bcos/
-sed -i.bak 's/BCOS3/GM_BCOS3/g' src/integTest/resources/chains/bcos/stub.toml
-
-cat src/integTest/resources/chains/bcos/stub.toml
-mkdir -p src/integTest/resources/accounts
-cp -r src/test/resources/accounts/bcos src/integTest/resources/accounts
-cp -r src/test/resources/accounts/gm_bcos src/integTest/resources/accounts/fisco
-mkdir -p src/integTest/resources/solidity
-cp src/main/resources/* src/integTest/resources/solidity
-cp src/test/resources/contract/* src/integTest/resources/solidity
-bash gradlew integTest
-
-# clean
-bash nodes/127.0.0.1/stop_all.sh
-bash nodes/127.0.0.1/stop_all.sh
-bash nodes/127.0.0.1/stop_all.sh
-rm -rf nodes
-
-# SM node SM SSL test
-echo " SM NODE, SM SSL============>>>> "
-echo " SM NODE, SM SSL============>>>> "
-echo " SM NODE, SM SSL============>>>> "
-
-# download build_chain.sh to build fisco-bcos block chain
-curl -LO https://github.com/FISCO-BCOS/FISCO-BCOS/releases/download/v2.6.0/build_chain.sh && chmod u+x build_chain.sh
-echo "127.0.0.1:4 agency1 1,2,3" > ipconf
-bash build_chain.sh -f ipconf -g -G
-./nodes/127.0.0.1/fisco-bcos -v
-cat nodes/127.0.0.1/node0/config.ini | egrep sm_crypto
-
-bash nodes/127.0.0.1/start_all.sh
-# integration testing
-mkdir -p src/integTest/resources/chains/bcos
-cp -r nodes/127.0.0.1/sdk/* src/integTest/resources/chains/bcos
-cp src/test/resources/stub.toml src/integTest/resources/chains/bcos/
-sed -i.bak -e 's/BCOS3/GM_BCOS3/g' -e 's/gmConnectEnable = false/gmConnectEnable = true/g' src/integTest/resources/chains/bcos/stub.toml
-
-cat src/integTest/resources/chains/bcos/stub.toml
-mkdir -p src/integTest/resources/accounts
-cp -r src/test/resources/accounts/bcos src/integTest/resources/accounts
-cp -r src/test/resources/accounts/gm_bcos src/integTest/resources/accounts/fisco
-mkdir -p src/integTest/resources/solidity
-cp src/main/resources/* src/integTest/resources/solidity
-cp src/test/resources/contract/* src/integTest/resources/solidity
-bash gradlew integTest
-
-# clean
-bash nodes/127.0.0.1/stop_all.sh
-bash nodes/127.0.0.1/stop_all.sh
-bash nodes/127.0.0.1/stop_all.sh
-rm -rf nodes
+LOG_INFO "------ download_build_chain---------"
+download_build_chain
+LOG_INFO "------ check_basic---------"
+check_basic
+LOG_INFO "------ check_standard_node---------"
+check_standard_node
+#LOG_INFO "------ check_sm_node---------"
+#check_sm_node
 
 bash <(curl -s https://codecov.io/bash)

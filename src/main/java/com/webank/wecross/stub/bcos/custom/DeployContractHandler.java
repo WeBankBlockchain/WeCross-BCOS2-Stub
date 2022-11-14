@@ -217,14 +217,14 @@ public class DeployContractHandler implements CommandHandler {
         Path proxyPath = new Path();
         proxyPath.setResource(BCOSConstant.BCOS_PROXY_NAME);
 
-        /* Binary data needs to be base64 encoded */
-        //        String base64Bin =
-        // Base64.getEncoder().encodeToString(Numeric.hexStringToByteArray(bin));
-
         TransactionRequest transactionRequest =
                 new TransactionRequest(
                         BCOSConstant.PROXY_METHOD_DEPLOY,
-                        Arrays.asList(path.toString(), bin, abi).toArray(new String[0]));
+                        Arrays.asList(
+                                        path.toString(),
+                                        ContractCodecJsonWrapper.HexEncodedDataPrefix + bin,
+                                        abi)
+                                .toArray(new String[0]));
 
         TransactionContext transactionContext =
                 new TransactionContext(account, proxyPath, new ResourceInfo(), blockManager);
