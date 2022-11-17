@@ -30,6 +30,7 @@ public class BfsServiceWrapper {
                         clientWrapper.getClient(),
                         clientWrapper.getCryptoSuite().getCryptoKeyPair());
         String absolutePath = "/apps/" + name + "/latest";
+        logger.info("get bfs info, absolutePath: {}", absolutePath);
         try {
             List<BFSInfo> bfsInfos = bfsService.listBFSInfo(absolutePath);
             if (Objects.isNull(bfsInfos) || bfsInfos.isEmpty()) {
@@ -38,8 +39,7 @@ public class BfsServiceWrapper {
             }
             BFSInfo bfsInfo = bfsInfos.get(0);
             logger.info(
-                    "{} bfs info, name: {}, version: {}, address: {}, abi: {}",
-                    name,
+                    "bfs info, name: {}, version: {}, address: {}, abi: {}",
                     name,
                     bfsInfo.getFileName(),
                     bfsInfo.getAddress(),

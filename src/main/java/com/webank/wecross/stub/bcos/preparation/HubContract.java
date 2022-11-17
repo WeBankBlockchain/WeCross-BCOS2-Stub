@@ -165,7 +165,7 @@ public class HubContract {
                         groupID,
                         chainID,
                         "",
-                        metadata.abi,
+                        metadata.bin,
                         metadata.abi,
                         blockLimit.longValue(),
                         0);
@@ -199,7 +199,6 @@ public class HubContract {
             throw new Exception("Failed to deploy proxy contract.");
         }
 
-        BfsServiceWrapper bfsServiceWrapper = new BfsServiceWrapper();
         BFSService bfsService = new BFSService(client, credentials.generateKeyPair());
         RetCode retCode = bfsService.link(linkName, "latest", contractAddress, metadata.abi);
 

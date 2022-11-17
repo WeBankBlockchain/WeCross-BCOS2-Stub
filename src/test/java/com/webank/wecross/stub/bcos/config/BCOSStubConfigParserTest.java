@@ -15,7 +15,7 @@ public class BCOSStubConfigParserTest {
                 new BCOSStubConfigParser("./", "stub-sample-ut.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
         assertEquals(bcosStubConfig.getType(), "BCOS-UT");
-        BCOSStubConfig.ChainRpcService chainRpcService = bcosStubConfig.getChannelService();
+        BCOSStubConfig.ChainRpcService chainRpcService = bcosStubConfig.getChainRpcService();
         assertTrue(Objects.nonNull(chainRpcService.getChain()));
         assertEquals(chainRpcService.getChain().getChainID(), "chain0");
         assertEquals(chainRpcService.getChain().getGroupID(), "group0");

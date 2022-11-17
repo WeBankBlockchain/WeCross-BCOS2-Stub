@@ -219,12 +219,17 @@ contract WeCrossProxy {
         int32 ret;
         BfsInfo[] memory bfsList;
         (ret, bfsList) = bfs.list(nameToBfsPath(name));
-        if (ret < 0 || bfsList.length < 1 || bfsList[0].ext.length < 1) {
+        if (
+            ret < 0 ||
+            bfsList.length < 1 ||
+            !sameString(bfsList[0].file_type, "link") ||
+            bfsList[0].ext.length < 2
+        ) {
             return ("", "", "");
         }
         _version = bfsList[0].file_name;
         _address = bfsList[0].ext[0];
-        _abi = bfsList[0].ext[0];
+        _abi = bfsList[0].ext[1];
     }
 
     // constant call with xaTransactionID

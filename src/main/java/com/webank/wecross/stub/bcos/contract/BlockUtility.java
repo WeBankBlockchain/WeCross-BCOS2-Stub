@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 public class BlockUtility {
 
     private static final Logger logger = LoggerFactory.getLogger(BlockUtility.class);
+
     /**
      * convert Block to BlockHeader
      *
@@ -30,7 +31,10 @@ public class BlockUtility {
         }
         BlockHeader blockHeader = new BlockHeader();
         blockHeader.setHash(block.getHash());
-        blockHeader.setPrevHash(block.getParentInfo().get(0).getBlockHash());
+        blockHeader.setPrevHash(
+                block.getParentInfo().isEmpty()
+                        ? null
+                        : block.getParentInfo().get(0).getBlockHash());
         blockHeader.setNumber(block.getNumber());
         blockHeader.setReceiptRoot(block.getReceiptsRoot());
         blockHeader.setStateRoot(block.getStateRoot());

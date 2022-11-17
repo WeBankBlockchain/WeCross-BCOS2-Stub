@@ -216,7 +216,7 @@ public class BCOSBaseStubFactory implements StubFactory {
                             + path
                             + "\"");
         } catch (Exception e) {
-            System.out.println("Exception: " + e);
+            e.printStackTrace();
         }
     }
 
@@ -235,8 +235,8 @@ public class BCOSBaseStubFactory implements StubFactory {
                             + "' # BCOS3.0 or GM_BCOS3.0\n"
                             + "\n"
                             + "[chain]\n"
-                            + "    groupId = 1 # default 1\n"
-                            + "    chainId = 1 # default 1\n"
+                            + "    groupId = \"group0\" # default group0\n"
+                            + "    chainId = \"chain0\" # default chain0\n"
                             + "\n"
                             + "[chainRpcService]\n"
                             + "    caCert = 'ca.crt'\n"
@@ -245,11 +245,11 @@ public class BCOSBaseStubFactory implements StubFactory {
                             + (("BCOS3.0".equals(getStubType()))
                                     ? "    gmConnectEnable = false\n"
                                     : "    gmConnectEnable = true\n")
-                            + "    gmCaCert = 'gm/gmca.crt'\n"
-                            + "    gmSslCert = 'gm/gmsdk.crt'\n"
-                            + "    gmSslKey = 'gm/gmsdk.key'\n"
-                            + "    gmEnSslCert = 'gm/gmensdk.crt'\n"
-                            + "    gmEnSslKey = 'gm/gmensdk.key'\n"
+                            + "    gmCaCert = 'sm_ca.crt'\n"
+                            + "    gmSslCert = 'sm_sdk.crt'\n"
+                            + "    gmSslKey = 'sm_sdk.key'\n"
+                            + "    gmEnSslCert = 'sm_ensdk.crt'\n"
+                            + "    gmEnSslKey = 'sm_ensdk.key'\n"
                             + "    timeout = 300000  # ms, default 60000ms\n"
                             + "    connectionsStr = ['127.0.0.1:20200']\n"
                             + "\n";
@@ -280,6 +280,7 @@ public class BCOSBaseStubFactory implements StubFactory {
                             + "\"");
         } catch (Exception e) {
             logger.error("Exception: ", e);
+            e.printStackTrace();
         }
     }
 
@@ -291,7 +292,7 @@ public class BCOSBaseStubFactory implements StubFactory {
                     new File(path + File.separator + "WeCrossProxy" + File.separator + proxyPath);
             FileUtils.copyURLToFile(proxyDir, dest);
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
     }
 
@@ -302,7 +303,7 @@ public class BCOSBaseStubFactory implements StubFactory {
             File dest = new File(path + File.separator + "WeCrossHub" + File.separator + hubPath);
             FileUtils.copyURLToFile(hubDir, dest);
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
     }
 }

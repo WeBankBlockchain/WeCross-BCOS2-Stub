@@ -278,6 +278,23 @@ public class BCOSStubCallContractIntegTest {
     }
 
     @Test
+    public void getGenesisBlockIntegTest() throws InterruptedException {
+        AsyncToSync asyncToSync = new AsyncToSync();
+
+
+            driver.asyncGetBlock(0, true, connection, (e2, block) -> {
+                assertNull(e2);
+                BlockHeader blockHeader = block.getBlockHeader();
+                assertTrue(block.getRawBytes().length > 1);
+                assertTrue(Objects.nonNull(blockHeader));
+                assertTrue(Objects.nonNull(blockHeader.getHash()));
+                assertTrue(blockHeader.getNumber() == 0);
+                asyncToSync.getSemaphore().release();
+            });
+        asyncToSync.semaphore.acquire(1);
+    }
+
+    @Test
     public void getBlockHeaderFailedIntegTest() throws InterruptedException {
         AsyncToSync asyncToSync = new AsyncToSync();
         driver.asyncGetBlockNumber(connection, (e1, blockNumber) -> {

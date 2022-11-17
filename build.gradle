@@ -177,7 +177,6 @@ task makeJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar, d
         exclude(dependency('io.netty:.*'))
     }
 
-    relocate 'org.fisco.bcos', 'org.fisco.bcos.wecross.normal'
     relocate 'com.webank.wecross.stub.bcos', 'com.webank.wecross.stub.bcos.normal'
 
     from zipTree(shadowJar.archivePath)
@@ -226,7 +225,6 @@ task makeGMJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar,
         exclude(dependency('io.netty:.*'))
     }
 
-    relocate 'org.fisco.bcos', 'org.fisco.bcos.wecross.guomi'
     relocate 'com.webank.wecross.stub.bcos', 'com.webank.wecross.stub.bcos.guomi'
 
     from zipTree(shadowJar.archivePath)

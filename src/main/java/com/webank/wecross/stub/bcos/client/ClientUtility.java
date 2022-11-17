@@ -9,7 +9,6 @@ import org.fisco.bcos.sdk.v3.BcosSDK;
 import org.fisco.bcos.sdk.v3.client.Client;
 import org.fisco.bcos.sdk.v3.config.ConfigOption;
 import org.fisco.bcos.sdk.v3.config.model.ConfigProperty;
-import org.fisco.bcos.sdk.v3.model.CryptoType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -20,16 +19,10 @@ public class ClientUtility {
     private static final Logger logger = LoggerFactory.getLogger(ClientUtility.class);
 
     public static Client initClient(BCOSStubConfig bcosStubConfig) throws Exception {
-        BCOSStubConfig.ChainRpcService chainRpcServiceConfig = bcosStubConfig.getChannelService();
+        BCOSStubConfig.ChainRpcService chainRpcServiceConfig = bcosStubConfig.getChainRpcService();
 
         // groupID
         String groupID = chainRpcServiceConfig.getChain().getGroupID();
-        // ssl connect type
-        int cryptoType =
-                bcosStubConfig.getChannelService().isGmConnectEnable()
-                        ? CryptoType.SM_TYPE
-                        : CryptoType.ECDSA_TYPE;
-
         // cryptoMaterial
         Map<String, Object> cryptoMaterial = buildCryptoMaterial(chainRpcServiceConfig);
 
@@ -67,6 +60,7 @@ public class ClientUtility {
         Map<String, Object> cryptoMaterial = new HashMap<>();
         if (chainRpcServiceConfig.isGmConnectEnable()) {
             // gm ssl
+            cryptoMaterial.put("useSMCrypto", "true");
             checkCertExistAndPut(
                     resolver, cryptoMaterial, chainRpcServiceConfig.getGmCaCert(), "caCert");
             checkCertExistAndPut(
@@ -78,6 +72,7 @@ public class ClientUtility {
             checkCertExistAndPut(
                     resolver, cryptoMaterial, chainRpcServiceConfig.getGmEnSslKey(), "enSslKey");
         } else {
+            cryptoMaterial.put("useSMCrypto", "false");
             // not gm ssl
             checkCertExistAndPut(
                     resolver, cryptoMaterial, chainRpcServiceConfig.getCaCert(), "caCert");
@@ -99,7 +94,7 @@ public class ClientUtility {
         if (!certResource.exists() || !certResource.isFile()) {
             throw new WeCrossException(
                     WeCrossException.ErrorCode.DIR_NOT_EXISTS,
-                    key + " does not exist, please check.");
+                    key + " does not exist, please check location: " + certLocation);
         }
         cryptoMaterial.put(key, certResource.getFile().getPath());
     }

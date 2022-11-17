@@ -269,7 +269,7 @@ public class BCOSStubConfig {
         this.type = type;
     }
 
-    public ChainRpcService getChannelService() {
+    public ChainRpcService getChainRpcService() {
         return chainRpcService;
     }
 
