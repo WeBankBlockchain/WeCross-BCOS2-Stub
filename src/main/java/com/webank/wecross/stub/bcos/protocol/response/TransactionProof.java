@@ -1,45 +1,44 @@
 package com.webank.wecross.stub.bcos.protocol.response;
 
-import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
-import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
+import org.fisco.bcos.sdk.v3.client.protocol.model.JsonTransactionResponse;
+import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
 
 public class TransactionProof {
 
-    private TransactionWithProof.TransactionAndProof transAndProof;
-    private TransactionReceiptWithProof.ReceiptAndProof receiptAndProof;
+    private JsonTransactionResponse transWithProof;
+    private TransactionReceipt receiptWithProof;
 
     public TransactionProof() {}
 
     public TransactionProof(
-            TransactionWithProof.TransactionAndProof transAndProof,
-            TransactionReceiptWithProof.ReceiptAndProof receiptAndProof) {
-        this.transAndProof = transAndProof;
-        this.receiptAndProof = receiptAndProof;
+            JsonTransactionResponse transWithProof, TransactionReceipt receiptWithProof) {
+        this.transWithProof = transWithProof;
+        this.receiptWithProof = receiptWithProof;
     }
 
-    public void setTransAndProof(TransactionWithProof.TransactionAndProof transAndProof) {
-        this.transAndProof = transAndProof;
+    public JsonTransactionResponse getTransWithProof() {
+        return transWithProof;
     }
 
-    public void setReceiptAndProof(TransactionReceiptWithProof.ReceiptAndProof receiptAndProof) {
-        this.receiptAndProof = receiptAndProof;
+    public void setTransWithProof(JsonTransactionResponse transWithProof) {
+        this.transWithProof = transWithProof;
     }
 
-    public TransactionWithProof.TransactionAndProof getTransAndProof() {
-        return transAndProof;
+    public TransactionReceipt getReceiptWithProof() {
+        return receiptWithProof;
     }
 
-    public TransactionReceiptWithProof.ReceiptAndProof getReceiptAndProof() {
-        return receiptAndProof;
+    public void setReceiptWithProof(TransactionReceipt receiptWithProof) {
+        this.receiptWithProof = receiptWithProof;
     }
 
     @Override
     public String toString() {
         return "TransactionProof{"
-                + "transAndProof="
-                + transAndProof
-                + ", receiptAndProof="
-                + receiptAndProof
+                + "transWithProof="
+                + transWithProof
+                + ", receiptWithProof="
+                + receiptWithProof
                 + '}';
     }
 }

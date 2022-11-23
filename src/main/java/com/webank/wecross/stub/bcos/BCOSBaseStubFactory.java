@@ -9,7 +9,7 @@ import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.custom.CommandHandlerDispatcher;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
-import com.webank.wecross.stub.bcos.custom.RegisterCnsHandler;
+import com.webank.wecross.stub.bcos.custom.LinkBfsHandler;
 import com.webank.wecross.stub.bcos.preparation.HubContractDeployment;
 import com.webank.wecross.stub.bcos.preparation.ProxyContractDeployment;
 import java.io.File;
@@ -24,8 +24,8 @@ import org.apache.commons.io.FileUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
-import org.fisco.bcos.sdk.crypto.CryptoSuite;
-import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.v3.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.v3.crypto.keypair.CryptoKeyPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
@@ -63,7 +63,7 @@ public class BCOSBaseStubFactory implements StubFactory {
     }
 
     /**
-     * The stub type, BCOS2.0 or GM_BCOS2.0
+     * The stub type, BCOS3.0 or GM_BCOS3.0
      *
      * @return
      */
@@ -76,27 +76,27 @@ public class BCOSBaseStubFactory implements StubFactory {
         logger.info("New driver type:{}", this.cryptoSuite.getCryptoTypeConfig());
 
         /** Initializes the cns service */
-        AsyncCnsService asyncCnsService = new AsyncCnsService();
+        AsyncBfsService asyncBfsService = new AsyncBfsService();
 
         /** Initializes the custom command dispatcher */
-        RegisterCnsHandler registerCnsHandler = new RegisterCnsHandler();
-        registerCnsHandler.setAsyncCnsService(asyncCnsService);
+        LinkBfsHandler linkBfsHandler = new LinkBfsHandler();
+        linkBfsHandler.setAsyncBfsService(asyncBfsService);
 
         DeployContractHandler deployContractHandler = new DeployContractHandler();
-        deployContractHandler.setAsyncCnsService(asyncCnsService);
+        deployContractHandler.setAsyncCnsService(asyncBfsService);
 
         CommandHandlerDispatcher commandHandlerDispatcher = new CommandHandlerDispatcher();
         commandHandlerDispatcher.registerCommandHandler(
-                BCOSConstant.CUSTOM_COMMAND_REGISTER, registerCnsHandler);
+                BCOSConstant.CUSTOM_COMMAND_REGISTER, linkBfsHandler);
         commandHandlerDispatcher.registerCommandHandler(
                 BCOSConstant.CUSTOM_COMMAND_DEPLOY, deployContractHandler);
 
         /** Initializes the bcos driver */
         BCOSDriver driver = new BCOSDriver(this.cryptoSuite);
-        driver.setAsyncCnsService(asyncCnsService);
+        driver.setAsyncBfsService(asyncBfsService);
         driver.setCommandHandlerDispatcher(commandHandlerDispatcher);
 
-        asyncCnsService.setBcosDriver(driver);
+        asyncBfsService.setBcosDriver(driver);
 
         return driver;
     }
@@ -216,7 +216,7 @@ public class BCOSBaseStubFactory implements StubFactory {
                             + path
                             + "\"");
         } catch (Exception e) {
-            System.out.println("Exception: " + e);
+            e.printStackTrace();
         }
     }
 
@@ -232,24 +232,24 @@ public class BCOSBaseStubFactory implements StubFactory {
                             + "'\n"
                             + "    type = '"
                             + getStubType()
-                            + "' # BCOS2.0 or GM_BCOS2.0\n"
+                            + "' # BCOS3.0 or GM_BCOS3.0\n"
                             + "\n"
                             + "[chain]\n"
-                            + "    groupId = 1 # default 1\n"
-                            + "    chainId = 1 # default 1\n"
+                            + "    groupId = \"group0\" # default group0\n"
+                            + "    chainId = \"chain0\" # default chain0\n"
                             + "\n"
-                            + "[channelService]\n"
+                            + "[chainRpcService]\n"
                             + "    caCert = 'ca.crt'\n"
                             + "    sslCert = 'sdk.crt'\n"
                             + "    sslKey = 'sdk.key'\n"
-                            + (("BCOS2.0".equals(getStubType()))
+                            + (("BCOS3.0".equals(getStubType()))
                                     ? "    gmConnectEnable = false\n"
                                     : "    gmConnectEnable = true\n")
-                            + "    gmCaCert = 'gm/gmca.crt'\n"
-                            + "    gmSslCert = 'gm/gmsdk.crt'\n"
-                            + "    gmSslKey = 'gm/gmsdk.key'\n"
-                            + "    gmEnSslCert = 'gm/gmensdk.crt'\n"
-                            + "    gmEnSslKey = 'gm/gmensdk.key'\n"
+                            + "    gmCaCert = 'sm_ca.crt'\n"
+                            + "    gmSslCert = 'sm_sdk.crt'\n"
+                            + "    gmSslKey = 'sm_sdk.key'\n"
+                            + "    gmEnSslCert = 'sm_ensdk.crt'\n"
+                            + "    gmEnSslKey = 'sm_ensdk.key'\n"
                             + "    timeout = 300000  # ms, default 60000ms\n"
                             + "    connectionsStr = ['127.0.0.1:20200']\n"
                             + "\n";
@@ -280,6 +280,7 @@ public class BCOSBaseStubFactory implements StubFactory {
                             + "\"");
         } catch (Exception e) {
             logger.error("Exception: ", e);
+            e.printStackTrace();
         }
     }
 
@@ -291,7 +292,7 @@ public class BCOSBaseStubFactory implements StubFactory {
                     new File(path + File.separator + "WeCrossProxy" + File.separator + proxyPath);
             FileUtils.copyURLToFile(proxyDir, dest);
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
     }
 
@@ -302,7 +303,7 @@ public class BCOSBaseStubFactory implements StubFactory {
             File dest = new File(path + File.separator + "WeCrossHub" + File.separator + hubPath);
             FileUtils.copyURLToFile(hubDir, dest);
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
     }
 }

@@ -2,18 +2,16 @@ package com.webank.wecross.stub.bcos.client;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
-import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
-import org.fisco.bcos.sdk.client.protocol.response.Call;
-import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
-import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
-import org.fisco.bcos.sdk.model.callback.TransactionCallback;
+import org.fisco.bcos.sdk.v3.client.protocol.model.JsonTransactionResponse;
+import org.fisco.bcos.sdk.v3.client.protocol.response.BcosBlock;
+import org.fisco.bcos.sdk.v3.client.protocol.response.BcosBlockHeader;
+import org.fisco.bcos.sdk.v3.client.protocol.response.Call;
+import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
+import org.fisco.bcos.sdk.v3.model.callback.TransactionCallback;
 
-public class ClientWrapperWithExceptionMock extends AbstractClientWrapper {
+public class ClientWrapperWithExceptionMock extends ClientWrapperImplMock {
 
-    public ClientWrapperWithExceptionMock() {
-        super(null);
-    }
+    public ClientWrapperWithExceptionMock() {}
 
     @Override
     public BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException {
@@ -36,19 +34,19 @@ public class ClientWrapperWithExceptionMock extends AbstractClientWrapper {
     }
 
     @Override
-    public TransactionReceiptWithProof.ReceiptAndProof getTransactionReceiptByHashWithProof(
-            String transactionHash) throws IOException {
+    public TransactionReceipt getTransactionReceiptByHashWithProof(String transactionHash)
+            throws IOException {
         throw new IOException(" IOException");
     }
 
     @Override
-    public TransactionWithProof.TransactionAndProof getTransactionByHashWithProof(
-            String transactionHash) throws IOException {
+    public JsonTransactionResponse getTransactionByHashWithProof(String transactionHash)
+            throws IOException {
         throw new IOException(" IOException");
     }
 
     @Override
-    public Call.CallOutput call(String accountAddress, String contractAddress, String data)
+    public Call.CallOutput call(String accountAddress, String contractAddress, byte[] data)
             throws IOException {
         throw new IOException(" IOException");
     }

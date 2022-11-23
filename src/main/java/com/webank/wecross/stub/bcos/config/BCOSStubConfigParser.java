@@ -52,9 +52,9 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         BCOSStubConfig.Chain chain = getChainConfig(chainConfigValue);
 
         Map<String, Object> channelServiceConfigValue =
-                (Map<String, Object>) stubConfig.get("channelService");
-        requireItemNotNull(channelServiceConfigValue, "channelService", getConfigPath());
-        BCOSStubConfig.ChannelService channelServiceConfig =
+                (Map<String, Object>) stubConfig.get("chainRpcService");
+        requireItemNotNull(channelServiceConfigValue, "chainRpcService", getConfigPath());
+        BCOSStubConfig.ChainRpcService chainRpcServiceConfig =
                 getChannelServiceConfig(getConfigPath(), channelServiceConfigValue);
 
         List<Map<String, String>> resourcesConfigValue =
@@ -69,34 +69,28 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
 
         BCOSStubConfig bcosStubConfig = new BCOSStubConfig();
         bcosStubConfig.setType(stubType);
-        bcosStubConfig.setChannelService(channelServiceConfig);
+        bcosStubConfig.setChannelService(chainRpcServiceConfig);
         bcosStubConfig.setResources(bcosResources);
         bcosStubConfig.setChain(chain);
-        channelServiceConfig.setChain(chain);
+        chainRpcServiceConfig.setChain(chain);
 
         return bcosStubConfig;
     }
 
     public BCOSStubConfig.Chain getChainConfig(Map<String, Object> chainConfigValue) {
         // groupId field
-        Long groupId = (Long) chainConfigValue.get("groupId");
+        String groupId = (String) chainConfigValue.get("groupId");
         // chain field
-        Long chainId = (Long) chainConfigValue.get("chainId");
+        String chainId = (String) chainConfigValue.get("chainId");
 
         BCOSStubConfig.Chain chain = new BCOSStubConfig.Chain();
-        chain.setChainID(
-                Objects.nonNull(chainId)
-                        ? chainId.intValue()
-                        : ClientDefaultConfig.DEFAULT_CHAIN_ID);
-        chain.setGroupID(
-                Objects.nonNull(groupId)
-                        ? groupId.intValue()
-                        : ClientDefaultConfig.DEFAULT_GROUP_ID);
+        chain.setChainID(Objects.nonNull(chainId) ? chainId : ClientDefaultConfig.DEFAULT_CHAIN_ID);
+        chain.setGroupID(Objects.nonNull(groupId) ? groupId : ClientDefaultConfig.DEFAULT_GROUP_ID);
 
         return chain;
     }
 
-    public BCOSStubConfig.ChannelService getChannelServiceConfig(
+    public BCOSStubConfig.ChainRpcService getChannelServiceConfig(
             String configFile, Map<String, Object> channelServiceConfigValue) {
         // timeout field
         Long timeout = (Long) channelServiceConfigValue.get("timeout");
@@ -108,16 +102,16 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         // caCert field
         String caCertPath =
                 stubDir + File.separator + (String) channelServiceConfigValue.get("caCert");
-        requireFieldNotNull(caCertPath, "channelService", "caCert", configFile);
+        requireFieldNotNull(caCertPath, "chainRpcService", "caCert", configFile);
 
         // sslCert field
         String sslCert =
                 stubDir + File.separator + (String) channelServiceConfigValue.get("sslCert");
-        requireFieldNotNull(sslCert, "channelService", "sslCert", configFile);
+        requireFieldNotNull(sslCert, "chainRpcService", "sslCert", configFile);
 
         // sslKey field
         String sslKey = stubDir + File.separator + (String) channelServiceConfigValue.get("sslKey");
-        requireFieldNotNull(sslKey, "channelService", "sslKey", configFile);
+        requireFieldNotNull(sslKey, "chainRpcService", "sslKey", configFile);
 
         boolean gmConnectEnable =
                 channelServiceConfigValue.get("gmConnectEnable") != null
@@ -127,63 +121,63 @@ public class BCOSStubConfigParser extends AbstractBCOSConfigParser {
         @SuppressWarnings("unchecked")
         List<String> connectionsStr =
                 (List<String>) channelServiceConfigValue.get("connectionsStr");
-        requireFieldNotNull(connectionsStr, "channelService", "connectionsStr", configFile);
+        requireFieldNotNull(connectionsStr, "chainRpcService", "connectionsStr", configFile);
 
-        BCOSStubConfig.ChannelService channelServiceConfig = new BCOSStubConfig.ChannelService();
-        channelServiceConfig.setTimeout(
+        BCOSStubConfig.ChainRpcService chainRpcServiceConfig = new BCOSStubConfig.ChainRpcService();
+        chainRpcServiceConfig.setTimeout(
                 Objects.isNull(timeout)
                         ? ClientDefaultConfig.CHANNEL_SERVICE_DEFAULT_TIMEOUT
                         : timeout.intValue());
 
-        channelServiceConfig.setThreadNum(
+        chainRpcServiceConfig.setThreadNum(
                 Objects.isNull(threadNum)
                         ? ClientDefaultConfig.CHANNEL_SERVICE_DEFAULT_THREAD_NUMBER
                         : threadNum.intValue());
 
-        channelServiceConfig.setQueueCapacity(
+        chainRpcServiceConfig.setQueueCapacity(
                 Objects.isNull(threadQueueCapacity)
                         ? ClientDefaultConfig.CHANNEL_SERVICE_DEFAULT_THREAD_QUEUE_CAPACITY
                         : threadQueueCapacity.intValue());
 
-        channelServiceConfig.setCaCert(caCertPath);
-        channelServiceConfig.setSslCert(sslCert);
-        channelServiceConfig.setSslKey(sslKey);
-        channelServiceConfig.setGmConnectEnable(gmConnectEnable);
+        chainRpcServiceConfig.setCaCert(caCertPath);
+        chainRpcServiceConfig.setSslCert(sslCert);
+        chainRpcServiceConfig.setSslKey(sslKey);
+        chainRpcServiceConfig.setGmConnectEnable(gmConnectEnable);
 
         if (gmConnectEnable) {
             String gmCaCert =
                     stubDir + File.separator + (String) channelServiceConfigValue.get("gmCaCert");
-            requireFieldNotNull(gmCaCert, "channelService", "gmCaCert", configFile);
+            requireFieldNotNull(gmCaCert, "chainRpcService", "gmCaCert", configFile);
 
             String gmSslCert =
                     stubDir + File.separator + (String) channelServiceConfigValue.get("gmSslCert");
-            requireFieldNotNull(gmSslCert, "channelService", "gmSslCert", configFile);
+            requireFieldNotNull(gmSslCert, "chainRpcService", "gmSslCert", configFile);
 
             String gmSslKey =
                     stubDir + File.separator + (String) channelServiceConfigValue.get("gmSslKey");
-            requireFieldNotNull(gmSslKey, "channelService", "gmSslKey", configFile);
+            requireFieldNotNull(gmSslKey, "chainRpcService", "gmSslKey", configFile);
 
             String gmEnSslCert =
                     stubDir
                             + File.separator
                             + (String) channelServiceConfigValue.get("gmEnSslCert");
-            requireFieldNotNull(gmEnSslCert, "channelService", "gmEnSslCert", configFile);
+            requireFieldNotNull(gmEnSslCert, "chainRpcService", "gmEnSslCert", configFile);
 
             String gmEnSslKey =
                     stubDir + File.separator + (String) channelServiceConfigValue.get("gmEnSslKey");
-            requireFieldNotNull(gmEnSslKey, "channelService", "gmEnSslKey", configFile);
+            requireFieldNotNull(gmEnSslKey, "chainRpcService", "gmEnSslKey", configFile);
 
-            channelServiceConfig.setGmCaCert(gmCaCert);
-            channelServiceConfig.setGmSslCert(gmSslCert);
-            channelServiceConfig.setGmSslKey(gmSslKey);
-            channelServiceConfig.setGmEnSslCert(gmEnSslCert);
-            channelServiceConfig.setGmEnSslKey(gmEnSslKey);
+            chainRpcServiceConfig.setGmCaCert(gmCaCert);
+            chainRpcServiceConfig.setGmSslCert(gmSslCert);
+            chainRpcServiceConfig.setGmSslKey(gmSslKey);
+            chainRpcServiceConfig.setGmEnSslCert(gmEnSslCert);
+            chainRpcServiceConfig.setGmEnSslKey(gmEnSslKey);
         }
-        channelServiceConfig.setConnectionsStr(connectionsStr);
+        chainRpcServiceConfig.setConnectionsStr(connectionsStr);
 
-        logger.debug(" ChannelServiceConfig: {}", channelServiceConfig);
+        logger.debug(" ChannelServiceConfig: {}", chainRpcServiceConfig);
 
-        return channelServiceConfig;
+        return chainRpcServiceConfig;
     }
 
     public List<BCOSStubConfig.Resource> getBCOSResourceConfig(

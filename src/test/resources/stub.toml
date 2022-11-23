@@ -1,21 +1,21 @@
 [common]
     name = 'bcos' # stub must be same with directory name
-    type = 'BCOS2.0' # BCOS or GM_BCOS2.0
+    type = 'BCOS3.0'
 
 [chain]
-    groupId = 1 # default 1
-    chainId = 1 # default 1
+    groupId = "group0"
+    chainId = "chain0"
 
-[channelService]
+[chainRpcService]
     caCert = 'ca.crt'
     sslCert = 'sdk.crt'
     sslKey = 'sdk.key'
     gmConnectEnable = false #ssl gm or not
-    gmCaCert = 'gm/gmca.crt'
-    gmSslCert = 'gm/gmsdk.crt'
-    gmSslKey = 'gm/gmsdk.key'
-    gmEnSslCert = 'gm/gmensdk.crt'
-    gmEnSslKey = 'gm/gmensdk.key'
+    gmCaCert = 'gm/sm_ca.crt'
+    gmSslCert = 'gm/sm_sdk.crt'
+    gmSslKey = 'gm/sm_sdk.key'
+    gmEnSslCert = 'gm/sm_ensdk.crt'
+    gmEnSslKey = 'gm/sm_ensdk.key'
     timeout = 300000  # ms, default 60000ms
     connectionsStr = ['127.0.0.1:20200']
     threadNum = 18

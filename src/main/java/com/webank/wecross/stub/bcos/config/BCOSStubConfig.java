@@ -5,8 +5,8 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
-import org.fisco.bcos.sdk.crypto.hash.Hash;
-import org.fisco.bcos.sdk.crypto.hash.Keccak256;
+import org.fisco.bcos.sdk.v3.crypto.hash.Hash;
+import org.fisco.bcos.sdk.v3.crypto.hash.Keccak256;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,8 +17,8 @@ public class BCOSStubConfig {
     private String type;
     /** */
     private Chain chain;
-    /** ChannelServiceConfig, used for JavaSDK initialize */
-    private ChannelService channelService;
+    /** ChainRpcServiceConfig, used for JavaSDK initialize */
+    private ChainRpcService chainRpcService;
     /** BCOS resource list */
     private List<Resource> resources;
 
@@ -27,22 +27,22 @@ public class BCOSStubConfig {
     }
 
     public static class Chain {
-        private int groupID;
-        private int chainID;
+        private String groupID;
+        private String chainID;
 
-        public int getGroupID() {
+        public String getGroupID() {
             return groupID;
         }
 
-        public void setGroupID(int groupID) {
+        public void setGroupID(String groupID) {
             this.groupID = groupID;
         }
 
-        public int getChainID() {
+        public String getChainID() {
             return chainID;
         }
 
-        public void setChainID(int chainID) {
+        public void setChainID(String chainID) {
             this.chainID = chainID;
         }
 
@@ -52,7 +52,7 @@ public class BCOSStubConfig {
         }
     }
 
-    public static class ChannelService {
+    public static class ChainRpcService {
         private int timeout;
         private String caCert;
         private String sslCert;
@@ -183,7 +183,7 @@ public class BCOSStubConfig {
 
         @Override
         public String toString() {
-            return "ChannelService{"
+            return "ChainRpcService{"
                     + "timeout="
                     + timeout
                     + ", caCert='"
@@ -269,12 +269,12 @@ public class BCOSStubConfig {
         this.type = type;
     }
 
-    public ChannelService getChannelService() {
-        return channelService;
+    public ChainRpcService getChainRpcService() {
+        return chainRpcService;
     }
 
-    public void setChannelService(ChannelService channelService) {
-        this.channelService = channelService;
+    public void setChannelService(ChainRpcService chainRpcService) {
+        this.chainRpcService = chainRpcService;
     }
 
     public List<Resource> getResources() {
@@ -299,8 +299,8 @@ public class BCOSStubConfig {
                 + "type='"
                 + type
                 + '\''
-                + ", channelService="
-                + channelService
+                + ", chainRpcService="
+                + chainRpcService
                 + ", resourceConfig="
                 + resources
                 + '}';

@@ -5,7 +5,7 @@ import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.bcos.contract.BlockUtility;
 import java.io.IOException;
 import java.math.BigInteger;
-import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
+import org.fisco.bcos.sdk.v3.client.protocol.response.BcosBlock;
 
 public class ClientBlockManager implements BlockManager {
     private ClientWrapper clientWrapper;

@@ -5,11 +5,10 @@ import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import org.fisco.bcos.sdk.BcosSDK;
-import org.fisco.bcos.sdk.client.Client;
-import org.fisco.bcos.sdk.config.ConfigOption;
-import org.fisco.bcos.sdk.config.model.ConfigProperty;
-import org.fisco.bcos.sdk.model.CryptoType;
+import org.fisco.bcos.sdk.v3.BcosSDK;
+import org.fisco.bcos.sdk.v3.client.Client;
+import org.fisco.bcos.sdk.v3.config.ConfigOption;
+import org.fisco.bcos.sdk.v3.config.model.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -20,31 +19,25 @@ public class ClientUtility {
     private static final Logger logger = LoggerFactory.getLogger(ClientUtility.class);
 
     public static Client initClient(BCOSStubConfig bcosStubConfig) throws Exception {
-        BCOSStubConfig.ChannelService channelServiceConfig = bcosStubConfig.getChannelService();
+        BCOSStubConfig.ChainRpcService chainRpcServiceConfig = bcosStubConfig.getChainRpcService();
 
         // groupID
-        int groupID = channelServiceConfig.getChain().getGroupID();
-        // ssl connect type
-        int cryptoType =
-                bcosStubConfig.getChannelService().isGmConnectEnable()
-                        ? CryptoType.SM_TYPE
-                        : CryptoType.ECDSA_TYPE;
-
+        String groupID = chainRpcServiceConfig.getChain().getGroupID();
         // cryptoMaterial
-        Map<String, Object> cryptoMaterial = buildCryptoMaterial(channelServiceConfig);
+        Map<String, Object> cryptoMaterial = buildCryptoMaterial(chainRpcServiceConfig);
 
         // network
         Map<String, Object> network = new HashMap<>();
-        network.put("peers", channelServiceConfig.getConnectionsStr());
+        network.put("peers", chainRpcServiceConfig.getConnectionsStr());
 
         // threadPool
         Map<String, Object> threadPool = new HashMap<>();
         threadPool.put(
-                "channelProcessorThreadSize", String.valueOf(channelServiceConfig.getThreadNum()));
+                "channelProcessorThreadSize", String.valueOf(chainRpcServiceConfig.getThreadNum()));
         threadPool.put(
-                "receiptProcessorThreadSize", String.valueOf(channelServiceConfig.getThreadNum()));
+                "receiptProcessorThreadSize", String.valueOf(chainRpcServiceConfig.getThreadNum()));
         threadPool.put(
-                "maxBlockingQueueSize", String.valueOf(channelServiceConfig.getQueueCapacity()));
+                "maxBlockingQueueSize", String.valueOf(chainRpcServiceConfig.getQueueCapacity()));
 
         // configProperty
         ConfigProperty configProperty = new ConfigProperty();
@@ -53,7 +46,7 @@ public class ClientUtility {
         configProperty.setThreadPool(threadPool);
 
         // configOption
-        ConfigOption configOption = new ConfigOption(configProperty, cryptoType);
+        ConfigOption configOption = new ConfigOption(configProperty);
 
         // bcosSDK
         BcosSDK bcosSDK = new BcosSDK(configOption);
@@ -61,30 +54,32 @@ public class ClientUtility {
     }
 
     private static Map<String, Object> buildCryptoMaterial(
-            BCOSStubConfig.ChannelService channelServiceConfig)
+            BCOSStubConfig.ChainRpcService chainRpcServiceConfig)
             throws WeCrossException, IOException {
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         Map<String, Object> cryptoMaterial = new HashMap<>();
-        if (channelServiceConfig.isGmConnectEnable()) {
+        if (chainRpcServiceConfig.isGmConnectEnable()) {
             // gm ssl
+            cryptoMaterial.put("useSMCrypto", "true");
             checkCertExistAndPut(
-                    resolver, cryptoMaterial, channelServiceConfig.getGmCaCert(), "caCert");
+                    resolver, cryptoMaterial, chainRpcServiceConfig.getGmCaCert(), "caCert");
             checkCertExistAndPut(
-                    resolver, cryptoMaterial, channelServiceConfig.getGmSslCert(), "sslCert");
+                    resolver, cryptoMaterial, chainRpcServiceConfig.getGmSslCert(), "sslCert");
             checkCertExistAndPut(
-                    resolver, cryptoMaterial, channelServiceConfig.getGmSslKey(), "sslKey");
+                    resolver, cryptoMaterial, chainRpcServiceConfig.getGmSslKey(), "sslKey");
             checkCertExistAndPut(
-                    resolver, cryptoMaterial, channelServiceConfig.getGmEnSslCert(), "enSslCert");
+                    resolver, cryptoMaterial, chainRpcServiceConfig.getGmEnSslCert(), "enSslCert");
             checkCertExistAndPut(
-                    resolver, cryptoMaterial, channelServiceConfig.getGmEnSslKey(), "enSslKey");
+                    resolver, cryptoMaterial, chainRpcServiceConfig.getGmEnSslKey(), "enSslKey");
         } else {
+            cryptoMaterial.put("useSMCrypto", "false");
             // not gm ssl
             checkCertExistAndPut(
-                    resolver, cryptoMaterial, channelServiceConfig.getCaCert(), "caCert");
+                    resolver, cryptoMaterial, chainRpcServiceConfig.getCaCert(), "caCert");
             checkCertExistAndPut(
-                    resolver, cryptoMaterial, channelServiceConfig.getSslCert(), "sslCert");
+                    resolver, cryptoMaterial, chainRpcServiceConfig.getSslCert(), "sslCert");
             checkCertExistAndPut(
-                    resolver, cryptoMaterial, channelServiceConfig.getSslKey(), "sslKey");
+                    resolver, cryptoMaterial, chainRpcServiceConfig.getSslKey(), "sslKey");
         }
         return cryptoMaterial;
     }
@@ -99,7 +94,7 @@ public class ClientUtility {
         if (!certResource.exists() || !certResource.isFile()) {
             throw new WeCrossException(
                     WeCrossException.ErrorCode.DIR_NOT_EXISTS,
-                    key + " does not exist, please check.");
+                    key + " does not exist, please check location: " + certLocation);
         }
         cryptoMaterial.put(key, certResource.getFile().getPath());
     }

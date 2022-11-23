@@ -6,33 +6,33 @@ import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.TransactionException;
-import com.webank.wecross.stub.bcos.AsyncCnsService;
+import com.webank.wecross.stub.bcos.AsyncBfsService;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
-import com.webank.wecross.stub.bcos.preparation.CnsService;
+import com.webank.wecross.stub.bcos.preparation.BfsServiceWrapper;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.Objects;
-import org.fisco.bcos.sdk.abi.datatypes.Address;
-import org.fisco.bcos.sdk.crypto.CryptoSuite;
-import org.fisco.bcos.sdk.model.CryptoType;
-import org.fisco.bcos.sdk.utils.Numeric;
+import org.fisco.bcos.sdk.v3.codec.datatypes.Address;
+import org.fisco.bcos.sdk.v3.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.v3.model.CryptoType;
+import org.fisco.bcos.sdk.v3.utils.Numeric;
 import org.fisco.solc.compiler.CompilationResult;
 import org.fisco.solc.compiler.SolidityCompiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RegisterCnsHandler implements CommandHandler {
-    private static final Logger logger = LoggerFactory.getLogger(RegisterCnsHandler.class);
+public class LinkBfsHandler implements CommandHandler {
+    private static final Logger logger = LoggerFactory.getLogger(LinkBfsHandler.class);
 
-    private AsyncCnsService asyncCnsService;
+    private AsyncBfsService asyncBfsService;
 
-    public AsyncCnsService getAsyncCnsService() {
-        return asyncCnsService;
+    public AsyncBfsService getAsyncBfsService() {
+        return asyncBfsService;
     }
 
-    public void setAsyncCnsService(AsyncCnsService asyncCnsService) {
-        this.asyncCnsService = asyncCnsService;
+    public void setAsyncBfsService(AsyncBfsService asyncBfsService) {
+        this.asyncBfsService = asyncBfsService;
     }
 
     /** @param args version || address || abi */
@@ -73,7 +73,7 @@ public class RegisterCnsHandler implements CommandHandler {
         String abi = sourceContent;
 
         /* Parameter calibration */
-        if (version.length() > CnsService.MAX_VERSION_LENGTH) {
+        if (version.length() > BfsServiceWrapper.MAX_VERSION_LENGTH) {
             callback.onResponse(
                     new Exception("The length of version field must be less than or equal to 40"),
                     null);
@@ -137,7 +137,7 @@ public class RegisterCnsHandler implements CommandHandler {
 
         String finalAbi = abi;
         String finalAddress = address;
-        asyncCnsService.registerCNSByProxy(
+        asyncBfsService.linkBFSByProxy(
                 path,
                 address,
                 version,

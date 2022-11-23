@@ -1,7 +1,7 @@
 package com.webank.wecross.stub.bcos.contract;
 
-import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple2;
-import org.fisco.bcos.sdk.client.protocol.response.Call;
+import org.fisco.bcos.sdk.v3.client.protocol.response.Call;
+import org.fisco.bcos.sdk.v3.codec.datatypes.generated.tuples.generated.Tuple2;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -9,8 +9,8 @@ public class RevertMessageTest {
     @Test
     public void callRevertMessageTest() {
         Call.CallOutput callOutput = new Call.CallOutput();
-        callOutput.setCurrentBlockNumber("0x1725d");
-        callOutput.setStatus("0x16");
+        callOutput.setBlockNumber(123);
+        callOutput.setStatus(16);
         callOutput.setOutput(
                 "0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000008408c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003846726f7a656e20636f6e74726163743a32326435633762306433323734363366363363643466343932323030653832663961623034383962000000000000000000000000000000000000000000000000000000000000000000000000");
 

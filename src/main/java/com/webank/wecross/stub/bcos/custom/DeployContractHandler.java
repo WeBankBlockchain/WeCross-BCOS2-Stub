@@ -8,27 +8,25 @@ import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionRequest;
-import com.webank.wecross.stub.bcos.AsyncCnsService;
+import com.webank.wecross.stub.bcos.AsyncBfsService;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
-import com.webank.wecross.stub.bcos.preparation.CnsService;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
-import org.fisco.bcos.sdk.abi.wrapper.ABICodecJsonWrapper;
-import org.fisco.bcos.sdk.abi.wrapper.ABIDefinition;
-import org.fisco.bcos.sdk.abi.wrapper.ABIDefinitionFactory;
-import org.fisco.bcos.sdk.abi.wrapper.ABIObject;
-import org.fisco.bcos.sdk.abi.wrapper.ABIObjectFactory;
-import org.fisco.bcos.sdk.abi.wrapper.ContractABIDefinition;
-import org.fisco.bcos.sdk.crypto.CryptoSuite;
-import org.fisco.bcos.sdk.model.CryptoType;
-import org.fisco.bcos.sdk.utils.Numeric;
+import org.fisco.bcos.sdk.v3.codec.wrapper.ABIDefinition;
+import org.fisco.bcos.sdk.v3.codec.wrapper.ABIDefinitionFactory;
+import org.fisco.bcos.sdk.v3.codec.wrapper.ABIObject;
+import org.fisco.bcos.sdk.v3.codec.wrapper.ABIObjectFactory;
+import org.fisco.bcos.sdk.v3.codec.wrapper.ContractABIDefinition;
+import org.fisco.bcos.sdk.v3.codec.wrapper.ContractCodecJsonWrapper;
+import org.fisco.bcos.sdk.v3.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.v3.model.CryptoType;
+import org.fisco.bcos.sdk.v3.utils.Hex;
 import org.fisco.solc.compiler.CompilationResult;
 import org.fisco.solc.compiler.SolidityCompiler;
 import org.slf4j.Logger;
@@ -37,23 +35,23 @@ import org.slf4j.LoggerFactory;
 public class DeployContractHandler implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(DeployContractHandler.class);
 
-    private ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
+    private ContractCodecJsonWrapper abiCodecJsonWrapper = new ContractCodecJsonWrapper();
 
-    public AsyncCnsService asyncCnsService;
+    public AsyncBfsService asyncBfsService;
 
-    public AsyncCnsService getAsyncCnsService() {
-        return asyncCnsService;
+    public AsyncBfsService getAsyncCnsService() {
+        return asyncBfsService;
     }
 
-    public void setAsyncCnsService(AsyncCnsService asyncCnsService) {
-        this.asyncCnsService = asyncCnsService;
+    public void setAsyncCnsService(AsyncBfsService asyncBfsService) {
+        this.asyncBfsService = asyncBfsService;
     }
 
-    public ABICodecJsonWrapper getAbiCodecJsonWrapper() {
+    public ContractCodecJsonWrapper getAbiCodecJsonWrapper() {
         return abiCodecJsonWrapper;
     }
 
-    public void setAbiCodecJsonWrapper(ABICodecJsonWrapper abiCodecJsonWrapper) {
+    public void setAbiCodecJsonWrapper(ContractCodecJsonWrapper abiCodecJsonWrapper) {
         this.abiCodecJsonWrapper = abiCodecJsonWrapper;
     }
 
@@ -83,15 +81,7 @@ public class DeployContractHandler implements CommandHandler {
         String cnsName = (String) args[0];
         String sourceContent = (String) args[1];
         String className = (String) args[2];
-        String version = (String) args[3];
-
-        /* Parameter calibration */
-        if (version.length() > CnsService.MAX_VERSION_LENGTH) {
-            callback.onResponse(
-                    new Exception("The length of version field must be less than or equal to 40"),
-                    null);
-            return;
-        }
+        // FIXME: ignore version args[3]
 
         Driver driver = getAsyncCnsService().getBcosDriver();
         /* constructor params */
@@ -144,7 +134,7 @@ public class DeployContractHandler implements CommandHandler {
         ABIDefinition constructor = contractABIDefinition.getConstructor();
 
         /* check if solidity constructor needs arguments */
-        String paramsABI = "";
+        byte[] paramsABI = new byte[0];
         if (!Objects.isNull(constructor)
                 && !Objects.isNull(constructor.getInputs())
                 && !constructor.getInputs().isEmpty()) {
@@ -159,13 +149,14 @@ public class DeployContractHandler implements CommandHandler {
             ABIObject constructorABIObject = ABIObjectFactory.createInputObject(constructor);
             try {
                 ABIObject abiObject = abiCodecJsonWrapper.encode(constructorABIObject, params);
-                paramsABI = abiObject.encode();
+                // TODO: isWasm
+                paramsABI = abiObject.encode(false);
                 if (logger.isTraceEnabled()) {
                     logger.trace(
                             " className: {}, params: {}, abi: {}",
                             className,
                             params.toArray(new String[0]),
-                            paramsABI);
+                            Hex.toHexString(paramsABI));
                 }
             } catch (Exception e) {
                 logger.error(
@@ -191,10 +182,9 @@ public class DeployContractHandler implements CommandHandler {
                     metadata.abi);
         }
 
-        deployContractAndRegisterCNS(
+        deployContractAndRegisterLink(
                 path,
-                version,
-                metadata.bin + paramsABI,
+                metadata.bin + Hex.toHexString(paramsABI),
                 metadata.abi,
                 account,
                 connection,
@@ -215,9 +205,8 @@ public class DeployContractHandler implements CommandHandler {
         void onResponse(Exception e, String address);
     }
 
-    private void deployContractAndRegisterCNS(
+    private void deployContractAndRegisterLink(
             Path path,
-            String version,
             String bin,
             String abi,
             Account account,
@@ -229,15 +218,13 @@ public class DeployContractHandler implements CommandHandler {
         Path proxyPath = new Path();
         proxyPath.setResource(BCOSConstant.BCOS_PROXY_NAME);
 
-        /* Binary data needs to be base64 encoded */
-        String base64Bin =
-                ABICodecJsonWrapper.Base64EncodedDataPrefix
-                        + Base64.getEncoder().encodeToString(Numeric.hexStringToByteArray(bin));
-
         TransactionRequest transactionRequest =
                 new TransactionRequest(
                         BCOSConstant.PROXY_METHOD_DEPLOY,
-                        Arrays.asList(path.toString(), version, base64Bin, abi)
+                        Arrays.asList(
+                                        path.toString(),
+                                        ContractCodecJsonWrapper.HexEncodedDataPrefix + bin,
+                                        abi)
                                 .toArray(new String[0]));
 
         TransactionContext transactionContext =
@@ -250,14 +237,14 @@ public class DeployContractHandler implements CommandHandler {
                 connection,
                 (exception, res) -> {
                     if (Objects.nonNull(exception)) {
-                        logger.error(" deployAndRegisterCNS e: ", exception);
+                        logger.error(" deployAndRegisterLink e: ", exception);
                         callback.onResponse(exception, null);
                         return;
                     }
 
                     if (res.getErrorCode() != BCOSStatusCode.Success) {
                         logger.error(
-                                " deployAndRegisterCNS, error: {}, message: {}",
+                                " deployAndRegisterLink, error: {}, message: {}",
                                 res.getErrorCode(),
                                 res.getMessage());
                         callback.onResponse(new Exception(res.getMessage()), null);
@@ -265,12 +252,11 @@ public class DeployContractHandler implements CommandHandler {
                     }
 
                     logger.info(
-                            " deployAndRegisterCNS successfully, name: {}, version: {}, res: {} ",
+                            " deployAndRegisterLink successfully, name: {}, res: {} ",
                             path.getResource(),
-                            version,
                             res);
 
-                    asyncCnsService.addAbiToCache(path.getResource(), abi);
+                    asyncBfsService.addAbiToCache(path.getResource(), abi);
                     callback.onResponse(null, res.getResult()[0]);
                 });
     }

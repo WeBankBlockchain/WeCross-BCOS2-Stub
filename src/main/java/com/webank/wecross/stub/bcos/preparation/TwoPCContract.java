@@ -8,7 +8,7 @@ import com.webank.wecross.stub.bcos.client.ClientBlockManager;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
-import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.v3.crypto.CryptoSuite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

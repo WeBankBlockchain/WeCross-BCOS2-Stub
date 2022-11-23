@@ -12,7 +12,6 @@ import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
-import com.webank.wecross.stub.bcos.common.StatusCode;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
 import com.webank.wecross.stub.bcos.protocol.response.TransactionPair;
@@ -28,17 +27,18 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import org.fisco.bcos.sdk.abi.FunctionEncoder;
-import org.fisco.bcos.sdk.abi.datatypes.Function;
-import org.fisco.bcos.sdk.client.protocol.model.JsonTransactionResponse;
-import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
-import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
-import org.fisco.bcos.sdk.client.protocol.response.Call;
-import org.fisco.bcos.sdk.client.protocol.response.TransactionReceiptWithProof;
-import org.fisco.bcos.sdk.client.protocol.response.TransactionWithProof;
-import org.fisco.bcos.sdk.crypto.CryptoSuite;
-import org.fisco.bcos.sdk.model.TransactionReceipt;
-import org.fisco.bcos.sdk.model.callback.TransactionCallback;
+import org.fisco.bcos.sdk.v3.client.exceptions.ClientException;
+import org.fisco.bcos.sdk.v3.client.protocol.model.JsonTransactionResponse;
+import org.fisco.bcos.sdk.v3.client.protocol.response.BcosBlock;
+import org.fisco.bcos.sdk.v3.client.protocol.response.BcosBlockHeader;
+import org.fisco.bcos.sdk.v3.client.protocol.response.Call;
+import org.fisco.bcos.sdk.v3.codec.abi.FunctionEncoder;
+import org.fisco.bcos.sdk.v3.codec.datatypes.Function;
+import org.fisco.bcos.sdk.v3.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
+import org.fisco.bcos.sdk.v3.model.TransactionReceiptStatus;
+import org.fisco.bcos.sdk.v3.model.callback.TransactionCallback;
+import org.fisco.bcos.sdk.v3.utils.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -177,11 +177,11 @@ public class BCOSConnection implements Connection {
                 logger.debug(
                         " listPaths, status: {}, blk: {}, output: {}",
                         callOutput.getStatus(),
-                        callOutput.getCurrentBlockNumber(),
+                        callOutput.getBlockNumber(),
                         callOutput.getOutput());
             }
 
-            if (StatusCode.Success.equals(callOutput.getStatus())) {
+            if (TransactionReceiptStatus.Success.getCode() == callOutput.getStatus()) {
                 String[] paths = FunctionUtility.decodeDefaultOutput(callOutput.getOutput());
                 if (Objects.nonNull(paths) && paths.length != 0) {
                     Set<String> set = new LinkedHashSet<>();
@@ -249,7 +249,9 @@ public class BCOSConnection implements Connection {
 
             Call.CallOutput callOutput =
                     clientWrapper.call(
-                            transaction.getFrom(), transaction.getTo(), transaction.getData());
+                            transaction.getFrom(),
+                            transaction.getTo(),
+                            Hex.decode(transaction.getData()));
 
             if (logger.isDebugEnabled()) {
                 logger.debug(
@@ -258,7 +260,7 @@ public class BCOSConnection implements Connection {
                         transaction.getTo(),
                         transaction.getData(),
                         callOutput.getStatus(),
-                        callOutput.getCurrentBlockNumber(),
+                        callOutput.getBlockNumber(),
                         callOutput.getOutput());
             }
 
@@ -375,28 +377,20 @@ public class BCOSConnection implements Connection {
         Response response = new Response();
         try {
             // get transaction and transaction merkle proof
-            TransactionWithProof.TransactionAndProof transAndProof =
+            JsonTransactionResponse transWithProof =
                     clientWrapper.getTransactionByHashWithProof(txHash);
 
-            if (Objects.isNull(transAndProof)
-                    || Objects.isNull(transAndProof.getTransaction())
-                    || Objects.isNull(transAndProof.getTransaction().getHash())
-                    || transAndProof
-                            .getTransaction()
-                            .getHash()
-                            .equals(
-                                    "0x0000000000000000000000000000000000000000000000000000000000000000")) {
+            if (Objects.isNull(transWithProof) || Objects.isNull(transWithProof.getHash())) {
                 response.setErrorCode(BCOSStatusCode.TransactionReceiptProofNotExist);
                 response.setErrorMessage("Transaction proof not found, tx hash: " + txHash);
                 callback.onResponse(response);
                 return;
             }
 
-            TransactionReceiptWithProof.ReceiptAndProof receiptAndProof =
+            TransactionReceipt receiptWithProof =
                     clientWrapper.getTransactionReceiptByHashWithProof(txHash);
-            if (Objects.isNull(receiptAndProof)
-                    || Objects.isNull(receiptAndProof.getReceipt())
-                    || Objects.isNull(receiptAndProof.getReceipt().getTransactionHash())) {
+            if (Objects.isNull(receiptWithProof)
+                    || Objects.isNull(receiptWithProof.getTransactionHash())) {
                 response.setErrorCode(BCOSStatusCode.TransactionReceiptProofNotExist);
                 response.setErrorMessage("Transaction proof not found, tx hash: " + txHash);
                 callback.onResponse(response);
@@ -404,7 +398,7 @@ public class BCOSConnection implements Connection {
             }
 
             TransactionProof transactionProof =
-                    new TransactionProof(transAndProof, receiptAndProof);
+                    new TransactionProof(transWithProof, receiptWithProof);
 
             response.setErrorCode(BCOSStatusCode.Success);
             response.setErrorMessage(BCOSStatusCode.getStatusMessage(BCOSStatusCode.Success));
@@ -412,12 +406,17 @@ public class BCOSConnection implements Connection {
             logger.debug(
                     " getTransactionProof, tx hash: {}, transAndProof: {}, receiptAndProof: {}",
                     txHash,
-                    transactionProof.getTransAndProof(),
-                    transactionProof.getReceiptAndProof());
+                    transactionProof.getTransWithProof(),
+                    transactionProof.getReceiptWithProof());
             callback.onResponse(response);
         } catch (UnsupportedOperationException e) {
             response.setErrorCode(BCOSStatusCode.UnsupportedRPC);
             response.setErrorMessage(e.getMessage());
+            callback.onResponse(response);
+        } catch (ClientException e) {
+            // FIXME: sdk 3.0 if cannot get transaction will throw exception
+            response.setErrorCode(BCOSStatusCode.TransactionReceiptProofNotExist);
+            response.setErrorMessage("Transaction proof not found, tx hash: " + txHash);
             callback.onResponse(response);
         } catch (Exception e) {
             response.setErrorMessage(e.getMessage());
@@ -479,8 +478,8 @@ public class BCOSConnection implements Connection {
             try {
                 BcosBlockHeader.BlockHeader blockHeader =
                         clientWrapper.getBlockHeaderByNumber(blockNumber.longValue());
-                List<String> headerData = new ArrayList<>();
-                headerData.add(objectMapper.writeValueAsString(blockHeader));
+                // TODO: why set header?
+                String headerData = objectMapper.writeValueAsString(blockHeader);
                 block.setExtraData(headerData);
 
                 if (logger.isDebugEnabled()) {
