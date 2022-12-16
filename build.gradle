@@ -8,13 +8,13 @@ plugins {
 
     id 'org.ajoberstar.grgit' version '4.0.1'
     id 'com.github.sherter.google-java-format' version '0.8'
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
 }
 
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'com.webank.wecross'
-version '1.2.2'
+version '1.3.0'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -61,7 +61,7 @@ configurations {
 //    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 //}
 
-def log4j_version="2.17.2"
+def log4j_version="2.19.0"
 List logger = [
         "org.apache.logging.log4j:log4j-api:$log4j_version",
         "org.apache.logging.log4j:log4j-core:$log4j_version",
@@ -78,23 +78,20 @@ dependencies {
     }
 
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
-    implementation 'commons-codec:commons-codec:1.14'
-
-    implementation 'org.apache.commons:commons-lang3:3.11'
     implementation 'com.google.guava:guava:30.1-jre'
-    implementation 'org.yaml:snakeyaml:1.27'
 
-    implementation ('org.fisco-bcos.java-sdk:fisco-bcos-java-sdk:2.9.1')
+    implementation ('org.fisco-bcos.java-sdk:fisco-bcos-java-sdk:3.2.0-SNAPSHOT')
 
-    implementation 'org.fisco-bcos:solcJ:0.5.2.0'
+    implementation 'org.fisco-bcos:solcJ:0.6.10.1'
 
     // Use JUnit test framework
-    testImplementation 'junit:junit:4.12'
-    testImplementation 'org.slf4j:slf4j-log4j12:1.7.36'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.6.7'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.slf4j:slf4j-log4j12:2.0.3'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.7.5'
 
-    integTestImplementation 'junit:junit:4.12'
-    integTestImplementation 'org.slf4j:slf4j-log4j12:1.7.36'
+    integTestImplementation 'junit:junit:4.13.2'
+    integTestImplementation 'org.slf4j:slf4j-log4j12:2.0.3'
+
 }
 
 sourceSets {
@@ -139,12 +136,11 @@ task makeJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar, d
     exclude '**/*.toml'
     exclude '**/*.properties'
     exclude '**/*.yml'
-    exclude '**/BCOSGMStubFactory.*'
     exclude '**/performance/guomi/*'
 
     manifest {
         attributes(
-                'Main-Class': 'com.webank.wecross.stub.bcos.normal.BCOSStubFactory',
+                'Main-Class': 'com.webank.wecross.stub.bcos3.normal.BCOSStubFactory',
                 'version': project.version,
         )
 
@@ -173,65 +169,10 @@ task makeJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar, d
     dependencies {
         exclude(dependency('io.netty:.*'))
     }
-
-    relocate 'org.fisco.bcos', 'org.fisco.bcos.wecross.normal'
-    relocate 'com.webank.wecross.stub.bcos', 'com.webank.wecross.stub.bcos.normal'
-
-    from zipTree(shadowJar.archivePath)
-}
-
-task makeGMJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar, dependsOn: shadowJar) {
-
-    destinationDir file('dist/apps')
-    archiveName project.name + "-gm-" + project.version + '.jar'
-    exclude '**/*.xml'
-    exclude '**/*.toml'
-    exclude '**/*.properties'
-    exclude '**/*.yml'
-    exclude '**/BCOSStubFactory.*'
-    exclude '**/performance/normal/*'
-
-    manifest {
-        attributes(
-                'Main-Class': 'com.webank.wecross.stub.bcos.guomi.BCOSGMStubFactory',
-                'version': project.version,
-        )
-
-        try {
-            def repo = grgit.open(dir: file('.').canonicalPath)
-            if (repo != null) {
-                def date = new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-                def branch = repo.branch.getCurrent().getName()
-                def commit = repo.head().getAbbreviatedId(40)
-
-                attributes(["Implementation-Timestamp": date,
-                            "Git-Branch"              : branch,
-                            "Git-Commit"              : commit
-                ])
-
-                logger.info("  Commit : ")
-                logger.info("  => date: {}", date)
-                logger.info("  => branch: {}", branch)
-                logger.info("  => commit: {}", commit)
-            }
-        } catch (Exception e) {
-            // logger.warn(' .git not exist, cannot found commit info')
-        }
-    }
-
-    dependencies {
-        exclude(dependency('io.netty:.*'))
-    }
-
-    relocate 'org.fisco.bcos', 'org.fisco.bcos.wecross.guomi'
-    relocate 'com.webank.wecross.stub.bcos', 'com.webank.wecross.stub.bcos.guomi'
-
-    from zipTree(shadowJar.archivePath)
 }
 
 jar.enabled = false
 project.tasks.assemble.dependsOn(makeJar)
-project.tasks.assemble.dependsOn(makeGMJar)
 
 task integTest(type: Test) {
     description = 'Runs integration tests.'
@@ -288,13 +229,13 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             groupId = 'com.webank'
-            artifactId = 'wecross-bcos-stub'
+            artifactId = 'wecross-bcos3-stub'
             from components.java
             artifacts = [shadowJar]
 
             // https://docs.gradle.org/current/dsl/org.gradle.api.publish.maven.MavenPublication.html
             pom {
-                name = "WeCross-BCOS-Stub"
+                name = "WeCross-BCOS3-Stub"
                 description = "Stub interface for WeCross"
                 url = "https://github.com/WeBankBlockchain/WeCross"
                 licenses {

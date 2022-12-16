@@ -1,11 +1,11 @@
 ![](./docs/images/menu_logo_wecross.png)
 
-# WeCross-BCOS2-Stub
+# WeCross-BCOS3-Stub
 
-[![CodeFactor](https://www.codefactor.io/repository/github/webankblockchain/WeCross-BCOS2-Stub/badge)](https://www.codefactor.io/repository/github/webankblockchain/WeCross-BCOS2-Stub) [![Build Status](https://travis-ci.org/WeBankBlockchain/WeCross-BCOS2-Stub.svg?branch=dev)](https://travis-ci.org/WeBankBlockchain/WeCross-BCOS2-Stub) [![Latest release](https://img.shields.io/github/release/WeBankBlockchain/WeCross-BCOS2-Stub.svg)](https://github.com/WeBankBlockchain/WeCross-BCOS2-Stub/releases/latest)
-[![License](https://img.shields.io/github/license/WeBankBlockchain/WeCross-BCOS2-Stub)](https://www.apache.org/licenses/LICENSE-2.0) [![Language](https://img.shields.io/badge/Language-Java-blue.svg)](https://www.java.com)
+[![CodeFactor](https://www.codefactor.io/repository/github/webankblockchain/WeCross-BCOS3-Stub/badge)](https://www.codefactor.io/repository/github/webankblockchain/WeCross-BCOS3-Stub) [![Build Status](https://travis-ci.org/WeBankBlockchain/WeCross-BCOS3-Stub.svg?branch=dev)](https://travis-ci.org/WeBankBlockchain/WeCross-BCOS3-Stub) [![Latest release](https://img.shields.io/github/release/WeBankBlockchain/WeCross-BCOS3-Stub.svg)](https://github.com/WeBankBlockchain/WeCross-BCOS3-Stub/releases/latest)
+[![License](https://img.shields.io/github/license/WeBankBlockchain/WeCross-BCOS3-Stub)](https://www.apache.org/licenses/LICENSE-2.0) [![Language](https://img.shields.io/badge/Language-Java-blue.svg)](https://www.java.com)
 
-WeCross BCOS2 Stub是[WeCross](https://github.com/WeBankBlockchain/WeCross)用于适配[FISCO BCOS 2.6](https://github.com/FISCO-BCOS/FISCO-BCOS)及以上版本的插件。
+WeCross BCOS3 Stub是[WeCross](https://github.com/WeBankBlockchain/WeCross)用于适配[FISCO BCOS 3.0](https://github.com/FISCO-BCOS/FISCO-BCOS)及以上版本的插件。
 
 ## 关键特性
 
@@ -19,14 +19,14 @@ WeCross BCOS2 Stub是[WeCross](https://github.com/WeBankBlockchain/WeCross)用�
 
 **环境要求**:
 
-  - [JDK8及以上](https://www.oracle.com/java/technologies/javase-downloads.html)
-  - Gradle 5.0及以上
+- [JDK8及以上](https://www.oracle.com/java/technologies/javase-downloads.html)
+- Gradle 5.0及以上
 
 **编译命令**:
 
 ```bash
-git clone https://github.com/WeBankBlockchain/WeCross-BCOS2-Stub.git
-cd WeCross-BCOS2-Stub
+git clone https://github.com/WeBankBlockchain/WeCross-BCOS3-Stub.git
+cd WeCross-BCOS3-Stub
 ./gradlew assemble
 ```
 如果编译成功，将在当前目录的dist/apps目录下生成两个jar包，分别是国密版和非国密版插件。
@@ -44,7 +44,7 @@ cd WeCross-BCOS2-Stub
 
 您将成为贡献者，感谢各位贡献者的付出：
 
-<img src="https://contrib.rocks/image?repo=WeBankBlockchain/WeCross-BCOS2-Stub" alt="https://github.com/WeBankBlockchain/WeCross-BCOS2-Stub/graphs/contributors" style="zoom:100%;" />
+<img src="https://contrib.rocks/image?repo=WeBankBlockchain/WeCross-BCOS3-Stub" alt="https://github.com/WeBankBlockchain/WeCross-BCOS3-Stub/graphs/contributors" style="zoom:100%;" />
 
 ## 开源社区
 
@@ -54,4 +54,4 @@ cd WeCross-BCOS2-Stub
 
 ## License
 
-WeCross BCOS2 Stub的开源协议为Apache License 2.0，详情参考[LICENSE](./LICENSE)。
+WeCross BCOS3 Stub的开源协议为Apache License 2.0，详情参考[LICENSE](./LICENSE)。

@@ -1,3 +1,3 @@
 [account]
-    type = "BCOS2.0"
+    type = "BCOS3_GM_EVM"
     accountFile = '0x1bad8533b8c81962e2a07ccd4485d7a337eec8b8.pem'

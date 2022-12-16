@@ -3,25 +3,18 @@
     type = 'BCOS-UT' # BCOS
 
 [chain]
-    groupId = 111 # default 1
-    chainId = 123 # default 1
+    groupId = 'group0' # default group0
+    chainId = 'chain0' # default chain0
 
 [channelService]
     caCert = 'ca.crt'
     sslCert = 'sdk.crt'
     sslKey = 'sdk.key'
-    timeout = 111100  # ms, default 60000ms
-    connectionsStr = ['127.0.0.1:20200']
-    threadNum = 8
-    threadQueueCapacity = 5000
-    # connectionsStr = ['127.0.0.1:20201']
 
-#    pubKey = [
-#    "11e1be251ca08bb44f36fdeedfaeca40894ff80dfd80084607a75509edeaf2a9c6fee914f1e9efda571611cf4575a1577957edfd2baa9386bd63eb034868625f",
-#    "78a313b426c3de3267d72b53c044fa9fe70c2a27a00af7fea4a549a7d65210ed90512fc92b6194c14766366d434235c794289d66deff0796f15228e0e14a9191",
-#    "95b7ff064f91de76598f90bc059bec1834f0d9eeb0d05e1086d49af1f9c2f321062d011ee8b0df7644bd54c4f9ca3d8515a3129bbb9d0df8287c9fa69552887e",
-#    "b8acb51b9fe84f88d670646be36f31c52e67544ce56faf3dc8ea4cf1b0ebff0864c6b218fdcd9cf9891ebd414a995847911bd26a770f429300085f37e1131f36"
-#    ]
+    disableSsl = false
+    messageTimeout = 111100
+    connectionsStr = ['127.0.0.1:20200']
+    threadPoolSize = 8
 
 # resources is a list
 [[resources]]

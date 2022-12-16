@@ -1,4 +1,4 @@
-pragma solidity>=0.5.0 <0.6.11;
+pragma solidity>=0.6.10 <0.8.20;
 pragma experimental ABIEncoderV2;
 contract TupleTest {
     struct Item {

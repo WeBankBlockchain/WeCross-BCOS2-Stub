@@ -1,25 +1,27 @@
 [common]
     name = 'bcos' # stub must be same with directory name
-    type = 'BCOS2.0' # BCOS or GM_BCOS2.0
+    type = 'BCOS3_ECDSA_EVM' # BCOS3_ECDSA_EVM、BCOS3_ECDSA_WASM、BCOS3_GM_EVM、BCOS3_GM_WASM
 
 [chain]
-    groupId = 1 # default 1
-    chainId = 1 # default 1
+    groupId = 'group0' # default group0
+    chainId = 'chain0' # default chain0
 
 [channelService]
     caCert = 'ca.crt'
     sslCert = 'sdk.crt'
     sslKey = 'sdk.key'
-    gmConnectEnable = false #ssl gm or not
-    gmCaCert = 'gm/gmca.crt'
-    gmSslCert = 'gm/gmsdk.crt'
-    gmSslKey = 'gm/gmsdk.key'
-    gmEnSslCert = 'gm/gmensdk.crt'
-    gmEnSslKey = 'gm/gmensdk.key'
-    timeout = 300000  # ms, default 60000ms
+
+    gmCaCert = 'sm_ca.crt'
+    gmSslCert = 'sm_sdk.crt'
+    gmSslKey = 'sm_sdk.key'
+    gmEnSslCert = 'sm_ensdk.crt'
+    gmEnSslKey = 'sm_ensdk.key'
+
+    disableSsl = false
+    messageTimeout = 60000
     connectionsStr = ['127.0.0.1:20200']
-    threadNum = 18
-    threadQueueCapacity = 5000
+
+    threadPoolSize = 16
 
 # resources is a list
 [[resources]]

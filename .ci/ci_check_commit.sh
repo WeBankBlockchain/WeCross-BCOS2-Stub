@@ -3,7 +3,7 @@
 set -e
 
 scan_code_script="cobra/cobra.py -f json -o /tmp/report.json -t "
-ignore_files=(HelloWeCross.java BCOSStubFactory BCOSGMStubFactory BCOSAccountFactory BCOSAccountConfigParser integTest test sh crt key json toml)
+ignore_files=(HelloWeCross.java BCOS3EcdsaEvmStubFactory BCOS3EcdsaWasmStubFactory BCOS3GMEvmStubFactory BCOS3GMWasmStubFactory BCOSAccountFactory BCOSAccountConfigParser integTest test sh crt key json toml)
 
 LOG_ERROR() {
     content=${1}

@@ -15,7 +15,7 @@
 
 ### Issue
 
-可直接去[issues page](https://github.com/WeBankBlockchain/WeCross-BCOS2-Stub/issues)提issue。
+可直接去[issues page](https://github.com/WeBankBlockchain/WeCross-BCOS3-Stub/issues)提issue。
 
 ### 修复bug
 
