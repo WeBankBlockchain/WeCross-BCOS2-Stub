@@ -75,6 +75,7 @@ dependencies {
     compile logger
     implementation ('com.webank:wecross-java-stub:1.2.1') {
         exclude group: "io.netty"
+        exclude group: "org.fisco-bcos", module: "tcnative"
     }
 
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
