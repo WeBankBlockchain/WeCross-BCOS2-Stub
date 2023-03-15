@@ -1,24 +1,22 @@
-package com.webank.wecross.stub.bcos.web3j;
+package com.webank.wecross.stub.bcos.client;
 
 import static junit.framework.TestCase.assertTrue;
 
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import java.io.IOException;
-import org.fisco.bcos.web3j.protocol.Web3j;
 import org.junit.Test;
 
-public class Web3jWrapperImplTest {
+public class ClientWrapperImplTest {
+
     @Test
-    public void web3jWrapperImplTest() throws IOException {
+    public void clientWrapperImplTest() throws IOException {
         BCOSStubConfigParser bcosStubConfigParser =
                 new BCOSStubConfigParser("./", "stub-sample-ut.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
-
-        BCOSStubConfig.ChannelService channelService = bcosStubConfig.getChannelService();
-
         try {
-            Web3j web3j = Web3jUtility.initWeb3j(channelService);
+            AbstractClientWrapper clientWrapper =
+                    ClientWrapperFactory.createClientWrapperInstance(bcosStubConfig);
         } catch (Exception e) {
 
         } finally {

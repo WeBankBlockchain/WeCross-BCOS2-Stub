@@ -2,7 +2,7 @@ package com.webank.wecross.stub.bcos.common;
 
 import static junit.framework.TestCase.assertEquals;
 
-import com.webank.wecross.stub.bcos.web3j.Web3jDefaultConfig;
+import com.webank.wecross.stub.bcos.client.ClientDefaultConfig;
 import java.io.IOException;
 import org.junit.Test;
 
@@ -16,9 +16,9 @@ public class BCOSConstantTest {
         assertEquals(BCOSConstant.BCOS_ACCOUNT, "BCOS2.0");
         assertEquals(BCOSConstant.BCOS_SM_ACCOUNT, "GM_BCOS2.0");
 
-        assertEquals(Web3jDefaultConfig.DEFAULT_GROUP_ID, 1);
-        assertEquals(Web3jDefaultConfig.DEFAULT_CHAIN_ID, 1);
-        assertEquals(Web3jDefaultConfig.CHANNEL_SERVICE_DEFAULT_TIMEOUT, 60000);
+        assertEquals(ClientDefaultConfig.DEFAULT_GROUP_ID, 1);
+        assertEquals(ClientDefaultConfig.DEFAULT_CHAIN_ID, 1);
+        assertEquals(ClientDefaultConfig.CHANNEL_SERVICE_DEFAULT_TIMEOUT, 60000);
     }
 
     @Test

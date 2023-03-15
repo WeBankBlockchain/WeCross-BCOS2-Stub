@@ -1,7 +1,7 @@
 package com.webank.wecross.stub.bcos.common;
 
-import org.fisco.bcos.channel.protocol.ChannelPrococolExceiption;
-import org.fisco.bcos.fisco.EnumNodeVersion;
+import org.fisco.bcos.sdk.channel.model.ChannelPrococolExceiption;
+import org.fisco.bcos.sdk.channel.model.EnumNodeVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

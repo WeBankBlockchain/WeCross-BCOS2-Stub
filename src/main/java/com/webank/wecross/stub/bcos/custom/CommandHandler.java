@@ -5,6 +5,7 @@ import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Path;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
 
 public interface CommandHandler {
     /**
@@ -23,5 +24,6 @@ public interface CommandHandler {
             Account account,
             BlockManager blockManager,
             Connection connection,
-            Driver.CustomCommandCallback callback);
+            Driver.CustomCommandCallback callback,
+            CryptoSuite cryptoSuite);
 }

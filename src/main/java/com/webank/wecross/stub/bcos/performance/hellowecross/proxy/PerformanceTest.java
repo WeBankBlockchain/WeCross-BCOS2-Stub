@@ -3,7 +3,7 @@ package com.webank.wecross.stub.bcos.performance.hellowecross.proxy;
 import com.webank.wecross.stub.bcos.performance.PerformanceManager;
 import java.math.BigInteger;
 import java.util.Objects;
-import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
+import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,11 +17,11 @@ public class PerformanceTest {
         System.err.println(
                 " \t java -cp conf/:lib/*:plugin/* "
                         + PerformanceTest.class.getName()
-                        + " [chainName] [accountName] [resource or address] call [count] [qps] [enableGM]");
+                        + " [chainName] [accountName] [contractName] call [count] [qps] [enableGM]");
         System.err.println(
                 " \t java -cp conf/:lib/*:plugin/* "
                         + PerformanceTest.class.getName()
-                        + " [chainName] [accountName] [resource or address] sendTransaction [count] [qps] [enableGM]");
+                        + " [chainName] [accountName] [contractName] sendTransaction [count] [qps] [enableGM]");
         System.err.println("Example:");
         System.err.println(
                 " \t java -cp conf/:lib/*:plugin/* "
@@ -42,7 +42,7 @@ public class PerformanceTest {
 
         String chainName = args[0];
         String accountName = args[1];
-        String resourceOrAddress = args[2];
+        String contractName = args[2];
         String command = args[3];
         BigInteger count = new BigInteger(args[4]);
         BigInteger qps = new BigInteger(args[5]);
@@ -59,8 +59,8 @@ public class PerformanceTest {
                         + chainName
                         + ", account: "
                         + accountName
-                        + ", resource: "
-                        + resourceOrAddress
+                        + ", contractName: "
+                        + contractName
                         + ", count: "
                         + count
                         + ", qps: "
@@ -72,9 +72,8 @@ public class PerformanceTest {
             PureBCOSProxySuite suite =
                     command.equals("sendTransaction")
                             ? new PureBCOSProxySendTransactionSuite(
-                                    resourceOrAddress, chainName, accountName, sm)
-                            : new PureBCOSProxyCallSuite(
-                                    resourceOrAddress, chainName, accountName, sm);
+                                    contractName, chainName, accountName, sm)
+                            : new PureBCOSProxyCallSuite(contractName, chainName, accountName, sm);
             CnsInfo cnsInfo = suite.getCnsInfo();
             if (Objects.isNull(cnsInfo)) {
                 System.err.println(" ## Error: unable to fetch proxy contract address. ");

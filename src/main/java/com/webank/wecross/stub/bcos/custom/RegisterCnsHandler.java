@@ -8,14 +8,15 @@ import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.bcos.AsyncCnsService;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
+import com.webank.wecross.stub.bcos.preparation.CnsService;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.Objects;
-import org.fisco.bcos.web3j.abi.datatypes.Address;
-import org.fisco.bcos.web3j.crypto.EncryptType;
-import org.fisco.bcos.web3j.precompile.cns.CnsService;
-import org.fisco.bcos.web3j.utils.Numeric;
+import org.fisco.bcos.sdk.abi.datatypes.Address;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.model.CryptoType;
+import org.fisco.bcos.sdk.utils.Numeric;
 import org.fisco.solc.compiler.CompilationResult;
 import org.fisco.solc.compiler.SolidityCompiler;
 import org.slf4j.Logger;
@@ -42,7 +43,8 @@ public class RegisterCnsHandler implements CommandHandler {
             Account account,
             BlockManager blockManager,
             Connection connection,
-            Driver.CustomCommandCallback callback) {
+            Driver.CustomCommandCallback callback,
+            CryptoSuite cryptoSuite) {
         if (Objects.isNull(args) || args.length < 6) {
             callback.onResponse(
                     new TransactionException(
@@ -97,8 +99,7 @@ public class RegisterCnsHandler implements CommandHandler {
         if (sourceType.equals("sol")) {
             try {
                 CompilationResult.ContractMetadata metadata = null;
-                boolean sm = (EncryptType.encryptType == EncryptType.SM2_TYPE);
-
+                boolean sm = (cryptoSuite.getCryptoTypeConfig() == CryptoType.SM_TYPE);
                 File sourceFile = File.createTempFile("BCOSContract-", "-" + contractName + ".sol");
                 try (OutputStream outputStream = new FileOutputStream(sourceFile)) {
                     outputStream.write(sourceContent.getBytes());

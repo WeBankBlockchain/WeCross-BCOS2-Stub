@@ -1,26 +1,41 @@
 package com.webank.wecross.stub.bcos;
 
 import static junit.framework.Assert.assertNotNull;
-import static junit.framework.TestCase.*;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.webank.wecross.stub.*;
+import com.webank.wecross.stub.Account;
+import com.webank.wecross.stub.BlockHeader;
+import com.webank.wecross.stub.BlockManager;
+import com.webank.wecross.stub.Connection;
+import com.webank.wecross.stub.Driver;
+import com.webank.wecross.stub.Path;
+import com.webank.wecross.stub.Request;
+import com.webank.wecross.stub.ResourceInfo;
+import com.webank.wecross.stub.TransactionContext;
+import com.webank.wecross.stub.TransactionException;
+import com.webank.wecross.stub.TransactionRequest;
+import com.webank.wecross.stub.TransactionResponse;
+import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.account.BCOSAccountFactory;
+import com.webank.wecross.stub.bcos.client.ClientDefaultConfig;
+import com.webank.wecross.stub.bcos.client.ClientWrapperCallNotSucStatus;
+import com.webank.wecross.stub.bcos.client.ClientWrapperImplMock;
+import com.webank.wecross.stub.bcos.client.ClientWrapperTxVerifyMock;
+import com.webank.wecross.stub.bcos.client.ClientWrapperWithExceptionMock;
+import com.webank.wecross.stub.bcos.client.ClientWrapperWithNullMock;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.common.BCOSRequestType;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
 import com.webank.wecross.stub.bcos.common.BCOSStubException;
+import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.SignTransaction;
 import com.webank.wecross.stub.bcos.protocol.request.TransactionParams;
-import com.webank.wecross.stub.bcos.web3j.Web3jDefaultConfig;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperCallNotSucStatus;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImplMock;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperTxVerifyMock;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperWithExceptionMock;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperWithNullMock;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -28,16 +43,18 @@ import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import org.apache.commons.lang3.tuple.Pair;
-import org.fisco.bcos.web3j.abi.FunctionEncoder;
-import org.fisco.bcos.web3j.abi.datatypes.Function;
-import org.fisco.bcos.web3j.abi.wrapper.ABICodecJsonWrapper;
-import org.fisco.bcos.web3j.abi.wrapper.ABIDefinition;
-import org.fisco.bcos.web3j.abi.wrapper.ABIDefinitionFactory;
-import org.fisco.bcos.web3j.abi.wrapper.ABIObject;
-import org.fisco.bcos.web3j.abi.wrapper.ABIObjectFactory;
-import org.fisco.bcos.web3j.abi.wrapper.ContractABIDefinition;
-import org.fisco.bcos.web3j.crypto.gm.GenCredential;
-import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
+import org.fisco.bcos.sdk.abi.FunctionEncoder;
+import org.fisco.bcos.sdk.abi.datatypes.Function;
+import org.fisco.bcos.sdk.abi.wrapper.ABICodecJsonWrapper;
+import org.fisco.bcos.sdk.abi.wrapper.ABIDefinition;
+import org.fisco.bcos.sdk.abi.wrapper.ABIDefinitionFactory;
+import org.fisco.bcos.sdk.abi.wrapper.ABIObject;
+import org.fisco.bcos.sdk.abi.wrapper.ABIObjectFactory;
+import org.fisco.bcos.sdk.abi.wrapper.ContractABIDefinition;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.model.CryptoType;
+import org.fisco.bcos.sdk.transaction.codec.encode.TransactionEncoderService;
+import org.fisco.bcos.sdk.transaction.model.po.RawTransaction;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
@@ -45,7 +62,7 @@ import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 public class BCOSDriverTest {
 
     private Driver driver = null;
-    private Account account = null;
+    private BCOSAccount account = null;
     private Connection connection = null;
     private Connection exceptionConnection = null;
     private Connection callNotOkStatusConnection = null;
@@ -55,6 +72,10 @@ public class BCOSDriverTest {
     private BlockManager blockManager = null;
     private BlockManager txVerifyBlockManager = null;
     private TransactionContext transactionContext = null;
+    private CryptoSuite cryptoSuite = null;
+    private ABIDefinitionFactory abiDefinitionFactory = null;
+    private FunctionEncoder functionEncoder = null;
+    private TransactionEncoderService transactionEncoderService = null;
 
     public TransactionRequest createTransactionRequest(String method, String[] args) {
         TransactionRequest transactionRequest = new TransactionRequest(method, args);
@@ -63,19 +84,27 @@ public class BCOSDriverTest {
 
     @Before
     public void initializer() throws Exception {
-
         BCOSStubFactory bcosSubFactory = new BCOSStubFactory();
         Path path = Path.decode("a.b.c");
         driver = bcosSubFactory.newDriver();
-        account = BCOSAccountFactory.build("bcos", "classpath:/accounts/bcos");
 
         BCOSStubConfigParser bcosStubConfigParser =
                 new BCOSStubConfigParser("./", "stub-sample-ut.toml");
         BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
+        cryptoSuite =
+                bcosStubConfig.isGMStub()
+                        ? new CryptoSuite(CryptoType.SM_TYPE)
+                        : new CryptoSuite(CryptoType.ECDSA_TYPE);
+        abiDefinitionFactory = new ABIDefinitionFactory(cryptoSuite);
+        functionEncoder = new FunctionEncoder(cryptoSuite);
+        transactionEncoderService = new TransactionEncoderService(cryptoSuite);
+        account =
+                BCOSAccountFactory.getInstance(cryptoSuite)
+                        .build("bcos", "classpath:/accounts/bcos");
 
         ScheduledExecutorService scheduledExecutorService =
                 new ScheduledThreadPoolExecutor(4, new CustomizableThreadFactory("tmpBCOSConn-"));
-        connection = BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperImplMock());
+        connection = BCOSConnectionFactory.build(bcosStubConfig, new ClientWrapperImplMock());
         ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
         connection
                 .getProperties()
@@ -89,16 +118,16 @@ public class BCOSDriverTest {
 
         connection.getProperties().put(BCOSConstant.BCOS_STUB_TYPE, "BCOS2.0");
         exceptionConnection =
-                BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperWithExceptionMock());
+                BCOSConnectionFactory.build(bcosStubConfig, new ClientWrapperWithExceptionMock());
         nonExistConnection =
-                BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperWithNullMock());
+                BCOSConnectionFactory.build(bcosStubConfig, new ClientWrapperWithNullMock());
         callNotOkStatusConnection =
-                BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperCallNotSucStatus());
+                BCOSConnectionFactory.build(bcosStubConfig, new ClientWrapperCallNotSucStatus());
         txVerifyConnection =
-                BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperTxVerifyMock());
+                BCOSConnectionFactory.build(bcosStubConfig, new ClientWrapperTxVerifyMock());
 
-        blockManager = new BlockManagerImplMock(new Web3jWrapperImplMock());
-        txVerifyBlockManager = new BlockManagerImplMock(new Web3jWrapperTxVerifyMock());
+        blockManager = new BlockManagerImplMock(new ClientWrapperImplMock());
+        txVerifyBlockManager = new BlockManagerImplMock(new ClientWrapperTxVerifyMock());
         resourceInfo = ((BCOSConnection) connection).getResourceInfoList().get(0);
 
         transactionContext = new TransactionContext(account, path, resourceInfo, blockManager);
@@ -114,7 +143,7 @@ public class BCOSDriverTest {
 
         TransactionParams transaction =
                 new TransactionParams(
-                        request, FunctionEncoder.encode(function), TransactionParams.SUB_TYPE.CALL);
+                        request, functionEncoder.encode(function), TransactionParams.SUB_TYPE.CALL);
 
         byte[] data = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(transaction);
 
@@ -132,14 +161,16 @@ public class BCOSDriverTest {
 
         TransactionRequest request = new TransactionRequest(func, params);
         Function function = FunctionUtility.newDefaultFunction(func, params);
-        String signTx =
-                SignTransaction.sign(
-                        GenCredential.create(),
+
+        RawTransaction rawTransaction =
+                SignTransaction.buildTransaction(
                         "0x0",
-                        BigInteger.valueOf(Web3jDefaultConfig.DEFAULT_CHAIN_ID),
-                        BigInteger.valueOf(Web3jDefaultConfig.DEFAULT_GROUP_ID),
+                        BigInteger.valueOf(ClientDefaultConfig.DEFAULT_GROUP_ID),
+                        BigInteger.valueOf(ClientDefaultConfig.DEFAULT_CHAIN_ID),
                         BigInteger.valueOf(1111),
-                        FunctionEncoder.encode(function));
+                        functionEncoder.encode(function));
+        String signTx =
+                transactionEncoderService.encodeAndSign(rawTransaction, account.getCredentials());
 
         TransactionParams transaction =
                 new TransactionParams(request, signTx, TransactionParams.SUB_TYPE.SEND_TX);
@@ -162,7 +193,7 @@ public class BCOSDriverTest {
         String abi =
                 "[{\"constant\":false,\"inputs\":[{\"name\":\"n\",\"type\":\"string\"}],\"name\":\"set\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"get\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]";
 
-        ContractABIDefinition contractABIDefinition = ABIDefinitionFactory.loadABI(abi);
+        ContractABIDefinition contractABIDefinition = abiDefinitionFactory.loadABI(abi);
         ABIDefinition abiDefinition = contractABIDefinition.getFunctions().get("set").get(0);
         ABIObject inputObject = ABIObjectFactory.createInputObject(abiDefinition);
         ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
@@ -172,14 +203,16 @@ public class BCOSDriverTest {
         Function function =
                 FunctionUtility.newSendTransactionProxyFunction(
                         "1", "1", 1, "a.b.Hello", "set(string)", encoded.encode());
-        String signTx =
-                SignTransaction.sign(
-                        GenCredential.create(),
+
+        RawTransaction rawTransaction =
+                SignTransaction.buildTransaction(
                         "0x0",
-                        BigInteger.valueOf(Web3jDefaultConfig.DEFAULT_CHAIN_ID),
-                        BigInteger.valueOf(Web3jDefaultConfig.DEFAULT_GROUP_ID),
+                        BigInteger.valueOf(ClientDefaultConfig.DEFAULT_GROUP_ID),
+                        BigInteger.valueOf(ClientDefaultConfig.DEFAULT_CHAIN_ID),
                         BigInteger.valueOf(1111),
-                        FunctionEncoder.encode(function));
+                        functionEncoder.encode(function));
+        String signTx =
+                transactionEncoderService.encodeAndSign(rawTransaction, account.getCredentials());
 
         TransactionParams transaction =
                 new TransactionParams(request, signTx, TransactionParams.SUB_TYPE.SEND_TX_BY_PROXY);
@@ -203,7 +236,7 @@ public class BCOSDriverTest {
         String abi =
                 "[{\"constant\":false,\"inputs\":[{\"name\":\"n\",\"type\":\"string\"}],\"name\":\"set\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"get\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]";
 
-        ContractABIDefinition contractABIDefinition = ABIDefinitionFactory.loadABI(abi);
+        ContractABIDefinition contractABIDefinition = abiDefinitionFactory.loadABI(abi);
         ABIDefinition abiDefinition = contractABIDefinition.getFunctions().get("set").get(0);
         ABIObject inputObject = ABIObjectFactory.createInputObject(abiDefinition);
         ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
@@ -218,7 +251,7 @@ public class BCOSDriverTest {
         TransactionParams transaction =
                 new TransactionParams(
                         request,
-                        FunctionEncoder.encode(function),
+                        functionEncoder.encode(function),
                         TransactionParams.SUB_TYPE.CALL_BY_PROXY);
         transaction.setAbi(abi);
 

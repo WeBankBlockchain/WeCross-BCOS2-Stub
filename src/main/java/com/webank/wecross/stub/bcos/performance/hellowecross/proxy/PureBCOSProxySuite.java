@@ -1,16 +1,14 @@
 package com.webank.wecross.stub.bcos.performance.hellowecross.proxy;
 
+import com.webank.wecross.stub.bcos.client.ClientWrapperImplV26;
 import com.webank.wecross.stub.bcos.performance.hellowecross.HelloWeCross;
 import com.webank.wecross.stub.bcos.performance.hellowecross.PureBCOSSuite;
 import com.webank.wecross.stub.bcos.preparation.CnsService;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImplV26;
-import java.math.BigInteger;
 import java.util.Objects;
-import org.fisco.bcos.web3j.abi.wrapper.ABICodecJsonWrapper;
-import org.fisco.bcos.web3j.abi.wrapper.ABIDefinitionFactory;
-import org.fisco.bcos.web3j.abi.wrapper.ContractABIDefinition;
-import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
-import org.fisco.bcos.web3j.tx.gas.StaticGasProvider;
+import org.fisco.bcos.sdk.abi.wrapper.ABICodecJsonWrapper;
+import org.fisco.bcos.sdk.abi.wrapper.ABIDefinitionFactory;
+import org.fisco.bcos.sdk.abi.wrapper.ContractABIDefinition;
+import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,45 +16,28 @@ public abstract class PureBCOSProxySuite extends PureBCOSSuite {
 
     private static Logger logger = LoggerFactory.getLogger(PureBCOSProxySuite.class);
 
-    public PureBCOSProxySuite(
-            String chainName, String accountName, boolean sm, String resourceOrAddress)
-            throws Exception {
-        super(chainName, accountName, sm);
-        this.cnsInfo = CnsService.queryProxyCnsInfo(new Web3jWrapperImplV26(getWeb3j()));
-        this.abiCodecJsonWrapper = new ABICodecJsonWrapper();
-        this.contractABIDefinition = ABIDefinitionFactory.loadABI(HelloWeCross.ABI);
-        if (Objects.nonNull(this.cnsInfo)) {
-            this.weCrossProxy =
-                    WeCrossProxy.load(
-                            getCnsInfo().getAddress(),
-                            getWeb3j(),
-                            getCredentials(),
-                            new StaticGasProvider(
-                                    new BigInteger("30000000000"), new BigInteger("30000000000")));
-            if (!resourceOrAddress.startsWith("0x")) { // address
-                this.address = this.weCrossProxy.getAddressByNameByCache(resourceOrAddress).send();
-                if (Objects.isNull(this.address)
-                        || this.address.equals("0x0000000000000000000000000000000000000000")) {
-                    System.err.println(" Resource: " + resourceOrAddress + " not exist.");
-                    System.exit(0);
-                }
-                this.resource = resourceOrAddress;
-                System.err.println(" ## Resource: " + resource + " ,address: " + address);
-            } else { // resource
-                this.resource = "";
-                this.address = resourceOrAddress;
-            }
-
-            logger.info(" ===>> resource: {}, address: {}", resource, address);
-        }
-    }
-
     private CnsInfo cnsInfo;
     private ContractABIDefinition contractABIDefinition;
     private ABICodecJsonWrapper abiCodecJsonWrapper;
     private WeCrossProxy weCrossProxy;
-    private String resource;
-    private String address;
+    private String contractName;
+
+    public PureBCOSProxySuite(String chainName, String accountName, boolean sm, String contractName)
+            throws Exception {
+        super(chainName, accountName, sm);
+        this.cnsInfo = CnsService.queryProxyCnsInfo(new ClientWrapperImplV26(getClient()));
+        this.abiCodecJsonWrapper = new ABICodecJsonWrapper();
+        this.contractName = contractName;
+
+        ABIDefinitionFactory abiDefinitionFactory = new ABIDefinitionFactory(getCryptoSuite());
+        this.contractABIDefinition = abiDefinitionFactory.loadABI(HelloWeCross.ABI);
+        if (Objects.nonNull(this.cnsInfo)) {
+            this.weCrossProxy =
+                    WeCrossProxy.load(getCnsInfo().getAddress(), getClient(), getCredentials());
+
+            logger.info(" ===>> contractName: {}", contractName);
+        }
+    }
 
     public CnsInfo getCnsInfo() {
         return cnsInfo;
@@ -90,19 +71,7 @@ public abstract class PureBCOSProxySuite extends PureBCOSSuite {
         this.weCrossProxy = weCrossProxy;
     }
 
-    public String getResource() {
-        return resource;
-    }
-
-    public void setResource(String resource) {
-        this.resource = resource;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
+    public String getContractName() {
+        return contractName;
     }
 }

@@ -1,8 +1,7 @@
 package com.webank.wecross.stub.bcos.account;
 
 import com.webank.wecross.stub.Account;
-import org.fisco.bcos.web3j.crypto.Credentials;
-import org.fisco.bcos.web3j.utils.Numeric;
+import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,24 +12,22 @@ public class BCOSAccount implements Account {
     private final String name;
     private final String type;
     private final String publicKey;
-    private final Credentials credentials;
+    private final CryptoKeyPair keyPair;
 
     private int keyID;
 
     private boolean isDefault;
 
-    public BCOSAccount(String name, String type, Credentials credentials) {
+    public BCOSAccount(String name, String type, CryptoKeyPair keyPair) {
         this.name = name;
         this.type = type;
-        this.credentials = credentials;
-        this.publicKey =
-                Numeric.toHexStringNoPrefixZeroPadded(
-                        credentials.getEcKeyPair().getPublicKey(), 128);
+        this.keyPair = keyPair;
+        this.publicKey = this.keyPair.getHexPublicKey();
         logger.info(" name: {}, type: {}, publicKey: {}", name, type, publicKey);
     }
 
-    public Credentials getCredentials() {
-        return credentials;
+    public CryptoKeyPair getCredentials() {
+        return keyPair;
     }
 
     @Override
@@ -45,7 +42,7 @@ public class BCOSAccount implements Account {
 
     @Override
     public String getIdentity() {
-        return credentials.getAddress();
+        return keyPair.getAddress();
     }
 
     @Override

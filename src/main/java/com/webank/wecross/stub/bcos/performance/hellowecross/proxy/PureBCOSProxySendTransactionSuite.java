@@ -3,12 +3,13 @@ package com.webank.wecross.stub.bcos.performance.hellowecross.proxy;
 import com.webank.wecross.stub.bcos.performance.PerformanceSuiteCallback;
 import java.util.Arrays;
 import java.util.List;
-import org.fisco.bcos.channel.client.TransactionSucCallback;
-import org.fisco.bcos.web3j.abi.wrapper.ABIDefinition;
-import org.fisco.bcos.web3j.abi.wrapper.ABIObject;
-import org.fisco.bcos.web3j.abi.wrapper.ABIObjectFactory;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.fisco.bcos.web3j.utils.Numeric;
+import java.util.UUID;
+import org.fisco.bcos.sdk.abi.wrapper.ABIDefinition;
+import org.fisco.bcos.sdk.abi.wrapper.ABIObject;
+import org.fisco.bcos.sdk.abi.wrapper.ABIObjectFactory;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
+import org.fisco.bcos.sdk.model.callback.TransactionCallback;
+import org.fisco.bcos.sdk.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,20 +17,24 @@ public class PureBCOSProxySendTransactionSuite extends PureBCOSProxySuite {
     private static final Logger logger =
             LoggerFactory.getLogger(PureBCOSProxySendTransactionSuite.class);
 
+    private List<String> ss = Arrays.asList("[\"HelloWorld" + System.currentTimeMillis() + "\"]");
+
+    private ABIDefinition abiDefinition;
+    private String methodId;
+    private ABIObject inputObject;
+    private String abi;
+
     public PureBCOSProxySendTransactionSuite(
             String resourceOrAddress, String chainName, String accountName, boolean sm)
             throws Exception {
         super(chainName, accountName, sm, resourceOrAddress);
         logger.info(" ===>>> resourceOrAddress : {}, value: {}", resourceOrAddress, ss.get(0));
+
+        this.abiDefinition = getContractABIDefinition().getFunctions().get("set").get(0);
+        this.methodId = abiDefinition.getMethodId(this.getCryptoSuite());
+        this.inputObject = ABIObjectFactory.createInputObject(abiDefinition);
+        this.abi = getAbiCodecJsonWrapper().encode(inputObject, ss).encode();
     }
-
-    private List<String> ss = Arrays.asList("[\"HelloWorld" + System.currentTimeMillis() + "\"]");
-
-    private ABIDefinition abiDefinition =
-            getContractABIDefinition().getFunctions().get("set").get(0);
-    private String methodId = abiDefinition.getMethodId();
-    private ABIObject inputObject = ABIObjectFactory.createInputObject(abiDefinition);
-    private String abi = getAbiCodecJsonWrapper().encode(inputObject, ss).encode();
 
     @Override
     public String getName() {
@@ -38,35 +43,22 @@ public class PureBCOSProxySendTransactionSuite extends PureBCOSProxySuite {
 
     @Override
     public void call(PerformanceSuiteCallback callback) {
-        String signTx = null;
         try {
-            if (getResource().isEmpty()) {
-                signTx =
-                        getWeCrossProxy()
-                                .sendTransactionByAddressSeq(
-                                        getAddress(), Numeric.hexStringToByteArray(methodId + abi));
-            } else {
-                signTx =
-                        getWeCrossProxy()
-                                .sendTransactionSeq(
-                                        getResource(),
-                                        Numeric.hexStringToByteArray(methodId + abi));
-            }
-
-            this.getWeb3j()
-                    .sendRawTransactionAndGetProof(
-                            signTx,
-                            new TransactionSucCallback() {
+            getWeCrossProxy()
+                    .sendTransaction(
+                            UUID.randomUUID().toString(),
+                            getContractName(),
+                            Numeric.hexStringToByteArray(methodId + abi),
+                            new TransactionCallback() {
                                 @Override
-                                public void onResponse(TransactionReceipt response) {
+                                public void onResponse(TransactionReceipt receipt) {
                                     if (logger.isDebugEnabled()) {
-                                        logger.debug(" receipt: {}", response);
+                                        logger.debug(" receipt: {}", receipt);
                                     }
-                                    if (response.isStatusOK()) {
+                                    if (receipt.isStatusOK()) {
                                         callback.onSuccess("Success");
                                     } else {
-                                        callback.onFailed(
-                                                "Failed! status: " + response.getStatus());
+                                        callback.onFailed("Failed! status: " + receipt.getStatus());
                                     }
                                 }
                             });

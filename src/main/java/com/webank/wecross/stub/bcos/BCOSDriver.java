@@ -18,7 +18,15 @@ import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.stub.TransactionResponse;
 import com.webank.wecross.stub.bcos.account.BCOSAccount;
 import com.webank.wecross.stub.bcos.blockheader.BlockManagerEmpty;
-import com.webank.wecross.stub.bcos.common.*;
+import com.webank.wecross.stub.bcos.common.BCOSBlockHeader;
+import com.webank.wecross.stub.bcos.common.BCOSConstant;
+import com.webank.wecross.stub.bcos.common.BCOSRequestType;
+import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
+import com.webank.wecross.stub.bcos.common.BCOSStubException;
+import com.webank.wecross.stub.bcos.common.ExtendedTransactionDecoder;
+import com.webank.wecross.stub.bcos.common.FeatureSupport;
+import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
+import com.webank.wecross.stub.bcos.common.StatusCode;
 import com.webank.wecross.stub.bcos.contract.BlockUtility;
 import com.webank.wecross.stub.bcos.contract.FunctionUtility;
 import com.webank.wecross.stub.bcos.contract.RevertMessage;
@@ -41,24 +49,27 @@ import java.util.Objects;
 import java.util.UUID;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.bouncycastle.util.encoders.Hex;
-import org.fisco.bcos.web3j.abi.FunctionEncoder;
-import org.fisco.bcos.web3j.abi.datatypes.Function;
-import org.fisco.bcos.web3j.abi.wrapper.ABICodecJsonWrapper;
-import org.fisco.bcos.web3j.abi.wrapper.ABIDefinition;
-import org.fisco.bcos.web3j.abi.wrapper.ABIDefinitionFactory;
-import org.fisco.bcos.web3j.abi.wrapper.ABIObject;
-import org.fisco.bcos.web3j.abi.wrapper.ABIObjectFactory;
-import org.fisco.bcos.web3j.abi.wrapper.ContractABIDefinition;
-import org.fisco.bcos.web3j.crypto.Credentials;
-import org.fisco.bcos.web3j.crypto.EncryptType;
-import org.fisco.bcos.web3j.crypto.ExtendedRawTransaction;
-import org.fisco.bcos.web3j.crypto.ExtendedTransactionDecoder;
-import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
-import org.fisco.bcos.web3j.protocol.channel.StatusCode;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Call;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.fisco.bcos.web3j.tuples.generated.*;
-import org.fisco.bcos.web3j.utils.Numeric;
+import org.fisco.bcos.sdk.abi.FunctionEncoder;
+import org.fisco.bcos.sdk.abi.datatypes.Function;
+import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple2;
+import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple3;
+import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple4;
+import org.fisco.bcos.sdk.abi.datatypes.generated.tuples.generated.Tuple6;
+import org.fisco.bcos.sdk.abi.wrapper.ABICodecJsonWrapper;
+import org.fisco.bcos.sdk.abi.wrapper.ABIDefinition;
+import org.fisco.bcos.sdk.abi.wrapper.ABIDefinitionFactory;
+import org.fisco.bcos.sdk.abi.wrapper.ABIObject;
+import org.fisco.bcos.sdk.abi.wrapper.ABIObjectFactory;
+import org.fisco.bcos.sdk.abi.wrapper.ContractABIDefinition;
+import org.fisco.bcos.sdk.client.protocol.model.JsonTransactionResponse;
+import org.fisco.bcos.sdk.client.protocol.response.Call;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
+import org.fisco.bcos.sdk.transaction.codec.decode.TransactionDecoderService;
+import org.fisco.bcos.sdk.transaction.codec.encode.TransactionEncoderService;
+import org.fisco.bcos.sdk.transaction.model.po.RawTransaction;
+import org.fisco.bcos.sdk.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,15 +80,26 @@ public class BCOSDriver implements Driver {
 
     private ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
 
-    private Signer signer = Signer.newSigner(EncryptType.encryptType);
-
     private CommandHandlerDispatcher commandHandlerDispatcher;
 
     private AsyncCnsService asyncCnsService = null;
     private ABICodecJsonWrapper abiCodecJsonWrapper = new ABICodecJsonWrapper();
 
-    public BCOSDriver() {
+    private CryptoSuite cryptoSuite;
+    private TransactionDecoderService transactionDecoderService;
+    private ABIDefinitionFactory abiDefinitionFactory;
+    private FunctionEncoder functionEncoder;
+    private TransactionEncoderService transactionEncoderService;
+    private Signer signer;
+
+    public BCOSDriver(CryptoSuite cryptoSuite) {
         objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        this.cryptoSuite = cryptoSuite;
+        this.transactionDecoderService = new TransactionDecoderService(cryptoSuite);
+        this.abiDefinitionFactory = new ABIDefinitionFactory(cryptoSuite);
+        this.functionEncoder = new FunctionEncoder(cryptoSuite);
+        this.transactionEncoderService = new TransactionEncoderService(cryptoSuite);
+        this.signer = Signer.newSigner(cryptoSuite.getCryptoTypeConfig());
     }
 
     public AsyncCnsService getAsyncCnsService() {
@@ -128,15 +150,16 @@ public class BCOSDriver implements Driver {
                 case CALL_BY_PROXY:
                     {
                         if (subType == TransactionParams.SUB_TYPE.SEND_TX_BY_PROXY) {
-                            ExtendedRawTransaction extendedRawTransaction =
+                            RawTransaction extendedRawTransaction =
                                     ExtendedTransactionDecoder.decode(transactionParams.getData());
 
                             if (extendedRawTransaction
                                     .getData()
                                     .startsWith(
                                             Numeric.cleanHexPrefix(
-                                                    FunctionUtility
-                                                            .ProxySendTransactionTXMethodId))) {
+                                                    functionEncoder.buildMethodId(
+                                                            FunctionUtility
+                                                                    .ProxySendTransactionTXMethod)))) {
                                 Tuple6<String, String, BigInteger, String, String, byte[]>
                                         sendTransactionProxyFunctionInput =
                                                 FunctionUtility
@@ -159,7 +182,9 @@ public class BCOSDriver implements Driver {
                             if (transactionParams
                                     .getData()
                                     .startsWith(
-                                            FunctionUtility.ProxyCallWithTransactionIdMethodId)) {
+                                            functionEncoder.buildMethodId(
+                                                    FunctionUtility
+                                                            .ProxyCallWithTransactionIdMethod))) {
                                 Tuple4<String, String, String, byte[]>
                                         constantCallProxyFunctionInput =
                                                 FunctionUtility.getConstantCallProxyFunctionInput(
@@ -177,7 +202,8 @@ public class BCOSDriver implements Driver {
                         }
 
                         List<ABIDefinition> abiDefinitions =
-                                ABIDefinitionFactory.loadABI(transactionParams.getAbi())
+                                abiDefinitionFactory
+                                        .loadABI(transactionParams.getAbi())
                                         .getFunctions()
                                         .get(transactionRequest.getMethod());
                         if (Objects.isNull(abiDefinitions) || abiDefinitions.isEmpty()) {
@@ -203,7 +229,7 @@ public class BCOSDriver implements Driver {
                 case CALL:
                     {
                         if (subType == TransactionParams.SUB_TYPE.SEND_TX) {
-                            ExtendedRawTransaction extendedRawTransaction =
+                            RawTransaction extendedRawTransaction =
                                     ExtendedTransactionDecoder.decode(transactionParams.getData());
                             abi = extendedRawTransaction.getData();
                         } else {
@@ -215,7 +241,7 @@ public class BCOSDriver implements Driver {
                                         transactionRequest.getMethod(),
                                         transactionRequest.getArgs());
 
-                        encodeAbi = FunctionEncoder.encode(function);
+                        encodeAbi = functionEncoder.encode(function);
                         break;
                     }
                 default:
@@ -328,7 +354,7 @@ public class BCOSDriver implements Driver {
                             String[] args = request.getArgs();
                             String method = request.getMethod();
                             ContractABIDefinition contractABIDefinition =
-                                    ABIDefinitionFactory.loadABI(abi);
+                                    abiDefinitionFactory.loadABI(abi);
 
                             List<ABIDefinition> functions =
                                     contractABIDefinition.getFunctions().get(method);
@@ -360,6 +386,7 @@ public class BCOSDriver implements Driver {
                                     || "0".equals(transactionID)) {
                                 function =
                                         FunctionUtility.newConstantCallProxyFunction(
+                                                functionEncoder,
                                                 path.getResource(),
                                                 functions.get(0).getMethodSignatureAsString(),
                                                 encodedArgs);
@@ -376,7 +403,7 @@ public class BCOSDriver implements Driver {
                             String from = BCOSConstant.DEFAULT_ADDRESS;
                             if (Objects.nonNull(context.getAccount())) {
                                 BCOSAccount bcosAccount = (BCOSAccount) context.getAccount();
-                                Credentials credentials = bcosAccount.getCredentials();
+                                CryptoKeyPair credentials = bcosAccount.getCredentials();
                                 from = credentials.getAddress();
                             }
 
@@ -392,7 +419,7 @@ public class BCOSDriver implements Driver {
                             TransactionParams transaction =
                                     new TransactionParams(
                                             request,
-                                            FunctionEncoder.encode(function),
+                                            functionEncoder.encode(function),
                                             TransactionParams.SUB_TYPE.CALL_BY_PROXY);
                             transaction.setFrom(from);
                             transaction.setTo(contractAddress);
@@ -553,7 +580,7 @@ public class BCOSDriver implements Driver {
                                 }
                                 // BCOSAccount to get credentials to sign the transaction
                                 BCOSAccount bcosAccount = (BCOSAccount) context.getAccount();
-                                Credentials credentials = bcosAccount.getCredentials();
+                                CryptoKeyPair credentials = bcosAccount.getCredentials();
 
                                 Path path = context.getPath();
                                 String name = path.getResource();
@@ -581,7 +608,7 @@ public class BCOSDriver implements Driver {
                                                 String[] args = request.getArgs();
                                                 String method = request.getMethod();
                                                 ContractABIDefinition contractABIDefinition =
-                                                        ABIDefinitionFactory.loadABI(abi);
+                                                        abiDefinitionFactory.loadABI(abi);
 
                                                 List<ABIDefinition> functions =
                                                         contractABIDefinition
@@ -645,6 +672,7 @@ public class BCOSDriver implements Driver {
                                                     function =
                                                             FunctionUtility
                                                                     .newSendTransactionProxyFunction(
+                                                                            functionEncoder,
                                                                             uid,
                                                                             path.getResource(),
                                                                             functions
@@ -666,16 +694,18 @@ public class BCOSDriver implements Driver {
                                                 }
 
                                                 String encodedAbi =
-                                                        FunctionEncoder.encode(function);
+                                                        functionEncoder.encode(function);
                                                 // get signed transaction hex string
-                                                String signTx =
-                                                        SignTransaction.sign(
-                                                                credentials,
+                                                RawTransaction rawTransaction =
+                                                        SignTransaction.buildTransaction(
                                                                 contractAddress,
                                                                 BigInteger.valueOf(groupId),
                                                                 BigInteger.valueOf(chainId),
                                                                 BigInteger.valueOf(blockNumber),
                                                                 encodedAbi);
+                                                String signTx =
+                                                        transactionEncoderService.encodeAndSign(
+                                                                rawTransaction, credentials);
 
                                                 TransactionParams transaction =
                                                         new TransactionParams(
@@ -739,7 +769,9 @@ public class BCOSDriver implements Driver {
                                                                     }
 
                                                                     blockManager.asyncGetBlock(
-                                                                            receipt.getBlockNumber()
+                                                                            Numeric.decodeQuantity(
+                                                                                            receipt
+                                                                                                    .getBlockNumber())
                                                                                     .longValue(),
                                                                             (blockException,
                                                                                     block) -> {
@@ -767,12 +799,17 @@ public class BCOSDriver implements Driver {
                                                                                                                 .getTransactionHash(),
                                                                                                         block
                                                                                                                 .getBlockHeader(),
-                                                                                                        receipt);
+                                                                                                        receipt,
+                                                                                                        nodeVersion,
+                                                                                                        cryptoSuite);
                                                                                     }
 
                                                                                     transactionResponse
                                                                                             .setBlockNumber(
-                                                                                                    receipt.getBlockNumber()
+                                                                                                    Numeric
+                                                                                                            .decodeQuantity(
+                                                                                                                    receipt
+                                                                                                                            .getBlockNumber())
                                                                                                             .longValue());
                                                                                     transactionResponse
                                                                                             .setHash(
@@ -999,9 +1036,8 @@ public class BCOSDriver implements Driver {
                                 BlockHeaderValidation.verifyBlockHeader(
                                         bcosBlockHeader,
                                         blockVerifierString,
-                                        connection
-                                                .getProperties()
-                                                .get(BCOSConstant.BCOS_STUB_TYPE));
+                                        connection.getProperties().get(BCOSConstant.BCOS_STUB_TYPE),
+                                        cryptoSuite);
                             }
                             callback.onResponse(null, block);
                         } catch (Exception e) {
@@ -1039,9 +1075,10 @@ public class BCOSDriver implements Driver {
                     }
 
                     if (blockNumber
-                            != proof.getReceiptAndProof()
-                                    .getTransactionReceipt()
-                                    .getBlockNumber()
+                            != Numeric.decodeQuantity(
+                                            proof.getReceiptAndProof()
+                                                    .getReceipt()
+                                                    .getBlockNumber())
                                     .longValue()) {
                         callback.onResponse(
                                 new Exception("Transaction hash does not match the block number"),
@@ -1049,10 +1086,8 @@ public class BCOSDriver implements Driver {
                         return;
                     }
 
-                    TransactionReceipt transactionReceipt =
-                            proof.getReceiptAndProof().getTransactionReceipt();
-                    org.fisco.bcos.web3j.protocol.core.methods.response.Transaction transaction =
-                            proof.getTransAndProof().getTransaction();
+                    TransactionReceipt transactionReceipt = proof.getReceiptAndProof().getReceipt();
+                    JsonTransactionResponse transaction = proof.getTransAndProof().getTransaction();
 
                     if (isVerified) {
                         MerkleValidation.verifyTransactionProof(
@@ -1060,6 +1095,7 @@ public class BCOSDriver implements Driver {
                                 transactionHash,
                                 blockManager,
                                 proof,
+                                nodeVersion,
                                 verifyException -> {
                                     if (Objects.nonNull(verifyException)) {
                                         callback.onResponse(verifyException, null);
@@ -1071,7 +1107,8 @@ public class BCOSDriver implements Driver {
                                             transactionReceipt,
                                             connection,
                                             callback);
-                                });
+                                },
+                                cryptoSuite);
                     } else {
                         assembleTransaction(
                                 transactionHash,
@@ -1085,13 +1122,15 @@ public class BCOSDriver implements Driver {
 
     private void assembleTransaction(
             String transactionHash,
-            org.fisco.bcos.web3j.protocol.core.methods.response.Transaction tx,
+            JsonTransactionResponse jsonTransactionResponse,
             TransactionReceipt receipt,
             Connection connection,
             GetTransactionCallback callback) {
 
         try {
-            byte[] txBytes = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(tx);
+            byte[] txBytes =
+                    ObjectMapperFactory.getObjectMapper()
+                            .writeValueAsBytes(jsonTransactionResponse);
             byte[] receiptBytes = ObjectMapperFactory.getObjectMapper().writeValueAsBytes(receipt);
 
             String methodId;
@@ -1110,11 +1149,12 @@ public class BCOSDriver implements Driver {
             transaction.getTransactionResponse().setHash(transactionHash);
             transaction
                     .getTransactionResponse()
-                    .setBlockNumber(receipt.getBlockNumber().longValue());
+                    .setBlockNumber(Numeric.decodeQuantity(receipt.getBlockNumber()).longValue());
 
             String proxyInput = receipt.getInput();
             String proxyOutput = receipt.getOutput();
-            if (proxyInput.startsWith(FunctionUtility.ProxySendTXMethodId)) {
+            if (proxyInput.startsWith(
+                    functionEncoder.buildMethodId(FunctionUtility.ProxySendTXMethod))) {
                 Tuple3<String, String, byte[]> proxyResult =
                         FunctionUtility.getSendTransactionProxyWithoutTxIdFunctionInput(proxyInput);
                 resource = proxyResult.getValue2();
@@ -1125,7 +1165,8 @@ public class BCOSDriver implements Driver {
                 if (logger.isDebugEnabled()) {
                     logger.debug("  resource: {}, methodId: {}", resource, methodId);
                 }
-            } else if (proxyInput.startsWith(FunctionUtility.ProxySendTransactionTXMethodId)) {
+            } else if (proxyInput.startsWith(
+                    functionEncoder.buildMethodId(FunctionUtility.ProxySendTransactionTXMethod))) {
                 Tuple6<String, String, BigInteger, String, String, byte[]> proxyInputResult =
                         FunctionUtility.getSendTransactionProxyFunctionInput(proxyInput);
 
@@ -1135,7 +1176,7 @@ public class BCOSDriver implements Driver {
                 resource = Path.decode(path).getResource();
                 String methodSig = proxyInputResult.getValue5();
                 input = Numeric.toHexString(proxyInputResult.getValue6());
-                methodId = FunctionEncoder.buildMethodId(methodSig);
+                methodId = functionEncoder.buildMethodId(methodSig);
 
                 if (logger.isDebugEnabled()) {
                     logger.debug(
@@ -1181,7 +1222,8 @@ public class BCOSDriver implements Driver {
                         }
 
                         ABIDefinition function =
-                                ABIDefinitionFactory.loadABI(abi)
+                                abiDefinitionFactory
+                                        .loadABI(abi)
                                         .getMethodIDToFunctions()
                                         .get(finalMethodId);
 
@@ -1349,7 +1391,7 @@ public class BCOSDriver implements Driver {
             callback.onResponse(new Exception("Command not found, command: " + command), null);
             return;
         }
-        commandHandler.handle(path, args, account, blockManager, connection, callback);
+        commandHandler.handle(path, args, account, blockManager, connection, callback, cryptoSuite);
     }
 
     @Override
@@ -1359,13 +1401,15 @@ public class BCOSDriver implements Driver {
                     "Not BCOSAccount, account name: " + account.getClass().getName());
         }
 
-        Credentials credentials = ((BCOSAccount) account).getCredentials();
-        return signer.sign(credentials.getEcKeyPair(), message);
+        CryptoKeyPair credentials = ((BCOSAccount) account).getCredentials();
+        byte[] sign = signer.sign(credentials, message);
+        return sign;
     }
 
     @Override
     public boolean accountVerify(String identity, byte[] signBytes, byte[] message) {
-        return signer.verifyBySrcData(signBytes, message, identity);
+        boolean verify = signer.verifyBySrcData(signBytes, message, identity);
+        return verify;
     }
 
     /**

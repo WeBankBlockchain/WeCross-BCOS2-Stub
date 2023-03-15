@@ -1,28 +1,26 @@
 package com.webank.wecross.stub.bcos.performance.hellowecross.proxy;
 
 import com.webank.wecross.stub.bcos.performance.PerformanceSuiteCallback;
-import org.bouncycastle.util.encoders.Hex;
-import org.fisco.bcos.web3j.abi.wrapper.ABIDefinition;
-import org.fisco.bcos.web3j.utils.Numeric;
+import org.fisco.bcos.sdk.abi.wrapper.ABIDefinition;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
+import org.fisco.bcos.sdk.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PureBCOSProxyCallSuite extends PureBCOSProxySuite {
     private static final Logger logger = LoggerFactory.getLogger(PureBCOSProxyCallSuite.class);
+    private ABIDefinition abiDefinition;
+    private String methodId;
 
     public PureBCOSProxyCallSuite(
-            String resourceOrAddress, String chainName, String accountName, boolean sm)
+            String contractName, String chainName, String accountName, boolean sm)
             throws Exception {
-        super(chainName, accountName, sm, resourceOrAddress);
+        super(chainName, accountName, sm, contractName);
 
-        logger.info(" ===>>> resourceOrAddress : {}", resourceOrAddress);
+        logger.info(" ===>>> contractName : {}", contractName);
+        abiDefinition = getContractABIDefinition().getFunctions().get("get").get(0);
+        methodId = abiDefinition.getMethodId(getCryptoSuite());
     }
-
-    private ABIDefinition abiDefinition =
-            getContractABIDefinition().getFunctions().get("get").get(0);
-    private String methodId = abiDefinition.getMethodId();
-    // private ABIObject inputObject = ABIObjectFactory.createInputObject(abiDefinition);
-    // private String abi = getAbiCodecJsonWrapper().encode(inputObject, Arrays.asList()).encode();
 
     @Override
     public String getName() {
@@ -32,23 +30,20 @@ public class PureBCOSProxyCallSuite extends PureBCOSProxySuite {
     @Override
     public void call(PerformanceSuiteCallback callback) {
         try {
-            if (getResource().isEmpty()) {
-                callback.onFailed("Failed! status: Unsupported call by address");
+
+            TransactionReceipt receipt =
+                    getWeCrossProxy()
+                            .constantCall(
+                                    getContractName(), Numeric.hexStringToByteArray(methodId));
+
+            if (logger.isTraceEnabled()) {
+                logger.trace(" result: {} " + receipt);
+            }
+
+            if (receipt.isStatusOK()) {
+                callback.onFailed("Failed! status: empty return");
             } else {
-                byte[] sendBytes =
-                        getWeCrossProxy()
-                                .constantCall(getResource(), Numeric.hexStringToByteArray(methodId))
-                                .send();
-
-                if (logger.isTraceEnabled()) {
-                    logger.trace(" result: " + Hex.toHexString(sendBytes));
-                }
-
-                if (sendBytes.length == 0) {
-                    callback.onFailed("Failed! status: empty return");
-                } else {
-                    callback.onSuccess("Success");
-                }
+                callback.onSuccess("Success");
             }
         } catch (Exception e) {
             callback.onFailed("Failed! status: " + e.getMessage());

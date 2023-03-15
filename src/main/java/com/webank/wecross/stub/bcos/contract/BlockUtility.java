@@ -3,12 +3,12 @@ package com.webank.wecross.stub.bcos.contract;
 import com.webank.wecross.stub.Block;
 import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.bcos.common.BCOSBlockHeader;
+import com.webank.wecross.stub.bcos.common.ObjectMapperFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.fisco.bcos.web3j.protocol.ObjectMapperFactory;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlock;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BcosBlockHeader;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

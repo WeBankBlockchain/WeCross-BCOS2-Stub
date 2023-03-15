@@ -7,27 +7,26 @@ import static junit.framework.TestCase.assertTrue;
 import com.webank.wecross.stub.Connection;
 import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.ResourceInfo;
+import com.webank.wecross.stub.bcos.client.AbstractClientWrapper;
+import com.webank.wecross.stub.bcos.client.ClientWrapperImplMock;
 import com.webank.wecross.stub.bcos.common.BCOSConstant;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfig;
 import com.webank.wecross.stub.bcos.config.BCOSStubConfigParser;
-import com.webank.wecross.stub.bcos.web3j.Web3jWrapperImplMock;
-import java.io.IOException;
 import java.util.List;
 import org.junit.Test;
 
 public class BCOSConnectionFactoryTest {
     @Test
-    public void buildTest() throws IOException {
+    public void buildTest() {
         try {
 
             BCOSStubConfigParser bcosStubConfigParser =
                     new BCOSStubConfigParser("./", "stub-sample-ut.toml");
             BCOSStubConfig bcosStubConfig = bcosStubConfigParser.loadConfig();
+            AbstractClientWrapper clientWrapper = new ClientWrapperImplMock();
+            Connection connection = BCOSConnectionFactory.build(bcosStubConfig, clientWrapper);
 
-            Connection connection =
-                    BCOSConnectionFactory.build(bcosStubConfig, new Web3jWrapperImplMock());
-
-            Driver driver = new BCOSDriver();
+            Driver driver = new BCOSDriver(clientWrapper.getCryptoSuite());
             List<ResourceInfo> resources = driver.getResources(connection);
             assertTrue(resources.size() == 4);
             ResourceInfo resourceInfo = resources.get(0);

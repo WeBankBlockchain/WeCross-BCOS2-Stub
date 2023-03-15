@@ -1,13 +1,13 @@
 package com.webank.wecross.stub.bcos;
 
 import com.webank.wecross.stub.Stub;
-import org.fisco.bcos.web3j.crypto.EncryptType;
+import org.fisco.bcos.sdk.model.CryptoType;
 
 @Stub("BCOS2.0")
 public class BCOSStubFactory extends BCOSBaseStubFactory {
 
     public BCOSStubFactory() {
-        super(EncryptType.ECDSA_TYPE, "secp256k1", "BCOS2.0");
+        super(CryptoType.ECDSA_TYPE, "secp256k1", "BCOS2.0");
     }
 
     public static void main(String[] args) throws Exception {

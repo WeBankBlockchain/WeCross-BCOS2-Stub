@@ -1,6 +1,7 @@
 package com.webank.wecross.stub.bcos.preparation;
 
 import com.webank.wecross.stub.bcos.AsyncCnsService;
+import com.webank.wecross.stub.bcos.client.AbstractClientWrapper;
 import com.webank.wecross.stub.bcos.custom.DeployContractHandler;
 import java.io.File;
 import java.nio.file.Files;
@@ -128,14 +129,15 @@ public class TwoPCContractDeployment {
             }
 
             File file = resolver.getResource(contractPath).getFile();
-
+            AbstractClientWrapper clientWrapper = proxyContract.getConnection().getClientWrapper();
             twoPCContract.deploy2PCContract(
                     contractName,
                     version,
                     new String(Files.readAllBytes(file.toPath())),
                     tps,
                     fromIndex,
-                    toIndex);
+                    toIndex,
+                    clientWrapper.getCryptoSuite());
 
         } catch (Exception e) {
             logger.error("e: ", e);
