@@ -26,6 +26,7 @@ repositories {
     jcenter()
     maven { url "https://maven.aliyun.com/nexus/content/groups/public/" }
     maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+    mavenCentral()
 }
 
 googleJavaFormat {
@@ -73,7 +74,7 @@ List logger = [
 
 dependencies {
     compile logger
-    implementation ('com.webank:wecross-java-stub:1.3.0-SNAPSHOT') {
+    implementation ('com.webank:wecross-java-stub:1.3.0') {
         exclude group: "io.netty"
         exclude group: "org.fisco-bcos", module: "tcnative"
     }
