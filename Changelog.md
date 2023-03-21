@@ -4,8 +4,9 @@
 
 **更改**
 
-- 使用依赖BCOS Java SDK 2.9.1版本代替Web3JSDK(v1.2.3)
-- 去除netty和tcnative的依赖
+* 使用依赖BCOS Java SDK 2.9.1版本代替Web3JSDK(v1.2.3)
+* 更新gson、commons-io、snakeyaml版本以修复安全问题
+* 去除netty和tcnative的依赖
 
 ### v1.2.1
 
