@@ -8,13 +8,13 @@ plugins {
 
     id 'org.ajoberstar.grgit' version '4.0.1'
     id 'com.github.sherter.google-java-format' version '0.8'
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
 }
 
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group 'com.webank.wecross'
-version '1.3.0'
+version '1.3.2'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -58,9 +58,9 @@ configurations {
     integTestTestImplementation.extendsFrom testImplementation
 }
 
-//configurations.all {
-//    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-//}
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
 
 def log4j_version="2.19.0"
 List logger = [
@@ -74,7 +74,7 @@ List logger = [
 
 dependencies {
     compile logger
-    implementation ('com.webank:wecross-java-stub:1.3.0') {
+    implementation ('com.webank:wecross-java-stub:1.3.2-SNAPSHOT') {
         exclude group: 'com.google.code.gson', module: 'gson'
         exclude group: "io.netty"
         exclude group: "org.fisco-bcos", module: "tcnative"
