@@ -61,6 +61,7 @@ public class BlockUtility {
         stubBlockHeader.setTransactionRoot(bcosHeader.getTransactionsRoot());
         stubBlockHeader.setSealerList(bcosHeader.getSealerList());
         stubBlockHeader.setSignatureList(bcosHeader.getSignatureList());
+        stubBlockHeader.setTimestamp(Numeric.decodeQuantity(bcosHeader.getTimestamp()).longValue());
         return stubBlockHeader;
     }
 
