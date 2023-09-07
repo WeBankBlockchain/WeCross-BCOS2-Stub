@@ -1096,7 +1096,7 @@ public class BCOSDriver implements Driver {
                                 blockManager,
                                 proof,
                                 nodeVersion,
-                                verifyException -> {
+                                (verifyException, block) -> {
                                     if (Objects.nonNull(verifyException)) {
                                         callback.onResponse(verifyException, null);
                                         return;
@@ -1106,6 +1106,7 @@ public class BCOSDriver implements Driver {
                                             transaction,
                                             transactionReceipt,
                                             connection,
+                                            block,
                                             callback);
                                 },
                                 cryptoSuite);
@@ -1115,6 +1116,7 @@ public class BCOSDriver implements Driver {
                                 transaction,
                                 transactionReceipt,
                                 connection,
+                                null,
                                 callback);
                     }
                 });
@@ -1125,6 +1127,7 @@ public class BCOSDriver implements Driver {
             JsonTransactionResponse jsonTransactionResponse,
             TransactionReceipt receipt,
             Connection connection,
+            Block block,
             GetTransactionCallback callback) {
 
         try {
@@ -1150,6 +1153,11 @@ public class BCOSDriver implements Driver {
             transaction
                     .getTransactionResponse()
                     .setBlockNumber(Numeric.decodeQuantity(receipt.getBlockNumber()).longValue());
+            if (block != null && block.getBlockHeader() != null) {
+                transaction
+                        .getTransactionResponse()
+                        .setTimestamp(block.getBlockHeader().getTimestamp());
+            }
 
             String proxyInput = receipt.getInput();
             String proxyOutput = receipt.getOutput();
@@ -1315,6 +1323,7 @@ public class BCOSDriver implements Driver {
                                 transactionPair.getTransaction(),
                                 transactionPair.getReceipt(),
                                 connection,
+                                null,
                                 callback);
 
                     } catch (Exception e) {
