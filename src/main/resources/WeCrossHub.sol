@@ -19,6 +19,8 @@ contract WeCrossHub {
 
     string constant CALL_TYPE_INVOKE = "1";
 
+    string constant CALL_TYPE_GET_BLOCK = "2";
+
     uint256 increment = 0;
 
     uint256 currentIndex = 0;
@@ -52,6 +54,12 @@ contract WeCrossHub {
     returns(string memory uid)
     {
         return handleRequest(CALL_TYPE_QUERY, _path, _method, _args, _callbackPath, _callbackMethod);
+    }
+
+    function interchainGetBlock(string memory _path, string memory _method, string[] memory _args, string memory _callbackPath, string memory _callbackMethod) public
+    returns(string memory uid)
+    {
+        return handleRequest(CALL_TYPE_GET_BLOCK, _path, _method, _args, _callbackPath, _callbackMethod);
     }
 
     function handleRequest(string memory _callType, string memory _path, string memory _method, string[] memory _args, string memory _callbackPath, string memory _callbackMethod) private
