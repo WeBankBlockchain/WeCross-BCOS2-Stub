@@ -441,9 +441,13 @@ contract WeCrossProxy {
     returns (string memory)
     {
         uint256 len = xaTransactionIDs.length;
+        if (len == 0) {
+            return '{"total":0,"xaTransactions":[]}';
+        }
+
         uint256 index = sameString("-1", _index) ? (len - 1) : stringToUint256(_index);
 
-        if(len == 0 || len <= index) {
+        if (len <= index) {
             return '{"total":0,"xaTransactions":[]}';
         }
 
