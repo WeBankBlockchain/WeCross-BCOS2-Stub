@@ -62,6 +62,7 @@ import org.fisco.bcos.sdk.abi.wrapper.ABIObject;
 import org.fisco.bcos.sdk.abi.wrapper.ABIObjectFactory;
 import org.fisco.bcos.sdk.abi.wrapper.ContractABIDefinition;
 import org.fisco.bcos.sdk.client.protocol.model.JsonTransactionResponse;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
 import org.fisco.bcos.sdk.client.protocol.response.Call;
 import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
@@ -1028,6 +1029,19 @@ public class BCOSDriver implements Driver {
                     } else {
                         try {
                             Block block = BlockUtility.convertToBlock(response.getData(), false);
+                            if (block.getTransactionsHashes().isEmpty()) {
+                                BcosBlock.Block bcosBlock =
+                                        ObjectMapperFactory.getObjectMapper()
+                                                .readValue(
+                                                        response.getData(), BcosBlock.Block.class);
+                                for (int i = 0; i < bcosBlock.getTransactions().size(); i++) {
+                                    BcosBlock.TransactionObject transactionObject =
+                                            (BcosBlock.TransactionObject)
+                                                    bcosBlock.getTransactions().get(i);
+                                    assembleJsonTransactionResponse(
+                                            blockNumber, transactionObject, connection, block);
+                                }
+                            }
                             if (FeatureSupport.isSupportGetBlockHeader(nodeVersion)
                                     && blockVerifierString != null
                                     && blockNumber != 0) {
@@ -1045,6 +1059,110 @@ public class BCOSDriver implements Driver {
                             callback.onResponse(e, null);
                         }
                     }
+                });
+    }
+
+    private void assembleJsonTransactionResponse(
+            long blockNumber,
+            JsonTransactionResponse jsonTransactionResponse,
+            Connection connection,
+            Block block)
+            throws Exception {
+
+        byte[] txBytes =
+                ObjectMapperFactory.getObjectMapper().writeValueAsBytes(jsonTransactionResponse);
+
+        String methodId;
+        String input;
+        String xaTransactionID = "0";
+        String path;
+        String resource;
+        String transactionHash = jsonTransactionResponse.getHash();
+        Transaction transaction = new Transaction();
+        transaction.setTxBytes(txBytes);
+        transaction.setAccountIdentity(jsonTransactionResponse.getFrom());
+        transaction.setTransactionByProxy(true);
+
+        transaction.getTransactionResponse().setHash(transactionHash);
+        transaction.getTransactionResponse().setBlockNumber(blockNumber);
+        if (block != null && block.getBlockHeader() != null) {
+            transaction
+                    .getTransactionResponse()
+                    .setTimestamp(block.getBlockHeader().getTimestamp());
+        }
+        String proxyInput = jsonTransactionResponse.getInput();
+        if (proxyInput.startsWith(
+                functionEncoder.buildMethodId(FunctionUtility.ProxySendTXMethod))) {
+            Tuple3<String, String, byte[]> proxyResult =
+                    FunctionUtility.getSendTransactionProxyWithoutTxIdFunctionInput(proxyInput);
+            resource = proxyResult.getValue2();
+            input = Numeric.toHexString(proxyResult.getValue3());
+            methodId = input.substring(0, FunctionUtility.MethodIDWithHexPrefixLength);
+            if (logger.isDebugEnabled()) {
+                logger.debug("  resource: {}, methodId: {}", resource, methodId);
+            }
+        } else if (proxyInput.startsWith(
+                functionEncoder.buildMethodId(FunctionUtility.ProxySendTransactionTXMethod))) {
+            Tuple6<String, String, BigInteger, String, String, byte[]> proxyInputResult =
+                    FunctionUtility.getSendTransactionProxyFunctionInput(proxyInput);
+            xaTransactionID = proxyInputResult.getValue2();
+            path = proxyInputResult.getValue4();
+            resource = Path.decode(path).getResource();
+            String methodSig = proxyInputResult.getValue5();
+            methodId = functionEncoder.buildMethodId(methodSig);
+
+            if (logger.isDebugEnabled()) {
+                logger.debug(
+                        "xaTransactionID: {}, path: {}, methodSig: {}, methodId: {}",
+                        xaTransactionID,
+                        path,
+                        methodSig,
+                        methodId);
+            }
+        } else {
+            // transaction not send by proxy
+            transaction.setTransactionByProxy(false);
+            block.getTransactionsWithDetail().add(transaction);
+            return;
+        }
+
+        transaction
+                .getTransactionRequest()
+                .getOptions()
+                .put(StubConstant.XA_TRANSACTION_ID, xaTransactionID);
+        transaction.setResource(resource);
+        // query ABI
+        String finalMethodId = methodId;
+        asyncCnsService.queryABI(
+                resource,
+                this,
+                connection,
+                (queryABIException, abi) -> {
+                    if (Objects.nonNull(queryABIException)) {
+                        logger.error(
+                                "Query abi failed, transactionHash: {}, e: ",
+                                transactionHash,
+                                queryABIException);
+                        block.getTransactionsWithDetail().add(transaction);
+                        return;
+                    }
+
+                    ABIDefinition function =
+                            abiDefinitionFactory
+                                    .loadABI(abi)
+                                    .getMethodIDToFunctions()
+                                    .get(finalMethodId);
+
+                    if (Objects.isNull(function)) {
+                        logger.warn(
+                                "Maybe abi is upgraded, Load function failed, methodId: {}",
+                                finalMethodId);
+
+                        block.getTransactionsWithDetail().add(transaction);
+                        return;
+                    }
+                    transaction.getTransactionRequest().setMethod(function.getName());
+                    block.getTransactionsWithDetail().add(transaction);
                 });
     }
 

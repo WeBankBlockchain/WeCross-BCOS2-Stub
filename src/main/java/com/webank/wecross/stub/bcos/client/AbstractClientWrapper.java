@@ -1,8 +1,5 @@
 package com.webank.wecross.stub.bcos.client;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.Objects;
 import org.fisco.bcos.sdk.client.Client;
 import org.fisco.bcos.sdk.client.protocol.model.JsonTransactionResponse;
 import org.fisco.bcos.sdk.client.protocol.request.Transaction;
@@ -15,6 +12,10 @@ import org.fisco.bcos.sdk.crypto.CryptoSuite;
 import org.fisco.bcos.sdk.model.CryptoType;
 import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.fisco.bcos.sdk.model.callback.TransactionCallback;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Objects;
 
 public abstract class AbstractClientWrapper implements ClientWrapper {
 
@@ -31,8 +32,10 @@ public abstract class AbstractClientWrapper implements ClientWrapper {
     }
 
     @Override
-    public BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException {
-        BcosBlock bcosBlock = client.getBlockByNumber(BigInteger.valueOf(blockNumber), false);
+    public BcosBlock.Block getBlockByNumber(long blockNumber, boolean includeTransactions)
+            throws IOException {
+        BcosBlock bcosBlock =
+                client.getBlockByNumber(BigInteger.valueOf(blockNumber), includeTransactions);
         return bcosBlock.getResult();
     }
 

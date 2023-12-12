@@ -3,9 +3,10 @@ package com.webank.wecross.stub.bcos.client;
 import com.webank.wecross.stub.Block;
 import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.bcos.contract.BlockUtility;
+import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
+
 import java.io.IOException;
 import java.math.BigInteger;
-import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
 
 public class ClientBlockManager implements BlockManager {
     private ClientWrapper clientWrapper;
@@ -20,7 +21,7 @@ public class ClientBlockManager implements BlockManager {
     }
 
     public Block getBlock(long blockNumber) throws IOException {
-        BcosBlock.Block block = clientWrapper.getBlockByNumber(blockNumber);
+        BcosBlock.Block block = clientWrapper.getBlockByNumber(blockNumber, false);
         return BlockUtility.convertToBlock(block, false);
     }
 

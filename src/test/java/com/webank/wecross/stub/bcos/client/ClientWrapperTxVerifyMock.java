@@ -58,7 +58,7 @@ public class ClientWrapperTxVerifyMock extends ClientWrapperImplMock {
     }
 
     @Override
-    public BcosBlock.Block getBlockByNumber(long blockNumber) {
+    public BcosBlock.Block getBlockByNumber(long blockNumber, boolean includeTransactions) {
         return block;
     }
 
