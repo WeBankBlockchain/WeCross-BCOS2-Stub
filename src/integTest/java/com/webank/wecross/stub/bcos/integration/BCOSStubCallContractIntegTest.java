@@ -260,9 +260,9 @@ public class BCOSStubCallContractIntegTest {
             driver.asyncGetBlock(blockNumber, false, connection, (e2, block) -> {
                 assertNull(e2);
                 BlockHeader blockHeader = block.getBlockHeader();
-                List<String> transactionsHashes = block.getTransactionsHashes();
-                assertTrue(transactionsHashes.size() == 1);
-                assertTrue(Objects.nonNull(transactionsHashes.get(0)));
+                List<Transaction> transactionsWithDetail = block.getTransactionsWithDetail();
+                assertTrue(transactionsWithDetail.size() == 1);
+                assertTrue(Objects.nonNull(transactionsWithDetail.get(0)));
                 assertTrue(block.getRawBytes().length > 1);
                 assertTrue(Objects.nonNull(blockHeader));
                 assertTrue(Objects.nonNull(blockHeader.getHash()));
