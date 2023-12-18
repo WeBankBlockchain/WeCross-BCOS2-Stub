@@ -8,6 +8,7 @@ import com.webank.wecross.stub.Driver;
 import com.webank.wecross.stub.Path;
 import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stub.StubConstant;
+import com.webank.wecross.stub.Transaction;
 import com.webank.wecross.stub.TransactionContext;
 import com.webank.wecross.stub.TransactionException;
 import com.webank.wecross.stub.TransactionRequest;
@@ -260,9 +261,9 @@ public class BCOSStubCallContractIntegTest {
             driver.asyncGetBlock(blockNumber, false, connection, (e2, block) -> {
                 assertNull(e2);
                 BlockHeader blockHeader = block.getBlockHeader();
-                List<String> transactionsHashes = block.getTransactionsHashes();
-                assertTrue(transactionsHashes.size() == 1);
-                assertTrue(Objects.nonNull(transactionsHashes.get(0)));
+                List<Transaction> transactionsWithDetail = block.getTransactionsWithDetail();
+                assertTrue(transactionsWithDetail.size() == 1);
+                assertTrue(Objects.nonNull(transactionsWithDetail.get(0)));
                 assertTrue(block.getRawBytes().length > 1);
                 assertTrue(Objects.nonNull(blockHeader));
                 assertTrue(Objects.nonNull(blockHeader.getHash()));

@@ -31,8 +31,10 @@ public abstract class AbstractClientWrapper implements ClientWrapper {
     }
 
     @Override
-    public BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException {
-        BcosBlock bcosBlock = client.getBlockByNumber(BigInteger.valueOf(blockNumber), false);
+    public BcosBlock.Block getBlockByNumber(long blockNumber, boolean includeTransactions)
+            throws IOException {
+        BcosBlock bcosBlock =
+                client.getBlockByNumber(BigInteger.valueOf(blockNumber), includeTransactions);
         return bcosBlock.getResult();
     }
 
