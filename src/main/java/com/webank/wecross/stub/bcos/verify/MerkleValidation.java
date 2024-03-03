@@ -1,5 +1,6 @@
 package com.webank.wecross.stub.bcos.verify;
 
+import com.webank.wecross.stub.Block;
 import com.webank.wecross.stub.BlockHeader;
 import com.webank.wecross.stub.BlockManager;
 import com.webank.wecross.stub.bcos.common.BCOSStatusCode;
@@ -56,7 +57,7 @@ public class MerkleValidation {
     }
 
     public interface VerifyCallback {
-        void onResponse(BCOSStubException e);
+        void onResponse(BCOSStubException e, Block block);
     }
 
     /**
@@ -84,7 +85,8 @@ public class MerkleValidation {
                                         BCOSStatusCode.getStatusMessage(
                                                         BCOSStatusCode.FetchBlockHeaderFailed)
                                                 + ", blockNumber: "
-                                                + blockNumber));
+                                                + blockNumber),
+                                null);
                         return;
                     }
 
@@ -101,7 +103,8 @@ public class MerkleValidation {
                                                         BCOSStatusCode
                                                                 .TransactionReceiptProofVerifyFailed)
                                                 + ", hash="
-                                                + hash));
+                                                + hash),
+                                block);
                         return;
                     }
 
@@ -117,11 +120,12 @@ public class MerkleValidation {
                                         BCOSStatusCode.getStatusMessage(
                                                         BCOSStatusCode.TransactionProofVerifyFailed)
                                                 + ", hash="
-                                                + hash));
+                                                + hash),
+                                block);
                         return;
                     }
 
-                    callback.onResponse(null);
+                    callback.onResponse(null, block);
                 });
     }
 }

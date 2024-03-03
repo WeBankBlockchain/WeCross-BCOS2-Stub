@@ -24,7 +24,7 @@ public class BlockManagerImplMock implements BlockManager {
 
     public byte[] getBlockHeader(long l) {
         try {
-            BcosBlock.Block block = clientWrapper.getBlockByNumber(l);
+            BcosBlock.Block block = clientWrapper.getBlockByNumber(l, false);
             BlockHeader blockHeader = BlockUtility.convertToBlockHeader(block);
             return ObjectMapperFactory.getObjectMapper().writeValueAsBytes(blockHeader);
         } catch (IOException e) {

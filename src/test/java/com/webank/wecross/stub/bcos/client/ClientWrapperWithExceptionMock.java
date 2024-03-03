@@ -16,7 +16,8 @@ public class ClientWrapperWithExceptionMock extends AbstractClientWrapper {
     }
 
     @Override
-    public BcosBlock.Block getBlockByNumber(long blockNumber) throws IOException {
+    public BcosBlock.Block getBlockByNumber(long blockNumber, boolean includeTransactions)
+            throws IOException {
         throw new IOException(" IOException");
     }
 

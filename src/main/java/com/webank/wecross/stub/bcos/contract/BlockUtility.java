@@ -9,12 +9,14 @@ import java.util.ArrayList;
 import java.util.List;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlock;
 import org.fisco.bcos.sdk.client.protocol.response.BcosBlockHeader;
+import org.fisco.bcos.sdk.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BlockUtility {
 
     private static final Logger logger = LoggerFactory.getLogger(BlockUtility.class);
+
     /**
      * convert Block to BlockHeader
      *
@@ -33,6 +35,7 @@ public class BlockUtility {
         blockHeader.setReceiptRoot(block.getReceiptsRoot());
         blockHeader.setStateRoot(block.getStateRoot());
         blockHeader.setTransactionRoot(block.getTransactionsRoot());
+        blockHeader.setTimestamp(Numeric.decodeQuantity(block.getTimestamp()).longValue());
         return blockHeader;
     }
 
@@ -58,6 +61,7 @@ public class BlockUtility {
         stubBlockHeader.setTransactionRoot(bcosHeader.getTransactionsRoot());
         stubBlockHeader.setSealerList(bcosHeader.getSealerList());
         stubBlockHeader.setSignatureList(bcosHeader.getSignatureList());
+        stubBlockHeader.setTimestamp(Numeric.decodeQuantity(bcosHeader.getTimestamp()).longValue());
         return stubBlockHeader;
     }
 
@@ -75,7 +79,9 @@ public class BlockUtility {
 
         /** tx list */
         List<String> txs = new ArrayList<>();
-        if (!onlyHeader) {
+        if (!onlyHeader
+                && !block.getTransactions().isEmpty()
+                && block.getTransactions().get(0) instanceof BcosBlock.TransactionHash) {
             for (int i = 0; i < block.getTransactions().size(); i++) {
                 BcosBlock.TransactionHash transactionHash =
                         (BcosBlock.TransactionHash) block.getTransactions().get(i);

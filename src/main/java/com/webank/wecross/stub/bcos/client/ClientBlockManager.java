@@ -20,7 +20,7 @@ public class ClientBlockManager implements BlockManager {
     }
 
     public Block getBlock(long blockNumber) throws IOException {
-        BcosBlock.Block block = clientWrapper.getBlockByNumber(blockNumber);
+        BcosBlock.Block block = clientWrapper.getBlockByNumber(blockNumber, false);
         return BlockUtility.convertToBlock(block, false);
     }
 

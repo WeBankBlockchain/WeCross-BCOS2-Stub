@@ -3,7 +3,15 @@ set -e
 
 # gradle build check
 bash gradlew build
-
+get_sed_cmd()
+{
+  local sed_cmd="sed -i"
+  if [ "$(uname)" == "Darwin" ];then
+        sed_cmd="sed -i .bkp"
+  fi
+  echo "$sed_cmd"
+}
+sed_cmd=$(get_sed_cmd)
 # Non SM node test
 echo " Not SM NODE ============>>>> "
 echo " Not SM NODE ============>>>> "
@@ -27,7 +35,7 @@ mkdir -p src/integTest/resources/solidity
 cp src/main/resources/* src/integTest/resources/solidity
 cp src/test/resources/contract/* src/integTest/resources/solidity
 
-bash gradlew integTest
+bash gradlew integTest --info
 bash gradlew jacocoTestReport
 
 # clean
@@ -53,7 +61,7 @@ bash nodes/127.0.0.1/start_all.sh
 mkdir -p src/integTest/resources/chains/bcos
 cp -r nodes/127.0.0.1/sdk/* src/integTest/resources/chains/bcos
 cp src/test/resources/stub.toml src/integTest/resources/chains/bcos/
-sed -i.bak 's/BCOS2/GM_BCOS2/g' src/integTest/resources/chains/bcos/stub.toml
+${sed_cmd} 's/BCOS2/GM_BCOS2/g' src/integTest/resources/chains/bcos/stub.toml
 
 cat src/integTest/resources/chains/bcos/stub.toml
 mkdir -p src/integTest/resources/accounts
@@ -62,7 +70,7 @@ cp -r src/test/resources/accounts/gm_bcos src/integTest/resources/accounts/fisco
 mkdir -p src/integTest/resources/solidity
 cp src/main/resources/* src/integTest/resources/solidity
 cp src/test/resources/contract/* src/integTest/resources/solidity
-bash gradlew integTest
+bash gradlew integTest --info
 
 # clean
 bash nodes/127.0.0.1/stop_all.sh
@@ -87,7 +95,8 @@ bash nodes/127.0.0.1/start_all.sh
 mkdir -p src/integTest/resources/chains/bcos
 cp -r nodes/127.0.0.1/sdk/* src/integTest/resources/chains/bcos
 cp src/test/resources/stub.toml src/integTest/resources/chains/bcos/
-sed -i.bak -e 's/BCOS2/GM_BCOS2/g' -e 's/gmConnectEnable = false/gmConnectEnable = true/g' src/integTest/resources/chains/bcos/stub.toml
+${sed_cmd} -e 's/BCOS2/GM_BCOS2/g' src/integTest/resources/chains/bcos/stub.toml
+${sed_cmd} -e 's/gmConnectEnable = false/gmConnectEnable = true/g' src/integTest/resources/chains/bcos/stub.toml
 
 cat src/integTest/resources/chains/bcos/stub.toml
 mkdir -p src/integTest/resources/accounts
@@ -96,7 +105,7 @@ cp -r src/test/resources/accounts/gm_bcos src/integTest/resources/accounts/fisco
 mkdir -p src/integTest/resources/solidity
 cp src/main/resources/* src/integTest/resources/solidity
 cp src/test/resources/contract/* src/integTest/resources/solidity
-bash gradlew integTest
+bash gradlew integTest --info
 
 # clean
 bash nodes/127.0.0.1/stop_all.sh

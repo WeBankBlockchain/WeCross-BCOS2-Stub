@@ -474,7 +474,7 @@ public class BCOSConnection implements Connection {
         Response response = new Response();
         try {
             BigInteger blockNumber = new BigInteger(request.getData());
-            BcosBlock.Block block = clientWrapper.getBlockByNumber(blockNumber.longValue());
+            BcosBlock.Block block = clientWrapper.getBlockByNumber(blockNumber.longValue(), true);
 
             try {
                 BcosBlockHeader.BlockHeader blockHeader =
